@@ -1,0 +1,13 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Poule{% endblock %}
+
+{% block body %}
+    <h1>Edit Poule</h1>
+
+    {{ include('admin/poule/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('admin_poule_index') }}">back to list</a>
+
+    {{ include('/admin/poule/_delete_form.html.twig') }}
+{% endblock %}

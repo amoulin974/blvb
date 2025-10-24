@@ -1,0 +1,15 @@
+{{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+    {# Champ Nom de la phase #}
+<div class="form-control w-full">
+    {{ form_label(form.nom, 'Nom de la phase', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom de la phase'}}) }}
+    {{ form_errors(form.nom) }}
+</div>
+
+{# Bouton de soumission #}
+
+{{ form_rest(form) }}
+<button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_end(form) }}
+

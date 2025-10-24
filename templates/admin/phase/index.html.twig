@@ -1,0 +1,39 @@
+{% extends '../../base.html.twig' %}
+
+{% block title %}Phase index{% endblock %}
+
+{% block body %}
+    <h1>Phase index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>Datedebut</th>
+                <th>Datefin</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for phase in phases %}
+            <tr>
+                <td>{{ phase.id }}</td>
+                <td>{{ phase.nom }}</td>
+                <td>{{ phase.datedebut ? phase.datedebut|date('Y-m-d') : '' }}</td>
+                <td>{{ phase.datefin ? phase.datefin|date('Y-m-d') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_phase_show', {'id': phase.id}) }}">show</a>
+                    <a href="{{ path('app_phase_edit', {'id': phase.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_phase_new') }}">Create new</a>
+{% endblock %}

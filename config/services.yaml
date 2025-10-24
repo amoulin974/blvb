@@ -1,0 +1,44 @@
+# This file configures your own services
+
+parameters:
+# Ici tu peux importer ton fichier de config YAML
+# ou définir directement les paramètres
+# Exemple pour la config des phases/poules
+imports:
+    - { resource: app/saison.yaml }
+
+services:
+    # Valeurs par défaut pour tous les services
+    _defaults:
+        autowire: true
+        autoconfigure: true
+        public: false
+
+    # --------------------------------------------------------
+    # Services normaux
+    App\Service\:
+        resource: '../src/Service/'
+
+    # --------------------------------------------------------
+    # Contrôleurs
+    App\Controller\:
+        resource: '../src/Controller/'
+        tags: ['controller.service_arguments']
+
+    # --------------------------------------------------------
+    # Subscriber Doctrine pour créer automatiquement les phases/poules
+    App\EventListener\SaisonListener:
+        autowire: true
+        autoconfigure: false  # on configure manuellement
+        public: true          # nécessaire pour éviter l'inlining
+        tags:
+            - name: doctrine.event_listener
+              event: 'postPersist'
+              priority: 500
+              connection: 'default'
+
+    # --------------------------------------------------------
+    # Repositories Doctrine
+    App\Repository\:
+        resource: '../src/Repository/'
+        tags: ['doctrine.repository_service']

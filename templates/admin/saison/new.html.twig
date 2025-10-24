@@ -1,0 +1,51 @@
+{# templates/task/new.html.twig #}
+
+{% extends 'base.html.twig' %}
+
+
+
+{% block title %}
+Créer une nouvelle saison
+{% endblock %}
+{% block body %}
+<div class="container mx-auto max-w-md p-4">
+    <h1 class="h1">Créer une nouvelle saison</h1>
+
+    {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+    {# Champ Nom de la saison #}
+    <div class="form-control w-full">
+        {{ form_label(form.nom, 'Nom de la saison', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom de la saison'}}) }}
+
+        {{ form_errors(form.nom) }}
+    </div>
+    <div class="form-control w-full">
+        {{ form_label(form.date_debut, 'Date de début', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.date_debut, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Date de début'}}) }}
+
+        {{ form_errors(form.date_debut) }}
+    </div>
+
+    <div class="form-control w-full">
+        {{ form_label(form.date_fin, 'Date de fin', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.date_fin, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Date de fin'}}) }}
+
+        {{ form_errors(form.date_fin) }}
+    </div>
+
+    {# Bouton de soumission #}
+    <div class="form-control">
+        {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary w-full'}}) }}
+    </div>
+
+    {{ form_rest(form) }}
+    {{ form_end(form) }}
+
+    <div class="mt-4 text-center">
+        <a class="btn btn-outline btn-secondary w-full" href="{{ path('admin_saison_index') }}">
+            Voir toutes les saisons
+        </a>
+    </div>
+</div>
+{% endblock %}

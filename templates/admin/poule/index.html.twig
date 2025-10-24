@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Poule index{% endblock %}
+
+{% block body %}
+    <h1>Poule index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for poule in poules %}
+            <tr>
+                <td>{{ poule.id }}</td>
+                <td>{{ poule.nom }}</td>
+                <td>
+                    <a href="{{ path('admin_poule_show', {'id': poule.id}) }}">show</a>
+                    <a href="{{ path('admin_poule_edit', {'id': poule.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="3">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_poule_new') }}">Create new</a>
+{% endblock %}

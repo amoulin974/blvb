@@ -1,0 +1,15 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Modification du lieu : {{ lieu.nom }}{% endblock %}
+
+{% block body %}
+    <h1>Modification du lieu : {{ lieu.nom }}</h1>
+
+    <div class="container mx-auto max-w-md p-4">
+    {{ include('admin/lieu/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
+
+    <a href="{{ path('admin_lieu_index') }}">Revenir à la liste des lieux</a>
+
+    {{ include('admin/lieu/_delete_form.html.twig') }}
+    </div>
+{% endblock %}

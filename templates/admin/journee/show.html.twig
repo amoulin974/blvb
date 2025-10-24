@@ -1,0 +1,34 @@
+{% extends '../../base.html.twig' %}
+
+{% block title %}Journee{% endblock %}
+
+{% block body %}
+    <h1>Journee</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ journee.id }}</td>
+            </tr>
+            <tr>
+                <th>Numero</th>
+                <td>{{ journee.numero }}</td>
+            </tr>
+            <tr>
+                <th>Date_debut</th>
+                <td>{{ journee.dateDebut ? journee.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Date_fin</th>
+                <td>{{ journee.dateFin ? journee.dateFin|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_journee_index') }}">back to list</a>
+
+    <a href="{{ path('app_journee_edit', {'id': journee.id}) }}">edit</a>
+
+    {{ include('journee/_delete_form.html.twig') }}
+{% endblock %}

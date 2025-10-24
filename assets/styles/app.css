@@ -1,0 +1,9 @@
+@import "tailwindcss";
+@plugin "daisyui";
+@source not "../../public";
+body {
+    background-color: skyblue;
+}
+h1 {
+    @apply text-3xl font-bold text-center text-primary mb-6;
+}

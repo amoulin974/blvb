@@ -1,0 +1,34 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Partie{% endblock %}
+
+{% block body %}
+    <h1>Partie</h1>
+
+    <table class="table">
+        <tbody>
+            <tr>
+                <th>Id</th>
+                <td>{{ partie.id }}</td>
+            </tr>
+            <tr>
+                <th>Date</th>
+                <td>{{ partie.date ? partie.date|date('Y-m-d H:i:s') : '' }}</td>
+            </tr>
+            <tr>
+                <th>Nb_set_gagnant_reception</th>
+                <td>{{ partie.nbSetGagnantReception }}</td>
+            </tr>
+            <tr>
+                <th>Nb_set_gagnant_deplacement</th>
+                <td>{{ partie.nbSetGagnantDeplacement }}</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <a href="{{ path('admin_partie_index') }}">back to list</a>
+
+    <a href="{{ path('admin_partie_edit', {'id': partie.id}) }}">edit</a>
+
+    {{ include('admin/partie/_delete_form.html.twig') }}
+{% endblock %}

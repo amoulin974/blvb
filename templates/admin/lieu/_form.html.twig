@@ -1,0 +1,17 @@
+{{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+        {# Champ Nom de la saison #}
+<div class="form-control w-full">
+    {{ form_label(form.nom, 'Nom de la saison', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom du lieu'}}) }}
+    {{ form_errors(form.nom) }}
+</div>
+
+{# Champ Date_debut de la saison #}
+<div class="form-control w-full">
+    {{ form_label(form.adresse, 'Date de début de la saison', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.adresse, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Adresse du lieu'}}) }}
+    {{ form_errors(form.adresse) }}
+</div>
+    <button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_end(form) }}
