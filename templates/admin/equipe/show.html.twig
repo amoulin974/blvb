@@ -3,24 +3,15 @@
 {% block title %}Equipe{% endblock %}
 
 {% block body %}
-    <h1>Equipe</h1>
+    <h1>Detail de l'équipe {{ equipe.nom }}</h1>
 
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ equipe.id }}</td>
-            </tr>
-            <tr>
-                <th>Nom</th>
-                <td>{{ equipe.nom }}</td>
-            </tr>
-        </tbody>
-    </table>
+    <ul>
+        <li>id : {{ equipe.id }}</li>
+        <li>nom : {{ equipe.nom }}</li>
+        <li>Lieu d'entrainement : {{ equipe.idLieu.nom }}</li>
+    </ul>
 
-    <a href="{{ path('admin_equipe_index') }}">back to list</a>
 
-    <a href="{{ path('admin_equipe_edit', {'id': equipe.id}) }}">edit</a>
-
-    {{ include('admin/equipe/_delete_form.html.twig') }}
+    <a class="btn btn-sm" href="{{ path('admin_equipe_index') }}">Voir toutes les équipes</a>
+    <a class="btn btn-sm" href="{{ path('admin_equipe_new') }}">Créer une nouvelle équipe</a>
 {% endblock %}

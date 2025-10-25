@@ -3,7 +3,6 @@
 namespace App\Form;
 
 use App\Entity\Equipe;
-use App\Entity\equipe;
 use App\Entity\Journee;
 use App\Entity\Lieu;
 use App\Entity\Partie;
@@ -27,7 +26,7 @@ class PartieType extends AbstractType
                 'class' => Journee::class,
                 'choice_label' => 'id',
             ])
-            ->add('id_poule', EntityType::class, [
+            ->add('Poule', EntityType::class, [
                 'class' => Poule::class,
                 'choice_label' => 'id',
             ])

@@ -1,11 +1,16 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}New Equipe{% endblock %}
+{% block title %}Créer une nouvelle équipe{% endblock %}
 
 {% block body %}
-    <h1>Create new Equipe</h1>
-
-    {{ include('admin/equipe/_form.html.twig') }}
-
-    <a href="{{ path('admin_equipe_index') }}">back to list</a>
+<div class="container mx-auto max-w-md p-4">
+    <h1>Créer une nouvelle équipe</h1>
+    {{ include('admin/equipe/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
+    <p>L'ajout d'une équipe dans une poule se fait depuis cette poule</p>
+    <div class="mt-4 text-center">
+        <a class="btn btn-outline btn-secondary w-full" href="{{ path('admin_equipe_index') }}">
+            Voir toutes les équipes
+        </a>
+    </div>
+</div>
 {% endblock %}

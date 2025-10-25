@@ -20,7 +20,7 @@ class Partie
     private ?Journee $id_journee = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties')]
-    private ?Poule $id_poule = null;
+    private ?Poule $poule = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties')]
     private ?Lieu $id_lieu = null;
@@ -73,14 +73,14 @@ class Partie
         return $this;
     }
 
-    public function getIdPoule(): ?Poule
+    public function getPoule(): ?Poule
     {
-        return $this->id_poule;
+        return $this->poule;
     }
 
-    public function setIdPoule(?Poule $id_poule): static
+    public function setPoule(?Poule $poule): static
     {
-        $this->id_poule = $id_poule;
+        $this->poule = $poule;
 
         return $this;
     }

@@ -25,7 +25,7 @@ class Journee
     private ?\DateTimeImmutable $date_fin = null;
 
     #[ORM\ManyToOne(inversedBy: 'journees')]
-    private ?Phase $id_phase = null;
+    private ?Poule $poule = null;
 
     /**
      * @var Collection<int, Partie>
@@ -86,15 +86,14 @@ class Journee
         return $this;
     }
 
-    public function getIdPhase(): ?Phase
+    public function getPoule(): ?Poule
     {
-        return $this->id_phase;
+        return $this->poule;
     }
 
-    public function setIdPhase(?Phase $id_phase): static
+    public function setPoule(?Poule $poule): static
     {
-        $this->id_phase = $id_phase;
-
+        $this->poule = $poule;
         return $this;
     }
 

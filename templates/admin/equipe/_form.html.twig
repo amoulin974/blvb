@@ -1,4 +1,17 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+{{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+        {# Champ Nom de l'équioe #}
+<div class="form-control w-full">
+    {{ form_label(form.nom, "Nom de l'équipe", {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Nom de l'équipe"}}) }}
+    {{ form_errors(form.nom) }}
+</div>
+
+<div class="form-control w-full">
+    {{ form_label(form.id_lieu, "Lieu d'entrainement habituel de l'équipe", {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.id_lieu, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Lieu d'entrainement"}}) }}
+    {{ form_errors(form.id_lieu) }}
+</div>
+
+<button class="btn">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}

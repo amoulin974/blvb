@@ -1,11 +1,15 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base.html.twig' %}
 
-{% block title %}Journee index{% endblock %}
+{% block title %}Liste des journées{% endblock %}
 
 {% block body %}
-    <h1>Journee index</h1>
-
-    <table class="table">
+    <h1>Liste des journées</h1>
+    <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_journee_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Créer une nouvelle journée</a>
+<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
+    <table class="border border-solid table table-xs table-zebra">
         <thead>
             <tr>
                 <th>Id</th>
@@ -22,9 +26,9 @@
                 <td>{{ journee.numero }}</td>
                 <td>{{ journee.dateDebut ? journee.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
                 <td>{{ journee.dateFin ? journee.dateFin|date('Y-m-d H:i:s') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_journee_show', {'id': journee.id}) }}">show</a>
-                    <a href="{{ path('app_journee_edit', {'id': journee.id}) }}">edit</a>
+                <td class="flex items-center gap-2">
+                    <a href="{{ path('admin_journee_show', {'id': journee.id}) }}">show</a>
+                    <a href="{{ path('admin_journee_edit', {'id': journee.id}) }}">edit</a>
                 </td>
             </tr>
         {% else %}
@@ -34,6 +38,6 @@
         {% endfor %}
         </tbody>
     </table>
+</div>
 
-    <a href="{{ path('app_journee_new') }}">Create new</a>
 {% endblock %}

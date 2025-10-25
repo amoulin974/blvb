@@ -4,6 +4,7 @@ namespace App\Form;
 
 use App\Entity\Journee;
 use App\Entity\Phase;
+use App\Entity\Poule;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
@@ -21,9 +22,11 @@ class JourneeType extends AbstractType
             ->add('date_fin', null, [
                 'widget' => 'single_text',
             ])
-            ->add('id_phase', EntityType::class, [
-                'class' => Phase::class,
-                'choice_label' => 'id',
+            ->add('poule', EntityType::class, [
+                'class' => Poule::class,
+                'choice_label' => function (Poule $poule) {
+                    return $poule->getNom() . ' - ' . $poule->getPhase()->getSaison()->getNom().' - '.$poule->getPhase()->getNom();
+                },
             ])
         ;
     }

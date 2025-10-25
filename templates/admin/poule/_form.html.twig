@@ -1,4 +1,27 @@
 {{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
+
+<div class="form-control mb-2">
+    <div class="input w-full" >
+    {{ form_label(form.nom, 'Nom de la poule', {'label_attr': {'class': 'label-text'}}) }} :
+    {{ form_widget(form.nom, {'attr' : {'class': 'input' }}) }}
+    </div>
+</div>
+
+<div class="form-control mb-2">
+    <div class="select w-full" >
+        {{ form_label(form.phase, 'Phase de rattachement : ', {'label_attr': {'class': 'label-text'}}) }} :
+        {{ form_widget(form.phase, {'attr' : {'class':'select select-bordered'}}) }}
+    </div>
+</div>
+
+<div class="form-control mb-2 relative z-[9999]">
+    {{ form_label(form.equipes, 'Équipes :', {'label_attr': {'class': 'label-text'}}) }}
+    {{ form_widget(form.equipes, {'attr': {'class': ' w-full', 'data-controller': 'tom-select'}
+    }) }}
+</div>
+
+<button class="btn btn-primary btn-sm mb-4">Enregistrer</button>
+
 {{ form_end(form) }}
+
+

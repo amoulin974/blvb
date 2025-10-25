@@ -4,8 +4,12 @@
 
 {% block body %}
     <h1>Partie index</h1>
-
-    <table class="table">
+    <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_partie_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Créer un nouveau match</a>
+<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
+    <table class="border border-solid table table-xs table-zebra">
         <thead>
             <tr>
                 <th>Id</th>
@@ -22,7 +26,7 @@
                 <td>{{ partie.date ? partie.date|date('Y-m-d H:i:s') : '' }}</td>
                 <td>{{ partie.nbSetGagnantReception }}</td>
                 <td>{{ partie.nbSetGagnantDeplacement }}</td>
-                <td>
+                <td class="flex items-center gap-2">
                     <a href="{{ path('admin_partie_show', {'id': partie.id}) }}">show</a>
                     <a href="{{ path('admin_partie_edit', {'id': partie.id}) }}">edit</a>
                 </td>
@@ -34,6 +38,6 @@
         {% endfor %}
         </tbody>
     </table>
+</div>
 
-    <a href="{{ path('admin_partie_new') }}">Create new</a>
 {% endblock %}

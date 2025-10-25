@@ -1,0 +1,23 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajout d'équipe avec un fichier{% endblock %}
+
+{% block body %}
+<h1>Ajouter une équipe avec une fichier Excel</h1>
+    <p>Le but de cette page est de vous permettre de rajouter de nouvelles équipes à partir d'un fichier Excel    </p>
+    <h2>Etape n°1 : Récupérer le fichier Excel</h2>
+    <p><a class="btn" href="{{ path("admin_equipe_excel_download") }}">Cliquer sur ce lien pour obtenir le fichier Excel</a></p>
+    <h2>Etape n°2 : Compléter le ficher</h2>
+    <p>Vous ne pouvez importer que des équipes dont le lieu d'entrainement existe déjà.
+        Si vous souhaitez créer un nouveaux lien d'entrainement rendez-vous sur <a class="link" href="{{ path('admin_lieu_new') }}">cette page</a></p>
+    <h2>Etape n°3 : Téléverser le ficher Excel sur nos serveur</h2>
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+{#    {{ form_row(form.file) }}#}
+    <div class="form-control w-full">
+{#        {{ form_label(form.file, "Choisir le fichier :", {'label_attr': {'class': 'label'}}) }}#}
+        {{ form_widget(form.file, {'attr': {'class': 'file-input '}}) }}
+        {{ form_errors(form.file) }}
+    </div>
+    <button class="btn btn-success mt-2">Importer</button>
+    {{ form_end(form) }}
+{% endblock %}

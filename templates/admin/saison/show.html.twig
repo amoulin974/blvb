@@ -6,41 +6,73 @@
    <h1>Détails de la saison {{ saison.nom }}</h1>
 
 
-    <div class="bg-base-100 rounded-t-box w-2/3 mx-auto">
-            <h2>Nom : {{ saison.nom }}</h2>
+    <div class="bg-base-100 rounded-t-box mx-auto">
+
     </div>
-    <ul class="list bg-base-100 rounded-b-box shadow-md  w-2/3 mx-auto">
-        <li class="p-4 pb-2 text-sm opacity-100 tracking-wide">Liste des phases de la saison :</li>
+    <ul class="list bg-base-100 rounded-b-box shadow-md w-4/5 mx-auto">
+{#        <li class="p-4 pb-2 text-sm opacity-100 tracking-wide"><h2>Liste des phases de la saison :</h2></li>#}
         {% for phase in saison.phases %}
 
 
         <li class="list-row pl-12">
-            <div>
-            {{ phase.nom }} - {{ phase.datedebut|date("d/m/Y") }}
-             </div>
+            <h2 class="flex items-center">
+                <span class="mr-2">{{ phase.nom }} - {{ phase.datedebut|date("d/m/Y") }}</span>
+                <div class="join">
+                <a class="btn btn-xs btn-neutral" href="{{ path("admin_phase_edit", {'id': phase.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                    </svg> Modifier</a>
+
+                {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs', join:'join-item' }) }}
+                </div>
+             </h2>
 
             <div class="list-col-wrap ml-12">
                 <ul class="list bg-base-100 rounded-box ">
-                    <li class="text-sm tracking-wide">Les poules de la phase {{ phase.nom }}</li>
+{#                    <li class="text-sm tracking-wide">Les poules de la phase {{ phase.nom }}</li>#}
                     {% for poule in phase.poules %}
+
                         <li class="list-row pl-6 p-2">
-                            <div>{{ poule.nom }}</div>
-                            <div class="flex">
-                                <a class="btn btn-xs" href="{{ path("admin_poule_edit", {'id': poule.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                    </svg> Modifier</a>
-                                {{ include('admin/poule/_delete_form.html.twig', { size: 'btn-xs' }) }}
+                            <h3 class="flex items-center">
+                                <span class="mr-2">{{ poule.nom }}</span>
+                                <div class="flex join">
+                                    <a class="btn btn-xs btn-neutral" href="{{ path("admin_poule_edit", {'id': poule.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                        </svg> Modifier</a>
+                                    {{ include('admin/poule/_delete_form.html.twig', { size: 'btn-xs' }) }}
+                                    {% if poule.equipes|length>0 %}
+                                    <a class="btn btn-xs btn-success" href="{{ path("admin_poule_createjournee", {'id': poule.id}) }}">Créer les journées</a>
+                                    {% endif %}
+                                </div>
+                            </h3>
+
+                            <div class="list-col-wrap ml-6">
+                                <ul class="list bg-base-100 rounded-box flex inline-block">
+                                    <li class="text-sm tracking-wide">Les équipes :</li>
+                                    {% for equipe in poule.equipes %}
+                                        <span class="badge badge-outline">{{ equipe.nom }}</span>
+                                    {% else %}
+                                        <li><em>Pas d'équipe</em></li>
+                                    {%  endfor %}
+
+                                </ul>
+                                <ul class="list bg-base-100 rounded-box flex inline-block">
+                                    <li class="text-sm tracking-wide">Les journées :</li>
+                                    {% for journee in poule.journees %}
+                                        <li class="badge badge-outline">{{ journee.numero }} : {{ journee.datedebut.format('d-m-Y')}} - {{ journee.datefin.format('d-m-Y') }}</li>
+                                    {% else %}
+                                        <li><em>Pas de journée</em></li>
+                                    {%  endfor %}
+
+                                </ul>
                             </div>
                         </li>
+
 
                     {% endfor %}
                 </ul>
             </div>
             <div class="flex">
-                <a class="btn btn-xs" href="{{ path("admin_phase_edit", {'id': phase.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                    </svg> Modifier</a>
-                {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs' }) }}
+
             </div>
         </li>
         {% endfor %}

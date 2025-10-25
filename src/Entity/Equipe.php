@@ -33,10 +33,17 @@ class Equipe
     #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_equipe_deplace')]
     private Collection $parties_deplacement;
 
+    /**
+     * @var Collection<int, Poule>
+     */
+    #[ORM\ManyToMany(targetEntity: Poule::class, mappedBy: 'equipes')]
+    private Collection $Poules;
+
     public function __construct()
     {
         $this->parties_reception = new ArrayCollection();
         $this->parties_deplacement = new ArrayCollection();
+        $this->Poules = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -131,6 +138,30 @@ class Equipe
                 $partiesDeplacement->setIdEquipeDeplace(null);
             }
         }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Poule>
+     */
+    public function getPoules(): Collection
+    {
+        return $this->Poules;
+    }
+
+    public function addPoule(Poule $poule): static
+    {
+        if (!$this->Poules->contains($poule)) {
+            $this->Poules->add($poule);
+        }
+
+        return $this;
+    }
+
+    public function removePoule(Poule $poule): static
+    {
+        $this->Poules->removeElement($poule);
 
         return $this;
     }

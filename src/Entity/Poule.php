@@ -19,17 +19,29 @@ class Poule
     private ?string $nom = null;
 
     #[ORM\ManyToOne(inversedBy: 'poules')]
-    private ?phase $phase = null;
+    private ?Phase $phase = null;
 
     /**
      * @var Collection<int, Partie>
      */
-    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_poule')]
+    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'poule')]
     private Collection $parties;
+
+    #[ORM\OneToMany(targetEntity: Journee::class, mappedBy: 'poule')]
+    private Collection $journees;
+
+    /**
+     * @var Collection<int, Equipe>
+     */
+    #[ORM\ManyToMany(targetEntity: Equipe::class, inversedBy: 'Poules')]
+    #[ORM\JoinTable(name: 'equipe_poule')]
+    private Collection $equipes;
 
     public function __construct()
     {
         $this->parties = new ArrayCollection();
+        $this->equipes = new ArrayCollection();
+        $this->journees = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -56,17 +68,19 @@ class Poule
         return $this;
     }
 
-    public function getPhase(): ?phase
+    public function getPhase(): ?Phase
     {
         return $this->phase;
     }
 
-    public function setPhase(?phase $phase): static
+    public function setPhase(?Phase $phase): static
     {
         $this->phase = $phase;
 
         return $this;
     }
+
+
 
     /**
      * @return Collection<int, Partie>
@@ -95,6 +109,60 @@ class Poule
             }
         }
 
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Equipe>
+     */
+    public function getEquipes(): Collection
+    {
+        return $this->equipes;
+    }
+
+    public function addEquipe(Equipe $equipe): static
+    {
+        if (!$this->equipes->contains($equipe)) {
+            $this->equipes->add($equipe);
+            $equipe->addPoule($this);
+        }
+
+        return $this;
+    }
+
+    public function removeEquipe(Equipe $equipe): static
+    {
+        if ($this->equipes->removeElement($equipe)) {
+            $equipe->removePoule($this);
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Journee>
+     */
+    public function getJournees(): Collection
+    {
+        return $this->journees;
+    }
+
+    public function addJournee(Journee $journee): static
+    {
+        if (!$this->journees->contains($journee)) {
+            $this->journees->add($journee);
+            $journee->setPoule($this);
+        }
+        return $this;
+    }
+
+    public function removeJournee(Journee $journee): static
+    {
+        if ($this->journees->removeElement($journee)) {
+            if ($journee->getPoule() === $this) {
+                $journee->setPoule(null);
+            }
+        }
         return $this;
     }
 }

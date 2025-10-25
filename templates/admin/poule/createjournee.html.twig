@@ -1,0 +1,10 @@
+{% extends 'base.html.twig' %}
+{% block title %}Ajouter les journées à la poule {{ poule.nom }}{% endblock %}
+{% block body %}
+    {% if error %}
+        <p class="alert alert-error">{{ error }}</p>
+    {% else %}
+        <h1>Placer les journée de la poule {{ poule.nom }}</h1>
+        <div id="calendar" data-poule-id="{{ poule.id }} class="w-full bg-white rounded shadow p-4"></div>
+    {% endif %}
+{% endblock %}

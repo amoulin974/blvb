@@ -1,11 +1,16 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base.html.twig' %}
+
 
 {% block title %}Phase index{% endblock %}
 
 {% block body %}
     <h1>Phase index</h1>
-
-    <table class="table">
+    <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_phase_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+        </svg>
+        Créer une nouvelle phase</a>
+<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
+    <table class="border border-solid table table-xs table-zebra">
         <thead>
             <tr>
                 <th>Id</th>
@@ -22,9 +27,11 @@
                 <td>{{ phase.nom }}</td>
                 <td>{{ phase.datedebut ? phase.datedebut|date('Y-m-d') : '' }}</td>
                 <td>{{ phase.datefin ? phase.datefin|date('Y-m-d') : '' }}</td>
-                <td>
-                    <a href="{{ path('app_phase_show', {'id': phase.id}) }}">show</a>
-                    <a href="{{ path('app_phase_edit', {'id': phase.id}) }}">edit</a>
+                <td class="flex items-center gap-2">
+                    <a class="btn btn-sm btn-neutral" href="{{ path('admin_phase_edit', {'id': phase.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                        </svg>Modifier</a>
+                    {{ include('admin/phase/_delete_form.html.twig') }}
                 </td>
             </tr>
         {% else %}
@@ -34,6 +41,6 @@
         {% endfor %}
         </tbody>
     </table>
+</div>
 
-    <a href="{{ path('app_phase_new') }}">Create new</a>
 {% endblock %}

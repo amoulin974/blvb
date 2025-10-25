@@ -17,7 +17,7 @@ class EquipeType extends AbstractType
             ->add('nom')
             ->add('id_lieu', EntityType::class, [
                 'class' => Lieu::class,
-                'choice_label' => 'id',
+                'choice_label' => 'nom',
             ])
         ;
     }

@@ -1,11 +1,11 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}New Journee{% endblock %}
 
 {% block body %}
     <h1>Create new Journee</h1>
 
-    {{ include('journee/_form.html.twig') }}
+    {{ include('admin/journee/_form.html.twig') }}
 
-    <a href="{{ path('app_journee_index') }}">back to list</a>
+    <a href="{{ path('admin_journee_index') }}">back to list</a>
 {% endblock %}

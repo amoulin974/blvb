@@ -8,8 +8,11 @@
     <div class="container mx-auto max-w-md p-4">
     {{ include('admin/lieu/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
 
-    <a href="{{ path('admin_lieu_index') }}">Revenir à la liste des lieux</a>
+        <div class="flex">
+            <a href="{{ path('admin_lieu_index') }}" class="btn btn-info btn-sm">Revenir à la liste des lieux</a>
 
-    {{ include('admin/lieu/_delete_form.html.twig') }}
+            {{ include('admin/lieu/_delete_form.html.twig') }}
+        </div>
+
     </div>
 {% endblock %}
