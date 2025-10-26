@@ -1,4 +1,4 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Edit Phase{% endblock %}
 
@@ -7,9 +7,9 @@
 
 
 
-    {{ include('phase/_form.html.twig', {'button_label': 'Update'}) }}
+    {{ include('admin/phase/_form.html.twig', {'button_label': 'Update'}) }}
 
-    <a href="{{ path('app_phase_index') }}">back to list</a>
+    <a href="{{ path('admin_phase_index') }}">Retourner à la liste des phases</a>
 
-    {{ include('phase/_delete_form.html.twig') }}
+    {{ include('admin/phase/_delete_form.html.twig') }}
 {% endblock %}

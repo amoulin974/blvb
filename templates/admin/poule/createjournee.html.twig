@@ -1,10 +1,22 @@
 {% extends 'base.html.twig' %}
 {% block title %}Ajouter les journées à la poule {{ poule.nom }}{% endblock %}
 {% block body %}
+
     {% if error %}
         <p class="alert alert-error">{{ error }}</p>
     {% else %}
         <h1>Placer les journée de la poule {{ poule.nom }}</h1>
-        <div id="calendar" data-poule-id="{{ poule.id }} class="w-full bg-white rounded shadow p-4"></div>
+        <div
+            id="calendar"
+            data-controller="calendar"
+            data-calendar-events-url-value="/admin/poule/{{ poule.id }}/api/journees"
+            data-calendar-datedebut-value="{{ poule.phase.datedebut|date('Y-m-d') }}"
+            data-calendar-pouleid-value="{{ poule.id }}"
+            data-calendar-datefin-value="{{ poule.phase.datefin|date('Y-m-d') }}"
+            data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
+        </div>
+
+{#        <script src="{{ asset('app.js') }}"></script>#}
     {% endif %}
+
 {% endblock %}

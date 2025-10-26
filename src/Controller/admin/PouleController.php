@@ -189,4 +189,33 @@ final class PouleController extends AbstractController
 
         return $this->json($data);
     }
+    #[Route('/{poule}/api/journees/{id}', name: 'api_journees_update', methods: ['PUT'])]
+    public function apiJourneesUpdate(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $em): JsonResponse
+    {
+
+        $data = json_decode($request->getContent(), true);
+        if (isset($data['datedebut'])) {
+            $journee->setDateDebut(new \DateTimeImmutable($data['datedebut']));
+        }
+        if (isset($data['datefin'])) {
+            $journee->setDateFin(new \DateTimeImmutable($data['datefin']));
+        }
+
+//        var_dump($data);
+//        foreach ($journees as $journee) {
+//            $data[] = [
+//                'id' => $journee->getId(),
+//                'title' => 'Journée ' . $journee->getNumero(),
+//                'start' => $journee->getDateDebut()->format('Y-m-d'),
+//                'end' => $journee->getDateFin()->format('Y-m-d'),
+//            ];
+//        }
+        $em->flush();
+
+        return $this->json([
+            'id' => $journee->getId(),
+            'datedebut' => $journee->getDateDebut()->format('Y-m-d H:i:s'),
+            'datefin' => $journee->getDateFin()->format('Y-m-d H:i:s')
+        ]);
+    }
 }
