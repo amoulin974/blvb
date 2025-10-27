@@ -11,12 +11,14 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Contracts\Cache\CacheInterface;
+use Symfony\Contracts\Cache\ItemInterface;
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/saison', name: 'admin_saison_')]
 final class SaisonController extends AbstractController
 {
     #[Route('/saison', name: 'index', methods: ['GET'])]
-    public function index(SaisonRepository$saisonRepository): Response
+    public function index(SaisonRepository $saisonRepository): Response
     {
         return $this->render('admin/saison/index.html.twig', [
             'saisons' => $saisonRepository->findAll(),
@@ -26,7 +28,7 @@ final class SaisonController extends AbstractController
 
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em): Response
+    public function new(Request $request, EntityManagerInterface $em, CacheInterface $cache): Response
     {
         // creates a saison object
         $saison = new Saison();
@@ -41,6 +43,7 @@ final class SaisonController extends AbstractController
             $saison = $form->getData();
             $em->persist($saison);
             $em->flush();
+            $cache->delete('saisons_all');
             return $this->redirectToRoute('admin_saison_show', [
                 'id' => $saison->getId(),
             ]);
@@ -56,24 +59,26 @@ final class SaisonController extends AbstractController
 
     //Supprime une saison
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Saison $saison, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
     {
         if ($this->isCsrfTokenValid('delete'.$saison->getId(), $request->getPayload()->getString('_token'))) {
             $entityManager->remove($saison);
             $entityManager->flush();
+            $cache->delete('saisons_all');
         }
 
         return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
     {
         $form = $this->createForm(SaisonType::class, $saison);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
+            $cache->delete('saisons_all');
 
             return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
         }
@@ -86,7 +91,7 @@ final class SaisonController extends AbstractController
 
     //défini une saison comme favorite
     #[Route('/{id}/favorite/', name: 'favorite', methods: ['GET', 'POST'])]
-    public function favorite(Request $request, EntityManagerInterface $em, $id): Response
+    public function favorite(Request $request, EntityManagerInterface $em, $id, CacheInterface $cache): Response
     {
         $saisons=$em->getRepository(Saison::class)->findAll();
         foreach ($saisons as $saison) {
@@ -97,6 +102,7 @@ final class SaisonController extends AbstractController
             }
             $em->persist($saison);
             $em->flush();
+            $cache->delete('saisons_all');
         }
         return $this->redirectToRoute('admin_saison_index');
     }
