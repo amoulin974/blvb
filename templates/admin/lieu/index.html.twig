@@ -15,6 +15,8 @@
                 <th>Id</th>
                 <th>Nom</th>
                 <th>Adresse</th>
+                <th>Jour de réception</th>
+                <th>Nombre de terrains</th>
                 <th>actions</th>
             </tr>
         </thead>
@@ -24,6 +26,8 @@
                 <td>{{ lieu.id }}</td>
                 <td>{{ lieu.nom }}</td>
                 <td>{{ lieu.adresse }}</td>
+                <td>{{ lieu.jour }} - {{ lieu.heure|format_time('short') }}</td>
+                <td>{{ lieu.nbTerrains }}</td>
                 <td class="flex items-center gap-2">
 {#                    <a href="{{ path('admin_lieu_show', {'id': lieu.id}) }}">show</a>#}
                     <a class="btn btn-sm btn-neutral" href="{{ path('admin_lieu_edit', {'id': lieu.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

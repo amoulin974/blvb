@@ -4,7 +4,10 @@ namespace App\Controller\admin;
 
 use App\Controller\IsGranted;
 use App\Entity\Lieu;
+
 use App\Form\LieuType;
+
+
 use App\Repository\LieuRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -28,6 +31,9 @@ final class LieuController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $lieu = new Lieu();
+        // Pré-remplir avec les 7 jours
+
+
         $form = $this->createForm(LieuType::class, $lieu);
         $form->handleRequest($request);
 
@@ -55,6 +61,10 @@ final class LieuController extends AbstractController
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Lieu $lieu, EntityManagerInterface $entityManager): Response
     {
+
+
+
+
         $form = $this->createForm(LieuType::class, $lieu);
         $form->handleRequest($request);
 

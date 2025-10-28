@@ -34,10 +34,24 @@ class Lieu
     #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_lieu')]
     private Collection $parties;
 
+    #[ORM\Column(length: 255)]
+    private ?string $jour = null;
+
+    #[ORM\Column(type: Types::TIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $heure = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $nbTerrains = null;
+
+
+
+
+
     public function __construct()
     {
         $this->equipes = new ArrayCollection();
         $this->parties = new ArrayCollection();
+
     }
 
     public function getId(): ?int
@@ -72,6 +86,42 @@ class Lieu
     public function setAdresse(string $adresse): static
     {
         $this->adresse = $adresse;
+
+        return $this;
+    }
+
+    public function getJour(): ?string
+    {
+        return $this->jour;
+    }
+
+    public function setJour(string $jour): static
+    {
+        $this->jour = $jour;
+
+        return $this;
+    }
+
+    public function getHeure(): ?\DateTimeImmutable
+    {
+        return $this->heure;
+    }
+
+    public function setHeure(?\DateTimeImmutable $heure): static
+    {
+        $this->heure = $heure;
+
+        return $this;
+    }
+
+    public function getNbTerrains(): ?int
+    {
+        return $this->nbTerrains;
+    }
+
+    public function setNbTerrains(?int $nbTerrains): static
+    {
+        $this->nbTerrains = $nbTerrains;
 
         return $this;
     }
@@ -135,4 +185,7 @@ class Lieu
 
         return $this;
     }
+
+
+
 }

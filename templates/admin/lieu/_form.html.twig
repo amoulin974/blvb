@@ -13,5 +13,24 @@
     {{ form_widget(form.adresse, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Adresse du lieu'}}) }}
     {{ form_errors(form.adresse) }}
 </div>
+
+<div class="form-control">
+    {{ form_label(form.jour, 'Jour des match :', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.jour, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Jour des matchs'}}) }}
+    {{ form_errors(form.jour) }}
+</div>
+
+<div class="form-control">
+    {{ form_label(form.heure, "Heure d'ouverture :", {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.heure, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Heure d'ouverture"}}) }}
+    {{ form_errors(form.heure) }}
+</div>
+
+<div class="form-control">
+    {{ form_label(form.nbTerrains, "Nombre de terrains :", {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nbTerrains, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Nombre de terrains"}}) }}
+    {{ form_errors(form.nbTerrains) }}
+</div>
+
     <button class="btn btn-success btn-sm">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}
