@@ -25,12 +25,30 @@ final class FrontController extends AbstractController
     public function index(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository $saisonRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
-        var_dump($session->get('idSaisonSelected'));
         $this->getSaisonsCache($saisonRepository, $cache);
         $this->getSaisonSession($session, $request);
         return $this->render('front/index.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
+        ]);
+    }
+
+    #[Route('/equipes', name: 'equipes', methods: ['GET'])]
+    public function equipes(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+    $saisonRepository): Response
+    {
+        //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
+
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+
+        //Déterminer la phase à ouvrir
+
+        //Déterminer la poule à ouvrir
+        return $this->render('front/equipes.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+            'saison'=>$saisonRepository->find($this->idSaisonSelected),
         ]);
     }
 
@@ -43,7 +61,6 @@ final class FrontController extends AbstractController
         if ($saison) {
             $session->set('idSaisonSelected', $saison->getId());   // stocke la saison dans la session
         }
-
         return $this->redirectToRoute('front_index');  // retourne vers la page principale
     }
 

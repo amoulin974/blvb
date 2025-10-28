@@ -1,0 +1,47 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Les équipes de la saison {{ saison.nom }} - BLVB{% endblock %}
+
+{% block body %}
+    <h1>Les équipes de la saison {{ saison.nom }}</h1>
+    {% for phase in saison.phases%}
+        <div class="bg-base-100 border-base-300 collapse {%  if loop.index==2 %}collapse-open {% endif %}collapse-arrow border">
+            <input type="checkbox" class="peer" />
+            <div
+                class="collapse-title"
+            >
+                {{ phase.nom }}
+            </div>
+            <div
+                class="collapse-content"
+            >
+                <div class="tabs tabs-lift">
+                {% for poule in phase.poules %}
+
+                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" />
+                        <div class="tab-content bg-base-100 border-base-300 p-6">
+                            <table class="table">
+                                <tr>
+                                    <th>Nom</th>
+                                    <th>Lieu</th>
+                                    <th>Reception</th>
+                                </tr>
+
+                                {% for equipe in poule.equipes %}
+                                    <tr>
+                                        <td>{{ equipe.nom }}</td>
+                                        <td>{{ equipe.idLieu.nom }}</td>
+                                        <td>ddd</td>
+                                    </tr>
+
+                                    {% endfor %}
+                            </table>
+                        </div>
+
+
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    {%  endfor %}
+{% endblock %}

@@ -3,5 +3,50 @@
 {% block title %}Site du BLVB{% endblock %}
 
 {% block body %}
-Coucou
+    <h1>Bienvenue sur le site du B.L.V.B.</h1>
+    <p>Le championnat de volley-ball loisir senior B.L.V.B. a lieu de septembre à mai sur la côte basque et landaise.</p>
+
+    <p>Il comprend :</p>
+    <ul class="list-disc list-inside ml-2">
+        <li class="">des équipes de clubs :</li>
+        <ul class="list-disc list-inside ml-6">
+            <li>Anglet Olympique</li>
+            <li>Bayonne Volley-Ball</li>
+            <li>Volley-Ball Luzien Cibourien</li>
+            <li>Ondres Volley-Ball</li>
+            <li>JSA Angresse</li>
+        </ul>
+        <li class="">des associations</li>
+        <ul class="list-disc list-inside ml-6">
+            <li>ASPTT Bayonne</li>
+            <li>Leo Lagrange Bayonne</li>
+            <li>Tosse</li>
+            <li>Capbreton</li>
+            <li>d’entreprises (aucune ces dernières saisons; autrefois nous avions Quiksilver et Turbomeca)</li>
+        </ul>
+
+    </ul>
+
+
+
+
+    <p class="mt-2">Ces équipes sont répartie en 3 groupe de niveau :</p>
+
+    <ul class="list-disc list-inside ml-2">
+        <li>Groupe A (le plus élevé) : Poule 1 = ELITE DES AS</li>
+        <li>Groupe B : Poule 2 = ELITE</li>
+        <li>Groupe C : Poule 3 = ESPOIR</li>
+        <li>Groupe D (le plus faible) : Poule 4 = HONNEUR</li>
+    </ul>
+
+    <p>Une première phase de brassage permet de niveler les niveaux, puis des phases finales récompensent les meilleurs équipes dans leur catégorie respective.</p>
+
+    <p>A l’issue du championnat une cérémonie est organisée pour distribuer les prix, suivi d »un repas convivial qui peut se prolonger tard dans la nuit.</p>
+
+    <h2>Trophée ELITE DES AS (Groupe A)</h2>
+    <img src="{{ asset('images/t1_elite_des_as.jpg')}}">
+    <h2>Trophée ELITE (Groupe B)</h2>
+    <h2>Trophée ESPOIR (Groupe C)</h2>
+    <h2>Trophée HONNEUR (Groupe D)</h2>
+    <img src="{{ asset('/images/trophee_honneur.jpg')}}">
 {% endblock %}
