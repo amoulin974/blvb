@@ -26,6 +26,11 @@ services:
         tags: ['controller.service_arguments']
 
     # --------------------------------------------------------
+    # Security
+    App\Security\:
+        resource: '../src/Security/'
+        
+    # --------------------------------------------------------
     # Subscriber Doctrine pour créer automatiquement les phases/poules
     App\EventListener\SaisonListener:
         autowire: true
