@@ -2,18 +2,16 @@
 
 namespace App\Controller\admin;
 
-use App\Controller\IsGranted;
+
 use App\Entity\Lieu;
-
 use App\Form\LieuType;
-
-
 use App\Repository\LieuRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/lieu', name: 'admin_lieu_')]

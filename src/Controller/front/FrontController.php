@@ -12,6 +12,7 @@ use App\Repository\SaisonRepository;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
+use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
 
 #[Route('/', name: 'front_')]
 final class FrontController extends AbstractController
@@ -46,7 +47,6 @@ final class FrontController extends AbstractController
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
         
-
         //Déterminer la poule à ouvrir
         return $this->render('front/equipes.html.twig', [
             'saisons' => $this->saisons,
@@ -56,6 +56,7 @@ final class FrontController extends AbstractController
         ]);
     }
 
+    //Route appelé quand l'utilisateur change de saison dans le menu déroulant du header
     #[Route('/set-saison', name: 'set_saison', methods: ['POST'])]
     public function setSaison(Request $request, SessionInterface $session, SaisonRepository $saisonRepository): Response
     {
@@ -68,6 +69,8 @@ final class FrontController extends AbstractController
         return $this->redirectToRoute('front_index');  // retourne vers la page principale
     }
 
+    //Récupère les saisons en cache (la liste des saisons ne change pas souvent donc à chaque requête on ne va pas la chercher en base de données)
+    //Si le cache a expiré (1 heure ici), on va chercher en base de données et on remplit le cache à nouveau
     public function getSaisonsCache(SaisonRepository $saisonRepository, CacheInterface $cache)
     {
         $this->saisons = $cache->get('saisons_all', function (ItemInterface $item) use ($saisonRepository){
@@ -79,6 +82,7 @@ final class FrontController extends AbstractController
 
     }
 
+    //Récupère la saison sélectionnée dans la session ou met la saison par défaut
     public function getSaisonSession(SessionInterface $session, Request $request){
         if ($session->has('idSaisonSelected')){
             $this->idSaisonSelected = $session->get('idSaisonSelected');
@@ -87,6 +91,8 @@ final class FrontController extends AbstractController
         }
     }
 
+    //Détermine la phase actuelle d'une saison (la phase dont la date de début et de fin englobe la date actuelle) 
+    //ou la première phase si aucune n'est ouverte
     public function getPhaseActuelle($saison){
         $dateActuelle = new \DateTime();
         foreach ($saison->getPhases() as $phase) {
@@ -95,6 +101,8 @@ final class FrontController extends AbstractController
             }
             
         }
-        return null; // Retourne null si aucune phase actuelle n'est trouvée
+        return $saison->getPhases()[0]; // Retourne la première phase si aucune n'est ouverte
     }
+
+    
 }

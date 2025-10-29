@@ -34,16 +34,31 @@
                 </label>
             </div>
 
-            <div class="flex-1 px-2 mx-2 font-bold text-lg"><a class="mr-1" href="{{  path('front_index')}}">BLVB</a></div>
+            <div class="flex flex-1 px-2 mx-2 font-bold text-lg">
+                <a class="mr-1" href="{{  path('front_index')}}">BLVB</a>
+                
+            </div>
 
             {# Menu desktop #}
             <div class="hidden lg:flex flex-none">
                 <ul class="menu menu-horizontal px-1">
                     {% block navbar_links %}
-                        <li><a href="#">Calendrier des matchs</a></li>
-                        <li><a href="#">Les équipes</a></li>
-                        <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
+                        <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
+                        <li><a href="#">Calendrier</a></li>
+                        
+                        {% if app.user %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
+                        {% endif %}
+                            <li>
+                                <form method="post" action="{{ path('app_logout') }}" class="inline-flex items-center">
+                                    <button type="submit" class="">Se déconnecter</button>
+                                </form>
+                            </li>
+                        {% else %}
+                        <li><a href="{{path('app_register')}}">Créer un compte</a></li>                       
                         <li><a href="#">Se connecter</a></li>
+                        {% endif %}
                     {% endblock %}
                 </ul>
             </div>
@@ -62,7 +77,7 @@
         <label for="my-drawer-2" aria-label="Fermer le menu" class="drawer-overlay"></label>
         <aside class="menu p-4 w-64 bg-base-200 min-h-full">
             {% block sidebar_links %}
-                <li><a href="#">Calendrier des matchs</a></li>
+                <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
                 <li><a href="#">Les équipes</a></li>
                 <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
                 <li><a href="#">Se connecter</a></li>

@@ -2,7 +2,6 @@
 
 namespace App\Controller\admin;
 
-use App\Controller\IsGranted;
 use App\Entity\Journee;
 use App\Form\JourneeType;
 use App\Repository\JourneeRepository;
@@ -11,7 +10,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/journee', name: 'admin_journee_')]
 final class JourneeController extends AbstractController

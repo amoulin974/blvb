@@ -2,7 +2,7 @@
 
 namespace App\Controller\admin;
 
-use App\Controller\IsGranted;
+
 use App\Entity\Lieu;
 use App\Entity\Equipe;
 use App\Form\Type\ImportExcelEquipeType;
@@ -19,7 +19,7 @@ use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Cell\DataValidation;
-
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use function PHPUnit\Framework\isArray;
 
 #[IsGranted('ROLE_ADMIN')]

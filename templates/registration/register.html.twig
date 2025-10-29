@@ -12,12 +12,22 @@
     {{ form_errors(registrationForm) }}
 
     {{ form_start(registrationForm) }}
-        {{ form_row(registrationForm.email) }}
-        {{ form_row(registrationForm.plainPassword, {
+        <div class="form-control">
+            {{ form_label(registrationForm.email, 'Email :', {'label_attr': {'class': 'label'}}) }}
+            {{ form_widget(registrationForm.email, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Email', 'type':'email'}}) }}
+            {{ form_errors(registrationForm.email) }}
+        </div>
+        <div class="form-control">
+            {{ form_label(registrationForm.plainPassword, 'Mot de passe :', {'label_attr': {'class': 'label'}}) }}
+            {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Mot de passe', 'type':'password'}}) }}
+            {{ form_errors(registrationForm.plainPassword) }}
+        </div>
+        {# {{ form_row(registrationForm.email) }} #}
+        {# {{ form_row(registrationForm.plainPassword, {
             label: 'Password'
-        }) }}
+        }) }} #}
         {{ form_row(registrationForm.agreeTerms) }}
 
-        <button type="submit" class="btn">Register</button>
+        <button type="submit" class="btn btn-success">Créer le compte</button>
     {{ form_end(registrationForm) }}
 {% endblock %}

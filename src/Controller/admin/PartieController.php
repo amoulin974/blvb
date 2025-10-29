@@ -2,7 +2,7 @@
 
 namespace App\Controller\admin;
 
-use App\Controller\IsGranted;
+
 use App\Entity\Partie;
 use App\Form\PartieType;
 use App\Repository\PartieRepository;
@@ -11,6 +11,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/partie', name: 'admin_partie_')]

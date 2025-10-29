@@ -34,7 +34,7 @@
                 </label>
             </div>
 
-            <div class="flex flex-1 px-2 mx-2 font-bold text-lg">
+            <div class="flex flex-1 px-2 mx-2 font-bold text-lg items-center">
                 <a class="mr-1" href="{{  path('front_index')}}">BLVB</a>
                 <div>
                     <form method="post" action="{{ path('front_set_saison') }}">
@@ -50,13 +50,25 @@
             </div>
 
             {# Menu desktop #}
-            <div class="hidden lg:flex flex-none">
+            <div class="hidden lg:flex flex-none items-center">
                 <ul class="menu menu-horizontal px-1">
                     {% block navbar_links %}
                         <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
                         <li><a href="#">Calendrier</a></li>
-                        <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
-                        <li><a href="#">Se connecter</a></li>
+                        
+                        {% if app.user %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
+                        {% endif %}
+                            <li>
+                                <form method="post" action="{{ path('app_logout') }}" class="inline-flex items-center">
+                                    <button type="submit" class="">Se déconnecter</button>
+                                </form>
+                            </li>
+                        {% else %}
+                        <li><a href="{{path('app_register')}}">Créer un compte</a></li>                       
+                        <li><a href="{{path('app_login')}}">Se connecter</a></li>
+                        {% endif %}
                     {% endblock %}
                 </ul>
             </div>

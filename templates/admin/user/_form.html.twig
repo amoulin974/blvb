@@ -1,0 +1,33 @@
+{{ form_start(form, { attr: { class: "space-y-6 max-w-xl mx-auto" } }) }}
+
+<div>
+    <label class="block text-sm font-medium mb-1" for="user_email">
+        Email
+    </label>
+    {{ form_widget(form.email, { attr: { class: "input input-bordered w-full" } }) }}
+    {{ form_errors(form.email) }}
+</div>
+
+<div>
+    <label class="block text-sm font-medium mb-1">
+        Rôles
+    </label>
+
+    {{ form_widget(form.roles, {
+        attr: {
+            class: "select select-bordered w-full",
+            multiple: "multiple",
+            size: 4
+        }
+    }) }}
+    <p class="text-xs text-gray-500 mt-1">Maintenir Ctrl (ou Cmd) pour sélectionner plusieurs rôles.</p>
+
+    {{ form_errors(form.roles) }}
+</div>
+
+<div class="flex justify-end gap-3">
+    <a href="{{ path('admin_user_index') }}" class="btn btn-ghost btn-sm">Annuler</a>
+    <button type="submit" class="btn btn-success btn-sm">Enregistrer</button>
+</div>
+
+{{ form_end(form) }}

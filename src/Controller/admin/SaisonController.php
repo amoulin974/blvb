@@ -13,6 +13,9 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+
+
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/saison', name: 'admin_saison_')]
 final class SaisonController extends AbstractController
