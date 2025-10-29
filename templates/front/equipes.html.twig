@@ -5,7 +5,7 @@
 {% block body %}
     <h1>Les équipes de la saison {{ saison.nom }}</h1>
     {% for phase in saison.phases%}
-        <div class="bg-base-100 border-base-300 collapse {%  if loop.index==2 %}collapse-open {% endif %}collapse-arrow border">
+        <div class="bg-base-100 border-base-300 collapse {%  if phaseouverte.id==phase.id %}collapse-open {% endif %}collapse-arrow border">
             <input type="checkbox" class="peer" />
             <div
                 class="collapse-title"
@@ -15,12 +15,14 @@
             <div
                 class="collapse-content"
             >
+            
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
-                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" />
+                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-base-100 border-base-300 p-6">
-                            <table class="table">
+                        {# Affichage pour grand écran sous forme de table #}
+                            <table class="border border-solid table-xs table-zebra hidden md:table" >
                                 <tr>
                                     <th>Nom</th>
                                     <th>Lieu</th>
@@ -31,13 +33,23 @@
                                     <tr>
                                         <td>{{ equipe.nom }}</td>
                                         <td>{{ equipe.idLieu.nom }}</td>
-                                        <td>ddd</td>
+                                        <td>{{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short')}}</td>
                                     </tr>
 
                                     {% endfor %}
                             </table>
+                            {# Affichage pour mobile sous forme de carte #}
+                            {% for equipe in poule.equipes %}
+                            <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile">
+                                <div class="card-body">
+                                    <h3 class="card-title">{{equipe.nom}}</h3>
+                                    <p>{{ equipe.idLieu.nom }}</p>
+                                    <p>{{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short')}}</p>
+                                </div>
+                                
+                            </div>
+                            {% endfor %}
                         </div>
-
 
                 {% endfor %}
                 </div>

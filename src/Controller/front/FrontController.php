@@ -41,14 +41,18 @@ final class FrontController extends AbstractController
 
         $this->getSaisonsCache($saisonRepository, $cache);
         $this->getSaisonSession($session, $request);
+        $saison=$saisonRepository->find($this->idSaisonSelected);
 
         //Déterminer la phase à ouvrir
+        $phaseouverte=$this->getPhaseActuelle($saison);
+        
 
         //Déterminer la poule à ouvrir
         return $this->render('front/equipes.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
-            'saison'=>$saisonRepository->find($this->idSaisonSelected),
+            'saison'=>$saison,
+            'phaseouverte'=>$phaseouverte,
         ]);
     }
 
@@ -81,5 +85,16 @@ final class FrontController extends AbstractController
         } else{
             $this->idSaisonSelected = $this->saisons[0]->getId() ;
         }
+    }
+
+    public function getPhaseActuelle($saison){
+        $dateActuelle = new \DateTime();
+        foreach ($saison->getPhases() as $phase) {
+            if ($dateActuelle >= $phase->getDateDebut() && $dateActuelle <= $phase->getDateFin()) {
+                return $phase;
+            }
+            
+        }
+        return null; // Retourne null si aucune phase actuelle n'est trouvée
     }
 }
