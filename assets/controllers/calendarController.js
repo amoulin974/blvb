@@ -29,7 +29,7 @@ export default class extends Controller {
         const nbMois = (validEnd.getFullYear() - validStart.getFullYear()) * 12
             + (validEnd.getMonth() - validStart.getMonth()) + 1;
 
-        const calendar = new Calendar(el, {
+        this.calendar = new Calendar(el, {
             plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin],
             initialView: "multiMonthFourMonth",
             eventColor: '#f59e0b',
@@ -57,38 +57,128 @@ export default class extends Controller {
                     },
                 },
             },
-            eventClick: function(info) {
-                alert('Événement : ' + info.event.title);
-            },
-            eventDrop: (info) => {
-                const eventId = info.event.id;
-                const newStart = info.event.startStr;
-                const newEnd = info.event.endStr  ?? info.event.endStr ;
+            //Click sur un événement
+            eventClick: this.onEventClick.bind(this),
 
-                fetch('/admin/poule/' + this.pouleidValue + '/api/journees/'+eventId, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': this.csrfTokenValue
-                    },
-                    body: JSON.stringify({
-                        datedebut: newStart,
-                        datefin: newEnd
-                    })
-                })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Erreur lors de la mise à jour');
-                        return response.json();
-                    })
-                    .then(json => console.log('Événement mis à jour :', json))
-                    .catch(err => {
-                        console.error(err);
-                        info.revert(); // annule le déplacement si erreur
-                    });
-            }
+            //Redimensionnement d'un événement
+            eventResize:this.onEventDrop.bind(this),
+
+            //Déplacement d'un événement
+            eventDrop: this.onEventDrop.bind(this),
+
+            //Click sur une date vide ou sélection de dates entraine la création d'une nouvelle journée
+            // dateClick: this.onDateClick.bind(this),
+            select: this.onDateClick.bind(this),
         });
 
-        calendar.render();
+        this.calendar.render();
+    }
+
+    //Méthode appelée lors du déplacement d'un événement pour mettre à jour la date dans la BDD
+    onEventDrop(info) {
+        const eventId = info.event.id;
+        const newStart = info.event.startStr;
+        const newEnd = info.event.endStr  ?? info.event.endStr ;
+
+        fetch('/admin/poule/' + this.pouleidValue + '/api/journees/'+eventId, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': this.csrfTokenValue
+            },
+            body: JSON.stringify({
+                datedebut: newStart,
+                datefin: newEnd
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+            return response.json();
+        })
+        .then(json => {
+            console.log('Événement mis à jour :', json);
+            //On recharche tous les événements pour tenir compte de la régularisation des numéros de journée
+            this.calendar.refetchEvents();
+        })
+        .catch(err => {
+            console.error(err);
+            info.revert(); // annule le déplacement si erreur
+        });
+    }
+
+    //Méthode appelée sur le click d'un événement qui affiche une modale avec les infos de l'événement et un bouton de suppression
+    onEventClick(info) {
+        // Remplir la modale
+        document.getElementById('eventTitle').textContent = info.event.title;
+        document.getElementById('eventDate').textContent = info.event.start.toLocaleDateString('fr-FR');
+
+        // Afficher la modale (DaisyUI ouvre une modal en ajoutant 'modal-open' sur <body>)
+        document.getElementById('eventModal').classList.add('modal-open');
+
+        // Bouton de suppression
+        document.getElementById('supprimer').onclick = () => {
+            
+            fetch('/admin/poule/' + this.pouleidValue + '/api/journees/' + info.event.id, {
+                method: 'DELETE',
+                headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': this.csrfTokenValue
+            },
+            body: JSON.stringify({
+                id: info.event.id,
+            })
+        })
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+                return response.json();
+            })
+            .then(json => {
+                console.log('Suppression de la journée :', info.event.id);
+                //On recharche tous les événements pour supprimer la journée de l'UI et tenir compte de la régularisation des numéros de journée
+                 this.calendar.refetchEvents();
+                document.getElementById('eventModal').classList.remove('modal-open');
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('eventModal').classList.remove('modal-open');
+                
+            });
+    
+        }
+        // Bouton de fermeture
+        document.getElementById('closeModal').onclick = function() {
+            document.getElementById('eventModal').classList.remove('modal-open');
+        }
+    }
+
+    //Méthode appelée sur le click d'une date vide pour créer une nouvelle journée
+    onDateClick(info) {
+        
+        fetch('/admin/poule/' + this.pouleidValue + '/api/journees', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': this.csrfTokenValue
+            },
+            body: JSON.stringify({
+                datedebut: info.startStr,
+                datefin: info.endStr  ?? info.startStr
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur lors de la création');
+            return response.json();
+        })
+        .then(json => {
+            console.log('Nouvelle journée créée :', json);
+            //On recharche tous les événements pour afficher la nouvelle journée et tenir compte de la régularisation des numéros de journée
+            this.calendar.refetchEvents();
+        })
+        .catch(err => {
+            console.error(err);
+        });
     }
 }

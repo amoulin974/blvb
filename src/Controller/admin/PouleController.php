@@ -83,86 +83,124 @@ final class PouleController extends AbstractController
         return $this->redirectToRoute('admin_poule_index', [], Response::HTTP_SEE_OTHER);
     }
 
+    //Crée les journées pour une poule
     #[Route('/{id}/createjournee', name: 'createjournee', methods: ['GET'])]
     public function createJournee(Poule $poule, Request $request, EntityManagerInterface $entityManager): Response
     {
-        //Récupère la poule
-
         //On compte le nombre d'équipes dans la poule
-
         //Si il n'y a pas au moins deux équipes dans la poule on renvoit un message d'erreur indiquant qu'il faut commencer par entrer les équipes
         $error=null;
         $nbEquipe=count($poule->getEquipes());
         if ($nbEquipe<2){
            $error="Il faut au moins deux équipes dans la poule";
         }else{
-            $nbMatch=($nbEquipe*$nbEquipe-1)/2;
-            if ($nbEquipe % 2 == 0){
-                $nbMatchParJour = $nbEquipe/2;
-            }else{
-                $nbMatchParJour = ($nbEquipe-1)/2;
-            }
-            $nbJournee = $nbMatch/$nbMatchParJour;
 
-
-        // Dates de la phase
-        $debutPhase = $poule->getPhase()->getDateDebut();
-        $finPhase = $poule->getPhase()->getDateFin();
-
-        // Vérifie si la phase peut contenir toutes les journées (1 semaine par journée)
-        $dureePhaseEnSemaines = intval($finPhase->diff($debutPhase)->days / 7) + 1;
-        if ($dureePhaseEnSemaines < $nbJournee) {
-            $error = "La phase est trop courte pour contenir toutes les journées.";
-        } else {
             //On supprime les journées de cette poules
             $oldJournees = $poule->getJournees();
             foreach ($oldJournees as $journee) {
                 $entityManager->remove($journee);
             }
-            $entityManager->flush();
 
-            // Génération des journées
-            $currentDate = clone $debutPhase;
-            for ($i = 1; $i <= $nbJournee; $i++) {
-
-                // Skip Noël et Jour de l'an
-                $annee = (int)$currentDate->format('Y');
-                $noel = new \DateTimeImmutable("$annee-12-25");
-                $jourAn = new \DateTimeImmutable(($annee+1)."-01-01");
-
-                while (($currentDate <= $finPhase) &&
-                    ($currentDate <= $noel && $currentDate >= $noel->modify('-6 days') ||
-                        $currentDate <= $jourAn && $currentDate >= $jourAn->modify('-6 days'))
-                ) {
-                    $currentDate = $currentDate->modify('+1 week');
+            //On vérifie si la première poule de la phase à déjà des journées et si le nombre d'équipe est identique. Si c'est le cas on copie les journées
+            $phase=$poule->getPhase();
+            $poulesPhase=$phase->getPoules();
+            $firstPoule=$poulesPhase[0];
+            
+        
+            //Si la première poule a le même nombre d'équipes et des journées on les copie
+            if (count($firstPoule->getEquipes())==$nbEquipe && count($firstPoule->getJournees())>0){
+                foreach($firstPoule->getJournees() as $journeefirstpoule){
+                    $newJournee=new Journee;
+                    $newJournee->setDateDebut($journeefirstpoule->getDateDebut());
+                    $newJournee->setDateFin($journeefirstpoule->getDateFin());
+                    $newJournee->setNumero($journeefirstpoule->getNumero());
+                    $newJournee->setPoule($poule);
+                    $entityManager->persist($newJournee);
+                    
                 }
+                $entityManager->flush();
+            }else{
+                //Calcul du nombre de journées nécessaires
+                $nbMatch=$nbEquipe*($nbEquipe-1)/2;
+                if ($nbEquipe % 2 == 0){
+                    $nbMatchParJour = $nbEquipe/2;
+                }else{
+                    $nbMatchParJour = ($nbEquipe-1)/2;
+                }
+                $nbJournee = $nbMatch/$nbMatchParJour;
 
-                $journee = new Journee();
-                $journee->setNumero($i);
+        
+                // Dates de la phase
+                $debutPhase = $poule->getPhase()->getDateDebut();
+                $finPhase = $poule->getPhase()->getDateFin();
 
-                // Début de la semaine (lundi)
-                $debutSemaine = $currentDate->modify('Monday this week');
-                $finSemaine = $currentDate->modify('Sunday this week');
+                // Vérifie si la phase peut contenir toutes les journées (1 semaine par journée)
+                $dureePhaseEnSemaines = intval($finPhase->diff($debutPhase)->days / 7) + 1;
+                if ($dureePhaseEnSemaines < $nbJournee) {
+                    $error = "La phase est trop courte pour contenir toutes les journées.";
+                } else {
+                    
+                    $entityManager->flush();
 
-                $journee->setDateDebut(new \DateTimeImmutable($debutSemaine->format('Y-m-d')));
-                $journee->setDateFin(new \DateTimeImmutable($finSemaine->format('Y-m-d')));
-                $journee->setPoule($poule);
+                    // Génération des journées
+                    $currentDate = clone $debutPhase;
+                    for ($i = 1; $i <= $nbJournee; $i++) {
 
-                $entityManager->persist($journee);
+                        // Skip Noël et Jour de l'an
+                        $annee = (int)$currentDate->format('Y');
+                        $noel = new \DateTimeImmutable("$annee-12-25");
+                        $jourAn = new \DateTimeImmutable(($annee+1)."-01-01");
 
-                // Passe à la semaine suivante
-                $currentDate = $currentDate->modify('+1 week');
+                        while (($currentDate <= $finPhase) &&
+                            ($currentDate <= $noel && $currentDate >= $noel->modify('-6 days') ||
+                                $currentDate <= $jourAn && $currentDate >= $jourAn->modify('-6 days'))
+                        ) {
+                            $currentDate = $currentDate->modify('+1 week');
+                        }
+
+                        $journee = new Journee();
+                        $journee->setNumero($i);
+
+                        // Début de la semaine (lundi)
+                        $debutSemaine = $currentDate->modify('Monday this week');
+                        $finSemaine = $currentDate->modify('Sunday this week');
+
+                        $journee->setDateDebut(new \DateTimeImmutable($debutSemaine->format('Y-m-d')));
+                        $journee->setDateFin(new \DateTimeImmutable($finSemaine->format('Y-m-d')));
+                        $journee->setPoule($poule);
+
+                        $entityManager->persist($journee);
+
+                        // Passe à la semaine suivante
+                        $currentDate = $currentDate->modify('+1 week');
+                    }
+
+                    $entityManager->flush();
+                }
             }
-
-            $entityManager->flush();
-        }
+            
     }
 
+    //Affiche lecalendrier pour pouvoir déplacer les journées
         return $this->render('admin/poule/createjournee.html.twig', [
         'poule' => $poule,
         'error' => $error,
         ]);
     }
+
+    //fonction qui crée les matchs pour une poule
+    #[Route('/{id}/creatematch', name: 'creatematch', methods: ['GET'])]
+    public function createMatch(Poule $poule, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $error=null;
+        return $this->render('admin/poule/createjournee.html.twig', [
+        'poule' => $poule,
+        'error' => $error,
+        ]);
+    }
+
+
+    //Affiche le calendrier des journées pour une poule
     #[Route('/{id}/getjourneecalendar', name: 'getjourneecalendar', methods: ['GET'])]
     public function getJourneeCalendar (Poule $poule, Request $request, EntityManagerInterface $entityManager): Response
     {
@@ -190,6 +228,8 @@ final class PouleController extends AbstractController
 
         return $this->json($data);
     }
+
+    //Met à jour une journée Méthode appelé par l'API lors du déplacement d'une journée dans le calendrier
     #[Route('/{poule}/api/journees/{id}', name: 'api_journees_update', methods: ['PUT'])]
     public function apiJourneesUpdate(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $em): JsonResponse
     {
@@ -202,21 +242,89 @@ final class PouleController extends AbstractController
             $journee->setDateFin(new \DateTimeImmutable($data['datefin']));
         }
 
-//        var_dump($data);
-//        foreach ($journees as $journee) {
-//            $data[] = [
-//                'id' => $journee->getId(),
-//                'title' => 'Journée ' . $journee->getNumero(),
-//                'start' => $journee->getDateDebut()->format('Y-m-d'),
-//                'end' => $journee->getDateFin()->format('Y-m-d'),
-//            ];
-//        }
         $em->flush();
-
+        
+        $this->regulariseNumeroJournee($poule, $em);
+        
         return $this->json([
             'id' => $journee->getId(),
             'datedebut' => $journee->getDateDebut()->format('Y-m-d H:i:s'),
             'datefin' => $journee->getDateFin()->format('Y-m-d H:i:s')
         ]);
+    }
+
+    //Supprime une journée Méthode appelé par l'API lors du click sur le bouton supprimer dans la modale du calendrier
+    #[Route('/{poule}/api/journees/{id}', name: 'api_journees_delete', methods: ['DELETE'])]
+    public function apiJourneesDelete(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $em): JsonResponse
+    {
+        //On supprime la journée       
+        $em->remove($journee);
+        $em->flush();
+        
+        
+        //On renvoie la liste des journées restantes
+        $journees = $poule->getJournees();
+        $this->regulariseNumeroJournee($poule, $em);
+        $data = [];
+
+        foreach ($journees as $journee) {
+            $data[] = [
+                'id' => $journee->getId(),
+                'title' => 'Journée ' . $journee->getNumero(),
+                'start' => $journee->getDateDebut()->format('Y-m-d'),
+                'end' => $journee->getDateFin()->format('Y-m-d'),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    //Ajoute une journée Méthode appelé par l'API lors du click sur une date vide dans le calendrier
+    #[Route('/{poule}/api/journees', name: 'api_journees_add', methods: ['POST'])]
+    public function apiJourneesAdd(Request $request, Poule $poule, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $journee = new Journee();
+        if (isset($data['datedebut'])) {
+            $journee->setDateDebut(new \DateTimeImmutable($data['datedebut']));
+        }
+        if (isset($data['datefin'])) {
+            $journee->setDateFin(new \DateTimeImmutable($data['datefin']));
+        }
+        //On calcule le numéro de la journée en ajoutant 1 au nombre de journées existantes 
+        //(la méthode regulariseNumeroJournee sera appelée après pour tout remettre en ordre si besoin)
+        $nbJournees = count($poule->getJournees());
+        $journee->setNumero($nbJournees + 1);
+        $journee->setPoule($poule);
+        $poule->addJournee($journee);
+        $em->persist($journee);
+        $em->flush();
+        
+        $this->regulariseNumeroJournee($poule, $em);
+        
+        return $this->json([
+            'id' => $journee->getId(),
+            'title' => 'Journée ' . $journee->getNumero(),
+            'start' => $journee->getDateDebut()->format('Y-m-d'),
+            'end' => $journee->getDateFin()->format('Y-m-d'),
+        ]);
+    }
+
+    
+
+    //Réordonne les numéros des journées d'une poule en fonction de leurs dates de début
+    public function regulariseNumeroJournee(Poule $poule, EntityManagerInterface $em): void
+    {
+        $journees = $poule->getJournees()->toArray();
+        usort($journees, function (Journee $a, Journee $b) {
+            return $a->getDateDebut() <=> $b->getDateDebut();
+        });
+
+        foreach ($journees as $index => $journee) {
+            $journee->setNumero($index + 1);
+            $em->persist($journee);
+        }
+
+        $em->flush();
     }
 }

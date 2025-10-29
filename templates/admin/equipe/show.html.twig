@@ -9,6 +9,13 @@
         <li>id : {{ equipe.id }}</li>
         <li>nom : {{ equipe.nom }}</li>
         <li>Lieu d'entrainement : {{ equipe.idLieu.nom }}</li>
+        <li>Liste des poules :</li>
+            <ul>
+        {% for poule in equipe.Poules %}
+            {# {{dump(poule)}} #}
+                <li>Poule : {{ poule.nom }} de {{ poule.phase.saison.nom }} - {{ poule.phase.nom }}</li>
+            {% endfor %} 
+            </ul>
     </ul>
 
 

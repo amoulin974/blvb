@@ -6,6 +6,10 @@
         <p class="alert alert-error">{{ error }}</p>
     {% else %}
         <h1>Placer les journée de la poule {{ poule.nom }}</h1>
+        <div class="mb-4">
+            <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id}) }}">Voir la saison</a>  
+            <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a> 
+        </div>
         <div
             id="calendar"
             data-controller="calendar"
@@ -15,7 +19,17 @@
             data-calendar-datefin-value="{{ poule.phase.datefin|date('Y-m-d') }}"
             data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
         </div>
-
+        <!-- Modal DaisyUI -->
+        <div id="eventModal" class="modal">
+        <div class="modal-box">
+            <h3 class="font-bold text-lg" id="eventTitle">Titre de l'événement</h3>
+            <p class="py-4" id="eventDate">Date de l'événement</p>
+            <button class="btn btn-error" id="supprimer">Supprimer l'événement</button>
+            <div class="modal-action">
+            <button class="btn-info" id="closeModal">Fermer</button>
+            </div>
+        </div>
+        </div>
 {#        <script src="{{ asset('app.js') }}"></script>#}
     {% endif %}
 

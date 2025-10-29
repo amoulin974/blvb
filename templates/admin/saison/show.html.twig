@@ -42,6 +42,9 @@
                                     {% if poule.equipes|length>0 %}
                                     <a class="btn btn-xs btn-success" href="{{ path("admin_poule_createjournee", {'id': poule.id}) }}">Créer les journées</a>
                                     {% endif %}
+                                    {% if poule.journees|length>0 %}
+                                    <a class="btn btn-xs btn-success" href="{{ path("admin_poule_creatematch", {'id': poule.id}) }}">Créer les match</a>
+                                    {% endif %}
                                 </div>
                             </h3>
 

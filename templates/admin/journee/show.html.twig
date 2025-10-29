@@ -1,4 +1,4 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base.html.twig' %}
 
 {% block title %}Journee{% endblock %}
 
@@ -26,9 +26,9 @@
         </tbody>
     </table>
 
-    <a href="{{ path('app_journee_index') }}">back to list</a>
+    <a href="{{ path('admin_journee_index') }}">back to list</a>
 
-    <a href="{{ path('app_journee_edit', {'id': journee.id}) }}">edit</a>
+    <a href="{{ path('admin_journee_edit', {'id': journee.id}) }}">edit</a>
 
-    {{ include('journee/_delete_form.html.twig') }}
+    {{ include('admin/journee/_delete_form.html.twig') }}
 {% endblock %}
