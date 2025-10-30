@@ -5,6 +5,7 @@ namespace App\Controller\admin;
 use App\Entity\Poule;
 use App\Form\PouleType;
 use App\Entity\Journee;
+use App\Entity\Equipe;
 use App\Repository\PouleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -13,6 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Service\PlanificationMatchService;
 
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/poule', name: 'admin_poule_')]
@@ -190,9 +192,76 @@ final class PouleController extends AbstractController
 
     //fonction qui crée les matchs pour une poule
     #[Route('/{id}/creatematch', name: 'creatematch', methods: ['GET'])]
-    public function createMatch(Poule $poule, Request $request, EntityManagerInterface $entityManager): Response
+    public function createMatch(Poule $poule, Request $request, EntityManagerInterface $entityManager, PlanificationMatchService $planificationService): Response
     {
         $error=null;
+        foreach ($poule->getJournees() as $journee) {
+            //On supprime les matchs de cette journée
+            $oldParties = $journee->getParties();
+            foreach ($oldParties as $partie) {
+                $entityManager->remove($partie);
+            }
+        }
+        $entityManager->flush();
+        //On crée les matchs
+        $equipes = $poule->getEquipes()->toArray();
+        $nbEquipe = count($equipes);
+        if ($nbEquipe<2){
+           $error="Il faut au moins deux équipes dans la poule";
+        }else{
+            //Algorithme de la ronde
+            
+            
+            $equipeArray = $equipes;
+            if ($nbEquipe % 2 != 0) {
+                $equipeBye = new Equipe();
+                $equipeBye->setNom("BYE");
+                $equipeArray[] = $equipeBye;
+                $nbEquipe++; // On met à jour le nombre total
+            }
+            $rounds = $nbEquipe - 1;
+            $matchesPerRound = $nbEquipe / 2;
+            $journees = $poule->getJournees()->toArray();
+            // Tri selon l’attribut "numero"
+            usort($journees, function($j1, $j2){
+                return $j1->getNumero() <=> $j2->getNumero();
+            });
+
+            for ($round = 0; $round < $rounds; $round++) {
+                $journee = $journees[$round];
+                for ($match = 0; $match < $matchesPerRound; $match++) {
+                    $homeIndex = ($round + $match) % ($nbEquipe - 1);
+                    $awayIndex = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
+
+                    // La dernière équipe reste fixe
+                    if ($match == 0) {
+                        $awayIndex = $nbEquipe - 1;
+                    }
+
+                    // Si l'une des équipes est fictive, on ne crée pas le match
+                    if ($equipeArray[$homeIndex]->getNom() === "BYE" || $equipeArray[$awayIndex]->getNom() === "BYE") {
+                        continue;
+                    }
+
+                    $partie = new \App\Entity\Partie();
+                    
+                    $dateMatch = $planificationService->calculerDateMatch(
+                        $journee->getDateDebut(),
+                        $equipeArray[$homeIndex]->getIdLieu()->getJour(),
+                        $equipeArray[$homeIndex]->getIdLieu()->getHeure()
+                    );
+                    $partie->setDate($dateMatch);
+                    $partie->setIdLieu($equipeArray[$homeIndex]->getIdLieu());
+                    $partie->setIdEquipeRecoit($equipeArray[$homeIndex]);
+                    $partie->setIdEquipeDeplace($equipeArray[$awayIndex]);
+                    $partie->setIdJournee($journee);
+                    $partie->setPoule($poule);
+                    $entityManager->persist($partie);
+                }
+            }
+            $entityManager->flush();
+
+           }
         return $this->render('admin/poule/createjournee.html.twig', [
         'poule' => $poule,
         'error' => $error,

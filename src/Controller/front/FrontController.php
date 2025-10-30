@@ -34,6 +34,7 @@ final class FrontController extends AbstractController
         ]);
     }
 
+    //Route pour afficher la liste des équipes qui participent à la saison sélectionnée
     #[Route('/equipes', name: 'equipes', methods: ['GET'])]
     public function equipes(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
     $saisonRepository): Response
@@ -47,7 +48,9 @@ final class FrontController extends AbstractController
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
         
-        //Déterminer la poule à ouvrir
+        //TODO Déterminer la poule à ouvrir en fonction de l'utilisateur qui est connecté et de la poule en cache
+
+
         return $this->render('front/equipes.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
@@ -55,6 +58,27 @@ final class FrontController extends AbstractController
             'phaseouverte'=>$phaseouverte,
         ]);
     }
+
+    //Route pour afficher le calendrier des matchs de la saison sélectionnée
+    #[Route('/calendrier', name: 'calendrier', methods: ['GET'])]
+    public function calendrier(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+    $saisonRepository): Response
+    {
+        //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+        $saison=$saisonRepository->find($this->idSaisonSelected);
+        //Déterminer la phase à ouvrir
+        $phaseouverte=$this->getPhaseActuelle($saison);
+
+        return $this->render('front/calendrier.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+            'saison'=>$saison,
+            'phaseouverte'=>$phaseouverte,
+        ]);
+    }
+
 
     //Route appelé quand l'utilisateur change de saison dans le menu déroulant du header
     #[Route('/set-saison', name: 'set_saison', methods: ['POST'])]

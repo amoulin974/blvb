@@ -1,0 +1,144 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Le calendrier de la saison {{ saison.nom }} - BLVB{% endblock %}
+
+{% block body %}
+    <h1>Le calendrier de la saison {{ saison.nom }}</h1>
+    {% for phase in saison.phases%}
+        <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+            <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
+            <div class="collapse-title">
+                {{ phase.nom }}
+            </div>
+            <div class="collapse-content">
+                <div class="tabs tabs-lift">
+                {% for poule in phase.poules %}
+
+                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <div class="tab-content bg-base-100 border-base-300 p-6">
+                        <div>Filtrer par équipe : 
+                                <select id="equipeFilter_{{poule.id}}" onchange="filterMatches({{poule.id}})">
+                                    <option value="all">Toutes les équipes</option>
+                                    {% for equipe in poule.equipes %}
+                                        <option value="{{equipe.id}}">{{equipe.nom}}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        {% for journee in poule.journees %}
+                            
+                            <h3 class="mt-3 mb-2">Journée {{ journee.numero }} </h3>
+                            {% if journee.parties|length >0 %}
+                                {# Affichage pour grand écran sous forme de table #}
+                                <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
+                                    <tr >
+                                        <th>Équipe qui reçoit</th>
+                                        <th>Équipe qui sé déplace</th>
+                                        <th>Date</th>
+                                        <th>Lieu</th>
+                                        <th>Résultat</th>
+                                    </tr>
+
+                                    {% for partie in journee.parties %}
+                                        <tr data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                            <td>{{ partie.idEquipeRecoit.nom }}</td>
+                                            <td>{{ partie.idEquipeDeplace.nom }}</td>
+                                            <td>{{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
+                                            <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.idLieu.adresse|url_encode }}" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer">
+                                                    {{ partie.idLieu.nom }}
+                                                </a></td>
+                                            <td>
+                                                {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
+                                                    {{ partie.getNbSetGagnantReception }} - {{ partie.getNbSetGagnantDeplacement }}
+                                                {% else %}
+                                                    À venir
+                                                {% endif %}
+                                        </tr>
+
+
+                                    {% endfor %}
+                                </table>
+                                {# Affichage pour mobile sous forme de carte #}
+                                {% for partie in journee.parties %}
+                                <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                    <div class="card-body " >
+                                        <p><strong>{{ partie.idEquipeRecoit.nom }}</strong> vs <strong>{{ partie.idEquipeDeplace.nom }}</strong></p>
+                                        <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
+                                        <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.idLieu.adresse|url_encode }}" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer">
+                                                    {{ partie.idLieu.nom }}
+                                                </a></p>
+                                        <p>Résultat :
+                                        {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
+                                                    {{ partie.getNbSetGagnantReception }} - {{ partie.getNbSetGagnantDeplacement }}
+                                                {% else %}
+                                                    À venir
+                                                {% endif %}
+                                        </p>
+                                    </div>
+                                    
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="alert alert-info">
+                                    Aucun match planifié pour cette journée.
+                                </div>
+                            {% endif %}
+                            {%else%}
+                            <div class="alert alert-info">
+                                Aucun match planifié pour cette poule.
+                            </div>
+                        {% endfor %}
+                        
+                    
+                            
+                        </div>
+
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    {%  endfor %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+function filterMatches(pouleId) {
+    const select = document.getElementById('equipeFilter_' + pouleId);
+    const value = select.value;
+
+    // Sélectionner uniquement les tables de cette poule
+    const tables = document.querySelectorAll('[name="tabs_' + pouleId + '"] ~ .tab-content table');
+
+    tables.forEach(table => {
+        const rows = table.querySelectorAll('tr[data-recoit]');
+        console.log(rows);
+        rows.forEach(row => {
+            const recoit = row.dataset.recoit;
+            const deplace = row.dataset.deplace;
+
+            if (value === "all" || recoit === value || deplace === value) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+
+    // Sélectionner uniquement les cartes de cette poule
+    const cards = document.querySelectorAll('[name="tabs_' + pouleId + '"] ~ .tab-content .card');
+    cards.forEach(card => {
+        const recoit = card.dataset.recoit;
+        const deplace = card.dataset.deplace;
+
+        if (value === "all" || recoit === value || deplace === value) {
+            card.style.display = '';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+</script>
+{% endblock %}

@@ -54,7 +54,7 @@
                 <ul class="menu menu-horizontal px-1">
                     {% block navbar_links %}
                         <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
-                        <li><a href="#">Calendrier</a></li>
+                        <li><a href="{{ path('front_calendrier')}}">Calendrier</a></li>
                         
                         {% if app.user %}
                             {% if is_granted('ROLE_ADMIN') %}
@@ -88,13 +88,25 @@
         <aside class="menu p-4 w-64 bg-base-200 min-h-full">
             {% block sidebar_links %}
                 <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
-                <li><a href="#">Les équipes</a></li>
-                <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
-                <li><a href="#">Se connecter</a></li>
+                        <li><a href="{{ path('front_calendrier')}}">Calendrier</a></li>
+                        
+                        {% if app.user %}
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
+                        {% endif %}
+                            <li>
+                                <form method="post" action="{{ path('app_logout') }}" class="inline-flex items-center">
+                                    <button type="submit" class="">Se déconnecter</button>
+                                </form>
+                            </li>
+                        {% else %}
+                        <li><a href="{{path('app_register')}}">Créer un compte</a></li>                       
+                        <li><a href="{{path('app_login')}}">Se connecter</a></li>
+                        {% endif %}
             {% endblock %}
         </aside>
     </div>
 </div>
-
+{% block extra_scripts %}{% endblock %}
 </body>
 </html>
