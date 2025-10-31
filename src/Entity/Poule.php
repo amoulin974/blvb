@@ -37,11 +37,18 @@ class Poule
     #[ORM\JoinTable(name: 'equipe_poule')]
     private Collection $equipes;
 
+    /**
+     * @var Collection<int, Classement>
+     */
+    #[ORM\OneToMany(targetEntity: Classement::class, mappedBy: 'poule')]
+    private Collection $classements;
+
     public function __construct()
     {
         $this->parties = new ArrayCollection();
         $this->equipes = new ArrayCollection();
         $this->journees = new ArrayCollection();
+        $this->classements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -163,6 +170,42 @@ class Poule
                 $journee->setPoule(null);
             }
         }
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Classement>
+     */
+    public function getClassements(): Collection
+    {
+        return $this->classements;
+    }
+
+    public function addClassement(Classement $classement): static
+    {
+        if (!$this->classements->contains($classement)) {
+            $this->classements->add($classement);
+            $classement->setPoule($this);
+        }
+
+        return $this;
+    }
+
+    public function removeClassement(Classement $classement): static
+    {
+        if ($this->classements->removeElement($classement)) {
+            // set the owning side to null (unless already changed)
+            if ($classement->getPoule() === $this) {
+                $classement->setPoule(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function setClassements(ArrayCollection $classements): self
+    {
+        $this->classements = $classements;
         return $this;
     }
 }

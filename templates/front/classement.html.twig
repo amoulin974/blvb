@@ -1,0 +1,115 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Le classement de la saison : {{ saison.nom }} - BLVB{% endblock %}
+
+{% block body %}
+
+<h1>Le classement de la saison {{ saison.nom }}</h1>
+    {% for phase in saison.phases%}
+        <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+            <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
+            <div class="collapse-title">
+                {{ phase.nom }}
+            </div>
+            <div class="collapse-content">
+                <div class="tabs tabs-lift">
+                {% for poule in phase.poules %}
+
+                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <div class="tab-content bg-base-100 border-base-300 p-6">
+                        {# Affichage pour grand écran sous forme de table #}
+                            {% if poule.classements|length > 0 %}
+                                <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
+                                    <tr >
+                                        <th>Equipe</th>
+                                        <th>Points</th>
+                                        <th>Set Gagnés</th>
+                                        <th>Set Perdus</th>
+                                        <th>Classement</th>
+                                        <th>Détail</th>
+                                    </tr>
+                                {% for classement in poule.classements %}
+                            
+                                        <tr>
+                                                <td>{{ classement.equipe.nom }} </td>
+                                                <td>{{ classement.points }}</td>
+                                                <td>{{ classement.setGagnes}}</td>
+                                                <td>{{ classement.setPerdus}}</td>
+                                                <td>{{ classement.position}}</td>
+                                                <td>
+                                                <details class="collapse collapse-arrow ">
+                                                    <summary class="btn btn-xs btn-info flex items-center gap-2">
+                                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                                                        </svg> <span>Voir le détail   </span>
+                                                    </summary>
+                                                    <ul class="list-disc list-inside">
+                                                        {% for partie in poule.parties %}
+                                                            {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
+                                                                <li>
+                                                                    {% if partie.getNbSetGagnantReception == "" and partie.getNbSetGagnantDeplacement == ""%}
+                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} : partie non jouée
+                                                                    {% else %}
+                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} :
+                                                                    {{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </details>
+                                                </td>                                            
+                                                
+                                            </tr>
+                                {% endfor %}
+                            
+                            </table>
+                            {# Affichage pour mobile sous forme de carte #}
+                                {% for classement in poule.classements %}
+                                    <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-classements-mobile mt-1" ">
+                                        <div class="card-body " >
+                                                <p><strong>Equipe n° {{ classement.position}} : {{ classement.equipe.nom }} </strong>  </p>
+                                                <p>Points : {{ classement.points }}</p>
+                                                <p>Nombre set gagnés {{ classement.setGagnes}}</p>
+                                                <p>Nombre set perdus {{ classement.setPerdus}}</p>
+                                                <p>
+                                                <details class="collapse collapse-arrow ">
+                                                    <summary class="btn btn-xs btn-info">
+                                                        <span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                            </svg></span> Voir le détail</summary>
+                                                    <ul class="list-disc list-inside">
+                                                        {% for partie in poule.parties %}
+                                                            {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
+                                                                <li>
+                                                                    {% if partie.getNbSetGagnantReception == "" and partie.getNbSetGagnantDeplacement == ""%}
+                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} : partie non jouée
+                                                                    {% else %}
+                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} :
+                                                                    {{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </details>
+                                                </p>
+                                                  
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                            {% else %}
+                            <p class="alert alert-info">Aucun résultat saisi </p>
+                            {% endif %}
+                        </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    {% endfor %}
+
+    {% endblock %}
+{% block extra_scripts %}
+{% endblock %}

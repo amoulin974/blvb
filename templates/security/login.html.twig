@@ -3,7 +3,10 @@
 {% block title %}Log in!{% endblock %}
 
 {% block body %}
-    <form method="post">
+<div class="flex justify-center items-center min-h-screen bg-base-200">
+    <div class="card w-full max-w-md bg-base-100 shadow-xl">
+        <div class="card-body">
+    <form method="post" class="flex flex-col gap-4">
         {% if error %}
             <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
         {% endif %}
@@ -15,10 +18,21 @@
         {% endif %}
 
         <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-        <label for="username">Email</label>
-        <input type="email" value="{{ last_username }}" name="_username" id="username" class="form-control" autocomplete="email" required autofocus>
-        <label for="password">Password</label>
-        <input type="password" name="_password" id="password" class="form-control" autocomplete="current-password" required>
+        <div class="form-control">
+                    <label class="label" for="username">
+                        <span class="label-text">Email</span>
+                    </label>
+                    <input type="email" value="{{ last_username }}" name="_username" id="username"
+                           class="input input-bordered w-full" autocomplete="email" required autofocus>
+                </div>
+        <div class="form-control">
+                    <label class="label" for="password">
+                        <span class="label-text">Password</span>
+                    </label>
+                    <input type="password" name="_password" id="password" 
+                           class="input input-bordered w-full" autocomplete="current-password" required>
+                </div>
+        
         <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
 
         {#
@@ -31,8 +45,9 @@
             </div>
         #}
 
-        <button class="btn btn-lg btn-primary" type="submit">
-            Sign in
-        </button>
+         <button type="submit" class="btn btn-primary mt-2">Sign in</button>
     </form>
+        </div>
+    </div>
+</div>
 {% endblock %}

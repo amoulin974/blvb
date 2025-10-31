@@ -13,5 +13,11 @@
     {{ form_errors(form.id_lieu) }}
 </div>
 
-<button class="btn">{{ button_label|default('Save') }}</button>
+<div class="form-control mb-2 relative z-[9999]">
+    {{ form_label(form.capitaine, 'Capitaine :', {'label_attr': {'class': 'label-text'}}) }}
+    {{ form_widget(form.capitaine, {'attr': {'class': ' w-full', 'data-controller': 'tom-select'}
+    }) }}
+</div>
+
+<button class="btn btn-success btn-sm">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}

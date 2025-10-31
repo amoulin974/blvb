@@ -39,6 +39,8 @@ class PouleType extends AbstractType
                 'by_reference' => false,
                 'attr' => [
                     'class' => 'select select-bordered w-full',
+                    'data-tom-select-multiple-value' => 'true',
+                    'data-tom-select-placeholder-value' => 'Choisissez une equipe...'
                 ],
 
             ])

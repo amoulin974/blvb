@@ -39,11 +39,21 @@ class Equipe
     #[ORM\ManyToMany(targetEntity: Poule::class, mappedBy: 'equipes')]
     private Collection $Poules;
 
+    /**
+     * @var Collection<int, Classement>
+     */
+    #[ORM\OneToMany(targetEntity: Classement::class, mappedBy: 'equipe')]
+    private Collection $classements;
+
+    #[ORM\ManyToOne]
+    private ?User $capitaine = null;
+
     public function __construct()
     {
         $this->parties_reception = new ArrayCollection();
         $this->parties_deplacement = new ArrayCollection();
         $this->Poules = new ArrayCollection();
+        $this->classements = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -162,6 +172,48 @@ class Equipe
     public function removePoule(Poule $poule): static
     {
         $this->Poules->removeElement($poule);
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Classement>
+     */
+    public function getClassements(): Collection
+    {
+        return $this->classements;
+    }
+
+    public function addClassement(Classement $classement): static
+    {
+        if (!$this->classements->contains($classement)) {
+            $this->classements->add($classement);
+            $classement->setEquipe($this);
+        }
+
+        return $this;
+    }
+
+    public function removeClassement(Classement $classement): static
+    {
+        if ($this->classements->removeElement($classement)) {
+            // set the owning side to null (unless already changed)
+            if ($classement->getEquipe() === $this) {
+                $classement->setEquipe(null);
+            }
+        }
+
+        return $this;
+    }
+
+    public function getCapitaine(): ?User
+    {
+        return $this->capitaine;
+    }
+
+    public function setCapitaine(?User $capitaine): static
+    {
+        $this->capitaine = $capitaine;
 
         return $this;
     }

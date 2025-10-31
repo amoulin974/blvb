@@ -1,4 +1,27 @@
 {{ form_start(form, { attr: { class: "space-y-6 max-w-xl mx-auto" } }) }}
+<div>
+    <label class="block text-sm font-medium mb-1" for="user_prenom">
+        Prenom*
+    </label>
+    {{ form_widget(form.prenom, { attr: { class: "input input-bordered w-full" } }) }}
+    {{ form_errors(form.prenom) }}
+</div>
+
+<div>
+    <label class="block text-sm font-medium mb-1" for="user_nom">
+        Nom*
+    </label>
+    {{ form_widget(form.nom, { attr: { class: "input input-bordered w-full" } }) }}
+    {{ form_errors(form.nom) }}
+</div>
+
+<div>
+    <label class="block text-sm font-medium mb-1" for="user_telephone">
+        telephone
+    </label>
+    {{ form_widget(form.telephone, { attr: { class: "input input-bordered w-full" } }) }}
+    {{ form_errors(form.telephone) }}
+</div>
 
 <div>
     <label class="block text-sm font-medium mb-1" for="user_email">
@@ -6,6 +29,14 @@
     </label>
     {{ form_widget(form.email, { attr: { class: "input input-bordered w-full" } }) }}
     {{ form_errors(form.email) }}
+</div>
+
+<div>
+    <label class="block text-sm font-medium mb-1" for="user_email">
+        Mot de passe :
+    </label>
+    {{ form_widget(form.plainPassword, { attr: { class: "input input-bordered w-full" } }) }}
+    {{ form_errors(form.plainPassword) }}
 </div>
 
 <div>

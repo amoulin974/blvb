@@ -2,11 +2,15 @@ import { Controller } from "@hotwired/stimulus";
 import TomSelect from "tom-select";
 
 export default class extends Controller {
+    static values = {
+        multiple: Boolean,
+        placeholder: String
+    }
     connect() {
         new TomSelect(this.element, {
             plugins: ['remove_button'],
-            maxItems: null,
-            placeholder: 'Choisissez des équipes...',
+            maxItems: this.multipleValue ? null : 1,
+            placeholder: this.placeholderValue || '',
             onItemAdd: function() {
                 // Vide le champ de recherche après ajout d'une option
                 this.setTextboxValue('');

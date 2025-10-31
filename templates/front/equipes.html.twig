@@ -21,36 +21,51 @@
 
                         <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-base-100 border-base-300 p-6">
+                        {% if poule.equipes|length ==0 %}
+                            <p class="alert alert-info">Aucune équipe dans cette poule.</p>
+                        {% else %}
                         {# Affichage pour grand écran sous forme de table #}
-                            <table class="border border-solid table-xs table-zebra hidden md:table" >
+                            <table class="border border-solid table table-zebra hidden md:table" >
                                 <tr>
                                     <th>Nom</th>
-                                    <th>Lieu</th>
-                                    <th>Reception</th>
+                                    <th>Adresse</th>
+                                    <th>Horaire habituel de réception</th>
+                                    <th>Classement</th>
                                 </tr>
 
                                 {% for equipe in poule.equipes %}
                                     <tr>
                                         <td>{{ equipe.nom }}</td>
-                                        <td>{{ equipe.idLieu.nom }}</td>
-                                        <td>{{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short')}}</td>
+                                        <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer">
+                                                    {{ equipe.idLieu.nom }}
+                                                </a></td>
+                                        <td>{{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</td>
+                                        <td>{{equipe.position}}</td>
                                     </tr>
 
                                     {% endfor %}
                             </table>
                             {# Affichage pour mobile sous forme de carte #}
                             {% for equipe in poule.equipes %}
-                            <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile">
+                            <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
                                 <div class="card-body">
                                     <h3 class="card-title">{{equipe.nom}}</h3>
-                                    <p>{{ equipe.idLieu.nom }}</p>
-                                    <p>{{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short')}}</p>
+                                    <p>Adresse <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
+                                                target="_blank" 
+                                                rel="noopener noreferrer">
+                                                    {{ equipe.idLieu.nom }}
+                                                </a></p>
+                                    <p>Recoit habituellement : {{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>
+                                    {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
                                 </div>
                                 
                             </div>
                             {% endfor %}
+                        {% endif %}
                         </div>
-
+                        
                 {% endfor %}
                 </div>
             </div>

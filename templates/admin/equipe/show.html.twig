@@ -9,6 +9,7 @@
         <li>id : {{ equipe.id }}</li>
         <li>nom : {{ equipe.nom }}</li>
         <li>Lieu d'entrainement : {{ equipe.idLieu.nom }}</li>
+        <li>Capitaine : {{ equipe.capitaine.nom }}</li>
         <li>Liste des poules :</li>
             <ul>
         {% for poule in equipe.Poules %}

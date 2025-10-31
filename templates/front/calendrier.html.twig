@@ -39,8 +39,8 @@
                                     </tr>
 
                                     {% for partie in journee.parties %}
-                                        <tr data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                            <td>{{ partie.idEquipeRecoit.nom }}</td>
+                                        <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                            <td>{{ partie.idEquipeRecoit.nom }} </td>
                                             <td>{{ partie.idEquipeDeplace.nom }}</td>
                                             <td>{{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
                                             <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.idLieu.adresse|url_encode }}" 
@@ -49,19 +49,32 @@
                                                     {{ partie.idLieu.nom }}
                                                 </a></td>
                                             <td>
+                                             
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    {{ partie.getNbSetGagnantReception }} - {{ partie.getNbSetGagnantDeplacement }}
+                                                    <span class="score_partie-{{partie.id}}">{{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}</span>
                                                 {% else %}
-                                                    À venir
+                                                    À venir 
                                                 {% endif %}
+                                                {% if is_granted('ROLE_ADMIN') 
+                                                            or (app.user is not null
+                                                                and partie.idEquipeRecoit.capitaine is not null 
+                                                                and partie.idEquipeRecoit.capitaine.id == app.user.id) %}
+                                                               
+                                                            <a href="#" 
+                                                                class="btn btn-warning btn-xs open-score-modal"
+                                                                data-partie-id="{{ partie.id }}"
+                                                                data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+                                                                data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
+                                                                Saisir le résultat
+                                                            </a>
+                                                            {% endif %}
                                         </tr>
-
-
+                                        
                                     {% endfor %}
                                 </table>
                                 {# Affichage pour mobile sous forme de carte #}
                                 {% for partie in journee.parties %}
-                                <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                     <div class="card-body " >
                                         <p><strong>{{ partie.idEquipeRecoit.nom }}</strong> vs <strong>{{ partie.idEquipeDeplace.nom }}</strong></p>
                                         <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
@@ -72,10 +85,24 @@
                                                 </a></p>
                                         <p>Résultat :
                                         {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    {{ partie.getNbSetGagnantReception }} - {{ partie.getNbSetGagnantDeplacement }}
+                                                    <span class="score_partie-{{partie.id}}">{{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}</span>
                                                 {% else %}
                                                     À venir
+                                                    
                                                 {% endif %}
+                                                    {% if is_granted('ROLE_ADMIN') 
+                                                            or (app.user is not null
+                                                                and partie.idEquipeRecoit.capitaine is not null 
+                                                                and partie.idEquipeRecoit.capitaine.id == app.user.id) %}
+                                                               
+                                                             <a href="#" 
+                                                                class="btn btn-warning btn-xs open-score-modal"
+                                                                data-partie-id="{{ partie.id }}"
+                                                                data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+                                                                data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
+                                                                Saisir le résultat
+                                                            </a>
+                                                    {% endif %}
                                         </p>
                                     </div>
                                     
@@ -101,6 +128,32 @@
             </div>
         </div>
     {%  endfor %}
+
+ <div id="scoreModal" class="modal">
+    <div class="modal-box">
+        <h3 id="scoreModalTitle" class="font-bold text-lg mb-4">
+            Saisir le score
+        </h3>
+
+        <div class="mb-2">
+            <label id="labelReception" class="block text-sm font-medium mb-1">Score Équipe 1 :</label>
+            <input type="text" id="scoreReception" class="input input-bordered w-full" min="0">
+        </div>
+
+        <div class="mb-4">
+            <label id="labelDeplacement" class="block text-sm font-medium mb-1">Score Équipe 2 :</label>
+            <input type="text" id="scoreDeplacement" class="input input-bordered w-full" min="0">
+        </div>
+        <p class="italic text-sm text-gray-500">Saisir 3 et 1 si l'équipe qui reçoit gagne 3 sets à 1.</p>
+        <p class="italic text-sm text-gray-500">Si une équipe est forfait saisir un seul F dans son score et rien pour l'autre équipe.</p>
+        <div class="modal-action">
+            <button class="btn btn-primary" id="btnValider">Valider</button>
+            <a href="#" class="btn btn-ghost" data-modal-close>Annuler</a>
+        </div>
+    </div>
+</div>
+  
+
 {% endblock %}
 
 {% block extra_scripts %}
@@ -140,5 +193,80 @@ function filterMatches(pouleId) {
         }
     });
 }
+
+//Script pour gérer l'ouverture et la fermeture des modals de saisie de score
+const modal = document.getElementById('scoreModal');
+const title = document.getElementById('scoreModalTitle');
+const labelReception = document.getElementById('labelReception');
+const labelDeplacement = document.getElementById('labelDeplacement');
+const inputReception = document.getElementById('scoreReception');
+const inputDeplacement = document.getElementById('scoreDeplacement');
+let currentPartieId = null;
+
+// Ouvrir la modale
+document.querySelectorAll('.open-score-modal').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        currentPartieId = btn.dataset.partieId;
+
+        title.textContent = `Saisir le score : ${btn.dataset.equipeRecoit} vs ${btn.dataset.equipeDeplace}`;
+        labelReception.textContent = `Nombre sets gagnants ${btn.dataset.equipeRecoit} :`;
+        labelDeplacement.textContent = `Nombre sets gagnats ${btn.dataset.equipeDeplace} :`;
+
+        inputReception.value = '';
+        inputDeplacement.value = '';
+
+        modal.classList.add('modal-open');
+    });
+});
+
+// Fermer la modale
+document.querySelectorAll('[data-modal-close]').forEach(btn => {
+    btn.addEventListener('click', e => {
+        e.preventDefault();
+        modal.classList.remove('modal-open');
+    });
+});
+
+// Le bouton valider
+document.getElementById('btnValider').addEventListener('click', () => {
+    const scoreReception = inputReception.value;
+    const scoreDeplacement = inputDeplacement.value;
+
+    console.log(`Partie ${currentPartieId} : ${scoreReception} - ${scoreDeplacement}`);
+
+    // Envoi du résultat au serveur
+    fetch('/front/partie/' + currentPartieId + '/api/update', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': this.csrfTokenValue
+            },
+            body: JSON.stringify({
+                scoreReception: scoreReception,
+                scoreDeplacement: scoreDeplacement
+            })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+            return response.json();
+        })
+        .then(json => {
+            console.log('Partie mis à jour :'+ json.newScore);
+            //Mise à jour du tableau et de la carte
+            document.querySelectorAll('.score_partie-'+currentPartieId).forEach(zone => {
+                zone.textContent = json.newScore;
+            });
+        })
+        .catch(err => {
+            console.error(err);
+            
+        });
+    modal.classList.remove('modal-open');
+    });
+
+    
+
 </script>
 {% endblock %}
