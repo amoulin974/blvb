@@ -86,7 +86,7 @@ final class PouleController extends AbstractController
     }
 
     //Crée les journées pour une poule
-    #[Route('/{id}/createjournee', name: 'createjournee', methods: ['GET'])]
+    #[Route('/{id}/createjournee', name: 'createjournee', methods: ['POST'])]
     public function createJournee(Poule $poule, Request $request, EntityManagerInterface $entityManager): Response
     {
         //On compte le nombre d'équipes dans la poule
@@ -107,8 +107,8 @@ final class PouleController extends AbstractController
             $phase=$poule->getPhase();
             $poulesPhase=$phase->getPoules();
             $firstPoule=$poulesPhase[0];
-            
-        
+
+
             //Si la première poule a le même nombre d'équipes et des journées on les copie
             if (count($firstPoule->getEquipes())==$nbEquipe && count($firstPoule->getJournees())>0){
                 foreach($firstPoule->getJournees() as $journeefirstpoule){
@@ -118,7 +118,7 @@ final class PouleController extends AbstractController
                     $newJournee->setNumero($journeefirstpoule->getNumero());
                     $newJournee->setPoule($poule);
                     $entityManager->persist($newJournee);
-                    
+
                 }
                 $entityManager->flush();
             }else{
@@ -131,7 +131,7 @@ final class PouleController extends AbstractController
                 }
                 $nbJournee = $nbMatch/$nbMatchParJour;
 
-        
+
                 // Dates de la phase
                 $debutPhase = $poule->getPhase()->getDateDebut();
                 $finPhase = $poule->getPhase()->getDateFin();
@@ -141,7 +141,7 @@ final class PouleController extends AbstractController
                 if ($dureePhaseEnSemaines < $nbJournee) {
                     $error = "La phase est trop courte pour contenir toutes les journées.";
                 } else {
-                    
+
                     $entityManager->flush();
 
                     // Génération des journées
@@ -180,7 +180,7 @@ final class PouleController extends AbstractController
                     $entityManager->flush();
                 }
             }
-            
+
     }
 
     //Affiche lecalendrier pour pouvoir déplacer les journées
@@ -191,7 +191,7 @@ final class PouleController extends AbstractController
     }
 
     //fonction qui crée les matchs pour une poule
-    #[Route('/{id}/creatematch', name: 'creatematch', methods: ['GET'])]
+    #[Route('/{id}/creatematch', name: 'creatematch', methods: ['POST'])]
     public function createMatch(Poule $poule, Request $request, EntityManagerInterface $entityManager, PlanificationMatchService $planificationService): Response
     {
         $error=null;
@@ -210,8 +210,8 @@ final class PouleController extends AbstractController
            $error="Il faut au moins deux équipes dans la poule";
         }else{
             //Algorithme de la ronde
-            
-            
+
+
             $equipeArray = $equipes;
             if ($nbEquipe % 2 != 0) {
                 $equipeBye = new Equipe();
@@ -244,7 +244,7 @@ final class PouleController extends AbstractController
                     }
 
                     $partie = new \App\Entity\Partie();
-                    
+
                     $dateMatch = $planificationService->calculerDateMatch(
                         $journee->getDateDebut(),
                         $equipeArray[$homeIndex]->getIdLieu()->getJour(),
@@ -312,9 +312,9 @@ final class PouleController extends AbstractController
         }
 
         $em->flush();
-        
+
         $this->regulariseNumeroJournee($poule, $em);
-        
+
         return $this->json([
             'id' => $journee->getId(),
             'datedebut' => $journee->getDateDebut()->format('Y-m-d H:i:s'),
@@ -326,11 +326,11 @@ final class PouleController extends AbstractController
     #[Route('/{poule}/api/journees/{id}', name: 'api_journees_delete', methods: ['DELETE'])]
     public function apiJourneesDelete(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $em): JsonResponse
     {
-        //On supprime la journée       
+        //On supprime la journée
         $em->remove($journee);
         $em->flush();
-        
-        
+
+
         //On renvoie la liste des journées restantes
         $journees = $poule->getJournees();
         $this->regulariseNumeroJournee($poule, $em);
@@ -360,7 +360,7 @@ final class PouleController extends AbstractController
         if (isset($data['datefin'])) {
             $journee->setDateFin(new \DateTimeImmutable($data['datefin']));
         }
-        //On calcule le numéro de la journée en ajoutant 1 au nombre de journées existantes 
+        //On calcule le numéro de la journée en ajoutant 1 au nombre de journées existantes
         //(la méthode regulariseNumeroJournee sera appelée après pour tout remettre en ordre si besoin)
         $nbJournees = count($poule->getJournees());
         $journee->setNumero($nbJournees + 1);
@@ -368,9 +368,9 @@ final class PouleController extends AbstractController
         $poule->addJournee($journee);
         $em->persist($journee);
         $em->flush();
-        
+
         $this->regulariseNumeroJournee($poule, $em);
-        
+
         return $this->json([
             'id' => $journee->getId(),
             'title' => 'Journée ' . $journee->getNumero(),
@@ -379,7 +379,7 @@ final class PouleController extends AbstractController
         ]);
     }
 
-    
+
 
     //Réordonne les numéros des journées d'une poule en fonction de leurs dates de début
     public function regulariseNumeroJournee(Poule $poule, EntityManagerInterface $em): void
