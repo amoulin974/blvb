@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Réinitialiser le mot de passe{% endblock %}
+
+{% block body %}
+<div class="flex justify-center mt-20">
+    <div class="card w-full max-w-md shadow-xl bg-base-100 p-8">
+        <h2 class="text-2xl font-bold mb-6 text-center">Réinitialiser le mot de passe</h2>
+
+        {{ form_start(resetForm) }}
+
+        <div class="form-control w-full mb-4">
+            {{ form_label(resetForm.plainPassword.first, 'Nouveau mot de passe', {'label_attr': {'class': 'label'}}) }}
+            {{ form_widget(resetForm.plainPassword.first, {'attr': {'class': 'input input-bordered w-full'}}) }}
+{#            {{ form_errors(resetForm.plainPassword.first) }}#}
+            {# Messages d'erreur personnalisés #}
+            {% for error in resetForm.plainPassword.first.vars.errors %}
+                <p class="alert alert-error mt-2">{{ error.message }}</p>
+            {% endfor %}
+        </div>
+
+        {# Confirmation mot de passe #}
+        <div class="form-control w-full mb-4">
+            {{ form_label(resetForm.plainPassword.second, 'Confirmez le mot de passe', {'label_attr': {'class': 'label'}}) }}
+            {{ form_widget(resetForm.plainPassword.second, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {# Messages d'erreur personnalisés #}
+            {% for error in resetForm.plainPassword.second.vars.errors %}
+                <p class="alert alert-error mt-2">{{ error.message }}</p>
+            {% endfor %}
+        </div>
+
+        <div class="form-control mt-4">
+            <button class="btn btn-primary w-full">Réinitialiser le mot de passe</button>
+        </div>
+        {{ form_end(resetForm) }}
+    </div>
+</div>
+{% endblock %}

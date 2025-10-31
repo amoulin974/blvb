@@ -29,10 +29,10 @@
                     <label class="label" for="password">
                         <span class="label-text">Password</span>
                     </label>
-                    <input type="password" name="_password" id="password" 
+                    <input type="password" name="_password" id="password"
                            class="input input-bordered w-full" autocomplete="current-password" required>
                 </div>
-        
+
         <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
 
         {#
@@ -46,6 +46,12 @@
         #}
 
          <button type="submit" class="btn btn-primary mt-2">Sign in</button>
+
+        <!-- Lien mot de passe oublié -->
+        <div class="mt-2">
+            <a href="{{ path('app_forgot_password_request') }}" class="link">J’ai oublié mon mot de passe</a>
+        </div>
+    </form>
     </form>
         </div>
     </div>
