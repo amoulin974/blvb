@@ -13,19 +13,30 @@
 
     {{ form_start(registrationForm) }}
         <div class="form-control">
-            {{ form_label(registrationForm.email, 'Email :', {'label_attr': {'class': 'label'}}) }}
+            {{ form_label(registrationForm.email, 'Email* :', {'label_attr': {'class': 'label'}}) }}
             {{ form_widget(registrationForm.email, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Email', 'type':'email'}}) }}
             {{ form_errors(registrationForm.email) }}
         </div>
         <div class="form-control">
-            {{ form_label(registrationForm.plainPassword, 'Mot de passe :', {'label_attr': {'class': 'label'}}) }}
+            {{ form_label(registrationForm.plainPassword, 'Mot de passe* :', {'label_attr': {'class': 'label'}}) }}
             {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Mot de passe', 'type':'password'}}) }}
             {{ form_errors(registrationForm.plainPassword) }}
         </div>
-        {# {{ form_row(registrationForm.email) }} #}
-        {# {{ form_row(registrationForm.plainPassword, {
-            label: 'Password'
-        }) }} #}
+    <div class="form-control">
+        {{ form_label(registrationForm.prenom, 'Prénom* :', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(registrationForm.prenom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'prenom', 'type':'text'}}) }}
+        {{ form_errors(registrationForm.prenom) }}
+    </div>
+    <div class="form-control">
+        {{ form_label(registrationForm.nom, 'Nom :', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(registrationForm.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom', 'type':'text'}}) }}
+        {{ form_errors(registrationForm.nom) }}
+    </div>
+    <div class="form-control">
+        {{ form_label(registrationForm.telephone, 'Téléphone :', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(registrationForm.telephone, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Téléphone', 'type':'tel'}}) }}
+        {{ form_errors(registrationForm.telephone) }}
+    </div>
         {{ form_row(registrationForm.agreeTerms) }}
 
         <button type="submit" class="btn btn-success">Créer le compte</button>
