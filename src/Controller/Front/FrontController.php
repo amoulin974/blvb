@@ -34,7 +34,31 @@ final class FrontController extends AbstractController
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
         $this->getSaisonSession($session, $request);
+
+        $groupes=[
+            [
+                'nom'=> 'A ELITE DES AS', 
+                'image'=>'t1_elite_des_as.jpg', 
+                'description'=>'Le niveau le plus relevé ! Ici, les équipes s’affrontent avec passion et stratégie. Les matchs sont spectaculaires et intenses.'
+            ],
+            [
+                'nom'=> 'B ELITE', 
+                'image'=>'ballon.jpg', 
+                'description'=>'Les équipes ambitieuses rivalisent dans ce groupe. Les matchs sont équilibrés et chaque victoire se fête avec enthousiasme.'
+            ],
+            [
+                'nom'=> 'C ESPOIR', 
+                'image'=>'salle.jpg', 
+                'description'=>'Ici, les équipes apprennent et progressent. Chaque match est un moment convivial et amusant.'
+            ],
+            [
+                'nom'=> 'D HONNEUR', 
+                'image'=>'trophee_honneur.jpg', 
+                'description'=>'Le groupe parfait pour se lancer et s’amuser ! L’ambiance est détendue et conviviale.'
+            ]
+        ];
         return $this->render('front/index.html.twig', [
+            'groupes'=>$groupes,
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
         ]);

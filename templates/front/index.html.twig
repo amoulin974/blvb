@@ -2,51 +2,103 @@
 
 {% block title %}Site du BLVB{% endblock %}
 
+{% block hero %}
+    <div class="hero min-h-[720px] w-full bg-cover bg-center mt-0" style="background-image: url({{ asset('images/ballon_1280.jpg')}});">
+    <div class="hero-overlay"></div>
+    <div class="hero-content text-neutral-content text-center">
+        <div class="max-w-md">
+        <h1 class="mb-5 text-5xl font-bold">Championnat Basque Landais Volley Ball</h1>
+        <p class="mb-5">
+            Le championnat de volley-ball loisir senior B.L.V.B. a lieu de septembre à mai sur la côte basque et landaise.
+        </p>
+        {# <button class="btn btn-primary">Get Started</button> #}
+        </div>
+    </div>
+    </div>
+  {% endblock %}  
 {% block body %}
-    <h1>Bienvenue sur le site du B.L.V.B.</h1>
-    <p>Le championnat de volley-ball loisir senior B.L.V.B. a lieu de septembre à mai sur la côte basque et landaise.</p>
 
-    <p>Il comprend :</p>
-    <ul class="list-disc list-inside ml-2">
-        <li class="">des équipes de clubs :</li>
-        <ul class="list-disc list-inside ml-6">
-            <li>Anglet Olympique</li>
-            <li>Bayonne Volley-Ball</li>
-            <li>Volley-Ball Luzien Cibourien</li>
-            <li>Ondres Volley-Ball</li>
-            <li>JSA Angresse</li>
-        </ul>
-        <li class="">des associations</li>
-        <ul class="list-disc list-inside ml-6">
-            <li>ASPTT Bayonne</li>
-            <li>Leo Lagrange Bayonne</li>
-            <li>Tosse</li>
-            <li>Capbreton</li>
-            <li>d’entreprises (aucune ces dernières saisons; autrefois nous avions Quiksilver et Turbomeca)</li>
-        </ul>
+        <h2 class="text-center mb-4">Le championnat comprend</h2>
+        <div class="flex flex-col lg:flex-row justify-center items-center gap-6 w-full">
+            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md text-center">
+                <h3 class="font-semibold mb-2">Des équipes de clubs</h3>
+                <p>Anglet Olympique</p>
+                <p>Bayonne Volley-Ball</p>
+                <p>Volley-Ball Luzien Cibourien</p>
+                <p>Ondres Volley-Ball</p>
+                <p>JSA Angresse</p>
+            </div>
 
-    </ul>
+            {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
 
-
+            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md text-center">
+                <h3 class="font-semibold mb-2">Des associations</h3>
+                <p>ASPTT Bayonne</p>
+                <p>Leo Lagrange Bayonne</p>
+                <p>Tosse</p>
+                <p>Capbreton</p>
+                <p>D’entreprises (autrefois Quiksilver, Turbomeca...)</p>
+            </div>
+        </div>
 
 
-    <p class="mt-2">Ces équipes sont répartie en 4 groupes de niveau :</p>
 
-    <ul class="list-disc list-inside ml-2">
-        <li>Groupe A (le plus élevé) : Poule 1 = ELITE DES AS</li>
-        <li>Groupe B : Poule 2 = ELITE</li>
-        <li>Groupe C : Poule 3 = ESPOIR</li>
-        <li>Groupe D (le plus faible) : Poule 4 = HONNEUR</li>
-    </ul>
 
-    <p>Une première phase de brassage permet de niveler les niveaux, puis des phases finales récompensent les meilleurs équipes dans leur catégorie respective.</p>
+<section class="w-full flex flex-col justify-center items-center">
 
-    <p>A l’issue du championnat une cérémonie est organisée pour distribuer les prix, suivi d »un repas convivial qui peut se prolonger tard dans la nuit.</p>
+  <h2 class="text-center mb-4 mt-10">Ces équipes sont réparties en 4 groupes de niveau</h2>
 
-    <h2>Trophée ELITE DES AS (Groupe A)</h2>
-    <img src="{{ asset('images/t1_elite_des_as.jpg')}}">
-    <h2>Trophée ELITE (Groupe B)</h2>
-    <h2>Trophée ESPOIR (Groupe C)</h2>
-    <h2>Trophée HONNEUR (Groupe D)</h2>
-    <img src="{{ asset('/images/trophee_honneur.jpg')}}">
+{% for groupe in groupes %}
+    <div class="flex flex-col lg:flex-row justify-center items-center lg:items-stretch lg:gap-6 w-full mb-4">
+       
+       {% if loop.index is odd %}
+            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center text-center order-first">
+        {% else %}
+            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center text-center order-first lg:order-last">
+        {% endif %}
+        <h3 class="text-2xl font-bold text-primary mb-2">{{groupe.nom}}</h3>
+        <p>
+            {{groupe.description}}
+        </p>
+        </div>
+
+        {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
+
+       {% if loop.index is odd %}
+            <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last ">
+       {% else %}
+            <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last lg:order-first">
+       {% endif %}
+        
+        <img src="{{ asset('images/'~groupe.image) }}" alt="{{ groupe.nom }}" class="max-w-[600px] h-auto w-full rounded-lg shadow-lg">
+        </div>
+    </div>
+{% endfor %}
+
+
+
+  
+ 
+</section>
+
+
+
+
+
+
+
+
+
+
+
+
+   
+        
+
+
+
+
+
+
+    
 {% endblock %}
