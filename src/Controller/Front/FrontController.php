@@ -8,6 +8,7 @@ use App\Entity\Saison;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Partie;
 use App\Entity\Classement;
+use App\Repository\EquipeRepository;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -89,6 +90,56 @@ final class FrontController extends AbstractController
             'idSaisonSelected' => $this->idSaisonSelected,
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
+        ]);
+    }
+
+    //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
+    #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
+    public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+    $saisonRepository, ClassementService $classementService, int $id, EquipeRepository $equipeRepository): Response
+    {
+        //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+        $saison=$saisonRepository->find($this->idSaisonSelected);
+        //Déterminer la phase à ouvrir
+        $phaseouverte=$this->getPhaseActuelle($saison);
+
+        /**Equipe $equipe */
+        $equipe=$equipeRepository->find($id);
+        //Trier les équipes par le classement
+        $classementService->getClassement($saison);
+        $poules=$equipe->getPoules();
+        
+        
+        //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
+        $listeCapitaines=[];    
+        foreach ($poules as $poule) {
+            if ($poule->getPhase()->getId() === $phaseouverte->getId()) {
+                foreach ($poule->getEquipes() as $equipePoule) {
+                    if ($equipePoule->getCapitaine() !== null && !in_array($equipePoule->getCapitaine()->getId(), $listeCapitaines)){
+                        $listeCapitaines[] = $equipePoule->getCapitaine()->getId();
+                    }
+                }
+            }
+        }
+
+        //Si l'utilisateur connecté est dans cette liste on l'autorise à voir les coordonnées du capitaine de l'équipe sélectionnée
+        $user = $this->getUser();
+        $canViewCapitaine = false;
+        if (($user !== null && in_array($user->getId(), $listeCapitaines)) || $this->isGranted('ROLE_ADMIN')){
+              $canViewCapitaine = true;
+        }
+        
+        
+
+        return $this->render('front/equipe.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+            'saison'=>$saison,
+            'phaseouverte'=>$phaseouverte,
+            'canViewCapitaine'=>$canViewCapitaine,
+            'equipe'=>$equipe
         ]);
     }
 

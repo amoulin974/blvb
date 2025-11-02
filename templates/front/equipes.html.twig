@@ -36,7 +36,7 @@
 
                                 {% for equipe in poule.equipes %}
                                     <tr>
-                                        <td>{{ equipe.nom }}</td>
+                                        <td><a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="link">{{ equipe.nom }}</a></td>
                                         <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
                                                 target="_blank" 
                                                 rel="noopener noreferrer">

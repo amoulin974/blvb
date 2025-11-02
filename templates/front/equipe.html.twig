@@ -1,0 +1,50 @@
+{% extends "base_front.html.twig" %}
+{% block title %}Équipe {{equipe.nom}} - Site du BLVB{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto max-w-5xl px-4">
+        <h1 class="text-center mb-4">{{equipe.nom}}</h1>
+        <h2 class="card-title">Informations générales</h3>
+        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
+                                            target="_blank" 
+                                            rel="noopener noreferrer">
+                                                {{ equipe.idLieu.nom }}
+                                            </a></p>
+        <p><span class="font-bold">Horaire habituel de réceptions :</span>  {{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>
+        <p><span class="font-bold">Capitaine :</span> 
+        {%if not equipe.capitaine %}
+            <span class="em">Aucun capitaine défini</span>   </p>     
+        {% elseif not canViewCapitaine  %}
+        <span class="em">Ces information ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</span></p>
+        
+        {% else %}
+        </p>
+        <p><span class="font-bold">Nom :</span>  {{equipe.capitaine.prenom}} {{equipe.capitaine.nom}}</p>
+        <p><span class="font-bold">Tel :</span>  {{equipe.capitaine.telephone}} </p> 
+        <p><span class="font-bold">Email :</span>  {{equipe.capitaine.email}} </p>
+        {% endif %}
+        
+
+        <h2>Classement de la saison sélectionné </h2>
+        {% for phase in saison.phases %}
+            {% for poule in phase.poules %}
+                {% if equipe in poule.equipes %}
+                    <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+                        <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
+                        <div class="collapse-title">
+                            {{ phase.nom }}
+                        </div>
+                        <div class="collapse-content">
+                            <div class="tabs tabs-lift">
+                                {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
+                             </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endfor %}
+        
+
+    </div>
+    
+{% endblock %}

@@ -2,7 +2,8 @@
 
 {% block title %}Le calendrier de la saison {{ saison.nom }} - BLVB{% endblock %}
 
-{% block body %}
+{% block body %}3
+<div class="container mx-auto max-w-5xl px-4">
     <h1>Le calendrier de la saison {{ saison.nom }}</h1>
     {% for phase in saison.phases%}
         <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
@@ -127,6 +128,7 @@
                 </div>
             </div>
         </div>
+</div>
     {%  endfor %}
 
  <div id="scoreModal" class="modal">

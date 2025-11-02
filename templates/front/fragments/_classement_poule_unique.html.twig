@@ -1,0 +1,85 @@
+<input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <div class="tab-content bg-base-100 border-base-300 p-6">
+                        {# Affichage pour grand écran sous forme de table #}
+                            {% if poule.classements|length > 0 %}
+                                <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
+                                    <tr >
+                                        <th>Classement</th>
+                                        <th>Equipe</th>
+                                        <th>Points</th>
+                                        <th>Set Gagnés</th>
+                                        <th>Set Perdus</th>
+
+                                        <th>Détail</th>
+                                    </tr>
+                                {% for classement in poule.classements %}
+
+                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="bg-success font-bold" {% endif %}>
+                                            <td>{{ classement.position}}</td>
+                                            <td>{{ classement.equipe.nom }} </td>
+                                            <td>{{ classement.points }}</td>
+                                            <td>{{ classement.setGagnes}}</td>
+                                            <td>{{ classement.setPerdus}}</td>
+
+                                            <td>
+                                            <details class="collapse collapse-arrow ">
+                                                <summary class="btn btn-xs btn-primary">
+                                                    </svg><span> Voir le détail des matchs   </span>
+                                                </summary>
+                                                <ul class="list-disc list-inside">
+                                                    {% for partie in poule.parties %}
+                                                        {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
+                                                            <li>
+                                                                {% if partie.getNbSetGagnantReception == "" and partie.getNbSetGagnantDeplacement == ""%}
+                                                                {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} : partie non jouée
+                                                                {% else %}
+                                                                {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} :
+                                                                {{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}
+                                                                {% endif %}
+                                                            </li>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                </ul>
+                                            </details>
+                                            </td>
+
+                                        </tr>
+                                {% endfor %}
+
+                            </table>
+                            {# Affichage pour mobile sous forme de carte #}
+                                {% for classement in poule.classements %}
+                                    <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-classements-mobile mt-1" ">
+                                        <div class="card-body " >
+                                                <p><strong>Equipe n° {{ classement.position}} : {{ classement.equipe.nom }} </strong>  </p>
+                                                <p>Points : {{ classement.points }}</p>
+                                                <p>Nombre set gagnés {{ classement.setGagnes}}</p>
+                                                <p>Nombre set perdus {{ classement.setPerdus}}</p>
+                                                <p>
+                                                <details class="collapse collapse-arrow ">
+                                                    <summary class="btn btn-xs btn-info">
+                                                        <span>Voir le détail des matchs</span> </summary>
+                                                    <ul class="list-disc list-inside">
+                                                        {% for partie in poule.parties %}
+                                                            {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
+                                                                <li>
+                                                                    {% if partie.getNbSetGagnantReception == "" and partie.getNbSetGagnantDeplacement == ""%}
+                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} : partie non jouée
+                                                                    {% else %}
+                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} :
+                                                                    {{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}
+                                                                    {% endif %}
+                                                                </li>
+                                                            {% endif %}
+                                                        {% endfor %}
+                                                    </ul>
+                                                </details>
+                                                </p>
+
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                            {% else %}
+                            <p class="alert alert-info">Aucun résultat saisi </p>
+                            {% endif %}
+                        </div>
