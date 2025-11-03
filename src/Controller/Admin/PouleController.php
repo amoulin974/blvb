@@ -191,7 +191,7 @@ final class PouleController extends AbstractController
     }
 
     //fonction qui crée les matchs pour une poule
-    #[Route('/{id}/creatematch', name: 'creatematch', methods: ['POST'])]
+    #[Route('/{id}/createpartie', name: 'createpartie', methods: ['POST'])]
     public function createMatch(Poule $poule, Request $request, EntityManagerInterface $entityManager, PlanificationMatchService $planificationService): Response
     {
         $error=null;
@@ -279,6 +279,20 @@ final class PouleController extends AbstractController
 
         ]);
     }
+
+    //Affiche le calendrier des journées pour une poule
+    #[Route('/{id}/getpartiecalendar', name: 'getpartiecalendar', methods: ['GET'])]
+    public function getPartieCalendar (Journee $journee, Request $request, EntityManagerInterface $entityManager): Response
+    {
+        $poule=$journee->getPoule();
+        return $this->render('admin/poule/creatematch.html.twig', [
+            'error' => "",
+            'journee' => $journee,
+            'poule' => $poule,
+
+        ]);
+    }
+
     #[Route('/{id}/api/journees', name: 'api_journees', methods: ['GET'])]
     public function apiJournees(Poule $poule): JsonResponse
     {
@@ -364,6 +378,57 @@ final class PouleController extends AbstractController
         //(la méthode regulariseNumeroJournee sera appelée après pour tout remettre en ordre si besoin)
         $nbJournees = count($poule->getJournees());
         $journee->setNumero($nbJournees + 1);
+        $journee->setPoule($poule);
+        $poule->addJournee($journee);
+        $em->persist($journee);
+        $em->flush();
+
+        $this->regulariseNumeroJournee($poule, $em);
+
+        return $this->json([
+            'id' => $journee->getId(),
+            'title' => 'Journée ' . $journee->getNumero(),
+            'start' => $journee->getDateDebut()->format('Y-m-d'),
+            'end' => $journee->getDateFin()->format('Y-m-d'),
+        ]);
+    }
+
+    #[Route('/{id}/api/parties', name: 'api_parties', methods: ['GET'])]
+    public function apiParties(Poule $poule): JsonResponse
+    {
+        $parties = $poule->getParties();
+
+        $data = [];
+
+        foreach ($parties as $partie) {
+            $start = $partie->getDate(); // DateTimeImmutable
+            $end = $start->modify('+1 hour');
+            $data[] = [
+                'id' => $partie->getId(),
+                'title' => $partie->getIdEquipeRecoit()->getNom(). "vs" . $partie->getIdEquipeDeplace()->getNom(),
+                'start' => $start->format('c'),
+                'end' => $end->format('c'),
+            ];
+        }
+
+        return $this->json($data);
+    }
+
+    //Ajoute une journée Méthode appelé par l'API lors du click sur une date vide dans le calendrier
+    #[Route('/{poule}/api/parties', name: 'api_parties_add', methods: ['POST'])]
+    public function apiPartiesAdd(Request $request, Poule $poule, EntityManagerInterface $em): JsonResponse
+    {
+        $data = json_decode($request->getContent(), true);
+        $partie = new Partie();
+        if (isset($data['datedebut'])) {
+            $partie->setDateDebut(new \DateTimeImmutable($data['datedebut']));
+        }
+        if (isset($data['datefin'])) {
+            $partie->setDateFin(new \DateTimeImmutable($data['datefin']));
+        }
+        //On calcule le numéro de la journée en ajoutant 1 au nombre de journées existantes
+        //(la méthode regulariseNumeroJournee sera appelée après pour tout remettre en ordre si besoin)
+        $nbJournees = count($poule->getJournees());
         $journee->setPoule($poule);
         $poule->addJournee($journee);
         $em->persist($journee);

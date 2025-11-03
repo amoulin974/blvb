@@ -128,33 +128,33 @@
                 </div>
             </div>
         </div>
-</div>
+
     {%  endfor %}
 
- <div id="scoreModal" class="modal">
-    <div class="modal-box">
-        <h3 id="scoreModalTitle" class="font-bold text-lg mb-4">
-            Saisir le score
-        </h3>
+     <div id="scoreModal" class="modal">
+        <div class="modal-box">
+            <h3 id="scoreModalTitle" class="font-bold text-lg mb-4">
+                Saisir le score
+            </h3>
 
-        <div class="mb-2">
-            <label id="labelReception" class="block text-sm font-medium mb-1">Score Équipe 1 :</label>
-            <input type="text" id="scoreReception" class="input input-bordered w-full" min="0">
-        </div>
+            <div class="mb-2">
+                <label id="labelReception" class="block text-sm font-medium mb-1">Score Équipe 1 :</label>
+                <input type="text" id="scoreReception" class="input input-bordered w-full" min="0">
+            </div>
 
-        <div class="mb-4">
-            <label id="labelDeplacement" class="block text-sm font-medium mb-1">Score Équipe 2 :</label>
-            <input type="text" id="scoreDeplacement" class="input input-bordered w-full" min="0">
-        </div>
-        <p class="italic text-sm text-gray-500">Saisir 3 et 1 si l'équipe qui reçoit gagne 3 sets à 1.</p>
-        <p class="italic text-sm text-gray-500">Si une équipe est forfait saisir un seul F dans son score et rien pour l'autre équipe.</p>
-        <div class="modal-action">
-            <button class="btn btn-primary" id="btnValider">Valider</button>
-            <a href="#" class="btn btn-ghost" data-modal-close>Annuler</a>
+            <div class="mb-4">
+                <label id="labelDeplacement" class="block text-sm font-medium mb-1">Score Équipe 2 :</label>
+                <input type="text" id="scoreDeplacement" class="input input-bordered w-full" min="0">
+            </div>
+            <p class="italic text-sm text-gray-500">Saisir 3 et 1 si l'équipe qui reçoit gagne 3 sets à 1.</p>
+            <p class="italic text-sm text-gray-500">Si une équipe est forfait saisir un seul F dans son score et rien pour l'autre équipe.</p>
+            <div class="modal-action">
+                <button class="btn btn-primary" id="btnValider">Valider</button>
+                <a href="#" class="btn btn-ghost" data-modal-close>Annuler</a>
+            </div>
         </div>
     </div>
 </div>
-
 
 {% endblock %}
 

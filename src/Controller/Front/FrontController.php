@@ -38,23 +38,23 @@ final class FrontController extends AbstractController
 
         $groupes=[
             [
-                'nom'=> 'A ELITE DES AS', 
-                'image'=>'t1_elite_des_as.jpg', 
+                'nom'=> 'A ELITE DES AS',
+                'image'=>'t1_elite_des_as.jpg',
                 'description'=>'Le niveau le plus relevé ! Ici, les équipes s’affrontent avec passion et stratégie. Les matchs sont spectaculaires et intenses.'
             ],
             [
-                'nom'=> 'B ELITE', 
-                'image'=>'ballon.jpg', 
+                'nom'=> 'B ELITE',
+                'image'=>'terrain.jpg',
                 'description'=>'Les équipes ambitieuses rivalisent dans ce groupe. Les matchs sont équilibrés et chaque victoire se fête avec enthousiasme.'
             ],
             [
-                'nom'=> 'C ESPOIR', 
-                'image'=>'salle.jpg', 
+                'nom'=> 'C ESPOIR',
+                'image'=>'salle.jpg',
                 'description'=>'Ici, les équipes apprennent et progressent. Chaque match est un moment convivial et amusant.'
             ],
             [
-                'nom'=> 'D HONNEUR', 
-                'image'=>'trophee_honneur.jpg', 
+                'nom'=> 'D HONNEUR',
+                'image'=>'trophee_honneur.jpg',
                 'description'=>'Le groupe parfait pour se lancer et s’amuser ! L’ambiance est détendue et conviviale.'
             ]
         ];
@@ -78,10 +78,10 @@ final class FrontController extends AbstractController
 
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
-        
+
         //TODO Déterminer la poule à ouvrir en fonction de l'utilisateur qui est connecté et de la poule en cache
 
-        
+
         //Trier les équipes par le classement
         $classementService->getClassement($saison);
 
@@ -110,10 +110,10 @@ final class FrontController extends AbstractController
         //Trier les équipes par le classement
         $classementService->getClassement($saison);
         $poules=$equipe->getPoules();
-        
-        
+
+
         //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
-        $listeCapitaines=[];    
+        $listeCapitaines=[];
         foreach ($poules as $poule) {
             if ($poule->getPhase()->getId() === $phaseouverte->getId()) {
                 foreach ($poule->getEquipes() as $equipePoule) {
@@ -130,8 +130,8 @@ final class FrontController extends AbstractController
         if (($user !== null && in_array($user->getId(), $listeCapitaines)) || $this->isGranted('ROLE_ADMIN')){
               $canViewCapitaine = true;
         }
-        
-        
+
+
 
         return $this->render('front/equipe.html.twig', [
             'saisons' => $this->saisons,
@@ -201,7 +201,7 @@ final class FrontController extends AbstractController
         #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
         public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
         {
-        
+
         $data = json_decode($request->getContent(), true);
         try{
             $user = $this->getUser();
@@ -210,7 +210,7 @@ final class FrontController extends AbstractController
 
             if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
             if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
-            
+
             if ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
                 //Cas d'une forfait
                 if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
@@ -221,19 +221,19 @@ final class FrontController extends AbstractController
                     $partie->setNbSetGagnantReception(3);
                     $partie->setNbSetGagnantDeplacement(-1);
                 }
-                
-                
+
+
             }else{
                 //Cas normal
                 if (! is_numeric($data['scoreReception']) || ! is_numeric($data['scoreDeplacement'])) throw new Exception ("score invalide");
                 $scoreReception = (int)($data['scoreReception']);
                 $scoreDeplacement = (int)$data['scoreDeplacement'];
                 if ($scoreDeplacement > 3 || $scoreReception > 3 || $scoreDeplacement < 0 || $scoreReception < 0) throw new Exception("Score invalide");
-               
+
                 $partie->setNbSetGagnantReception($scoreReception);
                 $partie->setNbSetGagnantDeplacement($scoreDeplacement);
-                
-                
+
+
             }
             //Modification du score
             $em->persist($partie);
@@ -243,17 +243,17 @@ final class FrontController extends AbstractController
             $classementService->mettreAJourClassementPoule($partie->getPoule());
             return $this->json([
                 'newScore' => $scoreReception . ' à ' . $scoreDeplacement,
-                
-                ],200);
-            
 
-            
+                ],200);
+
+
+
         }catch(Exception $e){
             return $this->json([
             'error' => $e->getMessage(),
             ],400);
         }
-        
+
         }
 
     //Récupère les saisons en cache (la liste des saisons ne change pas souvent donc à chaque requête on ne va pas la chercher en base de données)
@@ -278,7 +278,7 @@ final class FrontController extends AbstractController
         }
     }
 
-    //Détermine la phase actuelle d'une saison (la phase dont la date de début et de fin englobe la date actuelle) 
+    //Détermine la phase actuelle d'une saison (la phase dont la date de début et de fin englobe la date actuelle)
     //ou la première phase si aucune n'est ouverte
     public function getPhaseActuelle($saison){
         $dateActuelle = new \DateTime();
@@ -286,10 +286,10 @@ final class FrontController extends AbstractController
             if ($dateActuelle >= $phase->getDateDebut() && $dateActuelle <= $phase->getDateFin()) {
                 return $phase;
             }
-            
+
         }
         return $saison->getPhases()[0]; // Retourne la première phase si aucune n'est ouverte
     }
 
-    
+
 }

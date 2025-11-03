@@ -7,15 +7,21 @@ import multiMonthPlugin from '@fullcalendar/multimonth';
 export default class extends Controller {
     static values = {
         eventsUrl: String,
+        datatype: String,
         datedebut: String,
         datefin: String,
         pouleid: String,
-        csrfToken: String
+        initialview: String,
+        buttons: String,
+        duration: String,
+        csrfToken: String,
+        initialDate:String
     }
 
     connect() {
         const el = this.element;
         if (!el) return;
+        console.log(this.datatypeValue);
 
         const dateDebut = new Date(this.datedebutValue);
         const dateFin = new Date(this.datefinValue);
@@ -29,31 +35,55 @@ export default class extends Controller {
         const nbMois = (validEnd.getFullYear() - validStart.getFullYear()) * 12
             + (validEnd.getMonth() - validStart.getMonth()) + 1;
 
+        switch (this.datatypeValue){
+            case "journee":
+              this.initialDate=new Date(dateDebut.getFullYear(), dateDebut.getMonth(), 1);
+            case "partie":
+                this.initialDate=dateDebut;
+        }
+        console.log(this.initialDate);
         this.calendar = new Calendar(el, {
             plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin],
-            initialView: "multiMonthFourMonth",
+            initialView: this.initialviewValue,
             eventColor: '#f59e0b',
-            initialDate: new Date(dateDebut.getFullYear(), dateDebut.getMonth(), 1),
+            initialDate: this.initialDate,
             multiMonthMaxColumns: nbMois,
             locale: 'fr',
             timeZone: 'local',
             firstDay: 1,
             editable: true,
             selectable: true,
-            events: this.eventsUrlValue,
+            // events: this.eventsUrlJourneeValue,
+            eventSources: [
+                {
+                    url: this.eventsUrlValue,
+                    color: 'orange',   // an option!
+                    textColor: 'black' // an option!
+                },
+
+            ],
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
-                right: 'multiMonthYear, multiMonth',
+                right: 'multiMonthFourMonth, dayGridFourWeek',
             },
             views: {
                 multiMonthFourMonth: {
                     type: 'multiMonth',
-                    buttonText: 'durée phase',
+                    buttonText: 'Phase',
                     duration: { months: nbMois },
                     validRange: {
                         start: new Date(dateDebut.getFullYear(), dateDebut.getMonth(), 1),
                         end: new Date(dateFin.getFullYear(), dateFin.getMonth() + 1, 0)
+                    },
+                },
+                dayGridFourWeek: {
+                    type: 'dayGrid',
+                    buttonText: 'Journée',
+                    duration: { week: this.durationValue },
+                    validRange: {
+                        start: this.initialDate,
+
                     },
                 },
             },
@@ -118,7 +148,7 @@ export default class extends Controller {
 
         // Bouton de suppression
         document.getElementById('supprimer').onclick = () => {
-            
+
             fetch('/admin/poule/' + this.pouleidValue + '/api/journees/' + info.event.id, {
                 method: 'DELETE',
                 headers: {
@@ -143,9 +173,9 @@ export default class extends Controller {
             .catch(err => {
                 console.error(err);
                 document.getElementById('eventModal').classList.remove('modal-open');
-                
+
             });
-    
+
         }
         // Bouton de fermeture
         document.getElementById('closeModal').onclick = function() {
@@ -155,7 +185,14 @@ export default class extends Controller {
 
     //Méthode appelée sur le click d'une date vide pour créer une nouvelle journée
     onDateClick(info) {
-        
+        console.log("clickdate");
+        if (this.datatypeValue==="journee"){
+            this.onDateClickJournee(info);
+        }
+
+    }
+
+    onDateClickJournee(info){
         fetch('/admin/poule/' + this.pouleidValue + '/api/journees', {
             method: 'POST',
             headers: {
@@ -168,17 +205,44 @@ export default class extends Controller {
                 datefin: info.endStr  ?? info.startStr
             })
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Erreur lors de la création');
-            return response.json();
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur lors de la création');
+                return response.json();
+            })
+            .then(json => {
+                console.log('Nouvelle journée créée :', json);
+                //On recharche tous les événements pour afficher la nouvelle journée et tenir compte de la régularisation des numéros de journée
+                this.calendar.refetchEvents();
+            })
+            .catch(err => {
+                console.error(err);
+            });
+    }
+
+    onDateClickPartie(info){
+        fetch('/admin/poule/' + this.pouleidValue + '/api/parties', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRF-TOKEN': this.csrfTokenValue
+            },
+            body: JSON.stringify({
+                datedebut: info.startStr,
+                datefin: info.endStr  ?? info.startStr
+            })
         })
-        .then(json => {
-            console.log('Nouvelle journée créée :', json);
-            //On recharche tous les événements pour afficher la nouvelle journée et tenir compte de la régularisation des numéros de journée
-            this.calendar.refetchEvents();
-        })
-        .catch(err => {
-            console.error(err);
-        });
+            .then(response => {
+                if (!response.ok) throw new Error('Erreur lors de la création');
+                return response.json();
+            })
+            .then(json => {
+                console.log('Nouvelle partie créée :', json);
+                //On recharche tous les événements pour afficher la nouvelle journée et tenir compte de la régularisation des numéros de journée
+                this.calendar.refetchEvents();
+            })
+            .catch(err => {
+                console.error(err);
+            });
     }
 }

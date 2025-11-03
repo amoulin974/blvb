@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
-{% block title %}Ajouter les journées à la poule {{ poule.nom }}{% endblock %}
+{% block title %}Ajouter les parties à la journee {{ journee.numero }} de la poule {{ poule.nom }}{% endblock %}
 {% block body %}
 
     {% if error %}
         <p class="alert alert-error">{{ error }}</p>
     {% else %}
-        <h1>Placer les journée de la poule {{ poule.nom }}</h1>
+        <h1>Placer les parties de la journée {{ journee.numero }} de la poule {{ poule.nom }}</h1>
         <div class="mb-4">
             <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id}) }}">Voir la saison</a>
             <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a>
@@ -13,14 +13,14 @@
         <div
             id="calendar"
             data-controller="calendar"
-            data-calendar-datatype-value="journee"
-            data-calendar-events-url-value="/admin/poule/{{ poule.id }}/api/journees"
-            data-calendar-initialview-value="multiMonthFourMonth"
-            data-calendar-duration-value="4"
+            data-calendar-datatype-value="partie"
+            data-calendar-events-url-value="/admin/poule/{{ poule.id }}/api/parties"
+            data-calendar-datedebut-value="{{ journee.datedebut|date('Y-m-d') }}"
+            data-calendar-initialview-value="dayGridFourWeek"
             data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"
-            data-calendar-datedebut-value="{{ poule.phase.datedebut|date('Y-m-d') }}"
+            data-calendar-duration-value="1"
             data-calendar-pouleid-value="{{ poule.id }}"
-            data-calendar-datefin-value="{{ poule.phase.datefin|date('Y-m-d') }}"
+            data-calendar-datefin-value="{{ journee.datefin|date('Y-m-d') }}"
             data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
         </div>
         <!-- Modal DaisyUI -->

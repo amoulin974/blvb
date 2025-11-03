@@ -15,7 +15,7 @@
         </div>
     </div>
     </div>
-  {% endblock %}  
+  {% endblock %}
 {% block body %}
 
         <h2 class="text-center mb-4">Le championnat comprend</h2>
@@ -50,17 +50,19 @@
 
 {% for groupe in groupes %}
     <div class="flex flex-col lg:flex-row justify-center items-center lg:items-stretch lg:gap-6 w-full mb-4">
-       
+
+        {#  Le textes#}
        {% if loop.index is odd %}
-            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center text-center order-first">
+            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center items-center text-center order-first">
         {% else %}
-            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center text-center order-first lg:order-last">
+            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center items-center text-center order-first lg:order-last">
         {% endif %}
-        <h3 class="text-2xl font-bold text-primary mb-2">{{groupe.nom}}</h3>
-        <p>
-            {{groupe.description}}
-        </p>
-        </div>
+                <h3 class="text-2xl font-bold text-primary mb-2">{{groupe.nom}}</h3>
+                <p>
+                    {{groupe.description}}
+                </p>
+                        <p><a href="{{ path('front_equipes')}}" class="btn btn-info mt-2">Voir les équipes</a></p>
+                </div>
 
         {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
 
@@ -69,7 +71,7 @@
        {% else %}
             <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last lg:order-first">
        {% endif %}
-        
+
         <img src="{{ asset('images/'~groupe.image) }}" alt="{{ groupe.nom }}" class="max-w-[600px] h-auto w-full rounded-lg shadow-lg">
         </div>
     </div>
@@ -77,8 +79,8 @@
 
 
 
-  
- 
+
+
 </section>
 
 
@@ -92,13 +94,13 @@
 
 
 
-   
-        
 
 
 
 
 
 
-    
+
+
+
 {% endblock %}
