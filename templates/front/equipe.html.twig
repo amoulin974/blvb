@@ -4,7 +4,7 @@
 {% block body %}
     <div class="container mx-auto max-w-5xl px-4">
         <h1 class="text-center mb-4">{{equipe.nom}}</h1>
-        <h2 class="card-title">Informations générales</h3>
+        <h2 class="mt-4">Informations générales</h3>
         <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
                                             target="_blank" 
                                             rel="noopener noreferrer">
@@ -25,7 +25,7 @@
         {% endif %}
         
 
-        <h2>Classement de la saison sélectionné </h2>
+        <h2 class="mt-4">Classement de la saison sélectionné </h2>
         {% for phase in saison.phases %}
             {% for poule in phase.poules %}
                 {% if equipe in poule.equipes %}

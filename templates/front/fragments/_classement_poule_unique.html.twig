@@ -14,7 +14,7 @@
                                     </tr>
                                 {% for classement in poule.classements %}
 
-                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="bg-success font-bold" {% endif %}>
+                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="!bg-success font-bold" {% endif %}>
                                             <td>{{ classement.position}}</td>
                                             <td>{{ classement.equipe.nom }} </td>
                                             <td>{{ classement.points }}</td>
