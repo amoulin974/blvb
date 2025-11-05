@@ -10,27 +10,47 @@
             <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id}) }}">Voir la saison</a>
             <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a>
         </div>
+
+        {#  Sélecteur de journée#}
+        <div>
+            <ul>
+            {% for journee in poule.journees %}
+                <li>Journée {{ journee.numero }} - {{ journee.dateDebut|format_date('short', locale='fr') }} - {{ journee.dateFin|format_date('short', locale='fr') }}</li>
+            {% endfor %}
+            </ul>
+        </div>
+
         <div
             id="calendar"
             data-controller="calendar"
             data-calendar-datatype-value="partie"
-            data-calendar-events-url-value="/admin/poule/{{ poule.id }}/api/parties"
-            data-calendar-datedebut-value="{{ journee.datedebut|date('Y-m-d') }}"
-            data-calendar-initialview-value="dayGridFourWeek"
+            data-calendar-events-url-value={{ path('admin_partie_api', {'id': poule.id, journee:poule.journees.0.id}) }}
+            data-calendar-datedebut-value="{{ poule.journees.0.datedebut|date('Y-m-d') }}"
+            data-calendar-initialview-value="dayGridSixDay"
             data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"
             data-calendar-duration-value="1"
             data-calendar-pouleid-value="{{ poule.id }}"
             data-calendar-datefin-value="{{ journee.datefin|date('Y-m-d') }}"
             data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
         </div>
+
+
         <!-- Modal DaisyUI -->
-        <div id="eventModal" class="modal">
+        <div id="partieModal" class="modal">
         <div class="modal-box">
             <h3 class="font-bold text-lg" id="eventTitle">Titre de l'événement</h3>
-            <p class="py-4" id="eventDate">Date de l'événement</p>
-            <button class="btn btn-error" id="supprimer">Supprimer l'événement</button>
-            <div class="modal-action">
-            <button class="btn-info" id="closeModal">Fermer</button>
+            <hr>
+            <h4>Modifier l'événement</h4>
+            <div id="modalBody" class="modal-body">
+            </div>
+            <hr>
+            <h4>Supprimer l'événement</h4>
+            <div class="modal-action flex flex-row justify-end mt-2">
+                <button class="btn btn-error" id="supprimer" >Supprimer l'événement</button>
+            </div>
+            <hr>
+            <div class="modal-action flex flex-row justify-end">
+                <button class="btn btn-info" id="closeModal" onclick="document.querySelector('#partieModal').classList.remove('modal-open')" >Fermer cette fenêtre</button>
             </div>
         </div>
         </div>

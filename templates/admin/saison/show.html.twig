@@ -31,7 +31,7 @@
 {#                    <li class="text-sm tracking-wide">Les poules de la phase {{ phase.nom }}</li>#}
                     {% for poule in phase.poules %}
 
-                        <li class="list-row pl-6 p-2">
+                        <li class="list-row pl-6 pb-3">
                             <h3 class="flex items-center">
                                 <span class="mr-2">{{ poule.nom }}</span>
                                 <div class="flex join items-center">
@@ -41,16 +41,15 @@
                                     {{ include('admin/poule/_delete_form.html.twig', { size: 'btn-xs' }) }}
                                     {% if poule.equipes|length>0 and poule.journees|length == 0%}
 {#                                    <a class="btn btn-xs btn-success" href="{{ path("admin_poule_createjournee", {'id': poule.id}) }}">Créer les journées</a>#}
-                                    <form class="flex items-center" action="{{ path('admin_poule_delete', {'id': poule.id}) }}" method="POST" >
-                                        <button type="submit" class="btn btn-xs btn-error">Créer les journées</button>
+                                    <form class="flex items-center" action="{{ path('admin_journee_createjournee', {'id': poule.id}) }}" method="POST" >
+                                        <button type="submit" class="btn btn-xs btn-success">Créer les journées</button>
                                     </form>
                                     {% endif %}
                                     {% if poule.equipes|length>0 and poule.journees|length>0 %}
-                                    <a class="btn btn-xs btn-info" href="{{ path("admin_poule_getjourneecalendar", {'id': poule.id}) }}">Voir les journées</a>
+                                    <a class="btn btn-xs btn-info" href="{{ path("admin_journee_getjourneecalendar", {'id': poule.id}) }}">Voir les journées</a>
                                     {% endif %}
                                     {% if poule.equipes|length>0 and poule.journees|length>0 and poule.parties|length == 0 %}
-{#                                        <a class="btn btn-xs btn-success" href="{{ path("admin_poule_creatematch", {'id': poule.id}) }}">Créer les match</a>#}
-                                        <form class="flex items-center" action="{{ path('admin_poule_createpartie', {'id': poule.id}) }}" method="POST">
+                                        <form class="flex items-center" action="{{ path('admin_partie_createpartie', {'id': poule.id}) }}" method="POST">
                                             <button type="submit" class="btn btn-xs btn-success">Créer les match</button>
                                         </form>
                                     {% endif %}
@@ -59,8 +58,9 @@
                             </h3>
 
                             <div class="list-col-wrap ml-6">
-                                <ul class="list bg-base-100 rounded-box flex inline-block">
-                                    <li class="text-sm tracking-wide">Les équipes :</li>
+                                <p class="text-sm tracking-wide font-bold mb-1">Les équipes :</p>
+                                <ul class="list bg-base-100 rounded-box flex flex-row">
+
                                     {% for equipe in poule.equipes %}
                                         <span class="badge badge-outline">{{ equipe.nom }}</span>
                                     {% else %}
@@ -68,11 +68,15 @@
                                     {%  endfor %}
 
                                 </ul>
-                                <ul class="list bg-base-100 rounded-box flex inline-block">
-                                    <li class="text-sm tracking-wide">Les journées :</li>
+                                <p class="text-sm tracking-wide mt-2 mb-1 font-bold">Les journées :</p>
+                                <ul class="list bg-base-100 rounded-box flex">
+
                                     {% for journee in poule.journees %}
                                         <li class="badge badge-outline">{{ journee.numero }} : {{ journee.datedebut.format('d-m-Y')}} - {{ journee.datefin.format('d-m-Y') }}
-                                            - <a class="btn btn-xs btn-info" href="{{ path("admin_poule_getpartiecalendar", {'id': journee.id}) }}">Voir les matchs</a></li>
+                                            {% if journee.parties|length > 0  %}
+                                                - <a class="btn btn-xs btn-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee':journee.id}) }}">Voir les matchs</a>
+                                            {% endif %}
+                                        </li>
                                             <ul>
                                                 {% for partie in poule.parties %}
                                                     {% if partie.IdJournee.id == journee.id %}

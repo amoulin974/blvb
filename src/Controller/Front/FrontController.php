@@ -92,6 +92,23 @@ final class FrontController extends AbstractController
             'phaseouverte'=>$phaseouverte,
         ]);
     }
+    //Route pour une page de réglement
+    #[Route('/reglement', name: 'reglement', methods: ['GET'])]
+    public function reglement(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+                                               $saisonRepository, ClassementService $classementService): Response
+    {
+        //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+        $saison=$saisonRepository->find($this->idSaisonSelected);
+        //Déterminer la phase à ouvrir
+        $phaseouverte=$this->getPhaseActuelle($saison);
+
+        return $this->render('front/reglement.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+        ]);
+    }
 
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
@@ -290,6 +307,8 @@ final class FrontController extends AbstractController
         }
         return $saison->getPhases()[0]; // Retourne la première phase si aucune n'est ouverte
     }
+
+
 
 
 }

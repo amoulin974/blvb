@@ -56,6 +56,7 @@
                         <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
                         <li><a href="{{ path('front_calendrier')}}">Calendrier</a></li>
                         <li><a href="{{ path('front_classement')}}">Classement</a></li>
+                        <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
                         {% if app.user %}
                             {% if is_granted('ROLE_ADMIN') %}
                                 <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
@@ -66,7 +67,7 @@
                                 </form>
                             </li>
                         {% else %}
-                        <li><a href="{{path('app_register')}}">Créer un compte</a></li>                       
+                        <li><a href="{{path('app_register')}}">Créer un compte</a></li>
                         <li><a href="{{path('app_login')}}">Se connecter</a></li>
                         {% endif %}
                     {% endblock %}
@@ -77,21 +78,23 @@
         {# Contenu de la page avec container central sur desktop #}
         {% block hero %}{% endblock %}
         <main class="flex-1 p-4">
-                
-            
+
+
                 {% block body %}{% endblock %}
-          
+
         </main>
     </div>
 
     {# Sidebar #}
-    <div class="drawer-side">
+    <div class="drawer-side z-[60]">
         <label for="my-drawer-2" aria-label="Fermer le menu" class="drawer-overlay"></label>
         <aside class="menu p-4 w-64 bg-base-200 min-h-full">
             {% block sidebar_links %}
                 <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
                 <li><a href="{{ path('front_calendrier')}}">Calendrier</a></li>
                 <li><a href="{{ path('front_classement')}}">Classement</a></li>
+                <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
+
                 {% if app.user %}
                     {% if is_granted('ROLE_ADMIN') %}
                         <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
@@ -102,7 +105,7 @@
                         </form>
                     </li>
                 {% else %}
-                <li><a href="{{path('app_register')}}">Créer un compte</a></li>                       
+                <li><a href="{{path('app_register')}}">Créer un compte</a></li>
                 <li><a href="{{path('app_login')}}">Se connecter</a></li>
                 {% endif %}
             {% endblock %}

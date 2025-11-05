@@ -30,7 +30,7 @@ class Journee
     /**
      * @var Collection<int, Partie>
      */
-    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_journee')]
+    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_journee', cascade: ["remove"], orphanRemoval: true)]
     private Collection $parties;
 
     public function __construct()

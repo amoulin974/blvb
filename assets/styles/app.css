@@ -1,6 +1,7 @@
 
 @import "tailwindcss";
 @import "tom-select/dist/css/tom-select.css";
+@import "tocbot/dist/tocbot.css";
 @plugin "daisyui";
 @source not "../../public";
 @plugin "daisyui/theme" {
@@ -54,11 +55,19 @@ h3{
     @apply text-xl font-bold text-secondary
 }
 
+h4{
+    @apply text-lg text-secondary font-bold
+}
+
 .ts-dropdown {
     z-index: 99999 !important;
 
 }
 .ts-dropdown-content{
     background-color: white;
+}
+
+#article-reglement img{
+
 }
 

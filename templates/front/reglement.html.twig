@@ -1,0 +1,233 @@
+{%  extends 'base_front.html.twig' %}
+{% block title %}Le règlement du tournoi - BLVB{% endblock %}
+
+{% block body %}
+<div class="container mx-auto max-w-7xl px-4 grid grid-cols-8 gap-4" data-controller="tocbot">
+    <nav class="toc js-toc col-span-2 col-start-1 sticky top-20 max-h-[calc(100vh-2rem)] overflow-y-auto pr-4">
+        Table of content
+    </nav>
+    <article id="article-reglement" class="js-toc-content col-span-4 top-24">
+
+
+<h1>Le règlement du tournois</h1>
+    <div class="">
+        <a class="flex justify-center flex-col items-center" href="https://www.fivb.com/wp-content/uploads/2025/06/FIVB-Volleyball_Rules2025_2028-FR-v04.pdf" target="_blank">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-12">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+            </svg>
+            <p>RÈGLES OFFICIELLES DE VOLLEYBALL 2025-2028</p>
+        </a>
+    </div>
+
+
+<h2 id="reglement-general">Règlement général</h2>
+<p>Chaque équipe joue une semaine sur deux à domicile. Les équipes se rencontrent en match aller simple/retour en phase 1 et phase 2
+    Il n'y aura pas de match programmé pendant les vacances scolaires Le schéma ci-dessous synthétise le fonctionnement du championnat</p>
+    <img class="block mx-auto" src="{{ asset('images/reglement/schema-2025.jpg') }}" alt="reglement">
+<h2 id="tableau-phase">Tableau des phases finales</h2>
+    <p>Le schéma ci-dessous décrit le fonctionnement des phases finales</p>
+    <img class="block mx-auto" src="{{ asset('images/reglement/schema-2025_finales_poule1.jpg') }}" alt="">
+    <img class="block mx-auto" src="{{ asset('images/reglement/schema-2025_finales_poule2.jpg') }}" alt="">
+    <img class="block mx-auto" src="{{ asset('images/reglement/schema-2025_finales_poule3.jpg') }}" alt="">
+    <img class="block mx-auto" src="{{ asset('images/reglement/schema-2025_finales_poule4.jpg') }}" alt="">
+    <p>L'organisation des dates des matchs de phases finales est laissée au choix de chaque club.</p>
+    <p>Mais, il faut que tous les matchs soient joués avant la finale qui aura lieu le <span class="text-accent">VENDREDI 22 MAI 2026 à Angresse</span> à partir de 18H30 à au gymnase De Nelson Paillou suivi d'une remise des prix, apéritif et repas.</p>
+<h2 id="vue-calendrier">Vue globale du calendrier</h2>
+    <img class="block mx-auto" src="{{ asset('images/reglement/calendrier-2025.jpg') }}" alt="">
+<h2 id="reglement-joueur">Règlement sur le nombre de joueurs</h2>
+    <h3>RÈGLE 1J : Nombre de filles par set</h3>
+    <p>Il faut au moins deux filles minimum par équipe sur le terrain et 4 garçons maximum :</p>
+    <table class="table table-bordered">
+        <thead>
+            <tr><th>Garçons</th><th>Filles</th><th>Règle</th></tr>
+        </thead>
+        <tbody>
+        <tr><td>6</td><td>0</td><td>Interdit : L'équipe est FORFAIT</td></tr>
+        <tr><td>5</td><td>1</td><td>1 garçon doit sortir et l'équipe démarre  chaque set à <strong>-8</strong></td></tr>
+        <tr><td>4</td><td>2</td><td>PAS DE PÉNALITÉS</td></tr>
+        <tr><td>3</td><td>3</td><td>PAS DE PÉNALITÉS</td></tr>
+        <tr><td>2</td><td>4</td><td>PAS DE PÉNALITÉS</td></tr>
+        <tr><td>1</td><td>5</td><td>PAS DE PÉNALITÉS</td></tr>
+        <tr><td>0</td><td>6</td><td>L'équipe adverse démarre chaque set à <strong>-5 </strong></td></tr>
+        </tbody>
+    </table>
+    <h3>RÈGLE 2J : Nombre de joueurs par set</h3>
+        <p>Le nombre de joueurs par équipe est de 5 minimum sur le terrain; si le nombre est inférieur ou égal à 4, alors l'équipe est forfait.</p>
+        <p>Afin d'éviter un forfait, et pour rester dans l'esprit corporatif, l'équipe ne présentant que 4 joueurs lors d'une partie, peut se faire prêter un joueur par l'équipe adverse avec son accord.
+            Si une fille arrive en cours de set, on termine le set, et cette règle ne s'applique plus pour le reste de la partie.</p>
+    <h3>RÈGLE 3J : Contre des filles</h3>
+        <p>Le contre des filles n'est pas autorisé à moins d'une entente entre équipes avant le match. </p>
+    <h3>RÈGLE 4J : Nombre de joueur licencié FFVB</h3>
+        <p>On autorise un maximum de 3 joueurs licenciées F.F.V.B. présent sur le terrain
+            à chaque set. (Licencié F.F.V.B. pour la saison en cours; les anciens licenciés ne sont pas comptabilisés).</p>
+        <p>Cela devra être indiqué avec un signe particulier sur la liste des joueurs sur le site blvb.fr</p>
+    <h3>Changement de joueur</h3>
+        <p>Une équipe démarrant un set à 5 peut faire rentrer un joueur/joueuse en cours de set
+            pour former une équipe de 6 joueurs. Si c'est une joueuse qui rentre en cours de set, afin de palier à l'absence de filles, la règle R2
+            s'applique aux sets suivants.</p>
+    <h3>RÈGLE 6J : Joueur blessé en cours de partie</h3>
+        <p> Si un joueur se blesse en cours de set il pourra être remplacé immédiatement :</p>
+        <ul>
+            <li>si c'est la seule fille de l'équipe qui se blesse :
+                l'équipe terminera le set à 5 et on applique la règle R2 à partir des sets suivants.</li>
+            <li>si l'équipe n'a que 6 joueurs : elle terminera à 5.</li>
+            <li>si l'équipe n'a que 5 joueurs : le match se termine, il est à rejouer car l'equipe emputée est forfait.</li>
+        </ul>
+    <h3>RÈGLE 7J : Joueur Joker pour renforcer une équipe pendant les phases de poules</h3>
+        <p>Les jokers (joueurs ou joueuses utilisés à l'intérieur d'un même club quel que soit le groupe)
+            ne seront tolérés que pour compléter une équipe en sous effectif (nombre de joueurs ou joueuses &lt;= 6) et
+            non pour renforcer le niveau de l'équipe (nombre de joueurs ou joueuses &gt;= 7).</p>
+        <p>Le joker ne doit pas provenir du groupe A pour enforcer une équipe du Groupe B.</p>
+        <p>Par contre l'inverse est possible. Un joker du Groupe B peut venir compléter une équipe du Groupe A.</p>
+<h2 id="reglement-rencontre">Règlement sur les rencontres</h2>
+    <h3>RÈGLE 1R : Partie interrompue </h3>
+        <p> Si la partie est interrompue</p>
+        <ul>
+            <li>à cause de la fermeture du gymnase par une coupure de courant</li>
+            <li>à cause de la fermeture du gymnase par le concierge</li>
+            <li>à cause de la blessure d'un joueur obligeant l'équipe à finir à 4</li>
+        </ul>
+
+        <p>La partie ne pourra <b>pas être rejouée </b>. Voici comment se déroulera le décompte des points :</p>
+        <ul>
+            <li>si le score est de 2 sets à 1 pour l'équipeA, alors cette dernière a gagné;</li>
+            <li>si le score est de 1 set partout et que l'équipe B mène dans le troisième set, c'est l'équipe B qui est déclarée vainqueur.</li>
+            <li>si le score est de 2 sets partout et que l'équipe B mène dans le cinquième set c'est l'équipe B qui est déclarée vainqueur.</li>
+            <li>si le score est de <strong>1 set partout</strong> et que l'équipe B est à égalité de points dans le troisème il y aura partage de 2 points entre les 2 équipes.</li>
+            <li>si le score est de <strong>2 sets partout</strong> et que l'équipe B est à égalité de points dans le cinquième il y aura partage de 2 points entre les 2 équipes.</li>
+        </ul>
+
+        <p>Dans les deux cas d'égalité ci-dessus :</p>
+        <ul>
+            <li>chaque équipe prend  donc 1 point</li>
+            <li>on comptabilise 1 match perdu pour chacune et </li>
+            <li>on modifie pas le set-average</li>
+        </ul>
+
+        <p>Le décompte des points est le suivant :</p>
+        <table class="table table-bordered">
+            <thead>
+                <tr><th></th><td>Score</td><td>Point gagnant</td><td>Point perdnant</td>
+            </thead>
+            <tbody>
+                </tr><tr><td>1/0</td><td>0</td><td>0</td></tr>
+                <tr><td>1/1</td><td>0</td><td>0</td></tr>
+                <tr><td>2/1</td><td>2</td><td>1</td></tr>
+                <tr><td>2/2</td><td>1</td><td>1</td></tr>
+            </tbody>
+        </table>
+
+    <h3>RÈGLE 2R : Equipe absente</h3>
+        <p>L'équipe qui ne se présentera pas à une rencontre, sans avoir prévenu, sera déclarée <b>FORFAIT</b>.</p>
+        <p>L'équipe qui ne pourra pas rejoindre le lieu de la rencontre à cause d'intempéries ou accident pourra rejouer la rencontre en accord avec les 2 équipes;
+            si aucune date n'est trouvée, sans perturbation du calendrier, l'équipe absente sera déclarée <b>FORFAIT</b>.</p>
+
+
+<h2 id="decompte-point">Décompte des points et des sets</h2>
+
+    <h3>RÈGLE 1D : Décompte des sets</h3>
+        <ul>
+            <li>Une victoire 3-0 rapporte 3 points</li>
+            <li>Une victoire 3-1 rapporte 3 points</li>
+            <li>Une victoire 3-2 rapporte 2 points</li>
+            <li><hr></li>
+            <li>Une défaite 2-3 rapporte 1 point</li>
+            <li>Une défaite 1-3 rapporte 0 point</li>
+            <li>Une défaite 0-3 rapporte 0 point</li>
+            <li><hr></li>
+            <li>Partie forfait = <strong>3 </strong>points pour le gagnant,<strong> -1</strong> point pour le perdant </li>
+        </ul>
+
+
+    <h3>RÈGLE 2D : Décomptes des points</h3>
+        <ul>
+            <li>La partie se joue en <strong>3</strong> sets gagnants.</li>
+            <li>Tous les sets se jouent en <strong>25</strong> points <strong>sec</strong> (c'est à dire sans 2 points d'écart)</li>
+            <li>Le cinquième set, dans le cas d'une partie en 5 sets, se joue en <strong>15</strong> points <strong>sec</strong>.</li>
+            <li>Le nombre de points par sets n'est pas comptabilisé dans le classement général.</li>
+            <li>2 temps morts sont autorisés par set.</li>
+            <li><strong>L'équipe qui gagne la partie envoi le résultat par email</strong></li>
+        </ul>
+
+        <p>En cas d'égalité au classement : on regarde </p>
+        <ol>
+            <li>le nombre de points</li>
+            <li>la différence entre les sets marqués et les sets encaissés</li>
+            <li>c'est l'équipe qui a gagné sa rencontre contre l'autre qui est devant</li>
+        </ol>
+
+
+<h2 id="arbitrage">Arbitrage</h2>
+
+    <h3>RÈGLE 1A : Arbitrage</h3>
+        <p>L'équipe qui reçoit doit OBLIGATOIREMENT fournir un arbitre qui peut aussi jouer le rôle de marqueur.</p>
+        <p>Il devra se faire aider par le fair-play des joueurs pour juger des ballons sur les lignes</p>
+        <p>Si l'équipe qui reçoit n'a que 6 joueurs, elle peut demander à un joueur adverse remplaçant d'arbitrer et de marquer.</p>
+        <p>Si l'équipe adverse n'a aussi que 6 joueurs, ce sera de l'auto-arbitrage total</p>
+        <p>L'équipe qui reçoit peut tout aussi fournir un système d'arbitrage plus complet : un arbitre de chaise, un marqueur et 2 arbitres de ligne</p>
+
+
+<h2 id="orga-finale">Organisation des finales</h2>
+
+    <h3>RÈGLE 1O : Organisation</h3>
+        <p>Les 3 finales des groupes B, C et D se jouent simultanément sur les terrains en travers.</p>
+        <p>La finale du groupe A se jouera après les autres finales sur le terrain central aux alentours de 21h30 :
+            Pour cela les 3 terrains devront être démontés pour pouvoir monter le terrain central.</p>
+
+    <h3>RÈGLE 2O : Joueurs</h3>
+        <p>La liste des joueurs devra être contrôlée lors de la journée des finales par le club organisateur.</p>
+        <p>Uniquement les joueurs présents sur la liste devront être sur le terrain.</p>
+        <p>Cette liste est consultable sur <a href="https://www.blvb.fr" target="_blank">blvb.fr</a> dans la rubrique joueurs.</p>
+        <p>Elle devra être fournie IMPERATIVEMENT au début de la seconde phase, soit le 31 janvier au plus tard.</p>
+
+    <h3>RÈGLE 3O : Arbitrage</h3>
+        <p>La finale du Groupe A sera jouée sur un terrain central et arbitré par au moins 2 personnes de l'association BLVB.</p>
+        <p>Le club organisateur pourra fournir une chaise d'arbitre et une table de marque, et éventuellement 2 arbitres supplémentaire pour les lignes.</p>
+        <p>Les autres finales des groupes B, C et D suivront les mêmes règles qu'en phase de poule</p>
+
+
+<h2 id="regle-filet">Règle au filet</h2>
+
+    <p>Les règles au filet sont les anciennes règles avant 2009 </p>
+
+    <p><strong>Pénétration sous le filet</strong> :</p>
+    <ul>
+        <li>Il est interdit de toucher le sol du camp adverse avec n’importe quelle autre partie du corps.</li>
+    </ul>
+    <p><strong>Contact avec le filet</strong>:</p>
+    <ul>
+        <li>Le contact avec le filet n'est pas une faute à moins qu'il ait lieu durant l'action de jeu ou qu'il gène le déroulement du
+            jeu. Certaines actions de jeu peuvent inclure des actions au cours desquelles les joueurs ne touchent pas le ballon.</li>
+        <li>Après avoir frappé le ballon, le joueur peut toucher les poteaux, câbles et autre objet en dehors de la longueur totale du filet, à condition que cette action n'ait pas d'incidence sur le
+            jeu.</li>
+    </ul>
+
+    <p><strong>Fautes du joueur au filet</strong>
+    </p><ul>
+        <li>Un joueur touche le ballon ou un adversaire dans l'espace adverse avant ou pendant la frappe d'attaque</li>
+        <li>Un joueur pénètre dans l'espace adverse sous le filet, gênant ainsi le jeu de l'adversaire</li>
+        <li>Un joueur pénètre dans le camp adverse</li>
+        <li>Un joueur touche le filet ou l'antenne en jouant le ballon ou lorsque ce contact gêne le déroulement du jeu</li>
+    </ul>
+
+<h2 id="regle-service">Règle au service</h2>
+    <ul>
+        <li>Le service doit être effectué dans les 8 secondes après le coup de sifflet.</li>
+        <li>Au service, une fois la balle lancée, il y a obligation de la frapper : la rattraper ou la laisser rebondir est une faute.</li>
+        <li>La balle doit être frappée avec une seule main ou n’importe quelle partie du bras.</li>
+        <li>Un service ne peut pas être contré (= touché par un joueur adversaire au dessus de la bande horizontale du filet, pieds au sol ou non).</li>
+        <li>Les joueurs de l'équipe au service ne doivent pas, par un écran individuel ou collectif, empêcher les adversaires de voir le joueur au service ou la trajectoire du ballon.</li>
+    </ul>
+
+<h2 id="regle-2025">Nouvelles règles 2025</h2>
+
+    <ul>
+        <li><strong>Fautes de positions : </strong>Plus de fautes de positions pour l’équipe qui est au service : les joueurs pourront se placer directement dans leur poste d’attaque pour les avants et de défense pour les arrières. </li>
+        <li><strong>Pénétration du passeur : </strong>Le passeur pourra pénétrer dés le lancé de ballon du serveur et non plus à la frappe de balle d’où un gain de temps lors des services smashés</li>
+        <li><strong>Ecran des joueurs de l’équipe au service : </strong>Les joueurs ne pourront plus lever les mains au dessus de la tête; la limite sera de poser les mains sur sa tête; de plus les joueurs ne pourront plus se coller il devra y avoir un bras tendu entre chaque joueur, soit 50 cm minimum). </li>
+        <li><strong>Double contact au niveau de la passe à 10 doigts : </strong>Le double contact sera autorisé que ce soit au premier ou au deuxième contact tant que le ballon reste dans son propre camp même si la passe est vraiment pourrit et que le ballon tourne dix mille fois sur lui même : Il y aura faute que si le ballon passe du côté de l’équipe adverse </li>
+    </ul>
+
+</article>
+</div>
+{% endblock %}
