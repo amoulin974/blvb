@@ -1,0 +1,47 @@
+{% extends 'base_front.html.twig' %}
+{%  block title %}
+{% endblock %}
+
+{%  block body %}
+    <div class="container mx-auto max-w-5xl px-4">
+        <h1>Le calendrier par gymnase de la saison {{ saison.nom }}</h1>
+        {% for phase in saison.phases%}
+            <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+                <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
+                <div class="collapse-title">
+                    {{ phase.nom }}
+                </div>
+                {%  for journee in saison.phases. %}
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Gymnase</th>
+                            <th>Nombre de terrains disponibles</th>
+                        </tr>
+                    </thead>
+
+                    /** Lieu lieu **/
+                    {% for lieu in lieux %}
+                        <tr>
+                            <td>test</td>
+                            <td>{{ lieu.nom }}</td>
+                            <td>{{ lieu.nbTerrains }}</td>
+                        </tr>
+
+                    {% endfor %}
+                </table>
+
+
+            </div>
+
+        {% endfor %}
+
+
+    </div>
+
+
+
+{% endblock %}
+

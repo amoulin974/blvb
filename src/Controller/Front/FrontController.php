@@ -2,6 +2,7 @@
 
 namespace App\Controller\Front;
 
+use App\Repository\LieuRepository;
 use phpDocumentor\Reflection\Types\Integer;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\Saison;
@@ -179,6 +180,28 @@ final class FrontController extends AbstractController
             'phaseouverte'=>$phaseouverte,
         ]);
     }
+    //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux
+    #[Route('/calendrierlieu', name: 'calendrierlieu', methods: ['GET'])]
+    public function calendrierLieu(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+                                                $saisonRepository, LieuRepository $lieuRepository): Response
+    {
+        //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+        $saison=$saisonRepository->find($this->idSaisonSelected);
+        //Déterminer la phase à ouvrir
+        $phaseouverte=$this->getPhaseActuelle($saison);
+        $lieux=$lieuRepository->findAll();
+
+        return $this->render('front/calendrier_lieu.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+            'saison'=>$saison,
+            'lieux'=>$lieux,
+            'phaseouverte'=>$phaseouverte,
+        ]);
+    }
+
 
     //Route pour afficher le classement des équipes de la saison sélectionnée
     #[Route('/classement', name: 'classement', methods: ['GET'])]
