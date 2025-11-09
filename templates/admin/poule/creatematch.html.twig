@@ -5,7 +5,7 @@
     {% if error %}
         <p class="alert alert-error">{{ error }}</p>
     {% else %}
-        <h1>Placer les parties de la journée {{ journee.numero }} de la poule {{ poule.nom }}</h1>
+        <h1>Placer les matchs de la journée {{ journee.numero }} de la poule {{ poule.nom }}</h1>
         <div class="mb-4">
             <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id}) }}">Voir la saison</a>
             <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a>
@@ -13,24 +13,30 @@
 
         {#  Sélecteur de journée#}
         <div>
-            <ul>
-            {% for journee in poule.journees %}
-                <li>Journée {{ journee.numero }} - {{ journee.dateDebut|format_date('short', locale='fr') }} - {{ journee.dateFin|format_date('short', locale='fr') }}</li>
+
+            {% for majournee in poule.journees %}
+                <span class="p-2 badge
+{% if majournee.id == journee.id %} badge-info  {% else %} badge-outline {% endif %}"><a class="link" href="/admin/partie/{{ poule.id }}/getpartiecalendar/{{ majournee.id }}">Journée {{ majournee.numero }}</a></span>
+{#                - {{ journee.dateDebut|format_date('short', locale='fr') }} - {{ journee.dateFin|format_date('short', locale='fr') }}#}
             {% endfor %}
-            </ul>
+
         </div>
 
         <div
             id="calendar"
             data-controller="calendar"
             data-calendar-datatype-value="partie"
-            data-calendar-events-url-value={{ path('admin_partie_api', {'id': poule.id, journee:poule.journees.0.id}) }}
-            data-calendar-datedebut-value="{{ poule.journees.0.datedebut|date('Y-m-d') }}"
+            data-calendar-journeeid-value={{ journee.id }}
+            data-calendar-events-url-value={{ path('admin_partie_api', {'id': poule.id, journee:journee.id}) }}
+            data-calendar-datedebut-value="{{ journee.datedebut|date('Y-m-d') }}"
             data-calendar-initialview-value="dayGridSixDay"
             data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"
             data-calendar-duration-value="1"
             data-calendar-pouleid-value="{{ poule.id }}"
-            data-calendar-datefin-value="{{ journee.datefin|date('Y-m-d') }}"
+
+
+
+            data-calendar-datefin-value="{{ journee.poule.phase.datefin|date('Y-m-d') }}"
             data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
         </div>
 

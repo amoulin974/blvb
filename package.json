@@ -30,9 +30,11 @@
         "@fullcalendar/multimonth": "^6.1.19",
         "@fullcalendar/timegrid": "^6.1.19",
         "@tailwindcss/postcss": "^4.1.14",
+        "build": "^0.1.4",
         "daisyui": "^5.2.3",
         "moment": "^2.30.1",
         "postcss-loader": "^8.2.0",
+        "run": "^1.5.0",
         "tippy.js": "^6.3.7",
         "tocbot": "^4.36.4",
         "tom-select": "^2.4.3"

@@ -20,7 +20,6 @@ class PartieCalendarType extends AbstractType
     {
         /** @var Poule $poule */
         $poule = $options['poule'];
-
         $builder
             ->add('date', DateTimeType::class, [
                 'widget' => 'single_text',
@@ -32,6 +31,7 @@ class PartieCalendarType extends AbstractType
                 'class' => Journee::class,
                 'choice_label' => fn(Journee $j) => 'Journée n°' . $j->getNumero(),
                 'label' => 'Journée',
+
                 'query_builder' => function (EntityRepository $er) use ($poule) {
                     return $er->createQueryBuilder('j')
                         ->where('j.poule = :poule')
@@ -86,6 +86,7 @@ class PartieCalendarType extends AbstractType
         $resolver->setDefaults([
             'data_class' => Partie::class,
             'poule' => null, // ✅ obligation pour filtrer
+            'journee' => null, // ✅ on déclare l'option
         ]);
     }
 }

@@ -3,7 +3,8 @@
 namespace App\Controller\Front;
 
 use App\Repository\LieuRepository;
-use phpDocumentor\Reflection\Types\Integer;
+use App\Repository\PartieRepository;
+use App\Service\PlanningService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\Saison;
 use Doctrine\ORM\EntityManagerInterface;
@@ -181,9 +182,12 @@ final class FrontController extends AbstractController
         ]);
     }
     //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux
+    //TODO Finir l'interface en choisissant la méthode (planning service ou ddans le controler)
     #[Route('/calendrierlieu', name: 'calendrierlieu', methods: ['GET'])]
     public function calendrierLieu(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-                                                $saisonRepository, LieuRepository $lieuRepository): Response
+                                                $saisonRepository, LieuRepository $lieuRepository,
+                                   PartieRepository $partieRepository,
+                                   PlanningService $planningService): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -193,12 +197,31 @@ final class FrontController extends AbstractController
         $phaseouverte=$this->getPhaseActuelle($saison);
         $lieux=$lieuRepository->findAll();
 
+
+        foreach ($lieux as $lieu) {
+            $partiesByDate=[];
+            foreach ($lieu->getParties() as $partie) {
+                if (!isset($partiesByDate[$partie->getPoule()->getPhase()->getId()])){
+                    $partiesByDate[$partie->getPoule()->getPhase()->getId()]=[];
+                }
+                if (!isset($partiesByDate[$partie->getPoule()->getPhase()->getId()][$partie->getDate()->format('Y-m-d')])) {
+                    $partiesByDate[$partie->getPoule()->getPhase()->getId()][$partie->getDate()->format('Y-m-d')] = [];
+
+                }
+                $partiesByDate[$partie->getPoule()->getPhase()->getId()][$partie->getDate()->format('Y-m-d')][]=$partie;
+            }
+            $lieu->partiesByDate=$partiesByDate;
+        }
+//        dd($lieux);
         return $this->render('front/calendrier_lieu.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'saison'=>$saison,
             'lieux'=>$lieux,
             'phaseouverte'=>$phaseouverte,
+            'partiesByDate'=>$partiesByDate
+
+
         ]);
     }
 

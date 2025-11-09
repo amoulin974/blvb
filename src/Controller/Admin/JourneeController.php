@@ -180,11 +180,7 @@ final class JourneeController extends AbstractController
 
         }
 
-        //Affiche lecalendrier pour pouvoir déplacer les journées
-        return $this->render('admin/poule/createjournee.html.twig', [
-            'poule' => $poule,
-            'error' => $error,
-        ]);
+        return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
     }
 
     #[Route('/{id}/api/journees', name: 'api', methods: ['GET'])]

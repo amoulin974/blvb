@@ -114,6 +114,7 @@ final class SaisonController extends AbstractController
 
 
     //Affiche une saison
+    //TODO ajouter des ancres pour qu'après la création des journées ou des matchs on arrive directement sur la bonne poule
     #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Saison $saison): Response
     {

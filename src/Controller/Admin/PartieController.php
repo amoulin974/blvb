@@ -161,16 +161,16 @@ final class PartieController extends AbstractController
             $entityManager->flush();
 
         }
-        return $this->render('admin/poule/creatematch.html.twig', [
-            'poule' => $poule,
-            'error' => $error,
-        ]);
+
+        return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
     }
 
     //Affiche le calendrier des journées pour une poule
+
     #[Route('/{id}/getpartiecalendar/{journee}', name: 'getpartiecalendar', methods: ['GET'])]
     public function getPartieCalendar (Poule $poule, Journee $journee): Response
     {
+
         // Vérifie l'appartenance
         if ($journee->getPoule() !== $poule) {
             throw $this->createNotFoundException("Cette journée n'appartient pas à cette poule.");
@@ -197,6 +197,7 @@ final class PartieController extends AbstractController
             $start = $partie->getDate(); // DateTimeImmutable
             $end = $start->modify('+1 hour');
             $data[] = [
+                'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'id' => $partie->getId(),
                 'title' => $partie->getIdEquipeRecoit()->getNom(). "vs" . $partie->getIdEquipeDeplace()->getNom(),
                 'start' => $start->format(\DateTimeInterface::ATOM),
@@ -213,7 +214,9 @@ final class PartieController extends AbstractController
     public function apiGetModalEdit(Poule $poule, Partie $partie, Request $request, EntityManagerInterface $em): Response
     {
         if ($partie->getPoule() !== $poule) throw $this->createNotFoundException("Cette partie n'appartient pas à cette poule");
-        $form = $this->createForm(PartieType::class, $partie);
+        $form = $this->createForm(PartieCalendarType::class, $partie,[
+        'poule' => $poule,
+        ]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -230,12 +233,12 @@ final class PartieController extends AbstractController
 
     //Route utilisée par fullcalendar pour afficher le formulaire de création d'une partie
     // dans la modale qui apparait quand on clique sur une partie
-    #[Route('/{poule}/api/getmodal/new', name: 'api_getmodalNew', methods: ['GET', 'POST'])]
-    public function apiGetModalNew(Poule $poule, Request $request, EntityManagerInterface $em): Response
+    #[Route('/{poule}/api/getmodal/new/{journee}', name: 'api_getmodalNew', methods: ['GET', 'POST'])]
+    public function apiGetModalNew(Poule $poule, Request $request, Journee $journee, EntityManagerInterface $em): Response
     {
         $partie= new Partie();
         $partie->setPoule($poule);
-
+        $partie->setIdJournee($journee);
         $form = $this->createForm(PartieCalendarType::class, $partie, [
             'poule' => $poule,
         ]);

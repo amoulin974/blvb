@@ -6,6 +6,8 @@ import multiMonthPlugin from '@fullcalendar/multimonth';
 import moment from "moment";
 import "moment/locale/fr";
 
+
+//ToDO pour le calendrier des match. Modifier la initial date en fonction de la journée affichée
 export default class extends Controller {
     static values = {
         eventsUrl: String,
@@ -17,6 +19,7 @@ export default class extends Controller {
         buttons: String,
         duration: String,
         csrfToken: String,
+        journeeid:String,
         initialDate:String
     }
 
@@ -88,6 +91,7 @@ export default class extends Controller {
                     type: 'dayGrid',
                     buttonText: 'Journée',
                     duration: { days: 7 },
+                    hiddenDays: [0],
                     validRange: {
                         start: validStart.format("YYYY-MM-DD"),
                         end: validEnd.format("YYYY-MM-DD"),
@@ -137,7 +141,6 @@ export default class extends Controller {
 
     //Méthode appelée sur le click d'une date vide pour créer une nouvelle journée
     onDateClick(info) {
-        console.log("clickdate");
         if (this.datatypeValue==="journee"){
             this.onDateClickJournee(info);
         }else if (this.datatypeValue==="partie"){
@@ -315,7 +318,8 @@ export default class extends Controller {
 
         const modalTitle=modal.querySelector('#eventTitle')
         const modalBody=modal.querySelector('#modalBody');
-        let url="/admin/partie/"+this.pouleidValue+"/api/getmodal/new"
+        console.log(this.journeeidValue)
+        let url="/admin/partie/"+this.pouleidValue+"/api/getmodal/new/"+this.journeeidValue
         // charger le formulaire via fetch
         fetch(url)
             .then(response => response.text())

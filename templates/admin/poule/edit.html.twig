@@ -9,7 +9,7 @@
 
     <div class="flex gap-2">
         <a href="{{ path('admin_poule_index') }}" class="btn btn-sm btn-info">Revenir à la liste des poules</a>
-        <a class="btn btn-neutral btn-sm" href="{{ path('admin_poule_getjourneecalendar', {'id':poule.id}) }}">Calendrier des journées</a>
+        <a class="btn btn-neutral btn-sm" href="{{ path('admin_journee_getjourneecalendar', {'id':poule.id}) }}">Calendrier des journées</a>
         {{ include('/admin/poule/_delete_form.html.twig') }}
     </div>
 

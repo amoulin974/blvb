@@ -5,33 +5,83 @@
 {%  block body %}
     <div class="container mx-auto max-w-5xl px-4">
         <h1>Le calendrier par gymnase de la saison {{ saison.nom }}</h1>
+
         {% for phase in saison.phases%}
             <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
                 <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
                 <div class="collapse-title">
-                    {{ phase.nom }}
+                    <h2>{{ phase.nom }}</h2>
                 </div>
-                {%  for journee in saison.phases. %}
+                <div class="collapse-content">
+                    <div>Filtrer par lieu :
+                        <select id="lieuFilter_{{phase.id}}" class="select" onchange="filterLieu({{phase.id}})">
+                            <option value="all">Tous les lieux</option>
+                            {% for lieu in lieux %}
+                                <option value="{{lieu.id}}">{{lieu.nom}}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                        {% for lieu in lieux %}
+                        <div data-idphase="{{ phase.id }}" data-idlieu="{{ lieu.id }}">
+                        <h3 class="mt-4">{{ lieu.nom }}</h3>
+                            <p>Recoit habituellement : {{lieu.jour}}  - {{lieu.heure|format_time('short', locale='fr')}}</p>
+                            {% if lieu.partiesByDate[phase.id] is defined %}
+                                <table class="table-zebra table-xs hidden md:table">
+                                    <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Nombre de matchs</th>
+                                        <th>Info</th>
+                                        <th>Détail des matchs</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for date, parties in lieu.partiesByDate[phase.id] %}
+                                        <tr>
+                                            <td>{{ date|format_date(locale='fr') }}</td>
+                                            <td>{{ parties|length }} / {{ lieu.nbterrains }}</td>
+                                            <td>
+                                                {% if  parties|length > lieu.nbterrains %} <p class="alert alert-error">Trop de matchs prévus par rapport à la capacité d'accueil. </p>{% endif %}
+                                                {%  if date|format_date(locale='fr', pattern='EEEE') != lieu.jour|lower %}
+                                                    <p class="alert alert-warning inline-block">Attention, {% if parties|length >1 %}les matchs sont placés {% else %} le match est placé {%  endif %} un <span class="font-bold">{{ date|format_date(locale='fr', pattern='EEEE') }}</span> ce qui ne correspond pas au jour de reception habituel de ce gymnase ({{ lieu.jour }}).</p>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <ul class="list">
+                                                    {%  for partie in parties %}
+                                                        <li class="text-xs caret-orange-50">{{ partie.IdEquipeRecoit.nom }} vs {{ partie.IdEquipeDeplace.nom }} ({{ partie.poule.nom }})</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
 
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Gymnase</th>
-                            <th>Nombre de terrains disponibles</th>
-                        </tr>
-                    </thead>
+                                </table>
+{#                                Affichage petit écran#}
+                                {% for lieu in lieux %}
+                                    <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
+                                        <div class="card-body">
+                                            <h3 class="card-title">{{lieu.nom}}</h3>
+                                            <p>Adresse <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ lieu.adresse|url_encode }}"
+                                                          target="_blank"
+                                                          rel="noopener noreferrer">
+                                                    {{ lieu.nom }}
+                                                </a></p>
+                                            <p>Recoit habituellement : {lieu.jour}}  - {{lieu.heure|format_time('short', locale='fr')}}</p>
+                                            {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
+                                        </div>
 
-                    /** Lieu lieu **/
-                    {% for lieu in lieux %}
-                        <tr>
-                            <td>test</td>
-                            <td>{{ lieu.nom }}</td>
-                            <td>{{ lieu.nbTerrains }}</td>
-                        </tr>
+                                    </div>
+                                {% endfor %}
+                            {% else %}
+                            <p class="alert alert-info">Aucun matchs dans ce gymnase et cette phase</p>
+                                {%  endif %}
+                        </div>
+                        {% endfor %}
 
-                    {% endfor %}
-                </table>
+                </div>
+
 
 
             </div>
@@ -44,4 +94,26 @@
 
 
 {% endblock %}
+{% block extra_scripts %}
+<script>
+    function filterLieu(phaseId) {
+        const select = document.getElementById('lieuFilter_' + phaseId);
+        const value = select.value;
 
+        // Sélectionner uniquement les div de cette poule
+        const divs = document.querySelectorAll('div[data-idphase="'+phaseId+'"]')
+
+        divs.forEach(div => {
+            const idLieuDiv = div.dataset.idlieu;
+            if (idLieuDiv == value) {
+                // ici c'est le div correspondant
+                div.style.display = '';
+            } else {
+                div.style.display = 'none';
+            }
+
+        });
+
+    }
+</script>
+    {% endblock %}

@@ -8,15 +8,10 @@
     {% for phase in saison.phases%}
         <div class="bg-base-100 border-base-300 collapse {%  if phaseouverte.id==phase.id %}collapse-open {% endif %}collapse-arrow border">
             <input type="checkbox" class="peer" />
-            <div
-                class="collapse-title"
-            >
+            <div class="collapse-title">
                 {{ phase.nom }}
             </div>
-            <div
-                class="collapse-content"
-            >
-            
+            <div class="collapse-content">
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
@@ -37,8 +32,8 @@
                                 {% for equipe in poule.equipes %}
                                     <tr>
                                         <td><a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="link">{{ equipe.nom }}</a></td>
-                                        <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
-                                                target="_blank" 
+                                        <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}"
+                                                target="_blank"
                                                 rel="noopener noreferrer">
                                                     {{ equipe.idLieu.nom }}
                                                 </a></td>
@@ -53,20 +48,20 @@
                             <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
                                 <div class="card-body">
                                     <h3 class="card-title">{{equipe.nom}}</h3>
-                                    <p>Adresse <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
-                                                target="_blank" 
+                                    <p>Adresse <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}"
+                                                target="_blank"
                                                 rel="noopener noreferrer">
                                                     {{ equipe.idLieu.nom }}
                                                 </a></p>
                                     <p>Recoit habituellement : {{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>
                                     {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
                                 </div>
-                                
+
                             </div>
                             {% endfor %}
                         {% endif %}
                         </div>
-                        
+
                 {% endfor %}
                 </div>
             </div>
