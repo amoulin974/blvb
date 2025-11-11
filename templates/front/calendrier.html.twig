@@ -15,10 +15,10 @@
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
-                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-base-100 border-base-300 p-6">
                         <div>Filtrer par équipe :
-                                <select id="equipeFilter_{{poule.id}}" onchange="filterMatches({{poule.id}})">
+                                <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" onchange="filterMatches({{phase.id}}, {{poule.id}})">
                                     <option value="all">Toutes les équipes</option>
                                     {% for equipe in poule.equipes %}
                                         <option value="{{equipe.id}}">{{equipe.nom}}</option>
@@ -160,16 +160,16 @@
 
 {% block extra_scripts %}
 <script>
-function filterMatches(pouleId) {
-    const select = document.getElementById('equipeFilter_' + pouleId);
+function filterMatches(phaseId, pouleId) {
+
+    const select = document.getElementById('equipeFilter_' + phaseId + '_' + pouleId);
     const value = select.value;
 
-    // Sélectionner uniquement les tables de cette poule
-    const tables = document.querySelectorAll('[name="tabs_' + pouleId + '"] ~ .tab-content table');
-
-    tables.forEach(table => {
-        const rows = table.querySelectorAll('tr[data-recoit]');
-        console.log(rows);
+    // Sélectionner uniquement les tabs de cette poule
+    const tabs = document.querySelectorAll('[name="tabs_' + phaseId + '"][data-poule="'+pouleId+'"] + .tab-content table');
+    console.log(tabs)
+    tabs.forEach(tab => {
+        const rows = tab.querySelectorAll('tr[data-recoit]');
         rows.forEach(row => {
             const recoit = row.dataset.recoit;
             const deplace = row.dataset.deplace;
@@ -183,7 +183,8 @@ function filterMatches(pouleId) {
     });
 
     // Sélectionner uniquement les cartes de cette poule
-    const cards = document.querySelectorAll('[name="tabs_' + pouleId + '"] ~ .tab-content .card');
+    const cards = document.querySelectorAll('[name="tabs_' + phaseId + '"][data-poule="'+pouleId+'"] + .tab-content .card');
+    console.log(cards)
     cards.forEach(card => {
         const recoit = card.dataset.recoit;
         const deplace = card.dataset.deplace;

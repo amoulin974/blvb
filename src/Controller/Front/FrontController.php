@@ -4,13 +4,13 @@ namespace App\Controller\Front;
 
 use App\Repository\LieuRepository;
 use App\Repository\PartieRepository;
-use App\Service\PlanningService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\Saison;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Partie;
 use App\Entity\Classement;
 use App\Repository\EquipeRepository;
+
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -115,7 +115,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, int $id, EquipeRepository $equipeRepository): Response
+    $saisonRepository, ClassementService $classementService, int $id, EquipeRepository $equipeRepository, PartieRepository $partieRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -130,6 +130,11 @@ final class FrontController extends AbstractController
         $classementService->getClassement($saison);
         $poules=$equipe->getPoules();
 
+        //On recupère la liste des matchs
+        $matchsByPoule=[];
+        foreach ($poules as $poule) {
+            $matchsByPoule[$poule->getId()] = $partieRepository->getMatchsByEquipePhase($equipe->getId(), $poule->getId());
+        }
 
         //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
         $listeCapitaines=[];
@@ -152,13 +157,16 @@ final class FrontController extends AbstractController
 
 
 
+
+
         return $this->render('front/equipe.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
             'canViewCapitaine'=>$canViewCapitaine,
-            'equipe'=>$equipe
+            'equipe'=>$equipe,
+            'matchsByPoule'=>$matchsByPoule
         ]);
     }
 
@@ -182,12 +190,12 @@ final class FrontController extends AbstractController
         ]);
     }
     //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux
-    //TODO Finir l'interface en choisissant la méthode (planning service ou ddans le controler)
+
     #[Route('/calendrierlieu', name: 'calendrierlieu', methods: ['GET'])]
     public function calendrierLieu(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
                                                 $saisonRepository, LieuRepository $lieuRepository,
                                    PartieRepository $partieRepository,
-                                   PlanningService $planningService): Response
+                                   ): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -197,7 +205,7 @@ final class FrontController extends AbstractController
         $phaseouverte=$this->getPhaseActuelle($saison);
         $lieux=$lieuRepository->findAll();
 
-
+        $partiesByDate=[];
         foreach ($lieux as $lieu) {
             $partiesByDate=[];
             foreach ($lieu->getParties() as $partie) {
@@ -212,7 +220,7 @@ final class FrontController extends AbstractController
             }
             $lieu->partiesByDate=$partiesByDate;
         }
-//        dd($lieux);
+
         return $this->render('front/calendrier_lieu.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,

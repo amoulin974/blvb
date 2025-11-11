@@ -57,18 +57,22 @@
 
                         <li><a href="{{ path('front_classement')}}">Classement</a></li>
                         <!-- Dropdown Calendrier -->
-                        <li class="relative group">
-                            <button class="px-3 hover:text-accent flex items-center">
-                                Calendrier
-                                <svg class="ml-1 w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 10.94l3.71-3.71a.75.75 0 111.06 1.06l-4.24 4.25a.75.75 0 01-1.06 0L5.23 8.29a.75.75 0 01.02-1.06z" clip-rule="evenodd"/>
-                                </svg>
-                            </button>
-                        <div class="absolute left-0 mt-8 w-40 bg-white border rounded shadow-lg opacity-0 group-hover:opacity-100 invisible group-hover:visible transition-opacity flex flex-col">
-                                <a href="{{ path('front_calendrier')}}" class="block px-4 py-2 hover:bg-gray-100">Par équipe</a>
-                                <a href="{{ path('front_calendrierlieu')}}" class="block px-4 py-2 hover:bg-gray-100">Par gymnase</a>
-                            </div>
-                        </li>
+                        <div class="hidden lg:flex justify-center items-center">
+                            <ul class=" menu-horizontal">
+
+                                <li>
+                                    <details>
+                                        <summary>Calendrier</summary>
+                                        <ul class="menu bg-base-200 w-58 [&_li>*]:rounded-none p-0">
+                                            <li><a href="{{ path('front_calendrier')}}" class="block px-1 py-2 hover:bg-gray-100">Par équipe</a>
+                                                <a href="{{ path('front_calendrierlieu')}}" class="block px-1 py-2 hover:bg-gray-100">Par gymnase</a></li>
+                                        </ul>
+                                    </details>
+                                </li>
+
+                            </ul>
+                        </div>
+
                         <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
                         {% if app.user %}
                             {% if is_granted('ROLE_ADMIN') %}
@@ -135,7 +139,9 @@
             {% endblock %}
         </aside>
     </div>
+
 </div>
+{%  include "front/fragments/_footer.html.twig" %}
 {% block extra_scripts %}{% endblock %}
 </body>
 </html>

@@ -34,6 +34,38 @@ class PartieRepository extends ServiceEntityRepository
 
         return $qb->getQuery()->getResult();
     }
+
+    public function getMatchsByEquipePhase(int $equipeId, int $pouleId): array
+    {
+        return $this->createQueryBuilder('m')
+            ->select('m.id AS match_id')
+            ->addSelect('m.date AS date_match')
+            ->addSelect('m.nb_set_gagnant_reception AS score_reception_match')
+            ->addSelect('m.nb_set_gagnant_deplacement AS score_deplacement_match')
+            ->addSelect('er.nom AS equipe_recoit')
+            ->addSelect('ed.nom AS equipe_deplace')
+            ->addSelect('l.nom AS lieu_nom')
+            ->addSelect('l.adresse AS lieu_adresse')
+            ->addSelect('j.id AS journee_id')
+
+            ->join('m.id_lieu', 'l')
+            ->join('m.id_journee', 'j')
+            ->join('m.poule', 'poule')
+
+            // 🔥 Deux JOIN séparés pour les 2 équipes
+            ->join('m.id_equipe_recoit ', 'er')     // ou join('m.equipeRecoit', 'er') selon ton mapping
+            ->join('m.id_equipe_deplace ', 'ed')    // idem
+
+            ->where('poule.id = :pouleId')
+            ->andWhere('er.id = :equipeId OR ed.id = :equipeId')
+
+            ->setParameter('pouleId', $pouleId)
+            ->setParameter('equipeId', $equipeId)
+
+            ->orderBy('m.date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
     //    /**
     //     * @return Partie[] Returns an array of Partie objects
     //     */

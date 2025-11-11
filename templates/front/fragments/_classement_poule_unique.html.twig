@@ -1,5 +1,4 @@
-<input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
-                        <div class="tab-content bg-base-100 border-base-300 p-6">
+
                         {# Affichage pour grand écran sous forme de table #}
                             {% if poule.classements|length > 0 %}
                                 <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
@@ -82,4 +81,4 @@
                             {% else %}
                             <p class="alert alert-info">Aucun résultat saisi </p>
                             {% endif %}
-                        </div>
+

@@ -4,47 +4,101 @@
 {% block body %}
     <div class="container mx-auto max-w-5xl px-4">
         <h1 class="text-center mb-4">{{equipe.nom}}</h1>
-        <h2 class="mt-4">Informations générales</h3>
-        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}" 
-                                            target="_blank" 
+        <h2 class="mt-4">Informations générales</h2>
+        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}"
+                                            target="_blank"
                                             rel="noopener noreferrer">
                                                 {{ equipe.idLieu.nom }}
                                             </a></p>
         <p><span class="font-bold">Horaire habituel de réceptions :</span>  {{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>
-        <p><span class="font-bold">Capitaine :</span> 
+        <p><span class="font-bold">Capitaine :</span>
         {%if not equipe.capitaine %}
-            <span class="em">Aucun capitaine défini</span>   </p>     
+            <span class="em">Aucun capitaine défini</span>   </p>
         {% elseif not canViewCapitaine  %}
         <span class="em">Ces information ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</span></p>
-        
+
         {% else %}
         </p>
         <p><span class="font-bold">Nom :</span>  {{equipe.capitaine.prenom}} {{equipe.capitaine.nom}}</p>
-        <p><span class="font-bold">Tel :</span>  {{equipe.capitaine.telephone}} </p> 
+        <p><span class="font-bold">Tel :</span>  {{equipe.capitaine.telephone}} </p>
         <p><span class="font-bold">Email :</span>  {{equipe.capitaine.email}} </p>
         {% endif %}
-        
 
-        <h2 class="mt-4">Classement de la saison sélectionné </h2>
+        <h2 class="mt-4">Calendrier</h2>
+        {% for phase in saison.phases %}
+            {% for poule in phase.poules %}
+                {%  if matchsByPoule[poule.id] is defined %}
+                    <h3 class="pl-4 pb-2">{{ phase.nom }} - {{ poule.nom }}</h3>
+
+            <table class="border border-solid table-xs table-zebra w-full">
+                <thead><tr>
+                    <th>Date</th>
+                    <th>Les équipes</th>
+                    <th>Score</th>
+                    <th>Le lieu</th>
+                </tr></thead>
+                <tbody>
+
+                    {%  for match in matchsByPoule[poule.id] %}
+
+                        <tr class="{% if match.score_deplacement_match is null and match.score_reception_match is null %}
+
+
+
+                            {%  elseif match.equipe_recoit == equipe.nom and match.score_reception_match > match.score_deplacement_match %}
+                            bg-success
+{% elseif match.equipe_recoit == equipe.nom and match.score_reception_match < match.score_deplacement_match %}
+                            bg-error
+                            {% elseif match.equipe_deplace == equipe.nom and match.score_deplacement_match > match.score_reception_match %}
+                        bg-success
+                            {% elseif match.equipe_deplace == equipe.nom and match.score_deplacement_match < match.score_reception_match %}
+                        bg-error
+                            {%  else %}
+                        bg-info
+                            {% endif %}
+
+                            ">
+                            <td>{{ match.date_match|format_date('short', locale='fr') }}</td>
+                            <td>{{ match.equipe_recoit }} {{ match.score_reception_match }} vs {{ match.equipe_deplace }} {{ match.score_deplacement_match }}</td>
+                            <td>
+                                {%  if match.score_reception_match is null and  match.score_deplacement_match is null %}
+                                    Match non joué
+                                    {% else %}{{ match.score_reception_match }} - {{ match.score_deplacement_match }}
+                                {%  endif %}
+                            </td>
+                            <td>
+                                <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
+                                   target="_blank"
+                                   rel="noopener noreferrer">
+                                    {{ match.lieu_nom}}
+                                </a>
+
+                            </td>
+                        </tr>
+
+                   {% endfor %}
+
+                </tbody>
+            </table>
+            <p>Le fichier ics de ce calendrier : <a class="link" href="{{path("calendar_ics", {poule: poule.id, equipe: equipe.id})}}">Click droit copier l'adresse</a></p>
+                <p class="text-xs">Faite un clic droit "copier l'adresse" puis dans google agenda -> le + à coté de Autre Agenda --> A partir de l'URL et copier l'adresse</p>
+                {%  endif  %}
+            {% endfor %}
+    {% endfor %}
+
+
+        <h2 class="mt-4">Classement de la saison sélectionnée </h2>
         {% for phase in saison.phases %}
             {% for poule in phase.poules %}
                 {% if equipe in poule.equipes %}
-                    <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
-                        <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
-                        <div class="collapse-title">
-                            {{ phase.nom }}
-                        </div>
-                        <div class="collapse-content">
-                            <div class="tabs tabs-lift">
+
+                <h3 class="pl-4 pb-2">{{ phase.nom }} - {{ poule.nom }}</h3>
                                 {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
-                             </div>
-                        </div>
-                    </div>
                 {% endif %}
             {% endfor %}
         {% endfor %}
-        
+
 
     </div>
-    
+
 {% endblock %}
