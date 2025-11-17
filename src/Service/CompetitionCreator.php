@@ -33,8 +33,13 @@ class CompetitionCreator
             $phase = new Phase();
             $phase->setNom($phaseData['nom'] ?? 'Phase sans nom');
 
-
-
+            // Détermine le type de la phase
+            if (str_contains(strtolower($phaseData['type']), 'finale')) {
+                $phase->setType(\App\Enum\PhaseType::FINALE);
+            } else {
+                $phase->setType(\App\Enum\PhaseType::CHAMPIONNAT);
+            }
+            $phase->setOrdre($phaseData['ordre'] ?? 0);
             $phase->setDateDebut(
                 $this->parseYamlDate($phaseData['date_debut'], $saison->getDateDebut())
             );

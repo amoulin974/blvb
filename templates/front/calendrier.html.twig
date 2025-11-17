@@ -198,7 +198,7 @@ function filterMatches(phaseId, pouleId) {
 }
 
 //Script pour gérer l'ouverture et la fermeture des modals de saisie de score
-const modal = document.getElementById('scoreModal');
+const modalScore = document.getElementById('scoreModal');
 const title = document.getElementById('scoreModalTitle');
 const labelReception = document.getElementById('labelReception');
 const labelDeplacement = document.getElementById('labelDeplacement');
@@ -219,7 +219,7 @@ document.querySelectorAll('.open-score-modal').forEach(btn => {
         inputReception.value = '';
         inputDeplacement.value = '';
 
-        modal.classList.add('modal-open');
+        modalScore.classList.add('modal-open');
     });
 });
 
@@ -227,7 +227,7 @@ document.querySelectorAll('.open-score-modal').forEach(btn => {
 document.querySelectorAll('[data-modal-close]').forEach(btn => {
     btn.addEventListener('click', e => {
         e.preventDefault();
-        modal.classList.remove('modal-open');
+        modalScore.classList.remove('modal-open');
     });
 });
 
@@ -268,7 +268,7 @@ document.getElementById('btnValider').addEventListener('click', () => {
             console.error(err);
 
         });
-    modal.classList.remove('modal-open');
+    modalScore.classList.remove('modal-open');
     });
 
 

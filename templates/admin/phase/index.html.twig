@@ -2,15 +2,26 @@
 
 
 {% block title %}Phase index{% endblock %}
-
+{% block stylesheets %}
+    {{ parent() }}
+    <link rel="stylesheet" href="//cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css">
+{% endblock %}
+ {% block javascripts %}
+     {{ parent() }}
+     <script
+         src="//code.jquery.com/jquery-3.7.1.min.js"
+         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+         crossorigin="anonymous"></script>
+     <script src="//cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
+ {% endblock %}
 {% block body %}
-    <h1>Phase index</h1>
+    <h1>Toutes les phases</h1>
     <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_phase_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
         Créer une nouvelle phase</a>
 <div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
-    <table class="border border-solid table table-xs table-zebra">
+    <table class="border border-solid table table-xs table-zebra" id="myTable">
         <thead>
             <tr>
                 <th>Id</th>
@@ -43,4 +54,7 @@
     </table>
 </div>
 
+{% endblock %}
+{% block extra_scripts %}
+    <script>let table = new DataTable('#myTable');</script>
 {% endblock %}

@@ -30,6 +30,8 @@ final class SaisonController extends AbstractController
 
 
 
+    //Ajoute une saison
+    //Attention au EventListener/SaisonListener qui créé les phases et les poules automatiquement
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
     public function new(Request $request, EntityManagerInterface $em, CacheInterface $cache): Response
     {

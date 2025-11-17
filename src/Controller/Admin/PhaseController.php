@@ -4,7 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\Journee;
 use App\Entity\Phase;
-use App\Form\PhaseType;
+use App\Form\PhaseFormType;
 use App\Repository\PhaseRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -29,7 +29,7 @@ final class PhaseController extends AbstractController
     public function new(Request $request, EntityManagerInterface $entityManager): Response
     {
         $phase = new Phase();
-        $form = $this->createForm(PhaseType::class, $phase);
+        $form = $this->createForm(PhaseFormType::class, $phase);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -56,7 +56,7 @@ final class PhaseController extends AbstractController
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Phase $phase, EntityManagerInterface $entityManager): Response
     {
-        $form = $this->createForm(PhaseType::class, $phase);
+        $form = $this->createForm(PhaseFormType::class, $phase);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {

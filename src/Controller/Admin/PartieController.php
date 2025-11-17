@@ -109,8 +109,6 @@ final class PartieController extends AbstractController
             $error="Il faut au moins deux équipes dans la poule";
         }else{
             //Algorithme de la ronde
-
-
             $equipeArray = $equipes;
             if ($nbEquipe % 2 != 0) {
                 $equipeBye = new Equipe();

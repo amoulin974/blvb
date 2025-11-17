@@ -3,24 +3,31 @@
 namespace App\Form;
 
 use App\Entity\Phase;
+use App\Enum\PhaseType;
 use App\Entity\Saison;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-
-class PhaseType extends AbstractType
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
+class PhaseFormType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
             ->add('nom')
-            ->add('datedebut')
-            ->add('datefin')
             ->add('saison', EntityType::class, [
                 'class' => saison::class,
                 'choice_label' => 'nom',
             ])
+            ->add('datedebut')
+            ->add('datefin')
+
+            ->add('type', ChoiceType::class, [
+                'choices' => PhaseType::cases(),
+                'choice_label' => fn (PhaseType $type) => $type->label(),
+            ])
+            ->add('ordre')
         ;
     }
 

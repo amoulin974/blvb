@@ -30,7 +30,7 @@
                 {%  if matchsByPoule[poule.id] is defined %}
                     <h3 class="pl-4 pb-2">{{ phase.nom }} - {{ poule.nom }}</h3>
 
-            <table class="border border-solid table-xs table-zebra w-full">
+            <table class="border border-solid table-xs table-zebra w-full hidden md:table">
                 <thead><tr>
                     <th>Date</th>
                     <th>Les équipes</th>
@@ -58,7 +58,7 @@
                             {% endif %}
 
                             ">
-                            <td>{{ match.date_match|format_date('short', locale='fr') }}</td>
+                            <td>{{ match.date_match|format_datetime('short', locale='fr') }}</td>
                             <td>{{ match.equipe_recoit }} {{ match.score_reception_match }} vs {{ match.equipe_deplace }} {{ match.score_deplacement_match }}</td>
                             <td>
                                 {%  if match.score_reception_match is null and  match.score_deplacement_match is null %}
@@ -80,6 +80,21 @@
 
                 </tbody>
             </table>
+                    {%  for match in matchsByPoule[poule.id] %}
+                        <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
+                            <div class="card-body " >
+                                <p><strong>{{ match.equipe_recoit }}</strong> {{ match.score_reception_match }} vs <strong>{{ match.equipe_deplace }}</strong> {{ match.score_deplacement_match }}</p>
+                                <p>Date : {{ match.date_match|format_datetime('short', locale='fr') }}</p>
+                                <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
+                                             target="_blank"
+                                             rel="noopener noreferrer">
+                                        {{ match.lieu_nom}}
+                                    </a>
+                                    </p>
+                            </div>
+
+                        </div>
+                    {% endfor %}
             <p>Le fichier ics de ce calendrier : <a class="link" href="{{path("calendar_ics", {poule: poule.id, equipe: equipe.id})}}">Click droit copier l'adresse</a></p>
                 <p class="text-xs">Faite un clic droit "copier l'adresse" puis dans google agenda -> le + à coté de Autre Agenda --> A partir de l'URL et copier l'adresse</p>
                 {%  endif  %}

@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
-
+use App\Enum\PhaseType;
 #[ORM\Entity(repositoryClass: PhaseRepository::class)]
 class Phase
 {
@@ -35,9 +35,11 @@ class Phase
     #[ORM\OneToMany(targetEntity: Poule::class, mappedBy: 'phase')]
     private Collection $poules;
 
-    /**
-     * @var Collection<int, Journee>
-     */
+    #[ORM\Column(enumType: PhaseType::class)]
+    private PhaseType $type = PhaseType::CHAMPIONNAT;
+
+    #[ORM\Column]
+    private ?int $ordre = null;
 
 
     public function __construct()
@@ -132,6 +134,30 @@ class Phase
                 $poule->setPhase(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getType(): ?PhaseType
+    {
+        return $this->type;
+    }
+
+    public function setType(?PhaseType  $type): static
+    {
+        $this->type = $type;
+
+        return $this;
+    }
+
+    public function getOrdre(): ?int
+    {
+        return $this->ordre;
+    }
+
+    public function setOrdre(int $ordre): static
+    {
+        $this->ordre = $ordre;
 
         return $this;
     }

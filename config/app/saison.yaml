@@ -2,25 +2,31 @@ parameters:
     saison:
         phases:
             - nom: "Phase 1"
+              type: "CHAMPIONNAT"
               date_debut: "01/09/n"
               date_fin: "01/02/n+1"
               duree: 4
+              ordre: 0
               poules:
                   - { nom: "Poule A" }
                   - { nom: "Poule B" }
                   - { nom: "Poule C" }
                   - { nom: "Poule D" }
             - nom: "Phase 2"
+              type: "CHAMPIONNAT"
               date_debut: "01/02/n+1"
               date_fin: "01/06/n+1"
+              ordre: 1
               poules:
                   - { nom: "Poule A" }
                   - { nom: "Poule B" }
                   - { nom: "Poule C" }
                   - { nom: "Poule D" }
             - nom: "Phase Finale"
+              type: "FINALE"
               date_debut: "01/06/n+1"
               date_fin: "01/08/n+1"
+              ordre: 2
               poules:
                   - { nom: "Poule A" }
                   - { nom: "Poule B" }

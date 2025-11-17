@@ -1,15 +1,53 @@
 {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
 
-    {# Champ Nom de la phase #}
-<div class="form-control w-full">
-    {{ form_label(form.nom, 'Nom de la phase', {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom de la phase'}}) }}
-    {{ form_errors(form.nom) }}
-</div>
+<div class="grid grid-cols-2 gap-4">
 
+
+    <div class="form-control mb-2">
+        <div class="input w-full" >
+        {{ form_label(form.nom, 'Nom de la phase', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom de la phase'}}) }}
+        {{ form_errors(form.nom) }}
+        </div>
+    </div>
+    <div class="form-control mb-2">
+        <div class="input w-full" >
+            {{ form_label(form.saison, 'Saison de rattachement', {'label_attr': {'class': 'label-text'}}) }} :
+            {{ form_widget(form.saison, {'attr' : {'class': 'input' }}) }}
+        </div>
+    </div>
+
+    <div class="form-control mb-2">
+        <div class="input w-full" >
+            {{ form_label(form.datedebut, 'Date de début', {'label_attr': {'class': 'label-text'}}) }} :
+            {{ form_widget(form.datedebut, {'attr' : {'class': 'input' }}) }}
+        </div>
+    </div>
+
+    <div class="form-control mb-2">
+        <div class="input w-full" >
+            {{ form_label(form.datefin, 'Date de fin', {'label_attr': {'class': 'label-text'}}) }} :
+            {{ form_widget(form.datefin, {'attr' : {'class': 'input' }}) }}
+        </div>
+    </div>
+    <div class="form-control mb-2">
+        <div class="input w-full" >
+            {{ form_label(form.type, 'Type de phase', {'label_attr': {'class': 'label-text'}}) }} :
+            {{ form_widget(form.type, {'attr' : {'class': 'input' }}) }}
+        </div>
+    </div>
+
+
+    <div class="form-control mb-2">
+        <div class="input w-full" >
+            {{ form_label(form.ordre, 'Ordre de la phase', {'label_attr': {'class': 'label-text'}}) }} :
+            {{ form_widget(form.ordre, {'attr' : {'class': 'input' }}) }}
+        </div>
+    </div>
+</div>
 {# Bouton de soumission #}
 
 {{ form_rest(form) }}
-<button class="btn">{{ button_label|default('Save') }}</button>
+<button class="btn btn-success btn-sm mb-4">Enregistrer</button>
 {{ form_end(form) }}
 
