@@ -1,8 +1,8 @@
 {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
 
-        {# Champ Nom du lieu #}
+{# Nom du lieu #}
 <div class="form-control">
-    {{ form_label(form.nom, 'Nom du lieu : ', {'label_attr': {'class': 'label'}}) }}
+    {{ form_label(form.nom, 'Nom du lieu :', {'label_attr': {'class': 'label'}}) }}
     {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom du lieu'}}) }}
     {{ form_errors(form.nom) }}
 </div>
@@ -14,23 +14,52 @@
     {{ form_errors(form.adresse) }}
 </div>
 
-<div class="form-control">
-    {{ form_label(form.jour, 'Jour des match :', {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.jour, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Jour des matchs'}}) }}
-    {{ form_errors(form.jour) }}
-</div>
+{# Section Créneaux #}
+<div class="divider">Créneaux</div>
+{% set prototypeHtml %}
+    <li class="card bg-base-200 shadow-sm p-4 relative">
+        <div class="flex justify-end">
+            <button type="button" class="btn btn-sm btn-circle btn-error remove-creneau"
+                    data-action="click->creneau-collection#remove"
+                    title="Supprimer">✕</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ form_row(form.creneaux.vars.prototype.jourSemaine, {'attr': {'class': 'select select-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.capacite, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.heureDebut, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.heureFin, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.prioritaire, {'attr': {'class': 'input input-bordered w-full'}}) }}
+        </div>
+    </li>
+{% endset %}
+<div data-controller="creneau-collection"
+     data-creneau-collection-target="list"
+     data-index="{{ form.creneaux|length }}"
+     data-prototype="{{ prototypeHtml|e('html_attr') }}">
 
-<div class="form-control">
-    {{ form_label(form.heure, "Heure d'ouverture :", {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.heure, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Heure d'ouverture"}}) }}
-    {{ form_errors(form.heure) }}
-</div>
+    <ul class="creneaux-list space-y-4">
+        {% for creneau in form.creneaux %}
+            <li class="card bg-base-200 shadow-sm p-4 relative">
+                <div class="flex justify-end">
+                    <button type="button" class="btn btn-sm btn-circle btn-error"
+                            data-action="click->creneau-collection#remove" title="Supprimer">✕</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {{ form_row(creneau.jourSemaine, {'attr': {'class': 'select select-bordered w-full'}}) }}
+                    {{ form_row(creneau.capacite, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                    {{ form_row(creneau.heureDebut, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                    {{ form_row(creneau.heureFin, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                    {{ form_row(creneau.prioritaire, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
 
-<div class="form-control">
-    {{ form_label(form.nbTerrains, "Nombre de terrains :", {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.nbTerrains, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Nombre de terrains"}}) }}
-    {{ form_errors(form.nbTerrains) }}
+    <button type="button"
+            class="btn btn-primary btn-sm mt-4"
+            data-action="click->creneau-collection#add">
+        Ajouter un créneau
+    </button>
 </div>
-
-    <button class="btn btn-success btn-sm">{{ button_label|default('Save') }}</button>
+<button class="btn btn-success btn-sm mt-6">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}

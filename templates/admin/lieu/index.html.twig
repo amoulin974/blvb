@@ -3,19 +3,28 @@
 {% block title %}Tous les lieux{% endblock %}
 
 {% block body %}
+    {% set jours_semaine = {
+        1: 'Lundi',
+        2: 'Mardi',
+        3: 'Mercredi',
+        4: 'Jeudi',
+        5: 'Vendredi',
+        6: 'Samedi',
+        7: 'Dimanche'
+    } %}
     <h1>Tous les lieux</h1>
     <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_lieu_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
          Créer un nouveau lieu</a>
-<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
+<div class="overflow-x-auto rounded-box border border-base-content/5 w-full bg-base-100">
     <table class="border border-solid table table-xs table-zebra ">
         <thead>
             <tr>
                 <th>Id</th>
                 <th>Nom</th>
                 <th>Adresse</th>
-                <th>Jour de réception</th>
+
                 <th>Nombre de terrains</th>
                 <th>actions</th>
             </tr>
@@ -26,8 +35,11 @@
                 <td>{{ lieu.id }}</td>
                 <td>{{ lieu.nom }}</td>
                 <td>{{ lieu.adresse }}</td>
-                <td>{{ lieu.jour }} - {{ lieu.heure|format_time('short') }}</td>
-                <td>{{ lieu.nbTerrains }}</td>
+                <td>{% for creneau in lieu.creneaux  %}
+                        {% set nom_jour = jours_semaine[creneau.jourSemaine] ?? 'Jour inconnu' %}
+                        <p>{{ nom_jour }} : {{ creneau.capacite }} terrains - prio {{ creneau.prioritaire }}</p>
+                    {% endfor %}
+                </td>
                 <td class="flex items-center gap-2">
 {#                    <a href="{{ path('admin_lieu_show', {'id': lieu.id}) }}">show</a>#}
                     <a class="btn btn-sm btn-neutral" href="{{ path('admin_lieu_edit', {'id': lieu.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">

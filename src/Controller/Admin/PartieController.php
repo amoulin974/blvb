@@ -144,8 +144,8 @@ final class PartieController extends AbstractController
 
                     $dateMatch = $planificationService->calculerDateMatch(
                         $journee->getDateDebut(),
-                        $equipeArray[$homeIndex]->getIdLieu()->getJour(),
-                        $equipeArray[$homeIndex]->getIdLieu()->getHeure()
+                        $equipeArray[$homeIndex]->getIdLieu()->getCreneaux()[0]->getJourSemaine(),
+                        $equipeArray[$homeIndex]->getIdLieu()->getCreneaux()[0]->getHeureDebut(),
                     );
                     $partie->setDate($dateMatch);
                     $partie->setIdLieu($equipeArray[$homeIndex]->getIdLieu());

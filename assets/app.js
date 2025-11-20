@@ -7,6 +7,7 @@ import './bootstrap.js';
  */
 import './styles/app.css';
 import { Application } from '@hotwired/stimulus';
+// import CreneauCollectionController from './controllers/creneau-collection-controller.js';
 import CalendarController from './controllers/calendarController.js';
 import TocbotController from './controllers/tocbotController.js';
 
@@ -15,3 +16,4 @@ console.log('App.js chargé - welcome to AssetMapper! 🎉');
 const application = Application.start();
 application.register('calendar', CalendarController);
 application.register('tocbot', TocbotController);
+// application.register('creneau-collection', CreneauCollectionController);

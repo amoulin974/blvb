@@ -43,6 +43,12 @@ class Poule
     #[ORM\OneToMany(targetEntity: Classement::class, mappedBy: 'poule')]
     private Collection $classements;
 
+    #[ORM\Column]
+    private ?int $nb_montee_defaut = null;
+
+    #[ORM\Column]
+    private ?int $nb_descente_defaut = null;
+
     public function __construct()
     {
         $this->parties = new ArrayCollection();
@@ -206,6 +212,30 @@ class Poule
     public function setClassements(ArrayCollection $classements): self
     {
         $this->classements = $classements;
+        return $this;
+    }
+
+    public function getNbMonteeDefaut(): ?int
+    {
+        return $this->nb_montee_defaut;
+    }
+
+    public function setNbMonteeDefaut(int $nb_montee_defaut): static
+    {
+        $this->nb_montee_defaut = $nb_montee_defaut;
+
+        return $this;
+    }
+
+    public function getNbDescenteDefaut(): ?int
+    {
+        return $this->nb_descente_defaut;
+    }
+
+    public function setNbDescenteDefaut(int $nb_descente_defaut): static
+    {
+        $this->nb_descente_defaut = $nb_descente_defaut;
+
         return $this;
     }
 }
