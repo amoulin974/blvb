@@ -35,6 +35,30 @@ class Saison
     #[ORM\Column]
     private ?\DateTimeImmutable $date_fin = null;
 
+    #[ORM\Column(options: ['default' => 3])]
+    private ?int $points_victoire_forte = 3;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private ?int $points_defaite_forte = 0;
+
+    #[ORM\Column(options: ['default' => 0])]
+    private ?int $points_nul = 0;
+
+    #[ORM\Column(options: ['default' => -3])]
+    private ?int $points_forfait = -3;
+
+    #[ORM\Column(options: ['default' => 1])]
+    private ?int $points_victoire_faible = 1;
+
+    #[ORM\Column(options: ['default' => 2])]
+    private ?int $points_defaite_faible = 2;
+
+    /**
+     * @var Collection<int, Indisponibilite>
+     */
+    #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'saison')]
+    private Collection $indisponibilites;
+
     public function __construct()
     {
 
@@ -42,6 +66,7 @@ class Saison
         $this->date_debut = new \DateTimeImmutable('first day of september this year'); // date actuelle par défaut
         $nextYear=(int)$this->date_debut->format('Y')+1;
         $this->date_fin = new \DateTimeImmutable("last day of july $nextYear"); // date actuelle par défaut
+        $this->indisponibilites = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -130,6 +155,108 @@ class Saison
     public function setDateFin(\DateTimeImmutable $date_fin): static
     {
         $this->date_fin = $date_fin;
+
+        return $this;
+    }
+
+    public function getPointsVictoire(): ?int
+    {
+        return $this->points_victoire;
+    }
+
+    public function setPointsVictoire(int $points_victoire): static
+    {
+        $this->points_victoire = $points_victoire;
+
+        return $this;
+    }
+
+    public function getPointsDefaite(): ?int
+    {
+        return $this->points_defaite;
+    }
+
+    public function setPointsDefaite(int $points_defaite): static
+    {
+        $this->points_defaite = $points_defaite;
+
+        return $this;
+    }
+
+    public function getPointsNul(): ?int
+    {
+        return $this->points_nul;
+    }
+
+    public function setPointsNul(int $points_nul): static
+    {
+        $this->points_nul = $points_nul;
+
+        return $this;
+    }
+
+    public function getPointsForfait(): ?int
+    {
+        return $this->points_forfait;
+    }
+
+    public function setPointsForfait(int $points_forfait): static
+    {
+        $this->points_forfait = $points_forfait;
+
+        return $this;
+    }
+
+    public function getPointsVictoireFaible(): ?int
+    {
+        return $this->points_victoire_faible;
+    }
+
+    public function setPointsVictoireFaible(int $points_victoire_faible): static
+    {
+        $this->points_victoire_faible = $points_victoire_faible;
+
+        return $this;
+    }
+
+    public function getPointsDefaiteFaible(): ?int
+    {
+        return $this->points_defaite_faible;
+    }
+
+    public function setPointsDefaiteFaible(int $points_defaite_faible): static
+    {
+        $this->points_defaite_faible = $points_defaite_faible;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Indisponibilite>
+     */
+    public function getIndisponibilites(): Collection
+    {
+        return $this->indisponibilites;
+    }
+
+    public function addIndisponibilite(Indisponibilite $indisponibilite): static
+    {
+        if (!$this->indisponibilites->contains($indisponibilite)) {
+            $this->indisponibilites->add($indisponibilite);
+            $indisponibilite->setSaison($this);
+        }
+
+        return $this;
+    }
+
+    public function removeIndisponibilite(Indisponibilite $indisponibilite): static
+    {
+        if ($this->indisponibilites->removeElement($indisponibilite)) {
+            // set the owning side to null (unless already changed)
+            if ($indisponibilite->getSaison() === $this) {
+                $indisponibilite->setSaison(null);
+            }
+        }
 
         return $this;
     }

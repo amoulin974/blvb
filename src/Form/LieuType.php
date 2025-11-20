@@ -3,7 +3,6 @@
 namespace App\Form;
 
 use App\Entity\Lieu;
-use Doctrine\DBAL\Types\TimeType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -17,10 +16,15 @@ class LieuType extends AbstractType
         $builder
             ->add('nom')
             ->add('adresse')
-            ->add('jour')
-            ->add('heure')
-            ->add('nbTerrains')
-
+            ->add('creneaux', CollectionType::class, [
+                'entry_type' => CreneauType::class,
+                'allow_add' => true,
+                'allow_delete' => true,
+                'by_reference' => false,
+                'prototype' => true,
+                'prototype_name' => '__name__',
+                'label' => 'Créneaux horaires',
+            ])
         ;
     }
 

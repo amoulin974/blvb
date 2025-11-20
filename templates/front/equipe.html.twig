@@ -10,7 +10,8 @@
                                             rel="noopener noreferrer">
                                                 {{ equipe.idLieu.nom }}
                                             </a></p>
-        <p><span class="font-bold">Horaire habituel de réceptions :</span>  {{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>
+{#        TODO Afficher les creneaux habituels#}
+{#        <p><span class="font-bold">Horaire habituel de réceptions :</span>  {{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>#}
         <p><span class="font-bold">Capitaine :</span>
         {%if not equipe.capitaine %}
             <span class="em">Aucun capitaine défini</span>   </p>
