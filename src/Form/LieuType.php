@@ -17,9 +17,7 @@ class LieuType extends AbstractType
         $builder
             ->add('nom')
             ->add('adresse')
-            ->add('jour')
-            ->add('heure')
-            ->add('nbTerrains')
+
 
         ;
     }

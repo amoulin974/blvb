@@ -37,7 +37,8 @@
                                                 rel="noopener noreferrer">
                                                     {{ equipe.idLieu.nom }}
                                                 </a></td>
-                                        <td>{{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</td>
+                                        {#        TODO Afficher les creneaux habituels#}
+{#                                        <td>{{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</td>#}
                                         <td>{{equipe.position}}</td>
                                     </tr>
 
@@ -53,7 +54,9 @@
                                                 rel="noopener noreferrer">
                                                     {{ equipe.idLieu.nom }}
                                                 </a></p>
-                                    <p>Recoit habituellement : {{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>
+                                    {#        TODO Afficher les creneaux habituels#}
+{#                                    <p>Recoit habituellement : {{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>#}
+                                    {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
                                     {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
                                 </div>
 

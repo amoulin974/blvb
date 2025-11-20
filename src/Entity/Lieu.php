@@ -34,14 +34,13 @@ class Lieu
     #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_lieu')]
     private Collection $parties;
 
-    #[ORM\Column(length: 255)]
-    private ?string $jour = null;
 
-    #[ORM\Column(type: Types::TIME_IMMUTABLE, nullable: true)]
-    private ?\DateTimeImmutable $heure = null;
 
-    #[ORM\Column(nullable: true)]
-    private ?int $nbTerrains = null;
+    /**
+     * @var Collection<int, Creneau>
+     */
+    #[ORM\OneToMany(targetEntity: Creneau::class, mappedBy: 'lieu', orphanRemoval: true)]
+    private Collection $creneaux;
 
 
 
@@ -51,6 +50,7 @@ class Lieu
     {
         $this->equipes = new ArrayCollection();
         $this->parties = new ArrayCollection();
+        $this->creneaux = new ArrayCollection();
 
     }
 
@@ -90,41 +90,11 @@ class Lieu
         return $this;
     }
 
-    public function getJour(): ?string
-    {
-        return $this->jour;
-    }
 
-    public function setJour(string $jour): static
-    {
-        $this->jour = $jour;
 
-        return $this;
-    }
 
-    public function getHeure(): ?\DateTimeImmutable
-    {
-        return $this->heure;
-    }
 
-    public function setHeure(?\DateTimeImmutable $heure): static
-    {
-        $this->heure = $heure;
 
-        return $this;
-    }
-
-    public function getNbTerrains(): ?int
-    {
-        return $this->nbTerrains;
-    }
-
-    public function setNbTerrains(?int $nbTerrains): static
-    {
-        $this->nbTerrains = $nbTerrains;
-
-        return $this;
-    }
 
     /**
      * @return Collection<int, Equipe>
@@ -180,6 +150,36 @@ class Lieu
             // set the owning side to null (unless already changed)
             if ($party->getIdLieu() === $this) {
                 $party->setIdLieu(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Creneau>
+     */
+    public function getCreneaux(): Collection
+    {
+        return $this->creneaux;
+    }
+
+    public function addCreneau(Creneau $creneau): static
+    {
+        if (!$this->creneaux->contains($creneau)) {
+            $this->creneaux->add($creneau);
+            $creneau->setLieu($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCreneau(Creneau $creneau): static
+    {
+        if ($this->creneaux->removeElement($creneau)) {
+            // set the owning side to null (unless already changed)
+            if ($creneau->getLieu() === $this) {
+                $creneau->setLieu(null);
             }
         }
 
