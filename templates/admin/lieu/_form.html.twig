@@ -1,8 +1,8 @@
 {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
 
-{# Champ Nom du lieu #}
+{# Nom du lieu #}
 <div class="form-control">
-    {{ form_label(form.nom, 'Nom du lieu : ', {'label_attr': {'class': 'label'}}) }}
+    {{ form_label(form.nom, 'Nom du lieu :', {'label_attr': {'class': 'label'}}) }}
     {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom du lieu'}}) }}
     {{ form_errors(form.nom) }}
 </div>
@@ -16,120 +16,50 @@
 
 {# Section Créneaux #}
 <div class="divider">Créneaux</div>
-<div class="form-control">
-    <h3 class="text-lg font-bold mb-2">Liste des créneaux</h3>
+{% set prototypeHtml %}
+    <li class="card bg-base-200 shadow-sm p-4 relative">
+        <div class="flex justify-end">
+            <button type="button" class="btn btn-sm btn-circle btn-error remove-creneau"
+                    data-action="click->creneau-collection#remove"
+                    title="Supprimer">✕</button>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {{ form_row(form.creneaux.vars.prototype.jourSemaine, {'attr': {'class': 'select select-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.capacite, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.heureDebut, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.heureFin, {'attr': {'class': 'input input-bordered w-full'}}) }}
+            {{ form_row(form.creneaux.vars.prototype.prioritaire, {'attr': {'class': 'input input-bordered w-full'}}) }}
+        </div>
+    </li>
+{% endset %}
+<div data-controller="creneau-collection"
+     data-creneau-collection-target="list"
+     data-index="{{ form.creneaux|length }}"
+     data-prototype="{{ prototypeHtml|e('html_attr') }}">
 
-    <ul class="creneaux-list space-y-4"
-        data-index="{{ form.creneaux|length > 0 ? form.creneaux|last.vars.name + 1 : 0 }}"
-        data-prototype="{{ form_widget(form.creneaux.vars.prototype)|e('html_attr') }}">
-
+    <ul class="creneaux-list space-y-4">
         {% for creneau in form.creneaux %}
             <li class="card bg-base-200 shadow-sm p-4 relative">
-                <button type="button" class="btn btn-sm btn-circle btn-ghost absolute top-2 right-2 remove-creneau" title="Supprimer">
-                    ✕
-                </button>
+                <div class="flex justify-end">
+                    <button type="button" class="btn btn-sm btn-circle btn-error"
+                            data-action="click->creneau-collection#remove" title="Supprimer">✕</button>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-control">
-                        {{ form_label(creneau.jourSemaine, null, {'label_attr': {'class': 'label'}}) }}
-                        {{ form_widget(creneau.jourSemaine, {'attr': {'class': 'select select-bordered w-full'}}) }}
-                        {{ form_errors(creneau.jourSemaine) }}
-                    </div>
-                    <div class="form-control">
-                        {{ form_label(creneau.capacite, null, {'label_attr': {'class': 'label'}}) }}
-                        {{ form_widget(creneau.capacite, {'attr': {'class': 'input input-bordered w-full'}}) }}
-                        {{ form_errors(creneau.capacite) }}
-                    </div>
-                    <div class="form-control">
-                        {{ form_label(creneau.heureDebut, null, {'label_attr': {'class': 'label'}}) }}
-                        {{ form_widget(creneau.heureDebut, {'attr': {'class': 'input input-bordered w-full'}}) }}
-                        {{ form_errors(creneau.heureDebut) }}
-                    </div>
-                    <div class="form-control">
-                        {{ form_label(creneau.heureFin, null, {'label_attr': {'class': 'label'}}) }}
-                        {{ form_widget(creneau.heureFin, {'attr': {'class': 'input input-bordered w-full'}}) }}
-                        {{ form_errors(creneau.heureFin) }}
-                    </div>
-                    <div class="form-control md:col-span-2">
-                        {{ form_label(creneau.prioritaire, null, {'label_attr': {'class': 'label'}}) }}
-                        {{ form_widget(creneau.prioritaire, {'attr': {'class': 'input input-bordered w-full'}}) }}
-                        {% if creneau.prioritaire.vars.help is defined %}
-                            <div class="text-sm text-gray-500 mt-1">{{ creneau.prioritaire.vars.help }}</div>
-                        {% endif %}
-                        {{ form_errors(creneau.prioritaire) }}
-                    </div>
+                    {{ form_row(creneau.jourSemaine, {'attr': {'class': 'select select-bordered w-full'}}) }}
+                    {{ form_row(creneau.capacite, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                    {{ form_row(creneau.heureDebut, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                    {{ form_row(creneau.heureFin, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                    {{ form_row(creneau.prioritaire, {'attr': {'class': 'input input-bordered w-full'}}) }}
                 </div>
             </li>
         {% endfor %}
     </ul>
 
-    <button type="button" class="btn btn-primary btn-sm mt-4 add-creneau-btn">
+    <button type="button"
+            class="btn btn-primary btn-sm mt-4"
+            data-action="click->creneau-collection#add">
         Ajouter un créneau
     </button>
 </div>
-
 <button class="btn btn-success btn-sm mt-6">{{ button_label|default('Save') }}</button>
 {{ form_end(form) }}
-
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const collectionHolder = document.querySelector('.creneaux-list');
-        const addBtn = document.querySelector('.add-creneau-btn');
-
-        if (!collectionHolder || !addBtn) return;
-
-        // Fonction pour supprimer un élément
-        const addDeleteLink = (item) => {
-            // Vérifier s'il y a déjà un bouton de suppression
-            if (item.querySelector('.remove-creneau')) {
-                item.querySelector('.remove-creneau').addEventListener('click', (e) => {
-                    e.preventDefault();
-                    item.remove();
-                });
-                return;
-            }
-
-            const removeBtn = document.createElement('button');
-            removeBtn.type = 'button';
-            removeBtn.className = 'btn btn-sm btn-circle btn-ghost absolute top-2 right-2 remove-creneau';
-            removeBtn.innerHTML = '✕';
-            removeBtn.title = 'Supprimer';
-
-            item.classList.add('relative'); // Assure le positionnement relatif
-            item.appendChild(removeBtn);
-
-            removeBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                item.remove();
-            });
-        };
-
-        // Initialiser les boutons de suppression pour les éléments existants
-        collectionHolder.querySelectorAll('li').forEach((item) => {
-            addDeleteLink(item);
-        });
-
-        addBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-
-            const prototype = collectionHolder.dataset.prototype;
-            const index = parseInt(collectionHolder.dataset.index);
-
-            // Remplacer __name__ par l'index actuel
-            const newForm = prototype.replace(/__name__/g, index);
-
-            // Créer le nouvel élément de liste
-            const newElem = document.createElement('li');
-            newElem.className = 'card bg-base-200 shadow-sm p-4 relative mt-4';
-            newElem.innerHTML = newForm;
-
-            // Ajouter le bouton de suppression
-            addDeleteLink(newElem);
-
-            // Ajouter au DOM
-            collectionHolder.appendChild(newElem);
-
-            // Mettre à jour l'index
-            collectionHolder.dataset.index = index + 1;
-        });
-    });
-</script>

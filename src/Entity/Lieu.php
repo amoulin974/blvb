@@ -39,7 +39,7 @@ class Lieu
     /**
      * @var Collection<int, Creneau>
      */
-    #[ORM\OneToMany(targetEntity: Creneau::class, mappedBy: 'lieu', orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Creneau::class, mappedBy: 'lieu', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $creneaux;
 
 
