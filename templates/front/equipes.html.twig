@@ -21,47 +21,72 @@
                             <p class="alert alert-info">Aucune équipe dans cette poule.</p>
                         {% else %}
                         {# Affichage pour grand écran sous forme de table #}
-                            <table class="border border-solid table table-zebra hidden md:table" >
-                                <tr>
-                                    <th>Nom</th>
-                                    <th>Adresse</th>
-                                    <th>Horaire habituel de réception</th>
-                                    <th>Classement</th>
-                                </tr>
-
-                                {% for equipe in poule.equipes %}
-                                    <tr>
-                                        <td><a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="link">{{ equipe.nom }}</a></td>
-                                        <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer">
-                                                    {{ equipe.idLieu.nom }}
-                                                </a></td>
-                                        {#        TODO Afficher les creneaux habituels#}
-{#                                        <td>{{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</td>#}
-                                        <td>{{equipe.position}}</td>
+                            <div class="hidden md:block overflow-x-auto">
+                                <table class="table table-zebra border border-solid w-full">
+                                    <thead> <tr>
+                                        <th>Nom</th>
+                                        <th>Adresse</th>
+                                        <th>Horaire habituel de réception</th>
+                                        <th>Classement</th>
                                     </tr>
-
+                                    </thead>
+                                    <tbody>
+                                    {% for equipe in poule.equipes %}
+                                        <tr>
+                                            <td>
+                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="link font-bold">
+                                                    {{ equipe.nom }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">
+                                                    {{ equipe.lieu.nom }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                {% for creneau in equipe.lieu.creneaux %}
+                                                    <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
+                                                {% endfor %}
+                                            </td>
+                                            <td class="text-center font-bold">{{equipe.position}}</td>
+                                        </tr>
                                     {% endfor %}
-                            </table>
-                            {# Affichage pour mobile sous forme de carte #}
-                            {% for equipe in poule.equipes %}
-                            <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
-                                <div class="card-body">
-                                    <h3 class="card-title">{{equipe.nom}}</h3>
-                                    <p>Adresse <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer">
-                                                    {{ equipe.idLieu.nom }}
-                                                </a></p>
-                                    {#        TODO Afficher les creneaux habituels#}
-{#                                    <p>Recoit habituellement : {{equipe.idLieu.jour}}  - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>#}
-                                    {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
-                                    {# <p>Classement : {{ equipe.getClassement(poule.id) }}</p> #}
-                                </div>
-
+                                    </tbody>
+                                </table>
                             </div>
-                            {% endfor %}
+                            {# Affichage pour mobile sous forme de carte #}
+                            <div class="md:hidden flex flex-col gap-4 mt-4">
+                                {% for equipe in poule.equipes %}
+                                    {# J'ai remplacé w-96 par w-full pour que ça s'adapte à l'écran du téléphone #}
+                                    <div class="card w-full bg-base-100 shadow-md border border-base-200">
+                                        <div class="card-body p-4"> <div class="flex justify-between items-start">
+                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="link font-bold">
+                                                <h3 class="card-title text-lg">{{equipe.nom}}</h3>
+                                                </a>
+                                            </div>
+
+                                            <div class="text-sm mt-2">
+                                                <p class="font-semibold">📍 Lieu :</p>
+                                                <a class="link block truncate" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">
+                                                    {{ equipe.lieu.nom }}
+                                                </a>
+                                            </div>
+
+                                            <div class="text-sm mt-2">
+                                                <p class="font-semibold">🕒 Créneaux :</p>
+                                                {% for creneau in equipe.lieu.creneaux %}
+                                                    <p>{{creneau.jourLibelle}} à {{creneau.heureDebut|format_time('short', locale='fr')}}</p>
+                                                {% else %}
+                                                    <p class="italic text-gray-500">Aucun créneau défini</p>
+                                                {% endfor %}
+                                            </div>
+                                            <div class="text-sm mt-2">
+                                            <p class="badge badge-primary">Classement : {{equipe.position}}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         {% endif %}
                         </div>
 

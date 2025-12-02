@@ -1,0 +1,13 @@
+{% extends '../../base.html.twig' %}
+
+{% block title %}Edit Indisponibilite{% endblock %}
+
+{% block body %}
+    <h1>Edit Indisponibilite</h1>
+
+    {{ include('indisponibilite/_form.html.twig', {'button_label': 'Update'}) }}
+
+    <a href="{{ path('app_indisponibilite_index') }}">back to list</a>
+
+    {{ include('indisponibilite/_delete_form.html.twig') }}
+{% endblock %}

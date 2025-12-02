@@ -35,11 +35,14 @@ class Saison
     #[ORM\Column]
     private ?\DateTimeImmutable $date_fin = null;
 
+    //Victoire bonifiée
     #[ORM\Column(options: ['default' => 3])]
     private ?int $points_victoire_forte = 3;
 
-    #[ORM\Column(options: ['default' => 0])]
-    private ?int $points_defaite_forte = 0;
+
+    //Défaite bonifiée
+    #[ORM\Column(options: ['default' => 1])]
+    private ?int $points_defaite_forte = 1;
 
     #[ORM\Column(options: ['default' => 0])]
     private ?int $points_nul = 0;
@@ -47,16 +50,18 @@ class Saison
     #[ORM\Column(options: ['default' => -3])]
     private ?int $points_forfait = -3;
 
-    #[ORM\Column(options: ['default' => 1])]
-    private ?int $points_victoire_faible = 1;
-
+    //Victoire non bonifiée
     #[ORM\Column(options: ['default' => 2])]
-    private ?int $points_defaite_faible = 2;
+    private ?int $points_victoire_faible = 2;
+
+    //Défaite non bonifiée
+    #[ORM\Column(options: ['default' => 0])]
+    private ?int $points_defaite_faible = 0;
 
     /**
      * @var Collection<int, Indisponibilite>
      */
-    #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'saison')]
+    #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'saison', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $indisponibilites;
 
     public function __construct()
@@ -159,26 +164,26 @@ class Saison
         return $this;
     }
 
-    public function getPointsVictoire(): ?int
+    public function getPointsVictoireForte(): ?int
     {
-        return $this->points_victoire;
+        return $this->points_victoire_forte;
     }
 
-    public function setPointsVictoire(int $points_victoire): static
+    public function setPointsVictoireForte(int $points_victoire_forte): static
     {
-        $this->points_victoire = $points_victoire;
+        $this->points_victoire_forte = $points_victoire_forte;
 
         return $this;
     }
 
-    public function getPointsDefaite(): ?int
+    public function getPointsDefaiteForte(): ?int
     {
-        return $this->points_defaite;
+        return $this->points_defaite_forte;
     }
 
-    public function setPointsDefaite(int $points_defaite): static
+    public function setPointsDefaiteForte(int $points_defaite_forte): static
     {
-        $this->points_defaite = $points_defaite;
+        $this->points_defaite_forte = $points_defaite_forte;
 
         return $this;
     }

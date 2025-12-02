@@ -1,48 +1,15 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}
-    Modifier la saison {{ saison.nom }}
-{% endblock %}
+{% block title %}Modifier la saison : {{ saison.nom }}{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto max-w-md p-4">
-        <h1 class="h1">Modifier la saison {{ saison.nom }}</h1>
+    <h1>Modifier la saison :  {{ saison.nom }} </h1>
 
-        {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+    {{ include('admin/saison/_form.html.twig', {'button_label': 'Enregistrer'}) }}
 
-        {# Champ Nom de la saison #}
-        <div class="form-control w-full">
-            {{ form_label(form.nom, 'Nom de la saison', {'label_attr': {'class': 'label'}}) }}
-            {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom de la saison'}}) }}
-            {{ form_errors(form.nom) }}
-        </div>
-
-        {# Champ Date_debut de la saison #}
-        <div class="form-control w-full">
-            {{ form_label(form.date_debut, 'Date de début de la saison', {'label_attr': {'class': 'label'}}) }}
-            {{ form_widget(form.date_debut, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Date de début de la saison'}}) }}
-            {{ form_errors(form.date_debut) }}
-        </div>
-
-        {# Champ Date_fin de la saison #}
-        <div class="form-control w-full">
-            {{ form_label(form.date_fin, 'Date de fin de la saison', {'label_attr': {'class': 'label'}}) }}
-            {{ form_widget(form.date_fin, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Date de fin de la saison'}}) }}
-            {{ form_errors(form.date_fin) }}
-        </div>
-
-        {# Bouton de soumission #}
-        <div class="form-control">
-            {{ form_widget(form.save, {'attr': {'class': 'btn btn-primary w-full'}}) }}
-        </div>
-
-        {{ form_rest(form) }}
-        {{ form_end(form) }}
-
-        <div class="mt-4 text-center">
-            <a class="btn btn-outline btn-secondary w-full" href="{{ path('admin_saison_index') }}">
-                Revenir à la liste des saisons
-            </a>
-        </div>
+    <div class="flex gap-2">
+        <a href="{{ path('admin_saison_index') }}" class="btn btn-sm btn-info">Revenir à la liste des saisons</a>
+        {{ include('/admin/saison/_delete_form.html.twig') }}
     </div>
+
 {% endblock %}

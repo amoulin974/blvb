@@ -48,7 +48,7 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('l.adresse AS lieu_adresse')
             ->addSelect('j.id AS journee_id')
 
-            ->join('m.id_lieu', 'l')
+            ->join('m.lieu', 'l')
             ->join('m.id_journee', 'j')
             ->join('m.poule', 'poule')
 

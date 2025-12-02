@@ -1,0 +1,11 @@
+{% extends '../../base.html.twig' %}
+
+{% block title %}New Indisponibilite{% endblock %}
+
+{% block body %}
+    <h1>Create new Indisponibilite</h1>
+
+    {{ include('indisponibilite/_form.html.twig') }}
+
+    <a href="{{ path('app_indisponibilite_index') }}">back to list</a>
+{% endblock %}

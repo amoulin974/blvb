@@ -10,7 +10,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Partie;
 use App\Entity\Classement;
 use App\Repository\EquipeRepository;
-
+use App\Service\CalendrierAnalyseService;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -192,33 +192,57 @@ final class FrontController extends AbstractController
     //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux
 
     #[Route('/calendrierlieu', name: 'calendrierlieu', methods: ['GET'])]
-    public function calendrierLieu(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-                                                $saisonRepository, LieuRepository $lieuRepository,
-                                   PartieRepository $partieRepository,
-                                   ): Response
+    public function calendrierLieu(
+        SessionInterface $session,
+        Request $request,
+        CacheInterface $cache,
+        SaisonRepository $saisonRepository,
+        LieuRepository $lieuRepository,
+        CalendrierAnalyseService $analyseService
+    ): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
         $this->getSaisonSession($session, $request);
+
         $saison=$saisonRepository->find($this->idSaisonSelected);
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
         $lieux=$lieuRepository->findAll();
 
-        $partiesByDate=[];
         foreach ($lieux as $lieu) {
-            $partiesByDate=[];
-            foreach ($lieu->getParties() as $partie) {
-                if (!isset($partiesByDate[$partie->getPoule()->getPhase()->getId()])){
-                    $partiesByDate[$partie->getPoule()->getPhase()->getId()]=[];
-                }
-                if (!isset($partiesByDate[$partie->getPoule()->getPhase()->getId()][$partie->getDate()->format('Y-m-d')])) {
-                    $partiesByDate[$partie->getPoule()->getPhase()->getId()][$partie->getDate()->format('Y-m-d')] = [];
+            $partiesDuLieu = [];
 
+            // 1. Regroupement
+            foreach ($lieu->getParties() as $partie) {
+                $phaseId = $partie->getPoule()->getPhase()->getId();
+                $dateKey = $partie->getDate()->format('Y-m-d');
+
+                if (!isset($partiesDuLieu[$phaseId])) {
+                    $partiesDuLieu[$phaseId] = [];
                 }
-                $partiesByDate[$partie->getPoule()->getPhase()->getId()][$partie->getDate()->format('Y-m-d')][]=$partie;
+                if (!isset($partiesDuLieu[$phaseId][$dateKey])) {
+                    $partiesDuLieu[$phaseId][$dateKey] = [];
+                }
+
+                $partiesDuLieu[$phaseId][$dateKey][] = $partie;
             }
-            $lieu->partiesByDate=$partiesByDate;
+            // 2. Analyse via le Service (Nettoyé)
+            foreach ($partiesDuLieu as $phaseId => $dates) {
+                foreach ($dates as $dateKey => $matchs) {
+                    $dateObjet = new \DateTime($dateKey);
+
+
+                    $analysesDuLieu[$phaseId][$dateKey] = $analyseService->analyser(
+                        $lieu,
+                        $dateObjet,
+                        count($matchs)
+                    );
+                }
+            }
+
+            $lieu->partiesByDate = $partiesDuLieu;
+            $lieu->analysesByDate = $analysesDuLieu;
         }
 
         return $this->render('front/calendrier_lieu.html.twig', [
@@ -227,9 +251,6 @@ final class FrontController extends AbstractController
             'saison'=>$saison,
             'lieux'=>$lieux,
             'phaseouverte'=>$phaseouverte,
-            'partiesByDate'=>$partiesByDate
-
-
         ]);
     }
 

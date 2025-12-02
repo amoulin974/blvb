@@ -19,7 +19,7 @@ class Equipe
     private ?string $nom = null;
 
     #[ORM\ManyToOne(inversedBy: 'equipes')]
-    private ?Lieu $id_lieu = null;
+    private ?Lieu $lieu = null;
 
     /**
      * @var Collection<int, Partie>
@@ -80,14 +80,14 @@ class Equipe
         return $this;
     }
 
-    public function getIdLieu(): ?Lieu
+    public function getLieu(): ?Lieu
     {
-        return $this->id_lieu;
+        return $this->lieu;
     }
 
-    public function setIdLieu(?Lieu $id_lieu): static
+    public function setLieu(?Lieu $lieu): static
     {
-        $this->id_lieu = $id_lieu;
+        $this->lieu = $lieu;
 
         return $this;
     }

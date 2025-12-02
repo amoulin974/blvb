@@ -5,13 +5,14 @@
     <div class="container mx-auto max-w-5xl px-4">
         <h1 class="text-center mb-4">{{equipe.nom}}</h1>
         <h2 class="mt-4">Informations générales</h2>
-        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.idLieu.adresse|url_encode }}"
+        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}"
                                             target="_blank"
                                             rel="noopener noreferrer">
-                                                {{ equipe.idLieu.nom }}
+                                                {{ equipe.lieu.nom }}
                                             </a></p>
-{#        TODO Afficher les creneaux habituels#}
-{#        <p><span class="font-bold">Horaire habituel de réceptions :</span>  {{equipe.idLieu.jour}} - {{equipe.idLieu.heure|format_time('short', locale='fr')}}</p>#}
+        {% for creneau in equipe.lieu.creneaux %}
+            <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
+        {% endfor %}
         <p><span class="font-bold">Capitaine :</span>
         {%if not equipe.capitaine %}
             <span class="em">Aucun capitaine défini</span>   </p>

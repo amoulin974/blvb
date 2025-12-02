@@ -114,7 +114,7 @@ final class EquipeController extends AbstractController
 
                     $equipe = new Equipe();
                     $equipe->setNom($nomEquipe);
-                    $equipe->setIdLieu($lieu);
+                    $equipe->setLieu($lieu);
 
                     $em->persist($equipe);
                 }

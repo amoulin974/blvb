@@ -25,13 +25,14 @@ class Lieu
     /**
      * @var Collection<int, Equipe>
      */
-    #[ORM\OneToMany(targetEntity: Equipe::class, mappedBy: 'id_lieu')]
+    #[ORM\OneToMany(targetEntity: Equipe::class, mappedBy: 'lieu')]
     private Collection $equipes;
 
     /**
      * @var Collection<int, Partie>
      */
-    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_lieu')]
+    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'lieu')]
+    #[ORM\OrderBy(['date' => 'ASC'])]
     private Collection $parties;
 
 
@@ -108,7 +109,7 @@ class Lieu
     {
         if (!$this->equipes->contains($equipe)) {
             $this->equipes->add($equipe);
-            $equipe->setIdLieu($this);
+            $equipe->setLieu($this);
         }
 
         return $this;
@@ -118,8 +119,8 @@ class Lieu
     {
         if ($this->equipes->removeElement($equipe)) {
             // set the owning side to null (unless already changed)
-            if ($equipe->getIdLieu() === $this) {
-                $equipe->setIdLieu(null);
+            if ($equipe->getLieu() === $this) {
+                $equipe->setLieu(null);
             }
         }
 
@@ -138,7 +139,7 @@ class Lieu
     {
         if (!$this->parties->contains($party)) {
             $this->parties->add($party);
-            $party->setIdLieu($this);
+            $party->setLieu($this);
         }
 
         return $this;
@@ -148,8 +149,8 @@ class Lieu
     {
         if ($this->parties->removeElement($party)) {
             // set the owning side to null (unless already changed)
-            if ($party->getIdLieu() === $this) {
-                $party->setIdLieu(null);
+            if ($party->getLieu() === $this) {
+                $party->setLieu(null);
             }
         }
 

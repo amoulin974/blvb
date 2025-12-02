@@ -1,6 +1,7 @@
 
                         {# Affichage pour grand écran sous forme de table #}
                             {% if poule.classements|length > 0 %}
+
                                 <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
                                     <tr >
                                         <th>Classement</th>
@@ -13,8 +14,13 @@
                                     </tr>
                                 {% for classement in poule.classements %}
 
-                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="!bg-success font-bold" {% endif %}>
-                                            <td>{{ classement.position}}</td>
+{#                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="!bg-success font-bold" {% endif %}>#}
+                                        <tr class="{% if classement.position <= poule.NbMonteeDefaut%}
+                                                !bg-success font-bold
+                                            {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) %}
+                                                !bg-warning{% endif %}
+                                                ">
+                                            <td>{{ classement.position}}
                                             <td>{{ classement.equipe.nom }} </td>
                                             <td>{{ classement.points }}</td>
                                             <td>{{ classement.setGagnes}}</td>
@@ -48,8 +54,11 @@
                             </table>
                             {# Affichage pour mobile sous forme de carte #}
                                 {% for classement in poule.classements %}
-                                    <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-classements-mobile mt-1" ">
-                                        <div class="card-body " >
+                                    <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-classements-mobile mt-1 {% if classement.position <= poule.NbMonteeDefaut%}
+                                                !bg-success font-bold
+                                            {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) %}
+                                                !bg-warning{% endif %}">
+                                        <div class="card-body {% if equipeid is defined and classement.equipe.id == equipeid %} bg-success font-bold {% endif %}" >
                                                 <p><strong>Equipe n° {{ classement.position}} : {{ classement.equipe.nom }} </strong>  </p>
                                                 <p>Points : {{ classement.points }}</p>
                                                 <p>Nombre set gagnés {{ classement.setGagnes}}</p>

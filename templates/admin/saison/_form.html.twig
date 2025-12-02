@@ -1,4 +1,83 @@
-{{ form_start(form) }}
-    {{ form_widget(form) }}
-    <button class="btn">{{ button_label|default('Save') }}</button>
-{{ form_end(form) }}
+
+    {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-full border p-4">
+    <legend class="fieldset-legend">Nom et durée</legend>
+    {# Champ Nom de la saison #}
+    <div class="form-control w-full">
+        {{ form_label(form.nom, 'Nom de la saison', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom de la saison2'}}) }}
+
+        {{ form_errors(form.nom) }}
+    </div>
+    <div class="form-control w-full">
+        {{ form_label(form.date_debut, 'Date de début', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.date_debut, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Date de début'}}) }}
+
+        {{ form_errors(form.date_debut) }}
+    </div>
+
+    <div class="form-control w-full">
+        {{ form_label(form.date_fin, 'Date de fin', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.date_fin, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Date de fin'}}) }}
+
+        {{ form_errors(form.date_fin) }}
+    </div>
+</fieldset>
+
+<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-full border p-4">
+    <legend class="fieldset-legend">Gestion des points</legend>
+    {# Champ Nom de la saison #}
+    <div class="form-control w-full">
+        {{ form_label(form.points_victoire_forte, 'Point pour une victoire bonifiée', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_victoire_forte, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '3'}}) }}
+
+        {{ form_errors(form.points_victoire_forte) }}
+    </div>
+    <div class="form-control w-full">
+        {{ form_label(form.points_victoire_faible, 'Point pour une victoire non bonifiée', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_victoire_faible, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '2'}}) }}
+
+        {{ form_errors(form.points_victoire_faible) }}
+    </div>
+
+    <div class="form-control w-full">
+        {{ form_label(form.points_defaite_forte, 'Point pour une défaite bonifiée', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_defaite_forte, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '1'}}) }}
+
+        {{ form_errors(form.points_defaite_forte) }}
+    </div>
+
+    <div class="form-control w-full">
+        {{ form_label(form.points_defaite_faible, 'Point pour une défaite non bonifiée', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_defaite_faible, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '0'}}) }}
+
+        {{ form_errors(form.points_defaite_faible) }}
+    </div>
+
+    <div class="form-control w-full">
+        {{ form_label(form.points_forfait, 'Point en cas de forfait', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_forfait, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '0'}}) }}
+
+        {{ form_errors(form.points_forfait) }}
+    </div>
+    <div class="form-control w-full">
+        {{ form_label(form.points_nul, 'Point pour un match nul', {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_nul, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '0'}}) }}
+
+        {{ form_errors(form.points_nul) }}
+    </div>
+</fieldset>
+<div class="form-control w-full border p-4 rounded bg-base-100 mt-4">
+    <label class="label font-bold">Périodes de fermeture (Vacances)</label>
+    {{ form_widget(form.indisponibilites) }}
+</div>
+{# Bouton de soumission #}
+<div class="form-control mt-4 mb-8">
+
+    <button class="btn btn-success btn-sm mt-6">{{ button_label|default('Enregistrer') }}</button>
+</div>
+
+{{ form_rest(form) }}
+
+    {{ form_end(form) }}
