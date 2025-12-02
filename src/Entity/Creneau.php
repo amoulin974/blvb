@@ -38,6 +38,22 @@ class Creneau
         return $this->id;
     }
 
+    private const JOURS = [
+        1 => 'Lundi',
+        2 => 'Mardi',
+        3 => 'Mercredi',
+        4 => 'Jeudi',
+        5 => 'Vendredi',
+        6 => 'Samedi',
+        7 => 'Dimanche',
+    ];
+
+    //Methode qui renvoi le jour de la semaine à partir de son numéro stockée dans jourSemaine
+    public function getJourLibelle(): string
+    {
+        return self::JOURS[$this->jourSemaine] ?? 'Inconnu';
+    }
+
     public function getJourSemaine(): ?int
     {
         return $this->jourSemaine;

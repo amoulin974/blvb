@@ -42,9 +42,9 @@ class CalendarIcsGenerator
 
             $recoit = $partie->getIdEquipeRecoit()->getNom();
             $deplace = $partie->getIdEquipeDeplace()->getNom();
-            $lieu = $partie->getIdLieu()->getNom();
-            $adresse = method_exists($partie->getIdLieu(), 'getAdresse')
-                ? $partie->getIdLieu()->getAdresse()
+            $lieu = $partie->getLieu()->getNom();
+            $adresse = method_exists($partie->getLieu(), 'getAdresse')
+                ? $partie->getLieu()->getAdresse()
                 : '';
 
             // Titre de l'événement

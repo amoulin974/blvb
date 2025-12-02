@@ -33,7 +33,7 @@
                                 <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
                                     <tr >
                                         <th>Équipe qui reçoit</th>
-                                        <th>Équipe qui sé déplace</th>
+                                        <th>Équipe qui se déplace</th>
                                         <th>Date</th>
                                         <th>Lieu</th>
                                         <th>Résultat</th>
@@ -44,10 +44,10 @@
                                             <td>{{ partie.idEquipeRecoit.nom }} </td>
                                             <td>{{ partie.idEquipeDeplace.nom }}</td>
                                             <td>{{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
-                                            <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.idLieu.adresse|url_encode }}"
+                                            <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">
-                                                    {{ partie.idLieu.nom }}
+                                                    {{ partie.lieu.nom }}
                                                 </a></td>
                                             <td>
 
@@ -79,10 +79,10 @@
                                     <div class="card-body " >
                                         <p><strong>{{ partie.idEquipeRecoit.nom }}</strong> vs <strong>{{ partie.idEquipeDeplace.nom }}</strong></p>
                                         <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
-                                        <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.idLieu.adresse|url_encode }}"
+                                        <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">
-                                                    {{ partie.idLieu.nom }}
+                                                    {{ partie.lieu.nom }}
                                                 </a></p>
                                         <p>Résultat :
                                         {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}

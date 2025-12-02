@@ -48,7 +48,7 @@ class PartieCalendarType extends AbstractType
                 'attr' => ['hidden' => true],
                 'label' => false,
             ])
-            ->add('id_lieu', EntityType::class, [
+            ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',
                 'label' => 'Lieu du match'

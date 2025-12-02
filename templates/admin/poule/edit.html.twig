@@ -5,7 +5,7 @@
 {% block body %}
     <h1>Modifier la poule :  {{ poule.nom }} - {{ poule.phase.saison.nom }} - {{ poule.phase.nom }}</h1>
 
-    {{ include('admin/poule/_form.html.twig', {'button_label': 'Update'}) }}
+    {{ include('admin/poule/_form.html.twig', {'button_label': 'Enregistrer'}) }}
 
     <div class="flex gap-2">
         <a href="{{ path('admin_poule_index') }}" class="btn btn-sm btn-info">Revenir à la liste des poules</a>

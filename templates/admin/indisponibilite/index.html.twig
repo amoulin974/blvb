@@ -1,0 +1,39 @@
+{% extends '../../base.html.twig' %}
+
+{% block title %}Indisponibilite index{% endblock %}
+
+{% block body %}
+    <h1>Indisponibilite index</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Id</th>
+                <th>Nom</th>
+                <th>DateDebut</th>
+                <th>DateFin</th>
+                <th>actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for indisponibilite in indisponibilites %}
+            <tr>
+                <td>{{ indisponibilite.id }}</td>
+                <td>{{ indisponibilite.nom }}</td>
+                <td>{{ indisponibilite.dateDebut ? indisponibilite.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
+                <td>{{ indisponibilite.dateFin ? indisponibilite.dateFin|date('Y-m-d H:i:s') : '' }}</td>
+                <td>
+                    <a href="{{ path('app_indisponibilite_show', {'id': indisponibilite.id}) }}">show</a>
+                    <a href="{{ path('app_indisponibilite_edit', {'id': indisponibilite.id}) }}">edit</a>
+                </td>
+            </tr>
+        {% else %}
+            <tr>
+                <td colspan="5">no records found</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <a href="{{ path('app_indisponibilite_new') }}">Create new</a>
+{% endblock %}
