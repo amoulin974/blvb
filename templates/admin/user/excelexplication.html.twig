@@ -1,0 +1,58 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Ajout de membres avec un fichier{% endblock %}
+
+{% block body %}
+
+
+<h1>Ajouter un ou plusieurs membres avec un fichier Excel</h1>
+    <p>Le but de cette page est de vous permettre de rajouter de nouveaux membres à partir d'un fichier Excel    </p>
+    <h2 class="mt-4">Etape n°1 : Récupérer le fichier Excel</h2>
+    <p><a class="link" href="{{ path("admin_user_excel_download") }}">Cliquer sur ce lien pour obtenir le fichier Excel</a></p>
+    <h2 class="mt-4">Etape n°2 : Compléter le ficher</h2>
+    <p>Les membres qui seront créés auront le rôle USER. Pour les transformer en admin, vous devrez les éditer manuellement.</p>
+    <p>Le numéro de téléphone est facultatif.</p>
+    <h2 class="mt-4">Etape n°3 : Téléverser le ficher Excel sur nos serveur</h2>
+    {{ form_start(form, {'attr': {'enctype': 'multipart/form-data'}}) }}
+{#    {{ form_row(form.file) }}#}
+    <div class="form-control w-full">
+{#        {{ form_label(form.file, "Choisir le fichier :", {'label_attr': {'class': 'label'}}) }}#}
+        {{ form_widget(form.file, {'attr': {'class': 'file-input '}}) }}
+        {{ form_errors(form.file) }}
+    </div>
+    <button class="btn btn-success mt-2">Importer</button>
+    {{ form_end(form) }}
+
+    {# --- BLOC RAPPORT D'ERREURS --- #}
+    {% if rapportErreurs is defined and rapportErreurs is not empty %}
+
+        <div class="alert alert-error shadow-lg mt-6">
+            <div>
+                <span class="font-bold">Rapport des lignes non importées</span>
+                <p>Les lignes suivantes ont été ignorées :</p>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto mt-4">
+            <table class="table w-full table-zebra">
+                <thead class="bg-gray-200">
+                <tr>
+                    <th>Ligne Excel #</th>
+                    <th>Email concerné</th>
+                    <th>Raison du rejet</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for erreur in rapportErreurs %}
+                    <tr>
+                        <td>{{ erreur.ligne }}</td>
+                        <td>{{ erreur.email }}</td>
+                        <td class="text-red-600">{{ erreur.raison }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    {% endif %}
+{% endblock %}

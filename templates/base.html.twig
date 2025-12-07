@@ -84,6 +84,13 @@
         {# Contenu de la page avec container central sur desktop #}
         <main class="flex-1 p-4">
             <div class="container mx-auto max-w-5xl px-4">
+                {% for label, messages in app.flashes %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ label }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endfor %}
                 {% block body %}{% endblock %}
             </div>
         </main>
