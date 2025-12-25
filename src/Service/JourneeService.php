@@ -126,6 +126,7 @@ class JourneeService
 
     }
 
+    //Méthode utilisée pour crééer les journée d'une phase du type finale
     private function creerJourneesFinales(Poule $poule): ?string
     {
         $nbEquipe = count($poule->getEquipes());

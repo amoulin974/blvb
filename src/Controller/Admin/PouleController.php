@@ -61,13 +61,23 @@ final class PouleController extends AbstractController
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
     {
+
+        // On récupère 'origin', si absent il vaudra null
+        $origin = $request->query->get('origin');
+
         $form = $this->createForm(PouleType::class, $poule);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
             $this->addFlash('success', 'Poule mise à jour avec succès !');
-            return $this->redirectToRoute('admin_poule_index', [], Response::HTTP_SEE_OTHER);
+
+            if ($origin==='saison_show'){
+                return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId(),'_fragment' => 'phase_' . $poule->getPhase()->getId()], Response::HTTP_SEE_OTHER);
+            }else{
+                return $this->redirectToRoute('admin_poule_index', [], Response::HTTP_SEE_OTHER);
+            }
+           
         }
 
         return $this->render('admin/poule/edit.html.twig', [

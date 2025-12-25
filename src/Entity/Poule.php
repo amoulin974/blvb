@@ -113,12 +113,13 @@ class Poule
         return $this;
     }
 
+ 
     public function removeParty(Partie $party): static
     {
         if ($this->parties->removeElement($party)) {
             // set the owning side to null (unless already changed)
-            if ($party->getIdPoule() === $this) {
-                $party->setIdPoule(null);
+            if ($party->getPoule() === $this) {
+                $party->setPoule(null);
             }
         }
 

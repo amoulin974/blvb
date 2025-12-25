@@ -287,56 +287,56 @@ final class FrontController extends AbstractController
             $session->set('idSaisonSelected', $saison->getId());   // stocke la saison dans la session
         }
         return $this->redirectToRoute('front_index');  // retourne vers la page principale
-        }
+    }
 
-        //Route appelé quand un admin ou un capitaine change le score d'une partie
-        #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
-        public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
-        {
+    //Route appelé quand un admin ou un capitaine change le score d'une partie
+    #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
+    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
+    {
 
-        $data = json_decode($request->getContent(), true);
-        try{
-            $user = $this->getUser();
-            //Vérifier si user à le role admin ou s'il est capitaine de l'équipe qui reçoit
-            if (!$this->isGranted('ROLE_ADMIN') && $partie->getIdEquipeRecoit()->getCapitaine()->getId() != $user->getId()) throw new Exception("Modification interdite");
+    $data = json_decode($request->getContent(), true);
+    try{
+        $user = $this->getUser();
+        //Vérifier si user à le role admin ou s'il est capitaine de l'équipe qui reçoit
+        if (!$this->isGranted('ROLE_ADMIN') && $partie->getIdEquipeRecoit()->getCapitaine()->getId() != $user->getId()) throw new Exception("Modification interdite");
 
-            if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
-            if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
+        if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
+        if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
 
-            if ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
-                //Cas d'une forfait
-                if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
-                if ($data['scoreReception'] === 'F'){
-                    $partie->setNbSetGagnantReception(-1);
-                    $partie->setNbSetGagnantDeplacement(3);
-                } else{
-                    $partie->setNbSetGagnantReception(3);
-                    $partie->setNbSetGagnantDeplacement(-1);
-                }
-
-
-            }else{
-                //Cas normal
-                if (! is_numeric($data['scoreReception']) || ! is_numeric($data['scoreDeplacement'])) throw new Exception ("score invalide");
-                $scoreReception = (int)($data['scoreReception']);
-                $scoreDeplacement = (int)$data['scoreDeplacement'];
-                if ($scoreDeplacement > 3 || $scoreReception > 3 || $scoreDeplacement < 0 || $scoreReception < 0) throw new Exception("Score invalide");
-
-                $partie->setNbSetGagnantReception($scoreReception);
-                $partie->setNbSetGagnantDeplacement($scoreDeplacement);
-
-
+        if ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
+            //Cas d'une forfait
+            if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
+            if ($data['scoreReception'] === 'F'){
+                $partie->setNbSetGagnantReception(-1);
+                $partie->setNbSetGagnantDeplacement(3);
+            } else{
+                $partie->setNbSetGagnantReception(3);
+                $partie->setNbSetGagnantDeplacement(-1);
             }
-            //Modification du score
-            $em->persist($partie);
-            $em->flush();
 
-            //Mise à jour du classement
-            $classementService->mettreAJourClassementPoule($partie->getPoule());
-            return $this->json([
-                'newScore' => $scoreReception . ' à ' . $scoreDeplacement,
 
-                ],200);
+        }else{
+            //Cas normal
+            if (! is_numeric($data['scoreReception']) || ! is_numeric($data['scoreDeplacement'])) throw new Exception ("score invalide");
+            $scoreReception = (int)($data['scoreReception']);
+            $scoreDeplacement = (int)$data['scoreDeplacement'];
+            if ($scoreDeplacement > 3 || $scoreReception > 3 || $scoreDeplacement < 0 || $scoreReception < 0) throw new Exception("Score invalide");
+
+            $partie->setNbSetGagnantReception($scoreReception);
+            $partie->setNbSetGagnantDeplacement($scoreDeplacement);
+
+
+        }
+        //Modification du score
+        $em->persist($partie);
+        $em->flush();
+
+        //Mise à jour du classement
+        $classementService->mettreAJourClassementPoule($partie->getPoule());
+        return $this->json([
+            'newScore' => $scoreReception . ' à ' . $scoreDeplacement,
+
+            ],200);
 
 
 
@@ -346,7 +346,7 @@ final class FrontController extends AbstractController
             ],400);
         }
 
-        }
+    }
 
     //Récupère les saisons en cache (la liste des saisons ne change pas souvent donc à chaque requête on ne va pas la chercher en base de données)
     //Si le cache a expiré (1 heure ici), on va chercher en base de données et on remplit le cache à nouveau
