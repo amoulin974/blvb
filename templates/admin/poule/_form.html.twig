@@ -1,4 +1,9 @@
-{{ form_start(form) }}
+{{ form_start(form, {
+    'attr': {
+        'data-turbo': 'false',
+        'action': app.request.requestUri
+    }
+}) }}
 
 <div class="form-control mb-2">
     <div class="input w-full" >

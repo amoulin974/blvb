@@ -18,7 +18,7 @@ class ClassementService
     ) {}
 
     /** 
-    * Ajoute un cahmp classement à toutes les équipes de chaque poules dans chanque phase d'une saison donnéee en paamètre
+    * Ajoute un champ classement à toutes les équipes de chaque poules dans chaque phase d'une saison donnéee en paamètre
     */
     public function getClassement(Saison $saison){
         /** Phase $phase */
