@@ -10,7 +10,7 @@ use App\Entity\Poule;
 use App\Form\PartieType;
 use App\Form\PartieCalendarType;
 use App\Repository\PartieRepository;
-use App\Service\PlanificationMatchService;
+use App\Service\PartieService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -91,74 +91,76 @@ final class PartieController extends AbstractController
 
     //fonction qui crée les matchs pour une poule
     #[Route('/{id}/createpartie', name: 'createpartie', methods: ['POST'])]
-    public function createPartie(Poule $poule, Request $request, EntityManagerInterface $entityManager, PlanificationMatchService $planificationService): Response
+    public function createPartie(Poule $poule, Request $request, EntityManagerInterface $entityManager, PartieService $partieService): Response
     {
-        $error=null;
-        foreach ($poule->getJournees() as $journee) {
-            //On supprime les matchs de cette journée
-            $oldParties = $journee->getParties();
-            foreach ($oldParties as $partie) {
-                $entityManager->remove($partie);
-            }
-        }
-        $entityManager->flush();
-        //On crée les matchs
-        $equipes = $poule->getEquipes()->toArray();
-        $nbEquipe = count($equipes);
-        if ($nbEquipe<2){
-            $error="Il faut au moins deux équipes dans la poule";
-        }else{
-            //Algorithme de la ronde
-            $equipeArray = $equipes;
-            if ($nbEquipe % 2 != 0) {
-                $equipeBye = new Equipe();
-                $equipeBye->setNom("BYE");
-                $equipeArray[] = $equipeBye;
-                $nbEquipe++; // On met à jour le nombre total
-            }
-            $rounds = $nbEquipe - 1;
-            $matchesPerRound = $nbEquipe / 2;
-            $journees = $poule->getJournees()->toArray();
-            // Tri selon l’attribut "numero"
-            usort($journees, function($j1, $j2){
-                return $j1->getNumero() <=> $j2->getNumero();
-            });
+        $partieService->createCalendar($poule);
 
-            for ($round = 0; $round < $rounds; $round++) {
-                $journee = $journees[$round];
-                for ($match = 0; $match < $matchesPerRound; $match++) {
-                    $homeIndex = ($round + $match) % ($nbEquipe - 1);
-                    $awayIndex = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
+        // $error=null;
+        // foreach ($poule->getJournees() as $journee) {
+        //     //On supprime les matchs de cette journée
+        //     $oldParties = $journee->getParties();
+        //     foreach ($oldParties as $partie) {
+        //         $entityManager->remove($partie);
+        //     }
+        // }
+        // $entityManager->flush();
+        // //On crée les matchs
+        // $equipes = $poule->getEquipes()->toArray();
+        // $nbEquipe = count($equipes);
+        // if ($nbEquipe<2){
+        //     $error="Il faut au moins deux équipes dans la poule";
+        // }else{
+        //     //Algorithme de la ronde
+        //     $equipeArray = $equipes;
+        //     if ($nbEquipe % 2 != 0) {
+        //         $equipeBye = new Equipe();
+        //         $equipeBye->setNom("BYE");
+        //         $equipeArray[] = $equipeBye;
+        //         $nbEquipe++; // On met à jour le nombre total
+        //     }
+        //     $rounds = $nbEquipe - 1;
+        //     $matchesPerRound = $nbEquipe / 2;
+        //     $journees = $poule->getJournees()->toArray();
+        //     // Tri selon l’attribut "numero"
+        //     usort($journees, function($j1, $j2){
+        //         return $j1->getNumero() <=> $j2->getNumero();
+        //     });
 
-                    // La dernière équipe reste fixe
-                    if ($match == 0) {
-                        $awayIndex = $nbEquipe - 1;
-                    }
+        //     for ($round = 0; $round < $rounds; $round++) {
+        //         $journee = $journees[$round];
+        //         for ($match = 0; $match < $matchesPerRound; $match++) {
+        //             $homeIndex = ($round + $match) % ($nbEquipe - 1);
+        //             $awayIndex = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
 
-                    // Si l'une des équipes est fictive, on ne crée pas le match
-                    if ($equipeArray[$homeIndex]->getNom() === "BYE" || $equipeArray[$awayIndex]->getNom() === "BYE") {
-                        continue;
-                    }
+        //             // La dernière équipe reste fixe
+        //             if ($match == 0) {
+        //                 $awayIndex = $nbEquipe - 1;
+        //             }
 
-                    $partie = new \App\Entity\Partie();
+        //             // Si l'une des équipes est fictive, on ne crée pas le match
+        //             if ($equipeArray[$homeIndex]->getNom() === "BYE" || $equipeArray[$awayIndex]->getNom() === "BYE") {
+        //                 continue;
+        //             }
 
-                    $dateMatch = $planificationService->calculerDateMatch(
-                        $journee->getDateDebut(),
-                        $equipeArray[$homeIndex]->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $equipeArray[$homeIndex]->getLieu()->getCreneaux()[0]->getHeureDebut(),
-                    );
-                    $partie->setDate($dateMatch);
-                    $partie->setLieu($equipeArray[$homeIndex]->getLieu());
-                    $partie->setIdEquipeRecoit($equipeArray[$homeIndex]);
-                    $partie->setIdEquipeDeplace($equipeArray[$awayIndex]);
-                    $partie->setIdJournee($journee);
-                    $partie->setPoule($poule);
-                    $entityManager->persist($partie);
-                }
-            }
-            $entityManager->flush();
+        //             $partie = new \App\Entity\Partie();
 
-        }
+        //             $dateMatch = $planificationService->calculerDateMatch(
+        //                 $journee->getDateDebut(),
+        //                 $equipeArray[$homeIndex]->getLieu()->getCreneaux()[0]->getJourSemaine(),
+        //                 $equipeArray[$homeIndex]->getLieu()->getCreneaux()[0]->getHeureDebut(),
+        //             );
+        //             $partie->setDate($dateMatch);
+        //             $partie->setLieu($equipeArray[$homeIndex]->getLieu());
+        //             $partie->setIdEquipeRecoit($equipeArray[$homeIndex]);
+        //             $partie->setIdEquipeDeplace($equipeArray[$awayIndex]);
+        //             $partie->setIdJournee($journee);
+        //             $partie->setPoule($poule);
+        //             $entityManager->persist($partie);
+        //         }
+        //     }
+        //     $entityManager->flush();
+
+        // }
 
         return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
     }
