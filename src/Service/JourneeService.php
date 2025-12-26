@@ -129,18 +129,36 @@ class JourneeService
     //Méthode utilisée pour crééer les journée d'une phase du type finale
     private function creerJourneesFinales(Poule $poule): ?string
     {
-        $nbEquipe = count($poule->getEquipes());
-        if (($nbEquipe & ($nbEquipe - 1)) !== 0) { // Vérifie si puissance de 2
-            return "Le nombre d'équipes pour les finales doit être une puissance de 2";
+        $equipes = $poule->getEquipes();
+        $nbEquipe = count($equipes);
+
+        if ($nbEquipe < 2) {
+            return "Il faut au moins 2 équipes pour une phase finale.";
         }
+
+        // 1. Calculer la puissance de 2 inférieure la plus proche
+        // Exemple : pour 12, log2(12) = 3.58 -> floor = 3 -> 2^3 = 8.
+        $puissanceInf = pow(2, floor(log($nbEquipe, 2)));
+
+        // 2. Déterminer s'il y a des barrages
+        $aDesBarrages = ($nbEquipe != $puissanceInf);
+
+        // 3. Calculer le nombre total de journées
+        // Si barrages : 1 (barrage) + log2(puissanceInf)
+        // Exemple 12 équipes : 1 (barrage) + 3 (1/4, 1/2, F) = 4 journées.
+        $nbJourneesFinales = (int)log($puissanceInf, 2);
+        $totalJournees = $aDesBarrages ? $nbJourneesFinales + 1 : $nbJourneesFinales;
 
         $debutPhase = $poule->getPhase()->getDateDebut();
         $currentDate = clone $debutPhase;
-        $nbJournee = (int)log($nbEquipe, 2); // 8 équipes → 3 journées (quart, demi, finale)
 
-        for ($i = 1; $i <= $nbJournee; $i++) {
+        for ($i = 1; $i <= $totalJournees; $i++) {
             $journee = new Journee();
+
+            $nom = $this->getNomJournee($i, $totalJournees, $aDesBarrages);
+            $journee->setNom($nom);
             $journee->setNumero($i);
+            
             $journee->setDateDebut(new \DateTimeImmutable($currentDate->format('Y-m-d')));
             $journee->setDateFin(new \DateTimeImmutable($currentDate->modify('+6 days')->format('Y-m-d')));
             $journee->setPoule($poule);
@@ -151,5 +169,25 @@ class JourneeService
 
         $this->em->flush();
         return null;
+    }
+
+    //Fonction qui nomme les journées
+    private function getNomJournee(int $index, int $total, bool $hasBarrage): string
+    {
+        if ($hasBarrage && $index === 1) {
+            return "Barrages";
+        }
+
+        // On calcule l'index réel par rapport à la finale (la finale est toujours le dernier tour)
+        $distanceDeLaFinale = $total - $index;
+
+        return match ($distanceDeLaFinale) {
+            0 => "Finale",
+            1 => "Demi-finale",
+            2 => "Quart de finale",
+            3 => "8ème de finale",
+            4 => "16ème de finale",
+            default => "Tour " . $index,
+        };
     }
 }

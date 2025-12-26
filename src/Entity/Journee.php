@@ -33,6 +33,9 @@ class Journee
     #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_journee', cascade: ["remove"], orphanRemoval: true)]
     private Collection $parties;
 
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $nom = null;
+
     public function __construct()
     {
         $this->parties = new ArrayCollection();
@@ -123,6 +126,18 @@ class Journee
                 $party->setIdJournee(null);
             }
         }
+
+        return $this;
+    }
+
+    public function getNom(): ?string
+    {
+        return $this->nom;
+    }
+
+    public function setNom(?string $nom): static
+    {
+        $this->nom = $nom;
 
         return $this;
     }
