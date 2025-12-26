@@ -72,7 +72,8 @@
                                 <ul class="list bg-base-100 rounded-box flex">
 
                                     {% for journee in poule.journees %}
-                                        <li class="badge badge-outline">{{ journee.numero }} : {{ journee.datedebut.format('d-m-Y')}} - {{ journee.datefin.format('d-m-Y') }}
+                                    {# {{dump(journee)}} #}
+                                        <li class="badge badge-outline">{{ journee.numero }} : {{ journee.datedebut.format('d-m-Y')}} - {{ journee.datefin.format('d-m-Y')}} {{journee.nom}}
                                             {% if journee.parties|length > 0  %}
                                                 - <a class="btn btn-xs btn-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee':journee.id}) }}">Voir les matchs</a>
                                             {% endif %}
