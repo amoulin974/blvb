@@ -7,6 +7,9 @@ use App\Entity\Journee;
 use App\Entity\Lieu;
 use App\Entity\Equipe;
 use App\Entity\Poule;
+use Symfony\Component\Form\FormEvent;
+use Symfony\Component\Form\FormEvents;
+use Symfony\Component\Form\Event\PreSetDataEvent;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\DateTimeType;
@@ -18,15 +21,66 @@ class PartieCalendarType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
-        /** @var Poule $poule */
         $poule = $options['poule'];
+        $builder->addEventListener(FormEvents::PRE_SET_DATA, function (FormEvent $event) use ($poule) {
+            $partie = $event->getData();
+            $form = $event->getForm();
+
+            if (!$partie) {
+                return;
+            }
+
+            // Calcul du texte pour le placeholder (Equipe reçoit)
+            $placeholderRecoit = 'Choisir une équipe...';
+            if (!$partie->getIdEquipeRecoit() && $partie->getParentMatch1()) {
+                $parent = $partie->getParentMatch1();
+                $placeholderRecoit = 'Vainqueur ' . ($parent->getNom() ?: 'Match #' . $parent->getId());
+            }
+
+            // Calcul du texte pour le placeholder (Equipe déplace)
+            $placeholderDeplace = 'Choisir une équipe...';
+            if (!$partie->getIdEquipeDeplace() && $partie->getParentMatch2()) {
+                $parent = $partie->getParentMatch2();
+                $placeholderDeplace = 'Vainqueur ' . ($parent->getNom() ?: 'Match #' . $parent->getId());
+            }
+            $form->add('id_equipe_recoit', EntityType::class, [
+                'class' => Equipe::class,
+                'choice_label' => 'nom',
+                'label' => 'Équipe qui reçoit',
+                'required' => false,
+                'placeholder' => $placeholderRecoit,
+                'query_builder' => function (EntityRepository $er) use ($poule) {
+                    return $er->createQueryBuilder('e')
+                        ->join('e.Poules', 'p')
+                        ->where('p = :poule')
+                        ->setParameter('poule', $poule)
+                        ->orderBy('e.nom', 'ASC');
+                },
+            ]);
+            $form->add('id_equipe_deplace', EntityType::class, [
+                    'class' => Equipe::class,
+                    'choice_label' => 'nom',
+                    'label' => 'Équipe qui se déplace',
+                    'required' => false,
+                    'placeholder' => $placeholderDeplace,
+                    'query_builder' => function (EntityRepository $er) use ($poule) {
+                        return $er->createQueryBuilder('e')
+                            ->join('e.Poules', 'p')
+                            ->where('p = :poule')
+                            ->setParameter('poule', $poule)
+                            ->orderBy('e.nom', 'ASC');
+                    },
+                ]);
+        });
+        /** @var Poule $poule */
+
         $builder
             ->add('date', DateTimeType::class, [
                 'widget' => 'single_text',
                 'label' => 'Date du match'
             ])
 
-// ✅ Liste des journées filtrées par la poule
+// Liste des journées filtrées par la poule
             ->add('id_journee', EntityType::class, [
                 'class' => Journee::class,
                 'choice_label' => fn(Journee $j) => 'Journée n°' . $j->getNumero(),
@@ -40,7 +94,7 @@ class PartieCalendarType extends AbstractType
                 },
             ])
 
-// ✅ On ne laisse jamais changer la poule → cachée car imposée par le contexte
+// On ne laisse jamais changer la poule → cachée car imposée par le contexte
             ->add('Poule', EntityType::class, [
                 'class' => Poule::class,
                 'choice_label' => fn(Poule $p) => $p->getNom(),
@@ -53,30 +107,7 @@ class PartieCalendarType extends AbstractType
                 'choice_label' => 'nom',
                 'label' => 'Lieu du match'
             ])
-            ->add('id_equipe_recoit', EntityType::class, [
-                'class' => Equipe::class,
-                'choice_label' => 'nom',
-                'label' => 'Équipe qui reçoit',
-                'query_builder' => function (EntityRepository $er) use ($poule) {
-                    return $er->createQueryBuilder('e')
-                        ->join('e.Poules', 'p')
-                        ->where('p = :poule')
-                        ->setParameter('poule', $poule)
-                        ->orderBy('e.nom', 'ASC');
-                },
-            ])
-            ->add('id_equipe_deplace', EntityType::class, [
-                'class' => Equipe::class,
-                'choice_label' => 'nom',
-                'label' => 'Équipe qui se déplace',
-                'query_builder' => function (EntityRepository $er) use ($poule) {
-                    return $er->createQueryBuilder('e')
-                        ->join('e.Poules', 'p')
-                        ->where('p = :poule')
-                        ->setParameter('poule', $poule)
-                        ->orderBy('e.nom', 'ASC');
-                },
-            ])
+
             ->add('nb_set_gagnant_reception')
             ->add('nb_set_gagnant_deplacement');
     }

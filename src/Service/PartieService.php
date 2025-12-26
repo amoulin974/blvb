@@ -3,8 +3,10 @@
 namespace App\Service;
 use App\Entity\Poule;
 use App\Entity\Partie;
+use App\Entity\Lieu;
 use App\Enum\PhaseType;
 use App\Entity\Journee;
+use App\Repository\LieuRepository;
 use App\Entity\Equipe;
 use DateTimeImmutable;
 use DateTimeInterface;
@@ -21,16 +23,16 @@ class PartieService
         'samedi'    => 'saturday',
         'dimanche'  => 'sunday',
         // Support des index numériques (si 1 = Lundi)
-        '1' => 'monday', 
-        '2' => 'tuesday', 
+        '1' => 'monday',
+        '2' => 'tuesday',
         '3' => 'wednesday',
-        '4' => 'thursday', 
-        '5' => 'friday', 
-        '6' => 'saturday', 
+        '4' => 'thursday',
+        '5' => 'friday',
+        '6' => 'saturday',
         '7' => 'sunday',
     ];
-    
-    
+
+
     public function __construct(
         private EntityManagerInterface $em
     ) {}
@@ -111,7 +113,144 @@ class PartieService
 
         }
     }
-    private function generateMatchJourneePhaseFinale(){
+    private function generateMatchJourneePhaseFinale(Poule $poule ){
+        $lieuRepository = $this->em->getRepository(Lieu::class);
+        $equipes = $poule->getEquipes()->toArray();
+        $nbEquipes = count($equipes);
+        $journees = $poule->getJournees()->toArray();
+        usort($journees, fn($j1, $j2) => $j1->getNumero() <=> $j2->getNumero());
+
+        // 1. Calculer la structure
+        // puissance de 2 inférieure (ex: pour 12 c'est 8)
+        $p = pow(2, floor(log($nbEquipes, 2)));
+        $nbBarrages = $nbEquipes - $p;
+        $nbExemptes = $p - $nbBarrages;
+
+        $matchsParTour = [];
+
+        // 2. Création de tous les matchs "vides" par tour
+        foreach ($journees as $indexJournee => $journee) {
+            $tourMatchs = [];
+
+            // Déterminer combien de matchs dans ce tour
+            if ($indexJournee === 0 && $nbBarrages > 0) {
+                $nbMatchsAcreer = $nbBarrages; // Tour de barrages
+            } else {
+                // Pour les tours suivants, on divise par 2 à chaque fois
+                // Le premier tour complet a $p/2$ matchs (ex: 8 équipes -> 4 matchs)
+                $distanceFinale = count($journees) - 1 - $indexJournee;
+                $nbMatchsAcreer = pow(2, $distanceFinale);
+            }
+
+            for ($i = 0; $i < $nbMatchsAcreer; $i++) {
+                $match = new Partie();
+                $match->setIdJournee($journee);
+                $match->setPoule($poule);
+                $match->setNom($journee->getNom() . ' - Match ' . ($i + 1));
+
+
+
+
+                $this->em->persist($match);
+                $tourMatchs[] = $match;
+            }
+            $matchsParTour[$indexJournee] = $tourMatchs;
+        }
+
+// ... (Sections 1 et 2 inchangées) ...
+
+// 3 & 4. Liaison et Remplissage des équipes de départ
+        $equipeIndex = 0;
+        $tourCible = ($nbBarrages > 0) ? 1 : 0;
+        $matchsDuTourSuivant = $matchsParTour[$tourCible];
+
+// A. On place d'abord les EXEMPTÉS (Têtes de série)
+// On les répartit : d'abord tous les "Recoit", puis si on en a encore, les "Deplace"
+        foreach ($matchsDuTourSuivant as $match) {
+            if ($equipeIndex < $nbExemptes) {
+                $match->setIdEquipeRecoit($equipes[$equipeIndex++]);
+            }
+        }
+        foreach ($matchsDuTourSuivant as $match) {
+            if ($equipeIndex < $nbExemptes && $match->getIdEquipeDeplace() === null) {
+                $match->setIdEquipeDeplace($equipes[$equipeIndex++]);
+            }
+        }
+
+// B. On remplit les BARRAGES (Round 0) et on les lie aux places LIBRES du tour suivant
+        if ($nbBarrages > 0) {
+            $barrageIndex = 0;
+            $matchsBarrage = $matchsParTour[0];
+
+            // 1. Remplissage des matchs de barrage avec les équipes restantes
+            foreach ($matchsBarrage as $matchB) {
+                $matchB->setIdEquipeRecoit($equipes[$equipeIndex++]);
+                $matchB->setIdEquipeDeplace($equipes[$equipeIndex++]);
+            }
+
+            // 2. LIAISON : On lie chaque match de barrage à une place vide (null) dans le tour suivant
+            foreach ($matchsDuTourSuivant as $matchS) {
+                // Si le slot Recoit est vide, on y lie un barrage
+                if ($matchS->getIdEquipeRecoit() === null && $barrageIndex < $nbBarrages) {
+                    $matchS->setParentMatch1($matchsBarrage[$barrageIndex++]);
+                }
+                // Si le slot Deplace est vide, on y lie un barrage
+                if ($matchS->getIdEquipeDeplace() === null && $barrageIndex < $nbBarrages) {
+                    $matchS->setParentMatch2($matchsBarrage[$barrageIndex++]);
+                }
+            }
+        }
+
+// C. Liaison des tours suivants (Quarts vers Demis, Demis vers Finale)
+// On commence après le tour de barrage ou le premier tour
+        $startTour = $tourCible;
+        for ($t = $startTour; $t < count($matchsParTour) - 1; $t++) {
+            foreach ($matchsParTour[$t] as $indexMatch => $matchActuel) {
+                $prochainTour = $matchsParTour[$t + 1];
+                $targetMatch = $prochainTour[floor($indexMatch / 2)];
+
+                if ($indexMatch % 2 === 0) {
+                    $targetMatch->setParentMatch1($matchActuel);
+                } else {
+                    $targetMatch->setParentMatch2($matchActuel);
+                }
+            }
+        }
+
+        // 5. Remplissage deu lieu et de la date
+        foreach ($matchsParTour as $tourMatchs) {
+            /** @var Partie $match */
+            foreach ($tourMatchs as $match) {
+                //Soit on sait qui reçoit donc on peut fixer le lieu et calculer la date
+                if ($match->getIdEquipeRecoit() !== null) {
+                    $match->setLieu($match->getIdEquipeRecoit()->getLieu());
+                    $dateMatch = $this->calculerDateMatch(
+                        $match->getIdJournee()->getDateDebut(),
+                        $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getJourSemaine(),
+                        $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getHeureDebut(),
+                    );
+                    $match->setDate($dateMatch);
+
+                }else{
+                    //On fixe la date au premier jour de la semaine à 20h
+
+
+                    $match->setLieu($lieuRepository->getLieuByDefaut());
+                    $dateMatch = $this->calculerDateMatch(
+                        $match->getIdJournee()->getDateDebut(),
+                        $match->getLieu()->getCreneaux()[0]->getJourSemaine(),
+                        $match->getLieu()->getCreneaux()[0]->getHeureDebut(),
+                    );
+                    $match->setDate($dateMatch);
+
+                }
+
+            }
+        }
+
+        $this->em->flush();
+        return null;
+
 
     }
     private function deleteMatches(Poule $poule): void
