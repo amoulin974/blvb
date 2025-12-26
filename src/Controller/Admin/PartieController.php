@@ -196,10 +196,21 @@ final class PartieController extends AbstractController
         foreach ($parties as $partie) {
             $start = $partie->getDate(); // DateTimeImmutable
             $end = $start->modify('+1 hour');
+
+            //Dans les phase finales, les matchs sont créés alors qu'on ne connait pas encore léquipe qui reçoit et l'équipe qui se déplace
+            //Donc si il manque un des deux, on utilise le nom de la partie
+            if ($partie->getIdEquipeRecoit() === null || $partie->getIdEquipeDeplace() === null) {
+                $title = $partie->getNom();
+            }else{
+                $title = $partie->getIdEquipeRecoit()->getNom(). "vs" . $partie->getIdEquipeDeplace()->getNom();
+            }
+
+
+
             $data[] = [
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'id' => $partie->getId(),
-                'title' => $partie->getIdEquipeRecoit()->getNom(). "vs" . $partie->getIdEquipeDeplace()->getNom(),
+                'title' => $title,
                 'start' => $start->format(\DateTimeInterface::ATOM),
                 'end' => $end->format(\DateTimeInterface::ATOM),
             ];

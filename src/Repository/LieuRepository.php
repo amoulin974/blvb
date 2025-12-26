@@ -16,6 +16,12 @@ class LieuRepository extends ServiceEntityRepository
         parent::__construct($registry, Lieu::class);
     }
 
+    public function getLieuByDefaut(): ?Lieu
+    {
+        //TODO définir un paramètre de configuration
+        return $this->findOneBy(['nom' => 'St-Jean-de-Luz, Gymnase du college Chantaco']);
+    }
+
 //    /**
 //     * @return Lieu[] Returns an array of Lieu objects
 //     */
