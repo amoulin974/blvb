@@ -6,6 +6,7 @@ use App\Entity\Phase;
 use App\Factory\EquipeFactory;
 use App\Factory\SaisonFactory;
 use App\EventListener\SaisonListener;
+use App\Service\ClassementService;
 use App\Factory\LieuFactory;
 use App\Factory\CreneauFactory;
 use App\Service\CompetitionCreator;
@@ -16,7 +17,8 @@ final class SaisonStructureStory extends Story
 {
     public function __construct(
         private CompetitionCreator $competitionCreator,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private ClassementService $classementService
     ) {}
 
     public function build(): void {
@@ -78,6 +80,8 @@ final class SaisonStructureStory extends Story
                     $poule->addEquipe($equipe);
                     $this->entityManager->persist($equipe);
                 }
+                //Mise à jour du classement pour la poule
+                $this->classementService->mettreAJourClassementPoule($poule);
             }
         }
 

@@ -86,7 +86,7 @@ final class FrontController extends AbstractController
 
 
         //Trier les équipes par le classement
-        $classementService->getClassement($saison);
+//        $classementService->getClassement($saison);
 
         return $this->render('front/equipes.html.twig', [
             'saisons' => $this->saisons,
@@ -128,7 +128,7 @@ final class FrontController extends AbstractController
         /**Equipe $equipe */
         $equipe=$equipeRepository->find($id);
         //Trier les équipes par le classement
-        $classementService->getClassement($saison);
+//        $classementService->getClassement($saison);
         $poules=$equipe->getPoules();
 
         //On recupère la liste des matchs
@@ -281,7 +281,7 @@ final class FrontController extends AbstractController
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
 
-        $classementService->getClassement($saison);
+//        $classementService->getClassement($saison);
         return $this->render('front/classement.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
