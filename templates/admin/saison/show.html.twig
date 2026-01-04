@@ -23,6 +23,15 @@
                     </svg> Modifier</a>
 
                 {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs', join:'join-item' }) }}
+                    {% if not loop.last %}
+                        <form action="{{ path('admin_phase_cloturer', {'id': phase.id}) }}" method="POST" >
+                            <button type="submit"
+                                    class="btn btn-warning btn-xs"
+                                    onclick="return confirm('Êtes-vous sûr de vouloir clôturer cette phase ? Cette action est irréversible.')">
+                                Clôturer la phase
+                            </button>
+                        </form>
+                    {% endif %}
                 </div>
              </h2>
 

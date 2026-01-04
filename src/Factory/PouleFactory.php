@@ -37,6 +37,7 @@ final class PouleFactory extends PersistentObjectFactory
             'nb_descente_defaut' => 2,
             'nb_montee_defaut' => 2,
             'nom' => self::faker()->text(255),
+            'niveau' => 1,
         ];
     }
 

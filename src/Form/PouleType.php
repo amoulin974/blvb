@@ -35,7 +35,8 @@ class PouleType extends AbstractType
                 'class' => Equipe::class,
                 'choice_label' => 'nom',
                 'multiple' => true,
-                'expanded' => false,         // select multiple natif
+                'expanded' => false,// select multiple natif
+                'required' => false,
                 'by_reference' => false,
                 'attr' => [
                     'class' => 'select select-bordered w-full',

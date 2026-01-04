@@ -45,11 +45,14 @@ class Poule
     #[ORM\OrderBy(["position" => "ASC"])]
     private Collection $classements;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $nb_montee_defaut = null;
 
-    #[ORM\Column]
+    #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $nb_descente_defaut = null;
+
+    #[ORM\Column(type: 'integer', nullable: true)]
+    private ?int $niveau = null;
 
     public function __construct()
     {
@@ -223,7 +226,7 @@ class Poule
         return $this->nb_montee_defaut;
     }
 
-    public function setNbMonteeDefaut(int $nb_montee_defaut): static
+    public function setNbMonteeDefaut(?int $nb_montee_defaut): static
     {
         $this->nb_montee_defaut = $nb_montee_defaut;
 
@@ -235,9 +238,21 @@ class Poule
         return $this->nb_descente_defaut;
     }
 
-    public function setNbDescenteDefaut(int $nb_descente_defaut): static
+    public function setNbDescenteDefaut(?int $nb_descente_defaut): static
     {
         $this->nb_descente_defaut = $nb_descente_defaut;
+
+        return $this;
+    }
+
+    public function getNiveau(): ?int
+    {
+        return $this->niveau;
+    }
+
+    public function setNiveau(?int $niveau): static
+    {
+        $this->niveau = $niveau;
 
         return $this;
     }

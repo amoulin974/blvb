@@ -2,26 +2,32 @@
 namespace App\Story;
 
 use App\Entity\Saison;
+use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Service\JourneeService;
 use App\Service\PartieService;
 use App\Service\ClassementService;
+use App\Service\PhaseService;
 use Zenstruck\Foundry\Story;
 use function Zenstruck\Foundry\faker;
 use Doctrine\ORM\EntityManagerInterface;
+
 final class SimulationMatchsStory extends Story
 {
     public function __construct(
         private JourneeService $journeeService,
         private PartieService $partieService,
         private ClassementService $classementService,
-        private EntityManagerInterface $entityManager
+        private EntityManagerInterface $entityManager,
+        private PhaseService $phaseService
     ) {}
 
     public function build(): void {}
 
     /**
      * Simule la saison jusqu'à la fin de la phase spécifiée (index 0, 1 ou 2)
+     * Par défaut, cette méthode ne clôture pas la dernière phase simulée pour permettre
+     * de visualiser les classements avant le basculement.
      */
     public function simulerJusquA(Saison $saison, int $indexPhaseMax): void
     {
@@ -29,16 +35,22 @@ final class SimulationMatchsStory extends Story
         for ($i = 0; $i <= $indexPhaseMax; $i++) {
             if (isset($phases[$i])) {
                 $this->simulerPhaseEntiere($phases[$i]);
+
+                // Si ce n'est pas la dernière phase demandée, on clôture automatiquement
+                // pour permettre à la phase suivante d'avoir des équipes.
+                if ($i < $indexPhaseMax) {
+                    $this->cloturer($phases[$i]);
+                }
             }
         }
     }
 
-    private function simulerPhaseEntiere($phase): void
+    /**
+     * Étape 1 : Génère les journées, les matchs, saisit les scores et calcule le classement
+     */
+    public function simulerPhaseEntiere(Phase $phase): void
     {
-
         foreach ($phase->getPoules() as $poule) {
-
-
             // 1. Génération des journées
             $this->journeeService->creerJournees($poule);
             // 2. Génération des matchs
@@ -50,8 +62,24 @@ final class SimulationMatchsStory extends Story
                 $partie->setNbSetGagnantDeplacement($score[1]);
             }
 
-            // 4. Mise à jour du classement de la poule
+            $this->entityManager->flush();
+            // 4. Mise à jour du classement de la poule (positions finales)
             $this->classementService->mettreAJourClassementPoule($poule);
         }
+        $this->entityManager->flush();
+    }
+
+    /**
+     * Étape 2 : Clôture physiquement la phase et bascule les équipes vers la suivante
+     */
+    public function cloturer(Phase $phase): void
+    {
+        // On s'assure que les classements sont à jour avant le basculement
+        $this->entityManager->flush();
+
+        // Appel du service pour le mouvement des équipes selon les montées/descentes
+        $this->phaseService->cloturerEtBasculer($phase);
+
+        // Le PhaseService gère déjà le flush final et l'initialisation de la phase suivante
     }
 }

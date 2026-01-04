@@ -6,6 +6,7 @@ use App\Entity\Journee;
 use App\Entity\Phase;
 use App\Form\PhaseFormType;
 use App\Repository\PhaseRepository;
+use App\Service\PhaseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -80,6 +81,43 @@ final class PhaseController extends AbstractController
         }
 
         return $this->redirectToRoute('admin_phase_index', [], Response::HTTP_SEE_OTHER);
+    }
+
+//    Route appellée par le bouton qui permet de cloturer une phase depuis show d'une saison
+    #[Route('/{id}/cloturer', name: 'cloturer', methods: ['POST'])]
+    public function cloturer(
+        Phase $phase,
+        EntityManagerInterface $entityManager,
+        PhaseService $phaseService
+    ): Response {
+        $saison = $phase->getSaison();
+        $phases = $saison->getPhases();
+
+        // 1. Trouver la phase suivante
+        $phaseSuivante = null;
+        $trouve = false;
+        foreach ($phases as $p) {
+            if ($trouve) {
+                $phaseSuivante = $p;
+                break;
+            }
+            if ($p->getId() === $phase->getId()) {
+                $trouve = true;
+            }
+        }
+
+        if (!$phaseSuivante) {
+            $this->addFlash('error', 'Il n’y a pas de phase suivante pour clôturer celle-ci.');
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+        }else{
+            $phaseService->cloturerEtBasculer($phase);
+            $this->addFlash('success', 'Équipes basculées avec succès.');
+        }
+
+
+
+        // Redirection vers la vue de la saison pour voir le résultat
+        return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
     }
 
 }

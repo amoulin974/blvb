@@ -57,9 +57,10 @@ final class SaisonStructureStory extends Story
         $saison = $this->entityManager->find(Saison::class, $saison->getId());
 
         $equipesParPoule = [];
-        foreach ($saison->getPhases() as $phase) {
+        $phase1 = $saison->getPhases()->first(); // On récupère l'objet Phase unique
+        if ($phase1)  {
             //Lors de la première phase on créé les équipes que l'on rajoute aux poules
-            foreach ($phase->getPoules() as $poule) {
+            foreach ($phase1->getPoules() as $poule) {
                 $nomPoule = $poule->getNom();
                 // Si c'est la première fois qu'on croise ce nom de poule (Phase 1)
                 if (!isset($equipesParPoule[$nomPoule])) {
