@@ -17,49 +17,7 @@ class ClassementService
         private EntityManagerInterface $em
     ) {}
 
-    /**
-    * Ajoute un champ classement à toutes les équipes de chaque poules dans chaque phase d'une saison donnéee en paamètre
-    */
-    public function getClassement(Saison $saison){
-        /** Phase $phase */
-        foreach ($saison->getPhases() as $phase){
-            /** Poule $poule */
-            foreach ($phase->getPoules() as $poule){
-                //Ordonancement des classements dans l'ordre d
-                $this->OrderClassementPouleByPosition($poule);
-                /** Equipe $equipe */
-                foreach ($poule->getEquipes() as $equipe){
-                    /** Classement $classment */
-                    $position = 0;
-                    foreach ($equipe->getClassements() as $classement){
-                        if ($classement->getPoule()==$poule){
-                            $equipe->position=$classement->getPosition();
-                            $position=1;
-                        }
 
-                    }
-                    if ($position === 0){
-                            $equipe->position="non défini";
-                        }
-                }
-
-            }
-        }
-    }
-
-    /**Ordonne les classement d'une poule en fonction de leur position */
-    public function OrderClassementPouleByPosition(Poule $poule){
-        if (! is_null($poule->getClassements())){
-            $classements=$poule->getClassements()->toArray();
-            usort($classements, function($a, $b) {
-            $posA=$a->getPosition();
-            $posB=$b->getPosition();
-            return $posA <=> $posB;
-             });
-             $poule->setClassements(new ArrayCollection($classements));
-        }
-
-    }
     /**
      * Met à jour le classement pour une poule entière.
      */
