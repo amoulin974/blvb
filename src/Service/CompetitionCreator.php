@@ -56,6 +56,9 @@ class CompetitionCreator
                     $poule = new Poule();
                     $nomPoule = $pouleData['nom'] ?? 'Poule sans nom';
                     $poule->setNom($isTest ? "test_" . $nomPoule : $nomPoule);
+                    if (isset($pouleData['niveau'])) {
+                        $poule->setNiveau((int) $pouleData['niveau']);
+                    }
                     $poule->setPhase($phase);
                     $poule->setNbMonteeDefaut(2);
                     $poule->setNbDescenteDefaut(2);

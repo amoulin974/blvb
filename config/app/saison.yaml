@@ -8,27 +8,27 @@ parameters:
               duree: 4
               ordre: 0
               poules:
-                  - { nom: "Poule A" }
-                  - { nom: "Poule B" }
-                  - { nom: "Poule C" }
-                  - { nom: "Poule D" }
+                  - { nom: "Poule A", niveau: "1" }
+                  - { nom: "Poule B", niveau: "2" }
+                  - { nom: "Poule C", niveau: "3" }
+                  - { nom: "Poule D", niveau: "4" }
             - nom: "Phase 2"
               type: "CHAMPIONNAT"
               date_debut: "01/02/n+1"
               date_fin: "01/06/n+1"
               ordre: 1
               poules:
-                  - { nom: "Poule A" }
-                  - { nom: "Poule B" }
-                  - { nom: "Poule C" }
-                  - { nom: "Poule D" }
+                  - { nom: "Poule A", niveau: "1" }
+                  - { nom: "Poule B", niveau: "2" }
+                  - { nom: "Poule C", niveau: "3" }
+                  - { nom: "Poule D", niveau: "4" }
             - nom: "Phase Finale"
               type: "FINALE"
               date_debut: "01/06/n+1"
               date_fin: "01/08/n+1"
               ordre: 2
               poules:
-                  - { nom: "Poule A" }
-                  - { nom: "Poule B" }
-                  - { nom: "Poule C" }
-                  - { nom: "Poule D" }
+                  - { nom: "Poule A", niveau: "1" }
+                  - { nom: "Poule B", niveau: "2" }
+                  - { nom: "Poule C", niveau: "3" }
+                  - { nom: "Poule D", niveau: "4" }
