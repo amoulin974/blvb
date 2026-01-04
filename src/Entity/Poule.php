@@ -42,6 +42,7 @@ class Poule
      * @var Collection<int, Classement>
      */
     #[ORM\OneToMany(targetEntity: Classement::class, mappedBy: 'poule')]
+    #[ORM\OrderBy(["position" => "ASC"])]
     private Collection $classements;
 
     #[ORM\Column]

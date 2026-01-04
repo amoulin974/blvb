@@ -48,7 +48,8 @@
                                                     <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
                                                 {% endfor %}
                                             </td>
-                                            <td class="text-center font-bold">{{equipe.position}}</td>
+                                            <td class="text-center font-bold">{% for classement in equipe.classements %}
+                                                    {% if classement.poule == poule %}{{ classement.position }}{% endif %}{%  endfor %}</td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
@@ -81,7 +82,7 @@
                                                 {% endfor %}
                                             </div>
                                             <div class="text-sm mt-2">
-                                            <p class="badge badge-primary">Classement : {{equipe.position}}</p>
+{#                                            <p class="badge badge-primary">Classement : {{equipe.position}}</p>#}
                                             </div>
                                         </div>
                                     </div>
