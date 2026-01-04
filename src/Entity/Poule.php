@@ -19,15 +19,16 @@ class Poule
     private ?string $nom = null;
 
     #[ORM\ManyToOne(inversedBy: 'poules')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Phase $phase = null;
 
     /**
      * @var Collection<int, Partie>
      */
-    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'poule')]
+    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'poule', orphanRemoval: true)]
     private Collection $parties;
 
-    #[ORM\OneToMany(targetEntity: Journee::class, mappedBy: 'poule')]
+    #[ORM\OneToMany(targetEntity: Journee::class, mappedBy: 'poule', orphanRemoval: true)]
     private Collection $journees;
 
     /**
@@ -113,7 +114,7 @@ class Poule
         return $this;
     }
 
- 
+
     public function removeParty(Partie $party): static
     {
         if ($this->parties->removeElement($party)) {

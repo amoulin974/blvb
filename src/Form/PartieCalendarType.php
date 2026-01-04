@@ -81,7 +81,7 @@ class PartieCalendarType extends AbstractType
             ])
 
 // Liste des journées filtrées par la poule
-            ->add('id_journee', EntityType::class, [
+            ->add('journee', EntityType::class, [
                 'class' => Journee::class,
                 'choice_label' => fn(Journee $j) => 'Journée n°' . $j->getNumero(),
                 'label' => 'Journée',
@@ -95,7 +95,7 @@ class PartieCalendarType extends AbstractType
             ])
 
 // On ne laisse jamais changer la poule → cachée car imposée par le contexte
-            ->add('Poule', EntityType::class, [
+            ->add('poule', EntityType::class, [
                 'class' => Poule::class,
                 'choice_label' => fn(Poule $p) => $p->getNom(),
                 'data' => $poule,

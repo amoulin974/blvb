@@ -24,8 +24,8 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('COUNT(p.id) AS nb_matchs')
             ->addSelect('l.nbTerrains AS nb_terrains')
             ->addSelect('l.nom AS lieu_nom')
-            ->join('p.id_lieu', 'l')
-            ->join('p.id_journee', 'j')
+            ->join('p.lieu', 'l')
+            ->join('p.journee', 'j')
             ->where('j.id IN (:journeesIds)')
             ->setParameter('journeesIds', $journeesIds)
             ->groupBy('lieu_id, journee_id, date_match')
@@ -49,12 +49,12 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('j.id AS journee_id')
 
             ->join('m.lieu', 'l')
-            ->join('m.id_journee', 'j')
+            ->join('m.journee', 'j')
             ->join('m.poule', 'poule')
 
             // 🔥 Deux JOIN séparés pour les 2 équipes
-            ->join('m.id_equipe_recoit ', 'er')     // ou join('m.equipeRecoit', 'er') selon ton mapping
-            ->join('m.id_equipe_deplace ', 'ed')    // idem
+            ->join('m.id_equipe_recoit', 'er')     // ou join('m.equipeRecoit', 'er') selon ton mapping
+            ->join('m.id_equipe_deplace', 'ed')    // idem
 
             ->where('poule.id = :pouleId')
             ->andWhere('er.id = :equipeId OR ed.id = :equipeId')

@@ -26,8 +26,8 @@ class Creneau
     #[ORM\Column]
     private ?int $capacite = null;
 
-    #[ORM\ManyToOne(inversedBy: 'creneaus')]
-    #[ORM\JoinColumn(nullable: false)]
+    #[ORM\ManyToOne(inversedBy: 'creneaux')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Lieu $lieu = null;
 
     #[ORM\Column]

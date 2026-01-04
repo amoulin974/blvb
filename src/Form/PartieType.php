@@ -24,14 +24,14 @@ class PartieType extends AbstractType
             ])
             ->add('nb_set_gagnant_reception')
             ->add('nb_set_gagnant_deplacement')
-            ->add('id_journee', EntityType::class, [
+            ->add('journee', EntityType::class, [
                 'class' => Journee::class,
                 'choice_label' => function(Journee $journee) {
                     return 'Journée n°' . $journee->getNumero();
                 },
                 'label' => 'Journée',
             ])
-            ->add('Poule', EntityType::class, [
+            ->add('poule', EntityType::class, [
                 'class' => Poule::class,
                 'choice_label' => function(Poule $poule) {
                     $phase = $poule->getPhase();
@@ -44,7 +44,7 @@ class PartieType extends AbstractType
                     return "$saisonNom / $phaseNom / $pouleNom";
                 },
             ])
-            ->add('id_lieu', EntityType::class, [
+            ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',
             ])

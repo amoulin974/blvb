@@ -14,6 +14,14 @@ services:
         autoconfigure: true
         public: false
 
+    App\DataFixtures\:
+        resource: '../src/DataFixtures/'
+
+    App\Story\:
+        resource: '../src/Story/'
+
+    App\Factory\:
+        resource: '../src/Factory/'
     # --------------------------------------------------------
     # Services normaux
     App\Service\:
@@ -29,7 +37,7 @@ services:
     # Security
     App\Security\:
         resource: '../src/Security/'
-        
+
     # --------------------------------------------------------
     # Subscriber Doctrine pour créer automatiquement les phases/poules
     App\EventListener\SaisonListener:

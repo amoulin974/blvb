@@ -28,12 +28,15 @@ class JourneeService
         foreach ($poule->getJournees() as $journee) {
             $this->em->remove($journee);
         }
+        $poule->getJournees()->clear();
         $this->em->flush();
 
         $phase = $poule->getPhase();
 
+
         if ($phase->getType() === PhaseType::CHAMPIONNAT) {
-            return $this->creerJourneesChampionnat($poule);
+            $this->creerJourneesChampionnat($poule);
+            return null;
         } elseif ($phase->getType() === PhaseType::FINALE) {
             return $this->creerJourneesFinales($poule);
         }else{
@@ -48,22 +51,24 @@ class JourneeService
         //On vérifie si la première poule de la phase à déjà des journées et si le nombre d'équipe est identique. Si c'est le cas on copie les journées
         $phase=$poule->getPhase();
         $poulesPhase=$phase->getPoules();
-        $firstPoule=$poulesPhase[0];
+        $firstPoule=$poulesPhase->first();
         $nbEquipe = count($poule->getEquipes());
 
         //Si la première poule a le même nombre d'équipes et des journées on les copie
         if (count($firstPoule->getEquipes())==$nbEquipe && count($firstPoule->getJournees())>0){
+
             foreach($firstPoule->getJournees() as $journeefirstpoule){
                 $newJournee=new Journee;
                 $newJournee->setDateDebut($journeefirstpoule->getDateDebut());
                 $newJournee->setDateFin($journeefirstpoule->getDateFin());
                 $newJournee->setNumero($journeefirstpoule->getNumero());
-                $newJournee->setPoule($poule);
+                $poule->addJournee($newJournee);
                 $this->em->persist($newJournee);
 
             }
             $this->em->flush();
         }else{
+
             //Calcul du nombre de journées nécessaires
             $nbMatch=$nbEquipe*($nbEquipe-1)/2;
             if ($nbEquipe % 2 == 0){
@@ -72,7 +77,6 @@ class JourneeService
                 $nbMatchParJour = ($nbEquipe-1)/2;
             }
             $nbJournee = $nbMatch/$nbMatchParJour;
-
 
             // Dates de la phase
             $debutPhase = $poule->getPhase()->getDateDebut();
@@ -88,6 +92,7 @@ class JourneeService
 
                 // Génération des journées
                 $currentDate = clone $debutPhase;
+
                 for ($i = 1; $i <= $nbJournee; $i++) {
 
                     // Skip Noël et Jour de l'an
@@ -111,7 +116,7 @@ class JourneeService
 
                     $journee->setDateDebut(new \DateTimeImmutable($debutSemaine->format('Y-m-d')));
                     $journee->setDateFin(new \DateTimeImmutable($finSemaine->format('Y-m-d')));
-                    $journee->setPoule($poule);
+                    $poule->addJournee($journee);
 
                     $this->em->persist($journee);
 
@@ -158,7 +163,7 @@ class JourneeService
             $nom = $this->getNomJournee($i, $totalJournees, $aDesBarrages);
             $journee->setNom($nom);
             $journee->setNumero($i);
-            
+
             $journee->setDateDebut(new \DateTimeImmutable($currentDate->format('Y-m-d')));
             $journee->setDateFin(new \DateTimeImmutable($currentDate->modify('+6 days')->format('Y-m-d')));
             $journee->setPoule($poule);

@@ -20,7 +20,7 @@ class CompetitionCreator
      * Crée automatiquement les phases et poules pour une saison
      * à partir de la configuration YAML (config/app/saison.yaml).
      */
-    public function creerPhasesEtPoules(Saison $saison): void
+    public function creerPhasesEtPoules(Saison $saison, bool $isTest = false): void
     {
         // On récupère la configuration
         $config = $this->params->get('saison');
@@ -31,7 +31,8 @@ class CompetitionCreator
 
         foreach ($config['phases'] as $phaseData) {
             $phase = new Phase();
-            $phase->setNom($phaseData['nom'] ?? 'Phase sans nom');
+            $nomPhase = $phaseData['nom'] ?? 'Phase sans nom';
+            $phase->setNom($isTest ? "test_" . $nomPhase : $nomPhase);
 
             // Détermine le type de la phase
             if (str_contains(strtolower($phaseData['type']), 'finale')) {
@@ -53,8 +54,11 @@ class CompetitionCreator
             if (isset($phaseData['poules']) && is_array($phaseData['poules'])) {
                 foreach ($phaseData['poules'] as $pouleData) {
                     $poule = new Poule();
-                    $poule->setNom($pouleData['nom'] ?? 'Poule sans nom');
+                    $nomPoule = $pouleData['nom'] ?? 'Poule sans nom';
+                    $poule->setNom($isTest ? "test_" . $nomPoule : $nomPoule);
                     $poule->setPhase($phase);
+                    $poule->setNbMonteeDefaut(2);
+                    $poule->setNbDescenteDefaut(2);
                     $this->em->persist($poule);
                 }
             }

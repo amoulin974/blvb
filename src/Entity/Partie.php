@@ -17,16 +17,18 @@ class Partie
     private ?\DateTimeImmutable $date = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties')]
-    private ?Journee $id_journee = null;
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?Journee $journee = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Poule $poule = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties')]
     private ?Lieu $lieu = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties_reception')]
-    private ?equipe $id_equipe_recoit = null;
+    private ?Equipe $id_equipe_recoit = null;
 
     #[ORM\ManyToOne(inversedBy: 'parties_deplacement')]
     private ?Equipe $id_equipe_deplace = null;
@@ -100,14 +102,14 @@ class Partie
         return $this;
     }
 
-    public function getIdJournee(): ?Journee
+    public function getJournee(): ?Journee
     {
-        return $this->id_journee;
+        return $this->journee;
     }
 
-    public function setIdJournee(?Journee $id_journee): static
+    public function setJournee(?Journee $journee): static
     {
-        $this->id_journee = $id_journee;
+        $this->journee = $journee;
 
         return $this;
     }
@@ -144,6 +146,9 @@ class Partie
     public function setIdEquipeRecoit(?equipe $id_equipe_recoit): static
     {
         $this->id_equipe_recoit = $id_equipe_recoit;
+        if ($id_equipe_recoit !== null) {
+            $id_equipe_recoit->addPartiesReception($this);
+        }
 
         return $this;
     }
@@ -156,7 +161,9 @@ class Partie
     public function setIdEquipeDeplace(?Equipe $id_equipe_deplace): static
     {
         $this->id_equipe_deplace = $id_equipe_deplace;
-
+        if ($id_equipe_deplace !== null) {
+            $id_equipe_deplace->addPartiesDeplacement($this);
+        }
         return $this;
     }
 
@@ -165,7 +172,7 @@ class Partie
         return $this->nb_set_gagnant_reception;
     }
 
-    public function setNbSetGagnantReception(int $nb_set_gagnant_reception): static
+    public function setNbSetGagnantReception(?int $nb_set_gagnant_reception): static
     {
         $this->nb_set_gagnant_reception = $nb_set_gagnant_reception;
 

@@ -16,7 +16,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
-use App\Service\PlanificationMatchService;
+
 
 #[IsGranted('ROLE_ADMIN')]
 #[Route('/admin/poule', name: 'admin_poule_')]
@@ -77,7 +77,7 @@ final class PouleController extends AbstractController
             }else{
                 return $this->redirectToRoute('admin_poule_index', [], Response::HTTP_SEE_OTHER);
             }
-           
+
         }
 
         return $this->render('admin/poule/edit.html.twig', [
