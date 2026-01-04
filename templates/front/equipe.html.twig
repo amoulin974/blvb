@@ -29,10 +29,11 @@
         <h2 class="mt-4">Calendrier</h2>
         {% for phase in saison.phases %}
             {% for poule in phase.poules %}
-                {%  if matchsByPoule[poule.id] is defined %}
+
+                {%  if matchsByPoule[poule.id] is defined and matchsByPoule[poule.id]|length>0 %}
                     <h3 class="pl-4 pb-2">{{ phase.nom }} - {{ poule.nom }}</h3>
 
-            <table class="border border-solid table-xs table-zebra w-full hidden md:table">
+            <table class="border border-solid table-xs  w-full hidden md:table">
                 <thead><tr>
                     <th>Date</th>
                     <th>Les équipes</th>
@@ -43,23 +44,7 @@
 
                     {%  for match in matchsByPoule[poule.id] %}
 
-                        <tr class="{% if match.score_deplacement_match is null and match.score_reception_match is null %}
-
-
-
-                            {%  elseif match.equipe_recoit == equipe.nom and match.score_reception_match > match.score_deplacement_match %}
-                            bg-success
-{% elseif match.equipe_recoit == equipe.nom and match.score_reception_match < match.score_deplacement_match %}
-                            bg-error
-                            {% elseif match.equipe_deplace == equipe.nom and match.score_deplacement_match > match.score_reception_match %}
-                        bg-success
-                            {% elseif match.equipe_deplace == equipe.nom and match.score_deplacement_match < match.score_reception_match %}
-                        bg-error
-                            {%  else %}
-                        bg-info
-                            {% endif %}
-
-                            ">
+                        <tr class="{{ match.resultat }}">
                             <td>{{ match.date_match|format_datetime('short', locale='fr') }}</td>
                             <td>{{ match.equipe_recoit }} {{ match.score_reception_match }} vs {{ match.equipe_deplace }} {{ match.score_deplacement_match }}</td>
                             <td>

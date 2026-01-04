@@ -78,6 +78,7 @@ final class FrontController extends AbstractController
         $this->getSaisonSession($session, $request);
         $saison=$saisonRepository->find($this->idSaisonSelected);
 
+
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
 
@@ -134,6 +135,19 @@ final class FrontController extends AbstractController
         $matchsByPoule=[];
         foreach ($poules as $poule) {
             $matchsByPoule[$poule->getId()] = $partieRepository->getMatchsByEquipePhase($equipe->getId(), $poule->getId());
+
+            //Pour chaque match on vérifie si l'équipe a gagné ou perdu
+            foreach ($matchsByPoule[$poule->getId()] as &$match) {
+
+                $match['resultat']='';
+                $reception=false;
+                if ($equipe->getNom() === $match["equipe_recoit"]) {$reception=true;}
+                if ($reception && $match["score_reception_match"] > $match["score_deplacement_match"]){$match['resultat']="bg-success";}
+                if ($reception && $match["score_reception_match"] < $match["score_deplacement_match"]){$match['resultat']="bg-error";}
+                if (!$reception && $match["score_deplacement_match"] > $match["score_reception_match"]){$match['resultat']="bg-success";}
+                if (!$reception && $match["score_deplacement_match"] < $match["score_reception_match"]){$match['resultat']="bg-error";}
+
+            }
         }
 
         //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
@@ -368,11 +382,13 @@ final class FrontController extends AbstractController
         } else{
             $this->idSaisonSelected = $this->saisons[0]->getId() ;
         }
+
     }
 
     //Détermine la phase actuelle d'une saison (la phase dont la date de début et de fin englobe la date actuelle)
     //ou la première phase si aucune n'est ouverte
     public function getPhaseActuelle($saison){
+
         $dateActuelle = new \DateTime();
         foreach ($saison->getPhases() as $phase) {
             if ($dateActuelle >= $phase->getDateDebut() && $dateActuelle <= $phase->getDateFin()) {
@@ -380,7 +396,7 @@ final class FrontController extends AbstractController
             }
 
         }
-        return $saison->getPhases()[0]; // Retourne la première phase si aucune n'est ouverte
+        return $saison->getPhases()->first(); // Retourne la première phase si aucune n'est ouverte
     }
 
 

@@ -26,13 +26,13 @@ class Phase
     private ?\DateTimeImmutable  $datefin = null;
 
     #[ORM\ManyToOne(inversedBy: 'phases')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?saison $saison = null;
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
+    private ?Saison $saison = null;
 
     /**
      * @var Collection<int, Poule>
      */
-    #[ORM\OneToMany(targetEntity: Poule::class, mappedBy: 'phase')]
+    #[ORM\OneToMany(targetEntity: Poule::class, mappedBy: 'phase', orphanRemoval: true)]
     private Collection $poules;
 
     #[ORM\Column(enumType: PhaseType::class)]
@@ -96,12 +96,12 @@ class Phase
         return $this;
     }
 
-    public function getSaison(): ?saison
+    public function getSaison(): ?Saison
     {
         return $this->saison;
     }
 
-    public function setSaison(?saison $saison): static
+    public function setSaison(?Saison $saison): static
     {
         $this->saison = $saison;
 

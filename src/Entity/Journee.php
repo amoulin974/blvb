@@ -25,12 +25,13 @@ class Journee
     private ?\DateTimeImmutable $date_fin = null;
 
     #[ORM\ManyToOne(inversedBy: 'journees')]
+    #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Poule $poule = null;
 
     /**
      * @var Collection<int, Partie>
      */
-    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'id_journee', cascade: ["remove"], orphanRemoval: true)]
+    #[ORM\OneToMany(targetEntity: Partie::class, mappedBy: 'journee', cascade: ["remove"], orphanRemoval: true)]
     private Collection $parties;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -112,7 +113,7 @@ class Journee
     {
         if (!$this->parties->contains($party)) {
             $this->parties->add($party);
-            $party->setIdJournee($this);
+            $party->setJournee($this);
         }
 
         return $this;
@@ -122,8 +123,8 @@ class Journee
     {
         if ($this->parties->removeElement($party)) {
             // set the owning side to null (unless already changed)
-            if ($party->getIdJournee() === $this) {
-                $party->setIdJournee(null);
+            if ($party->getJournee() === $this) {
+                $party->setJournee(null);
             }
         }
 

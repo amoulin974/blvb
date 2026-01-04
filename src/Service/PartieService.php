@@ -47,15 +47,18 @@ class PartieService
         // On imagine que tu as un champ 'type' ou 'isFinale' dans ton entité Poule
         if ($poule->getPhase()->getType() === PhaseType::CHAMPIONNAT) {
 
-            return $this->generateMatchJourneePhaseChampionnat($poule);
+            $this->generateMatchJourneePhaseChampionnat($poule);
+
         }else{
 
-            return $this->generateMatchJourneePhaseFinale($poule);
+            $this->generateMatchJourneePhaseFinale($poule);
         }
+        return null;
 
     }
 
     private function generateMatchJourneePhaseChampionnat(Poule $poule){
+
             $equipes = $poule->getEquipes()->toArray();
         $nbEquipe = count($equipes);
         if ($nbEquipe<2){
@@ -104,7 +107,7 @@ class PartieService
                     $partie->setLieu($equipeArray[$homeIndex]->getLieu());
                     $partie->setIdEquipeRecoit($equipeArray[$homeIndex]);
                     $partie->setIdEquipeDeplace($equipeArray[$awayIndex]);
-                    $partie->setIdJournee($journee);
+                    $partie->setJournee($journee);
                     $partie->setPoule($poule);
                     $this->em->persist($partie);
                 }
@@ -144,7 +147,7 @@ class PartieService
 
             for ($i = 0; $i < $nbMatchsAcreer; $i++) {
                 $match = new Partie();
-                $match->setIdJournee($journee);
+                $match->setJournee($journee);
                 $match->setPoule($poule);
                 $match->setNom($journee->getNom() . ' - Match ' . ($i + 1));
 
@@ -225,7 +228,7 @@ class PartieService
                 if ($match->getIdEquipeRecoit() !== null) {
                     $match->setLieu($match->getIdEquipeRecoit()->getLieu());
                     $dateMatch = $this->calculerDateMatch(
-                        $match->getIdJournee()->getDateDebut(),
+                        $match->getJournee()->getDateDebut(),
                         $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getJourSemaine(),
                         $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getHeureDebut(),
                     );
@@ -237,7 +240,7 @@ class PartieService
 
                     $match->setLieu($lieuRepository->getLieuByDefaut());
                     $dateMatch = $this->calculerDateMatch(
-                        $match->getIdJournee()->getDateDebut(),
+                        $match->getJournee()->getDateDebut(),
                         $match->getLieu()->getCreneaux()[0]->getJourSemaine(),
                         $match->getLieu()->getCreneaux()[0]->getHeureDebut(),
                     );
