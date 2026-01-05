@@ -7,11 +7,16 @@
     <div class="hero-overlay"></div>
     <div class="hero-content text-neutral-content text-center">
         <div class="max-w-md">
-        <h1 class="mb-5 text-5xl font-bold">Championnat Basque Landais Volley Ball</h1>
+        <h1 class="mb-5 text-5xl font-bold text-neutral-content!">Championnat Basque Landais Volley Ball</h1>
         <p class="mb-5">
             Le championnat de volley-ball loisir senior B.L.V.B. a lieu de septembre à mai sur la côte basque et landaise.
         </p>
-        {# <button class="btn btn-primary">Get Started</button> #}
+            {% if app.user %}
+                <a href="{{ path("front_calendrier") }}"><button class="btn btn-primary">Saisir un résultat</button></a>
+                <a href="{{ path("front_equipes") }}"><button class="btn btn-primary">Voir son équipe</button></a>
+            {% else %}
+            <a href="{{ path("app_login") }}"><button class="btn btn-primary">Capitaine : Se connecter pour saisir un résultat</button></a>
+            {% endif %}
         </div>
     </div>
     </div>
