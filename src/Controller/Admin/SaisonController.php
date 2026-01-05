@@ -120,6 +120,15 @@ final class SaisonController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Saison $saison): Response
     {
+        foreach($saison->getPhases() as &$phase){
+            foreach($phase->getPoules() as $poule){
+                if ($poule->getJournees()->count()==0){
+                    $phase->cloturable=false;
+                }else{
+                    $phase->cloturable=true;
+                }
+            }
+        }
         return $this->render('admin/saison/show.html.twig', [
             'saison' => $saison,
         ]);
