@@ -3,6 +3,8 @@
 namespace App\Repository;
 
 use App\Entity\Equipe;
+use App\Entity\Saison;
+use App\Entity\Poule;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -15,6 +17,27 @@ class EquipeRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Equipe::class);
     }
+
+    /**
+     * Récupère les poules d'une équipe pour une saison donnée.
+     * @return Poule[]
+     */
+    public function findPoulesBySaison(Equipe $equipe, Saison $saison): array
+    {
+        return $this->getEntityManager()->createQueryBuilder()
+            ->select('p')
+            ->from(Poule::class, 'p') // On cible l'entité Poule
+            ->join('p.equipes', 'e')   // Jointure vers les équipes de la poule
+            ->join('p.phase', 'ph')    // Jointure vers la phase
+            ->where('e.id = :equipeId')
+            ->andWhere('ph.saison = :saison') // Filtrage par saison
+            ->setParameter('equipeId', $equipe->getId())
+            ->setParameter('saison', $saison)
+            ->orderBy('ph.ordre', 'ASC') // Tri par ordre de phase
+            ->getQuery()
+            ->getResult();
+    }
+
 
     //    /**
     //     * @return Equipe[] Returns an array of Equipe objects

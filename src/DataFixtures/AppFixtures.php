@@ -28,7 +28,7 @@ class AppFixtures extends Fixture
         // 3 : Phase 2 en cours (P1 clôturée, matchs de P2 joués, NON clôturée)
         // 4 : Saison complète (P1 et P2 clôturées, Phase Finale jouée)
         // =========================================================================
-        $scenario = 1;
+        $scenario = 3;
 
         // 1. Nettoyage initial
         $this->cache->delete('saisons_all');

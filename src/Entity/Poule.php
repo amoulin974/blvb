@@ -112,7 +112,7 @@ class Poule
     {
         if (!$this->parties->contains($party)) {
             $this->parties->add($party);
-            $party->setIdPoule($this);
+            $party->setPoule($this);
         }
 
         return $this;

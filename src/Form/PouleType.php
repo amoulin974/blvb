@@ -19,6 +19,7 @@ class PouleType extends AbstractType
     {
         $builder
             ->add('nom')
+            ->add('niveau')
             ->add('phase', EntityType::class, [
                 'class' => phase::class,
                 'choice_label' => function (Phase $phase) {

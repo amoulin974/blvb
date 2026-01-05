@@ -15,9 +15,9 @@
                                 {% for classement in poule.classements %}
 
 {#                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="!bg-success font-bold" {% endif %}>#}
-                                        <tr class="{% if classement.position <= poule.NbMonteeDefaut%}
+                                        <tr class="{% if classement.position <= poule.NbMonteeDefaut and poule.parties|length > 0%}
                                                 !bg-success font-bold
-                                            {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) %}
+                                            {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) and poule.parties|length > 0 %}
                                                 !bg-warning{% endif %}
                                                 ">
                                             <td>{{ classement.position}}

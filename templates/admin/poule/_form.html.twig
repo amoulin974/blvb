@@ -13,6 +13,13 @@
 </div>
 
 <div class="form-control mb-2">
+    <div class="input w-full" >
+        {{ form_label(form.niveau, 'Niveau de la poule', {'label_attr': {'class': 'label-text'}}) }} :
+        {{ form_widget(form.niveau, {'attr' : {'class': 'input' }}) }}
+    </div>
+</div>
+
+<div class="form-control mb-2">
     <div class="select w-full" >
         {{ form_label(form.phase, 'Phase de rattachement : ', {'label_attr': {'class': 'label-text'}}) }} :
         {{ form_widget(form.phase, {'attr' : {'class':'select select-bordered'}}) }}

@@ -8,6 +8,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use App\Entity\Saison;
 use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Partie;
+use App\Entity\Equipe;
 use App\Entity\Classement;
 use App\Repository\EquipeRepository;
 use App\Service\CalendrierAnalyseService;
@@ -116,7 +117,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, int $id, EquipeRepository $equipeRepository, PartieRepository $partieRepository): Response
+    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -125,11 +126,8 @@ final class FrontController extends AbstractController
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
 
-        /**Equipe $equipe */
-        $equipe=$equipeRepository->find($id);
-        //Trier les équipes par le classement
-//        $classementService->getClassement($saison);
-        $poules=$equipe->getPoules();
+        $poules=$equipeRepository->findPoulesBySaison($equipe,$saison);
+        var_dump(count($poules));
 
         //On recupère la liste des matchs
         $matchsByPoule=[];
