@@ -31,10 +31,10 @@
             {% for poule in phase.poules %}
 
                 {%  if matchsByPoule[poule.id] is defined and matchsByPoule[poule.id]|length>0 %}
-                    <h3 class="pl-4 pb-2">{{ phase.nom }} - {{ poule.nom }}</h3>
+                    <h3 class="mt-2 pl-4 pb-1">{{ phase.nom }} - {{ poule.nom }}</h3>
 
             <table class="border border-solid table-xs  w-full hidden md:table">
-                <thead><tr>
+                <thead><tr class="text-center bg-base-300">
                     <th>Date</th>
                     <th>Les équipes</th>
                     <th>Score</th>
@@ -44,14 +44,30 @@
 
                     {%  for match in matchsByPoule[poule.id] %}
 
-                        <tr class="{{ match.resultat }}">
+                        <tr class="text-center">
                             <td>{{ match.date_match|format_datetime('short', locale='fr') }}</td>
                             <td>{{ match.equipe_recoit }} {{ match.score_reception_match }} vs {{ match.equipe_deplace }} {{ match.score_deplacement_match }}</td>
                             <td>
                                 {%  if match.score_reception_match is null and  match.score_deplacement_match is null %}
                                     Match non joué
-                                    {% else %}{{ match.score_reception_match }} - {{ match.score_deplacement_match }}
+                                    {% else %}
+                                        <div class="flex items-center justify-center"><span>{{ match.score_reception_match }} - {{ match.score_deplacement_match }}</span>
+                                            <span>
+                                        {% if match.resultat %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-success">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+
+                                        {% else %}
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-error">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                            </svg>
+
+                                        {%  endif %}
+                                                </span>
+                                        </div>
                                 {%  endif %}
+
                             </td>
                             <td>
                                 <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
@@ -70,7 +86,19 @@
                     {%  for match in matchsByPoule[poule.id] %}
                         <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
                             <div class="card-body " >
-                                <p><strong>{{ match.equipe_recoit }}</strong> {{ match.score_reception_match }} vs <strong>{{ match.equipe_deplace }}</strong> {{ match.score_deplacement_match }}</p>
+                                <p class="flex items-center">{{ match.equipe_recoit }} &nbsp; <strong>{{ match.score_reception_match }}</strong>&nbsp; vs &nbsp; {{ match.equipe_deplace }} &nbsp; <strong>{{ match.score_deplacement_match }}</strong>
+                                    {% if match.resultat %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-success">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+
+                                    {% else %}
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-error">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                                        </svg>
+
+                                    {%  endif %}
+                                </p>
                                 <p>Date : {{ match.date_match|format_datetime('short', locale='fr') }}</p>
                                 <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
                                              target="_blank"
@@ -94,7 +122,7 @@
             {% for poule in phase.poules %}
                 {% if equipe in poule.equipes %}
 
-                <h3 class="pl-4 pb-2">{{ phase.nom }} - {{ poule.nom }}</h3>
+                <h3 class="mt-2 pl-4 pb-1">{{ phase.nom }} - {{ poule.nom }}</h3>
                                 {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
                 {% endif %}
             {% endfor %}

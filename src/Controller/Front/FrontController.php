@@ -127,7 +127,6 @@ final class FrontController extends AbstractController
         $phaseouverte=$this->getPhaseActuelle($saison);
 
         $poules=$equipeRepository->findPoulesBySaison($equipe,$saison);
-        var_dump(count($poules));
 
         //On recupère la liste des matchs
         $matchsByPoule=[];
@@ -140,10 +139,10 @@ final class FrontController extends AbstractController
                 $match['resultat']='';
                 $reception=false;
                 if ($equipe->getNom() === $match["equipe_recoit"]) {$reception=true;}
-                if ($reception && $match["score_reception_match"] > $match["score_deplacement_match"]){$match['resultat']="bg-success";}
-                if ($reception && $match["score_reception_match"] < $match["score_deplacement_match"]){$match['resultat']="bg-error";}
-                if (!$reception && $match["score_deplacement_match"] > $match["score_reception_match"]){$match['resultat']="bg-success";}
-                if (!$reception && $match["score_deplacement_match"] < $match["score_reception_match"]){$match['resultat']="bg-error";}
+                if ($reception && $match["score_reception_match"] > $match["score_deplacement_match"]){$match['resultat']="1";}
+                if ($reception && $match["score_reception_match"] < $match["score_deplacement_match"]){$match['resultat']="0";}
+                if (!$reception && $match["score_deplacement_match"] > $match["score_reception_match"]){$match['resultat']="1";}
+                if (!$reception && $match["score_deplacement_match"] < $match["score_reception_match"]){$match['resultat']="0";}
 
             }
         }

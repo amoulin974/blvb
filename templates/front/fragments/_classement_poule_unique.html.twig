@@ -3,24 +3,36 @@
                             {% if poule.classements|length > 0 %}
 
                                 <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
-                                    <tr >
+                                    <tr class="bg-base-100 text-center">
                                         <th>Classement</th>
-                                        <th>Equipe</th>
-                                        <th>Points</th>
-                                        <th>Set Gagnés</th>
-                                        <th>Set Perdus</th>
+                                        <th >Equipe</th>
+                                        <th >Points</th>
+                                        <th >Set Gagnés</th>
+                                        <th >Set Perdus</th>
 
-                                        <th>Détail</th>
+                                        <th >Détail</th>
                                     </tr>
                                 {% for classement in poule.classements %}
 
 {#                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="!bg-success font-bold" {% endif %}>#}
-                                        <tr class="{% if classement.position <= poule.NbMonteeDefaut and poule.parties|length > 0%}
+                                        <tr class="text-center{% if classement.position <= poule.NbMonteeDefaut and poule.parties|length > 0%}
                                                 !bg-success font-bold
                                             {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) and poule.parties|length > 0 %}
                                                 !bg-warning{% endif %}
                                                 ">
-                                            <td>{{ classement.position}}
+                                            <td class="flex items-center justify-center"><span>{{ classement.position}} &nbsp;</span>
+                                                {% if classement.position <= poule.NbMonteeDefaut and poule.parties|length > 0%}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                                                    </svg>
+
+                                                {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) and poule.parties|length > 0 %}
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181" />
+                                                    </svg>
+
+                                                {% endif %}
+                                            </td>
                                             <td>{{ classement.equipe.nom }} </td>
                                             <td>{{ classement.points }}</td>
                                             <td>{{ classement.setGagnes}}</td>
