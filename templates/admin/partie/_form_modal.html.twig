@@ -4,10 +4,10 @@
 {# --- Zone 1 : Poule et Journée --- #}
 <div class="grid grid-cols-2 gap-4">
     <div>
-        {{ form_label(form.Poule, null, {'label_attr': {'class': 'label'}}) }}
+        {{ form_label(form.poule, null, {'label_attr': {'class': 'label'}}) }}
         <div class="form-control">
-            {{ form_widget(form.Poule, {'attr': {'class': 'select select-bordered w-full'}}) }}
-            {{ form_errors(form.Poule) }}
+            {{ form_widget(form.poule, {'attr': {'class': 'select select-bordered w-full'}}) }}
+            {{ form_errors(form.poule) }}
         </div>
     </div>
     <div>

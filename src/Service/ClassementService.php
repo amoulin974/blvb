@@ -28,9 +28,9 @@ class ClassementService
         foreach ($poule->getEquipes() as $equipe) {
             $classements[] = [
                 'equipe'      => $equipe,
-                'points'      => $this->calculerPointsEquipe($equipe, $saison),
-                'setsGagnes'  => $this->calculerTotalSetsGagnes($equipe),
-                'setsPerdus'  => $this->calculerTotalSetsPerdus($equipe),
+                'points'      => $this->calculerPointsEquipe($equipe, $saison, $poule),
+                'setsGagnes'  => $this->calculerTotalSetsGagnes($equipe, $poule),
+                'setsPerdus'  => $this->calculerTotalSetsPerdus($equipe, $poule),
             ];
         }
 
@@ -83,11 +83,14 @@ class ClassementService
     /**
      * Calcule les points pour une équipe (domicile + extérieur).
      */
-    public function calculerPointsEquipe(Equipe $equipe, Saison $saison): int
+    public function calculerPointsEquipe(Equipe $equipe, Saison $saison, Poule $pouleContext = null): int
     {
         $points = 0;
 
         foreach ($equipe->getPartiesReception() as $partie) {
+            if ($pouleContext && $partie->getPoule() !== $pouleContext) {
+                continue;
+            }
             $points += $this->pointsPourMatch(
                 $partie->getNbSetGagnantReception(),
                 $partie->getNbSetGagnantDeplacement(),
@@ -96,6 +99,9 @@ class ClassementService
         }
 
         foreach ($equipe->getPartiesDeplacement() as $partie) {
+            if ($pouleContext && $partie->getPoule() !== $pouleContext) {
+                continue;
+            }
             $points += $this->pointsPourMatch(
                 $partie->getNbSetGagnantDeplacement(),
                 $partie->getNbSetGagnantReception(),
@@ -126,17 +132,23 @@ class ClassementService
     /**
      * Total sets gagnés.
      */
-    private function calculerTotalSetsGagnes(Equipe $equipe): int
+    private function calculerTotalSetsGagnes(Equipe $equipe, Poule $pouleContext = null): int
     {
         $total = 0;
 
         foreach ($equipe->getPartiesReception() as $partie) {
+            if ($pouleContext && $partie->getPoule() !== $pouleContext) {
+                continue;
+            }
             $val = $partie->getNbSetGagnantReception();
             // Si c'est un forfait (-1), on ajoute 0, sinon on ajoute la valeur
             $total += ($val === -1) ? 0 : ($val ?? 0);
         }
 
         foreach ($equipe->getPartiesDeplacement() as $partie) {
+            if ($pouleContext && $partie->getPoule() !== $pouleContext) {
+                continue;
+            }
             $val = $partie->getNbSetGagnantDeplacement();
             $total += ($val === -1) ? 0 : ($val ?? 0);
         }
@@ -147,11 +159,14 @@ class ClassementService
     /**
      * Total sets perdus.
      */
-    private function calculerTotalSetsPerdus(Equipe $equipe): int
+    private function calculerTotalSetsPerdus(Equipe $equipe, Poule $pouleContext = null): int
     {
         $total = 0;
 
         foreach ($equipe->getPartiesReception() as $partie) {
+            if ($pouleContext && $partie->getPoule() !== $pouleContext) {
+                continue;
+            }
             $valAdversaire = $partie->getNbSetGagnantDeplacement();
             // L'équipe perd les sets que l'adversaire a gagnés.
             // Si l'adversaire est forfait (-1), l'équipe n'en perd aucun (0).
@@ -159,6 +174,9 @@ class ClassementService
         }
 
         foreach ($equipe->getPartiesDeplacement() as $partie) {
+            if ($pouleContext && $partie->getPoule() !== $pouleContext) {
+                continue;
+            }
             $valAdversaire = $partie->getNbSetGagnantReception();
             $total += ($valAdversaire === -1) ? 0 : ($valAdversaire ?? 0);
         }

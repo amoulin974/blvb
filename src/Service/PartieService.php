@@ -83,33 +83,48 @@ class PartieService
             for ($round = 0; $round < $rounds; $round++) {
                 $journee = $journees[$round];
                 for ($match = 0; $match < $matchesPerRound; $match++) {
-                    $homeIndex = ($round + $match) % ($nbEquipe - 1);
-                    $awayIndex = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
+                    $home = ($round + $match) % ($nbEquipe - 1);
+                    $away = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
 
                     // La dernière équipe reste fixe
                     if ($match == 0) {
-                        $awayIndex = $nbEquipe - 1;
+                        $away = $nbEquipe - 1;
                     }
 
+                    //LOGIQUE D'ALTERNANCE
+                    // Pour le pivot (match 0), on inverse domicile/extérieur chaque round
+                    // Pour les autres, on inverse si le numéro de round est impair
+                    if ($round % 2 == 1) {
+                        $temp = $home;
+                        $home = $away;
+                        $away = $temp;
+                    }
+
+
                     // Si l'une des équipes est fictive, on ne crée pas le match
-                    if ($equipeArray[$homeIndex]->getNom() === "BYE" || $equipeArray[$awayIndex]->getNom() === "BYE") {
+                    if ($equipeArray[$home]->getNom() === "BYE" || $equipeArray[$away]->getNom() === "BYE") {
                         continue;
                     }
 
                     $partie = new \App\Entity\Partie();
+                    $equipeHome = $equipeArray[$home];
+                    $equipeAway = $equipeArray[$away];
 
                     $dateMatch = $this->calculerDateMatch(
                         $journee->getDateDebut(),
-                        $equipeArray[$homeIndex]->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $equipeArray[$homeIndex]->getLieu()->getCreneaux()[0]->getHeureDebut(),
+                        $equipeHome->getLieu()->getCreneaux()[0]->getJourSemaine(),
+                        $equipeHome->getLieu()->getCreneaux()[0]->getHeureDebut(),
                     );
                     $partie->setDate($dateMatch);
-                    $partie->setLieu($equipeArray[$homeIndex]->getLieu());
-                    $partie->setIdEquipeRecoit($equipeArray[$homeIndex]);
-                    $partie->setIdEquipeDeplace($equipeArray[$awayIndex]);
-                    $partie->setJournee($journee);
-                    $partie->setPoule($poule);
+                    $partie->setLieu($equipeHome->getLieu());
+                    $partie->setIdEquipeRecoit($equipeHome);
+                    $partie->setIdEquipeDeplace($equipeAway);
+                    $journee->addParty($partie);
+                    $poule->addParty($partie);
+
                     $this->em->persist($partie);
+                    $this->em->persist($journee);
+                    $this->em->persist($poule);
                 }
             }
             $this->em->flush();
