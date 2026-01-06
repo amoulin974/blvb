@@ -4,6 +4,8 @@
 namespace App\Command;
 
 use App\Entity\Saison;
+use App\Entity\Phase;
+use App\Entity\Poule;
 use App\Entity\Equipe;
 use App\Entity\Lieu;
 use App\Entity\Creneau;
@@ -27,9 +29,137 @@ class ImportOldDataCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $oldConn = $this->doctrine->getConnection('old'); // Connexion DBAL vers blvb_old [cite: 18]
         $em = $this->doctrine->getManager('default');   // EntityManager vers la nouvelle base [cite: 18]
-
+        $platform = $em->getConnection()->getDatabasePlatform();
         $io->title('Démarrage de la migration BLVB');
 
+        //Suppression des données existante
+        $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 0;');
+
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('lieu', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('creneau', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('saison', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('phase', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('poule', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('equipe', true));
+
+        $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 1;');
+
+        //Création de la saison
+        $saison=new Saison();
+        $saison->setNom('Saison 2025-2026')
+        $saison->setFavori(1);
+        $dateDebut = new DateTimeImmutable('2025-09-01');
+        $saison->setDateDebut($dateDebut);
+        $dateFin = new DateTimeImmutable('2026-07-01');
+        $saison->setDateDebut($dateFin);
+        $saison->setPointsDefaiteFaible(0);
+        $saison->setPointsDefaiteForte(1);
+        $saison->setPointsVictoireFaible(2);
+        $saison->setPointsVictoireForte(3);
+        $saison->setPointsForfait(3);
+        $saison->setPointsNul(1);
+
+        $em->persist($saison);
+        //Création des phases
+        $phase1=new Phase();
+        $phase1->setNom("Phase 1");
+        $phase1->setType(0);
+        $phase1->setOrdre(0);
+        $dateDebut=\DateTimeImmutable('2025-09-01');
+        $dateFin=\DateTimeImmutable('2026-01-11');
+        $phase1->setDatedebut($dateDebut);
+        $phase1->setDatefin($dateFin);
+
+        $phase2=new Phase();
+        $phase2->setNom("Phase 2");
+        $phase2->setType(0);
+        $phase2->setOrdre(1);
+        $dateDebut=\DateTimeImmutable('2026-01-12');
+        $dateFin=\DateTimeImmutable('2026-05-31');
+        $phase2->setDatedebut($dateDebut);
+        $phase2->setDatefin($dateFin);
+
+        $phase3=new Phase();
+        $phase3->setNom("Phase 2");
+        $phase3->setType(1);
+        $phase3->setOrdre(2);
+        $dateDebut=\DateTimeImmutable('2026-06-01');
+        $dateFin=\DateTimeImmutable('2026-06-30');
+        $phase3->setDatedebut($dateDebut);
+        $phase3->setDatefin($dateFin);
+
+
+        $phase1->setSaison($saison);
+        $phase2->setSaison($saison);
+        $phase3->setSaison($saison);
+        $em->persist($phase1);
+        $em->persist($phase2);
+        $em->persist($phase3);
+
+        $saison->addPhase($phase1);
+        $saison->addPhase($phase2);
+        $saison->addPhase($phase3);
+
+        $tabPhase=[$phase1, $phase2, $phase3];
+        $tabPoules = ['Poule A', 'Poule B', 'Poule C', 'Poule D'];
+
+        for($i=0; $i<3; $i++){
+            for ($y=0; $y<4; $y++ ){
+                $poule=new Poule();
+                $poule->setNom($tabPoules[$y]);
+                if ($y != 3){
+                    $poule->setNbDescenteDefaut(2);
+                }else{
+                    $poule->setNbDescenteDefaut(0);
+                }
+                if ($y != 0){
+                    $poule->setNbDescenteDefaut(0);
+                }else{
+                    $poule->setNbDescenteDefaut(2);
+                }
+                $poule->setNiveau($y);
+                $poule->setPhase($tabPhase[$i]);
+                $tabPhase[$i]->addPoule($poule);
+
+                $em->persist($poule);
+
+            }
+        }
+
+
+
+        //Création des lieux et des équipes
+
+        $oldEquipes = $oldConn->fetchAllAssociative('SELECT distinct lieu, jour, heure FROM `tvbaequipe` WHERE saison like "2025/2026%"');
+        foreach ($oldEquipes as $oldEquipe){
+            $newLieu=new Lieu();
+
+            $newLieu->setNom(substr($oldEquipe['lieu'], 0,strpos($oldEquipe['lieu'], ",")));
+            $newLieu->setAdresse($oldEquipe['lieu']);
+
+
+            $creneau=new Creneau();
+            $creneau->setJourSemaine($this->mapJour($oldEquipe['jour']));
+            $heureStr = str_replace('h', ':', strtolower($oldEquipe['heure']));
+            $creneau->setHeureDebut(new \DateTimeImmutable($heureStr));
+
+            $creneau->setCapacite(2);
+            $creneau->setPrioritaire(1);
+            $heureFin = $creneau->getHeureDebut()->modify('+2 hours');
+            $creneau->setHeureFin($heureFin);
+            $newLieu->addCreneau($creneau);
+
+            $em->persist($newLieu);
+            $em->persist($creneau);
+
+        }
+        $em->flush();
+        $io->success('Migration terminée avec succès !');
+
+
+
+        //------------------------------------------------------------------------
+        /**
         // --- 1. Import des Saisons ---
         $oldSaisons = $oldConn->fetchAllAssociative('SELECT * FROM tvbasaison');
         $saisonMap = []; // Pour faire le lien avec les équipes plus tard
@@ -83,7 +213,7 @@ class ImportOldDataCommand extends Command
 
         $em->flush();
         $io->success('Migration terminée avec succès !');
-
+*/
         return Command::SUCCESS;
     }
 
