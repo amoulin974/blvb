@@ -13,7 +13,8 @@ services:
         autowire: true
         autoconfigure: true
         public: false
-
+    App\Command\:
+        resource: '../src/Command/'
     App\DataFixtures\:
         resource: '../src/DataFixtures/'
 
