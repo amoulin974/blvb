@@ -3,12 +3,15 @@
 
 namespace App\Command;
 
+use App\Entity\Journee;
+use App\Entity\Partie;
 use App\Entity\Saison;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Equipe;
 use App\Entity\Lieu;
 use App\Entity\Creneau;
+use App\Enum\PhaseType;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -41,16 +44,17 @@ class ImportOldDataCommand extends Command
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('phase', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('poule', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('equipe', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('equipe_poule', true));
 
         $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 1;');
 
         //Création de la saison
         $saison=new Saison();
-        $saison->setNom('Saison 2025-2026')
+        $saison->setNom('Saison 2025-2026');
         $saison->setFavori(1);
-        $dateDebut = new DateTimeImmutable('2025-09-01');
+        $dateDebut = new \DateTimeImmutable('2025-09-01');
         $saison->setDateDebut($dateDebut);
-        $dateFin = new DateTimeImmutable('2026-07-01');
+        $dateFin = new \DateTimeImmutable('2026-07-01');
         $saison->setDateDebut($dateFin);
         $saison->setPointsDefaiteFaible(0);
         $saison->setPointsDefaiteForte(1);
@@ -63,28 +67,28 @@ class ImportOldDataCommand extends Command
         //Création des phases
         $phase1=new Phase();
         $phase1->setNom("Phase 1");
-        $phase1->setType(0);
+        $phase1->setType(PhaseType::CHAMPIONNAT);
         $phase1->setOrdre(0);
-        $dateDebut=\DateTimeImmutable('2025-09-01');
-        $dateFin=\DateTimeImmutable('2026-01-11');
+        $dateDebut=new \DateTimeImmutable('2025-09-01');
+        $dateFin=new \DateTimeImmutable('2026-01-11');
         $phase1->setDatedebut($dateDebut);
         $phase1->setDatefin($dateFin);
 
         $phase2=new Phase();
         $phase2->setNom("Phase 2");
-        $phase2->setType(0);
+        $phase2->setType(PhaseType::CHAMPIONNAT);
         $phase2->setOrdre(1);
-        $dateDebut=\DateTimeImmutable('2026-01-12');
-        $dateFin=\DateTimeImmutable('2026-05-31');
+        $dateDebut=new \DateTimeImmutable('2026-01-12');
+        $dateFin=new \DateTimeImmutable('2026-05-31');
         $phase2->setDatedebut($dateDebut);
         $phase2->setDatefin($dateFin);
 
         $phase3=new Phase();
         $phase3->setNom("Phase 2");
-        $phase3->setType(1);
+        $phase3->setType(PhaseType::FINALE);
         $phase3->setOrdre(2);
-        $dateDebut=\DateTimeImmutable('2026-06-01');
-        $dateFin=\DateTimeImmutable('2026-06-30');
+        $dateDebut=new \DateTimeImmutable('2026-06-01');
+        $dateFin=new \DateTimeImmutable('2026-06-30');
         $phase3->setDatedebut($dateDebut);
         $phase3->setDatefin($dateFin);
 
@@ -101,12 +105,12 @@ class ImportOldDataCommand extends Command
         $saison->addPhase($phase3);
 
         $tabPhase=[$phase1, $phase2, $phase3];
-        $tabPoules = ['Poule A', 'Poule B', 'Poule C', 'Poule D'];
+        $tabNomPoules = ['Poule A', 'Poule B', 'Poule C', 'Poule D'];
 
         for($i=0; $i<3; $i++){
             for ($y=0; $y<4; $y++ ){
                 $poule=new Poule();
-                $poule->setNom($tabPoules[$y]);
+                $poule->setNom($tabNomPoules[$y]);
                 if ($y != 3){
                     $poule->setNbDescenteDefaut(2);
                 }else{
@@ -130,29 +134,104 @@ class ImportOldDataCommand extends Command
 
         //Création des lieux et des équipes
 
-        $oldEquipes = $oldConn->fetchAllAssociative('SELECT distinct lieu, jour, heure FROM `tvbaequipe` WHERE saison like "2025/2026%"');
+        $oldEquipes = $oldConn->fetchAllAssociative('SELECT * FROM `tvbaequipe` WHERE saison like "2025/2026%"');
+        $tabNewLieu=[];
+        $tabNewEquipe=[];
         foreach ($oldEquipes as $oldEquipe){
-            $newLieu=new Lieu();
+            $nomOriginalLieu = $oldEquipe['lieu'];
+            //Si le lieu n'existe pas déjà
+            if (! isset($tabNewLieu[$nomOriginalLieu])){
 
-            $newLieu->setNom(substr($oldEquipe['lieu'], 0,strpos($oldEquipe['lieu'], ",")));
-            $newLieu->setAdresse($oldEquipe['lieu']);
+                $newLieu=new Lieu();
+
+                $posVirgule = strpos($nomOriginalLieu, ",");
+                $nomCourt = ($posVirgule !== false) ? substr($nomOriginalLieu, 0, $posVirgule) : $nomOriginalLieu;
+                $newLieu->setNom($nomCourt);
+                $newLieu->setAdresse($nomOriginalLieu);
 
 
-            $creneau=new Creneau();
-            $creneau->setJourSemaine($this->mapJour($oldEquipe['jour']));
-            $heureStr = str_replace('h', ':', strtolower($oldEquipe['heure']));
-            $creneau->setHeureDebut(new \DateTimeImmutable($heureStr));
+                $creneau=new Creneau();
+                $creneau->setJourSemaine($this->mapJour($oldEquipe['jour']));
+                $heureStr = str_replace('h', ':', strtolower($oldEquipe['heure']));
+                $creneau->setHeureDebut(new \DateTimeImmutable($heureStr ?: '20:00'));
 
-            $creneau->setCapacite(2);
-            $creneau->setPrioritaire(1);
-            $heureFin = $creneau->getHeureDebut()->modify('+2 hours');
-            $creneau->setHeureFin($heureFin);
-            $newLieu->addCreneau($creneau);
+                $creneau->setCapacite(2);
+                $creneau->setPrioritaire(1);
+                $heureFin = $creneau->getHeureDebut()->modify('+2 hours');
+                $creneau->setHeureFin($heureFin);
+                $newLieu->addCreneau($creneau);
+                $tabNewLieu[$nomOriginalLieu]=$newLieu;
+                $em->persist($newLieu);
+                $em->persist($creneau);
+            }
 
-            $em->persist($newLieu);
-            $em->persist($creneau);
+            $equipe = new Equipe();
+            $equipe->setNom($oldEquipe['nom']);
+            $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
+
+            //Affectation de l'équipe à une poule
+                // 1. Découpage de la chaîne : "2025/2026-GroupeD-Phase1"
+            $parts = explode('-', $oldEquipe['saison']);
+            if (count($parts) < 3) continue; // Sécurité si le format est incorrect
+
+            $groupePart = $parts[1]; // "GroupeD"
+            $phasePart  = $parts[2]; // "Phase1"
+
+                // 2. Identification de la Phase (Phase1 -> index 0, Phase2 -> index 1...)
+                // On extrait le chiffre et on soustrait 1 pour l'index du tableau
+            $phaseNum = (int) filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
+            $phaseIndex = $phaseNum - 1;
+
+            if (isset($tabPhase[$phaseIndex])) {
+                $currentPhase = $tabPhase[$phaseIndex];
+
+                    // 3. Identification de la Poule dans cette phase
+                    // On transforme "GroupeD" en "Poule D"
+                $nomPouleCherche = "Poule " . str_replace('Groupe', '', $groupePart);
+
+                foreach ($currentPhase->getPoules() as $poule) {
+                    if ($poule->getNom() === $nomPouleCherche) {
+
+                        $poule->addEquipe($equipe);
+
+
+                        break;
+                    }
+                }
+            }
+            $tabNewEquipe[$oldEquipe['code']]=$equipe;
+
+            $em->persist($equipe);
+            $tabNewLieu[$nomOriginalLieu]->addEquipe($equipe);
+
+
+
 
         }
+        //TODO créer le bon nombre de journées en fonction du nombre déquipe
+        //Création des journée
+        foreach ($tabPhase as $phase){
+            foreach ($phase->getPoules() as $poule){
+                for ($i=0; $i<count($poule->getEquipes()); $i++){
+                    $journee=new Journee();
+                    $journee->setDateDebut(new \DateTimeImmutable('2025-09-01'));
+                }
+            }
+        }
+
+        //Récupération des matchs
+        $oldMatch = $oldConn->fetchAllAssociative('SELECT * FROM `tvbaresultat` WHERE saison like "2025/2026%"');
+        $partie=new Partie();
+        if (!isset($tabNewLieu[$oldMatch['lieupartie']])){
+            dump("erreur lieu match". $oldMatch['code']);
+        }else{
+            $partie->setLieu($tabNewLieu[$oldMatch['lieupartie']]);
+        }
+        $partie->setDate(new \DateTimeImmutable($oldMatch['datepartie']));
+        $partie->setIdEquipeRecoit($tabNewEquipe[$oldMatch['equipe1']]);
+        $partie->setIdEquipeDeplace($tabNewEquipe[$oldMatch['equipe2']]);
+        $partie->setNbSetGagnantReception($oldMatch['set1']);
+        $partie->setNbSetGagnantDeplacement($oldMatch['set2']);
         $em->flush();
         $io->success('Migration terminée avec succès !');
 
