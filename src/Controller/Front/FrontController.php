@@ -33,11 +33,20 @@ final class FrontController extends AbstractController
 
 
     #[Route('', name: 'index')]
-    public function index(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository $saisonRepository): Response
+    public function index(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+    $saisonRepository, EquipeRepository $equipeRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
         $this->getSaisonSession($session, $request);
+
+        $user= $this->getUser();
+        $equipe=null;
+        if ($user){
+            $equipe = $equipeRepository->findOneByCapitaine($user);
+        }
+
+
 
         $groupes=[
             [
@@ -65,6 +74,7 @@ final class FrontController extends AbstractController
             'groupes'=>$groupes,
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
+            'equipe'=>$equipe
         ]);
     }
 

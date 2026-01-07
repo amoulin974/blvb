@@ -2,6 +2,7 @@
 
 namespace App\Repository;
 
+use App\Entity\User;
 use App\Entity\Equipe;
 use App\Entity\Saison;
 use App\Entity\Poule;
@@ -36,6 +37,14 @@ class EquipeRepository extends ServiceEntityRepository
             ->orderBy('ph.ordre', 'ASC') // Tri par ordre de phase
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Trouve l'équipe dont l'utilisateur est le capitaine
+     */
+    public function findOneByCapitaine(User $user): ?Equipe
+    {
+        return $this->findOneBy(['capitaine' => $user]);
     }
 
 
