@@ -49,6 +49,7 @@ class ImportOldDataCommand extends Command
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('equipe_poule', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('journee', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('indisponibilite', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('partie', true));
 
         $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 1;');
 
@@ -340,8 +341,17 @@ class ImportOldDataCommand extends Command
             }
 
             // 4. Scores
-            $partie->setNbSetGagnantReception((int)$oldM['set1']);
-            $partie->setNbSetGagnantDeplacement((int)$oldM['set2']);
+
+            if ($oldM['set1'] == 0 && $oldM['set2'] == 0){
+                //match non joué
+                $partie->setNbSetGagnantReception(null);
+                $partie->setNbSetGagnantDeplacement(null);
+            }else{
+                $partie->setNbSetGagnantReception((int)$oldM['set1']);
+                $partie->setNbSetGagnantDeplacement((int)$oldM['set2']);
+            }
+
+
 
             // 5. Liaison avec la Journée
             // On utilise le mapping multidimensionnel [$nomPouleAncienne][$numJournee]
