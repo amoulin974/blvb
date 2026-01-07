@@ -3,6 +3,7 @@
 
 namespace App\Command;
 
+use App\Entity\Indisponibilite;
 use App\Entity\Journee;
 use App\Entity\Partie;
 use App\Entity\Saison;
@@ -35,6 +36,7 @@ class ImportOldDataCommand extends Command
         $platform = $em->getConnection()->getDatabasePlatform();
         $io->title('Démarrage de la migration BLVB');
 
+
         //Suppression des données existante
         $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 0;');
 
@@ -45,16 +47,21 @@ class ImportOldDataCommand extends Command
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('poule', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('equipe', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('equipe_poule', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('journee', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('indisponibilite', true));
 
         $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 1;');
+
+        //Récupération des dates de la saison
+        $oldIndisponibilites = $oldConn->fetchAssociative('SELECT * FROM `tvbadatesaison` WHERE saison like "2025/2026-GroupeA-Phase1"');
 
         //Création de la saison
         $saison=new Saison();
         $saison->setNom('Saison 2025-2026');
         $saison->setFavori(1);
-        $dateDebut = new \DateTimeImmutable('2025-09-01');
+        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_init']);
         $saison->setDateDebut($dateDebut);
-        $dateFin = new \DateTimeImmutable('2026-07-01');
+        $dateFin = $dateDebut->modify('+10 month');
         $saison->setDateDebut($dateFin);
         $saison->setPointsDefaiteFaible(0);
         $saison->setPointsDefaiteForte(1);
@@ -62,6 +69,58 @@ class ImportOldDataCommand extends Command
         $saison->setPointsVictoireForte(3);
         $saison->setPointsForfait(3);
         $saison->setPointsNul(1);
+
+        //Création des indisponibilités
+        //vacance de la toussain
+        $indisp1=new Indisponibilite();
+        $indisp1->setNom("Vacance de la toussaint");
+        $indisp1->setSaison($saison);
+        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ts1']);
+        $indisp1->setDateDebut($dateDebut);
+        $date2semaine = new \DateTimeImmutable($oldIndisponibilites['date_ts2']);
+        $dateFin = $date2semaine->modify('+6 day');
+        $indisp1->setDateFin($dateFin);
+        $em->persist($indisp1);
+
+
+        //Vacance de noel
+        $indisp2=new Indisponibilite();
+        $indisp2->setNom("Vacance de noel");
+        $indisp2->setSaison($saison);
+        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_no1']);
+        $indisp2->setDateDebut($dateDebut);
+        $date2semaine = new \DateTimeImmutable($oldIndisponibilites['date_no2']);
+        $dateFin = $date2semaine->modify('+6 day');
+        $indisp2->setDateFin($dateFin);
+        $em->persist($indisp2);
+
+        //Vacance d'hivers
+        $indisp3=new Indisponibilite();
+        $indisp3->setNom("Vacance d'hiver");
+        $indisp3->setSaison($saison);
+        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ca1']);
+        $indisp3->setDateDebut($dateDebut);
+        $date2semaine = new \DateTimeImmutable($oldIndisponibilites['date_ca2']);
+        $dateFin = $date2semaine->modify('+6 day');
+        $indisp3->setDateFin($dateFin);
+        $em->persist($indisp3);
+
+        //Vacance de Paques
+        $indisp4=new Indisponibilite();
+        $indisp4->setNom("Vacance de Paques");
+        $indisp4->setSaison($saison);
+        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ca1']);
+        $indisp4->setDateDebut($dateDebut);
+        $date2semaine = new \DateTimeImmutable($oldIndisponibilites['date_pa2']);
+        $dateFin = $date2semaine->modify('+6 day');
+        $indisp4->setDateFin($dateFin);
+        $em->persist($indisp4);
+
+
+        $saison->addIndisponibilite($indisp1);
+        $saison->addIndisponibilite($indisp2);
+        $saison->addIndisponibilite($indisp3);
+        $saison->addIndisponibilite($indisp4);
 
         $em->persist($saison);
         //Création des phases
@@ -170,129 +229,150 @@ class ImportOldDataCommand extends Command
             $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
 
             //Affectation de l'équipe à une poule
-                // 1. Découpage de la chaîne : "2025/2026-GroupeD-Phase1"
-            $parts = explode('-', $oldEquipe['saison']);
-            if (count($parts) < 3) continue; // Sécurité si le format est incorrect
-
-            $groupePart = $parts[1]; // "GroupeD"
-            $phasePart  = $parts[2]; // "Phase1"
-
-                // 2. Identification de la Phase (Phase1 -> index 0, Phase2 -> index 1...)
-                // On extrait le chiffre et on soustrait 1 pour l'index du tableau
-            $phaseNum = (int) filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
-            $phaseIndex = $phaseNum - 1;
-
-            if (isset($tabPhase[$phaseIndex])) {
-                $currentPhase = $tabPhase[$phaseIndex];
-
-                    // 3. Identification de la Poule dans cette phase
-                    // On transforme "GroupeD" en "Poule D"
-                $nomPouleCherche = "Poule " . str_replace('Groupe', '', $groupePart);
-
-                foreach ($currentPhase->getPoules() as $poule) {
-                    if ($poule->getNom() === $nomPouleCherche) {
-
-                        $poule->addEquipe($equipe);
-
-
-                        break;
-                    }
-                }
+            $poule = $this->findPouleByOldSaison($oldEquipe['saison'], $tabPhase);
+            if ($poule) {
+                $poule->addEquipe($equipe);
             }
-            $tabNewEquipe[$oldEquipe['code']]=$equipe;
 
+            $tabNewEquipe[$oldEquipe['code']] = $equipe;
             $em->persist($equipe);
+
+
             $tabNewLieu[$nomOriginalLieu]->addEquipe($equipe);
 
 
 
 
         }
-        //TODO créer le bon nombre de journées en fonction du nombre déquipe
-        //Création des journée
-        foreach ($tabPhase as $phase){
-            foreach ($phase->getPoules() as $poule){
-                for ($i=0; $i<count($poule->getEquipes()); $i++){
-                    $journee=new Journee();
-                    $journee->setDateDebut(new \DateTimeImmutable('2025-09-01'));
+
+        //Création des journée pour les phases championnat
+            $tabPouleAncienne = ['2025/2026-GroupeA-Phase1', '2025/2026-GroupeB-Phase1', '2025/2026-GroupeC-Phase1', '2025/2026-GroupeD-Phase1'];
+        $journeeMapping = []; // Pour lier les matchs plus tard
+                foreach ($tabPouleAncienne as $nomPouleAncienne) {
+                    $poule = $this->findPouleByOldSaison($nomPouleAncienne, $tabPhase);
+                    if (!$poule) continue;
+
+
+                    $oldJournees = $oldConn->fetchAllAssociative(
+                        'SELECT numjournee, MIN(datepartie) as date_min
+                         FROM tvbaresultat
+                         WHERE saison = :pouleAncienne
+                         GROUP BY numjournee
+                         ORDER BY numjournee ASC',
+                        ['pouleAncienne' => $nomPouleAncienne]
+                    );
+
+
+
+                    foreach ($oldJournees as $oldJ) {
+                        $num = (int)$oldJ['numjournee'];
+                        $dateMin = new \DateTimeImmutable($oldJ['date_min']); //
+
+                        // Normalisation : on se cale sur le lundi de la semaine de ce match
+                        $dateLundi = $dateMin->modify('monday this week');
+                        $dateDimanche = $dateLundi->modify('+6 days');
+
+                        $journee = new Journee();
+                        $journee->setNumero($num);
+                        $journee->setNom("Semaine du " . $dateLundi->format('d/m'));
+                        $journee->setDatedebut($dateLundi);
+                        $journee->setDatefin($dateDimanche);
+
+                        // On lie la journée à la poule Symfony actuelle
+                        $poule->addJournee($journee);
+                        $em->persist($journee);
+
+                        // On stocke l'objet pour l'import des matchs (Partie)
+                        $journeeMapping[$nomPouleAncienne][$num] = $journee;
+                    }
                 }
-            }
-        }
+
+
 
         //Récupération des matchs
-        $oldMatch = $oldConn->fetchAllAssociative('SELECT * FROM `tvbaresultat` WHERE saison like "2025/2026%"');
-        $partie=new Partie();
-        if (!isset($tabNewLieu[$oldMatch['lieupartie']])){
-            dump("erreur lieu match". $oldMatch['code']);
-        }else{
-            $partie->setLieu($tabNewLieu[$oldMatch['lieupartie']]);
-        }
-        $partie->setDate(new \DateTimeImmutable($oldMatch['datepartie']));
-        $partie->setIdEquipeRecoit($tabNewEquipe[$oldMatch['equipe1']]);
-        $partie->setIdEquipeDeplace($tabNewEquipe[$oldMatch['equipe2']]);
-        $partie->setNbSetGagnantReception($oldMatch['set1']);
-        $partie->setNbSetGagnantDeplacement($oldMatch['set2']);
-        $em->flush();
-        $io->success('Migration terminée avec succès !');
+        // Récupération de tous les matchs de la saison
+        $oldMatchs = $oldConn->fetchAllAssociative('SELECT * FROM `tvbaresultat` WHERE saison like "2025/2026%"');
 
+        $io->section('Importation des matchs');
+        $progressBar = $io->createProgressBar(count($oldMatchs));
 
+        foreach ($oldMatchs as $oldM) {
+            $partie = new Partie();
 
-        //------------------------------------------------------------------------
-        /**
-        // --- 1. Import des Saisons ---
-        $oldSaisons = $oldConn->fetchAllAssociative('SELECT * FROM tvbasaison');
-        $saisonMap = []; // Pour faire le lien avec les équipes plus tard
+            // 1. Liaison avec l'équipe Reçoit et Déplace
+            // On utilise le tableau de mapping créé lors de l'import des équipes
+            $equipeRecoit = $tabNewEquipe[$oldM['equipe1']] ?? null;
+            $equipeDeplace = $tabNewEquipe[$oldM['equipe2']] ?? null;
 
-        foreach ($oldSaisons as $oldS) {
-            $io->text("Migration saison : " . $oldS['nom']);
-            $saison = new Saison();
-            $saison->setNom($oldS['nom']);
-            $saison->setFavori($oldS['active'] == 1);
-
-            $em->persist($saison);
-            $saisonMap[$oldS['nom']] = $saison;
-        }
-        $em->flush();
-
-        // --- 2. Import des Equipes, Lieux et Créneaux ---
-        $oldEquipes = $oldConn->fetchAllAssociative('SELECT * FROM tvbaequipe');
-        $lieuxMap = [];
-
-        foreach ($oldEquipes as $oldE) {
-            $io->text("Migration équipe : " . $oldE['nom']);
-
-            // Gestion du Lieu (Dédoublonnement par nom)
-            $nomLieu = $oldE['lieu'] ?: 'Lieu inconnu';
-            if (!isset($lieuxMap[$nomLieu])) {
-                $lieu = new Lieu();
-                $lieu->setNom($nomLieu);
-
-                // Création du créneau si infos présentes
-                if ($oldE['jour'] && $oldE['heure']) {
-                    $creneau = new Creneau();
-                    $creneau->setJourSemaine($this->mapJour($oldE['jour']));
-
-                    $heureStr = str_replace('h', ':', strtolower($oldE['heure']));
-                    $creneau->setHeureDebut(new \DateTime($heureStr));
-
-                    $lieu->addCreneau($creneau);
-                    $em->persist($creneau);
-                }
-                $em->persist($lieu);
-                $lieuxMap[$nomLieu] = $lieu;
+            if (!$equipeRecoit || !$equipeDeplace) {
+                // Optionnel : logger l'erreur si une équipe est introuvable
+                $progressBar->advance();
+                continue;
             }
 
-            // Création de l'Equipe
-            $equipe = new Equipe();
-            $equipe->setNom($oldE['nom']);
-            $equipe->setLieu($lieuxMap[$nomLieu]);
+            $partie->setIdEquipeRecoit($equipeRecoit);
+            $partie->setIdEquipeDeplace($equipeDeplace);
 
-            $em->persist($equipe);
+            // 2. Liaison avec le Lieu
+            // L'ancienne base utilise 'lieupartie' pour le gymnase du match
+            if (isset($tabNewLieu[$oldM['lieupartie']])) {
+                $partie->setLieu($tabNewLieu[$oldM['lieupartie']]);
+            } else {
+                // Par défaut, on peut mettre le lieu de l'équipe qui reçoit
+                $partie->setLieu($equipeRecoit->getLieu());
+            }
+
+            // 3. Gestion de la Date et de l'Heure
+            $dateBrute = $oldM['datepartie'];   // Format YYYY-MM-DD
+            $heureBrute = $oldM['heurepartie']; // Format "20h30" ou "20:30"
+
+            // Nettoyage de l'heure : on remplace 'h' par ':' pour rendre la chaîne lisible par PHP
+            $heureNettoyee = str_replace('h', ':', strtolower($heureBrute));
+
+            try {
+                // On concatène la date et l'heure pour créer un objet complet
+                // On prévoit une heure par défaut (20:00) si la colonne est vide
+                $dateComplete = new \DateTimeImmutable($dateBrute . ' ' . ($heureNettoyee ?: '20:00'));
+                $partie->setDate($dateComplete);
+            } catch (\Exception $e) {
+                // En cas d'erreur de format, on enregistre au moins la date sans l'heure
+                $partie->setDate(new \DateTimeImmutable($dateBrute));
+            }
+
+            // 4. Scores
+            $partie->setNbSetGagnantReception((int)$oldM['set1']);
+            $partie->setNbSetGagnantDeplacement((int)$oldM['set2']);
+
+            // 5. Liaison avec la Journée
+            // On utilise le mapping multidimensionnel [$nomPouleAncienne][$numJournee]
+            if (isset($journeeMapping[$oldM['saison']][$oldM['numjournee']])) {
+                $partie->setJournee($journeeMapping[$oldM['saison']][$oldM['numjournee']]);
+            }
+            else{
+                dump($oldM);
+            }
+
+            //liaison avec la poule
+            $poule = $this->findPouleByOldSaison($oldM['saison'], $tabPhase);
+            $partie->setPoule($poule);
+            $poule->addParty($partie);
+            $em->persist($partie);
+            $progressBar->advance();
         }
+
+        $progressBar->finish();
+        $io->newLine();
+
+
+
+
 
         $em->flush();
         $io->success('Migration terminée avec succès !');
-*/
+
+
+
+
         return Command::SUCCESS;
     }
 
@@ -304,5 +384,31 @@ class ImportOldDataCommand extends Command
             '1' => 1, '2' => 2, '3' => 3, '4' => 4, '5' => 5, '6' => 6, '7' => 7
         ];
         return $map[strtolower($jour)] ?? 1;
+    }
+
+    private function findPouleByOldSaison(string $oldSaison, array $tabPhase): ?Poule
+    {
+        $parts = explode('-', $oldSaison);
+        if (count($parts) < 3) return null;
+
+        $groupePart = $parts[1]; // "GroupeD"
+        $phasePart  = $parts[2]; // "Phase1"
+
+        // Extraction de l'index de la phase (Phase1 -> 0, Phase2 -> 1)
+        $phaseNum = (int) filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
+        $phaseIndex = $phaseNum - 1;
+
+        if (isset($tabPhase[$phaseIndex])) {
+            $currentPhase = $tabPhase[$phaseIndex];
+            $nomPouleCherche = "Poule " . str_replace('Groupe', '', $groupePart);
+
+            foreach ($currentPhase->getPoules() as $poule) {
+                if ($poule->getNom() === $nomPouleCherche) {
+                    return $poule;
+                }
+            }
+        }
+
+        return null;
     }
 }
