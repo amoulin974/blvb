@@ -12,7 +12,12 @@ use App\Entity\Poule;
 use App\Entity\Equipe;
 use App\Entity\Lieu;
 use App\Entity\Creneau;
+use App\Entity\User;
 use App\Enum\PhaseType;
+use App\Factory\UserFactory;
+use Zenstruck\Foundry\Story;
+use function Zenstruck\Foundry\faker;
+use App\Service\ClassementService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -23,7 +28,10 @@ use Symfony\Component\Console\Style\SymfonyStyle;
 #[AsCommand(name: 'app:import-old-data', description: 'Importe les données de blvb_old')]
 class ImportOldDataCommand extends Command
 {
-    public function __construct(private ManagerRegistry $doctrine)
+    public function __construct(
+        private ManagerRegistry   $doctrine,
+        private ClassementService $classementService
+    )
     {
         parent::__construct();
     }
@@ -50,14 +58,27 @@ class ImportOldDataCommand extends Command
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('journee', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('indisponibilite', true));
         $em->getConnection()->executeStatement($platform->getTruncateTableSQL('partie', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('classement', true));
+        $em->getConnection()->executeStatement($platform->getTruncateTableSQL('user', true));
 
         $em->getConnection()->executeStatement('SET FOREIGN_KEY_CHECKS = 1;');
+
+        //Création de l'administrateur
+        // 2. Création de l'Administrateur
+        // La factory gère le hachage grâce au UserPasswordHasherInterface injecté
+        UserFactory::createOne([
+            'email' => 'admin@blvb.fr',
+            'roles' => ['ROLE_ADMIN'],
+            'password' => 'fakepassword123#',
+            'nom' => 'Administrateur',
+            'prenom' => 'Principal'
+        ]);
 
         //Récupération des dates de la saison
         $oldIndisponibilites = $oldConn->fetchAssociative('SELECT * FROM `tvbadatesaison` WHERE saison like "2025/2026-GroupeA-Phase1"');
 
         //Création de la saison
-        $saison=new Saison();
+        $saison = new Saison();
         $saison->setNom('Saison 2025-2026');
         $saison->setFavori(1);
         $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_init']);
@@ -73,7 +94,7 @@ class ImportOldDataCommand extends Command
 
         //Création des indisponibilités
         //vacance de la toussain
-        $indisp1=new Indisponibilite();
+        $indisp1 = new Indisponibilite();
         $indisp1->setNom("Vacance de la toussaint");
         $indisp1->setSaison($saison);
         $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ts1']);
@@ -85,7 +106,7 @@ class ImportOldDataCommand extends Command
 
 
         //Vacance de noel
-        $indisp2=new Indisponibilite();
+        $indisp2 = new Indisponibilite();
         $indisp2->setNom("Vacance de noel");
         $indisp2->setSaison($saison);
         $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_no1']);
@@ -96,7 +117,7 @@ class ImportOldDataCommand extends Command
         $em->persist($indisp2);
 
         //Vacance d'hivers
-        $indisp3=new Indisponibilite();
+        $indisp3 = new Indisponibilite();
         $indisp3->setNom("Vacance d'hiver");
         $indisp3->setSaison($saison);
         $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ca1']);
@@ -107,7 +128,7 @@ class ImportOldDataCommand extends Command
         $em->persist($indisp3);
 
         //Vacance de Paques
-        $indisp4=new Indisponibilite();
+        $indisp4 = new Indisponibilite();
         $indisp4->setNom("Vacance de Paques");
         $indisp4->setSaison($saison);
         $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ca1']);
@@ -125,30 +146,30 @@ class ImportOldDataCommand extends Command
 
         $em->persist($saison);
         //Création des phases
-        $phase1=new Phase();
+        $phase1 = new Phase();
         $phase1->setNom("Phase 1");
         $phase1->setType(PhaseType::CHAMPIONNAT);
         $phase1->setOrdre(0);
-        $dateDebut=new \DateTimeImmutable('2025-09-01');
-        $dateFin=new \DateTimeImmutable('2026-01-11');
+        $dateDebut = new \DateTimeImmutable('2025-09-01');
+        $dateFin = new \DateTimeImmutable('2026-01-11');
         $phase1->setDatedebut($dateDebut);
         $phase1->setDatefin($dateFin);
 
-        $phase2=new Phase();
+        $phase2 = new Phase();
         $phase2->setNom("Phase 2");
         $phase2->setType(PhaseType::CHAMPIONNAT);
         $phase2->setOrdre(1);
-        $dateDebut=new \DateTimeImmutable('2026-01-12');
-        $dateFin=new \DateTimeImmutable('2026-05-31');
+        $dateDebut = new \DateTimeImmutable('2026-01-12');
+        $dateFin = new \DateTimeImmutable('2026-05-31');
         $phase2->setDatedebut($dateDebut);
         $phase2->setDatefin($dateFin);
 
-        $phase3=new Phase();
+        $phase3 = new Phase();
         $phase3->setNom("Phase 2");
         $phase3->setType(PhaseType::FINALE);
         $phase3->setOrdre(2);
-        $dateDebut=new \DateTimeImmutable('2026-06-01');
-        $dateFin=new \DateTimeImmutable('2026-06-30');
+        $dateDebut = new \DateTimeImmutable('2026-06-01');
+        $dateFin = new \DateTimeImmutable('2026-06-30');
         $phase3->setDatedebut($dateDebut);
         $phase3->setDatefin($dateFin);
 
@@ -164,21 +185,21 @@ class ImportOldDataCommand extends Command
         $saison->addPhase($phase2);
         $saison->addPhase($phase3);
 
-        $tabPhase=[$phase1, $phase2, $phase3];
+        $tabPhase = [$phase1, $phase2, $phase3];
         $tabNomPoules = ['Poule A', 'Poule B', 'Poule C', 'Poule D'];
 
-        for($i=0; $i<3; $i++){
-            for ($y=0; $y<4; $y++ ){
-                $poule=new Poule();
+        for ($i = 0; $i < 3; $i++) {
+            for ($y = 0; $y < 4; $y++) {
+                $poule = new Poule();
                 $poule->setNom($tabNomPoules[$y]);
-                if ($y != 3){
+                if ($y != 3) {
                     $poule->setNbDescenteDefaut(2);
-                }else{
+                } else {
                     $poule->setNbDescenteDefaut(0);
                 }
-                if ($y != 0){
+                if ($y != 0) {
                     $poule->setNbDescenteDefaut(0);
-                }else{
+                } else {
                     $poule->setNbDescenteDefaut(2);
                 }
                 $poule->setNiveau($y);
@@ -191,18 +212,17 @@ class ImportOldDataCommand extends Command
         }
 
 
-
         //Création des lieux et des équipes
 
         $oldEquipes = $oldConn->fetchAllAssociative('SELECT * FROM `tvbaequipe` WHERE saison like "2025/2026%"');
-        $tabNewLieu=[];
-        $tabNewEquipe=[];
-        foreach ($oldEquipes as $oldEquipe){
+        $tabNewLieu = [];
+        $tabNewEquipe = [];
+        foreach ($oldEquipes as $oldEquipe) {
             $nomOriginalLieu = $oldEquipe['lieu'];
             //Si le lieu n'existe pas déjà
-            if (! isset($tabNewLieu[$nomOriginalLieu])){
+            if (!isset($tabNewLieu[$nomOriginalLieu])) {
 
-                $newLieu=new Lieu();
+                $newLieu = new Lieu();
 
                 $posVirgule = strpos($nomOriginalLieu, ",");
                 $nomCourt = ($posVirgule !== false) ? substr($nomOriginalLieu, 0, $posVirgule) : $nomOriginalLieu;
@@ -210,7 +230,7 @@ class ImportOldDataCommand extends Command
                 $newLieu->setAdresse($nomOriginalLieu);
 
 
-                $creneau=new Creneau();
+                $creneau = new Creneau();
                 $creneau->setJourSemaine($this->mapJour($oldEquipe['jour']));
                 $heureStr = str_replace('h', ':', strtolower($oldEquipe['heure']));
                 $creneau->setHeureDebut(new \DateTimeImmutable($heureStr ?: '20:00'));
@@ -220,7 +240,7 @@ class ImportOldDataCommand extends Command
                 $heureFin = $creneau->getHeureDebut()->modify('+2 hours');
                 $creneau->setHeureFin($heureFin);
                 $newLieu->addCreneau($creneau);
-                $tabNewLieu[$nomOriginalLieu]=$newLieu;
+                $tabNewLieu[$nomOriginalLieu] = $newLieu;
                 $em->persist($newLieu);
                 $em->persist($creneau);
             }
@@ -228,6 +248,33 @@ class ImportOldDataCommand extends Command
             $equipe = new Equipe();
             $equipe->setNom($oldEquipe['nom']);
             $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
+
+            //Récupération des capitaines
+            $oldCapitaine = $oldConn->fetchAssociative(
+                'SELECT * FROM `tvbacontact` WHERE codeequipe = :codeEquipe',
+                ['codeEquipe' => $oldEquipe['code']]
+            );
+
+            if ($oldCapitaine && !empty($oldCapitaine['email'])) {
+                //Vérifier qu'un user n'existe pas déjà avec l'adresse du capitaine
+                $userActuel = $em->getRepository(User::class)->findOneBy(['email' => $oldCapitaine['email']]);
+                if ($userActuel) {
+                    $equipe->setCapitaine($userActuel);
+                } else {
+                    $user = new User();
+                    $user->setPrenom($oldCapitaine['nom']);
+                    $user->setEmail($oldCapitaine['email']);
+                    $user->setRoles(['ROLE_USER']);
+                    // Génération d'un mot de passe aléatoire haché
+                    $fakePassword = bin2hex(random_bytes(10));
+                    $hashedPassword = $this->passwordHasher->hashPassword($user, $fakePassword);
+                    $user->setPassword($hashedPassword);
+                    $user->setIsVerified(1);
+                    $equipe->setCapitaine($user);
+                    $em->persist($user);
+                }
+            }
+
 
             //Affectation de l'équipe à une poule
             $poule = $this->findPouleByOldSaison($oldEquipe['saison'], $tabPhase);
@@ -242,52 +289,48 @@ class ImportOldDataCommand extends Command
             $tabNewLieu[$nomOriginalLieu]->addEquipe($equipe);
 
 
-
-
         }
 
         //Création des journée pour les phases championnat
-            $tabPouleAncienne = ['2025/2026-GroupeA-Phase1', '2025/2026-GroupeB-Phase1', '2025/2026-GroupeC-Phase1', '2025/2026-GroupeD-Phase1'];
+        $tabPouleAncienne = ['2025/2026-GroupeA-Phase1', '2025/2026-GroupeB-Phase1', '2025/2026-GroupeC-Phase1', '2025/2026-GroupeD-Phase1'];
         $journeeMapping = []; // Pour lier les matchs plus tard
-                foreach ($tabPouleAncienne as $nomPouleAncienne) {
-                    $poule = $this->findPouleByOldSaison($nomPouleAncienne, $tabPhase);
-                    if (!$poule) continue;
+        foreach ($tabPouleAncienne as $nomPouleAncienne) {
+            $poule = $this->findPouleByOldSaison($nomPouleAncienne, $tabPhase);
+            if (!$poule) continue;
 
 
-                    $oldJournees = $oldConn->fetchAllAssociative(
-                        'SELECT numjournee, MIN(datepartie) as date_min
+            $oldJournees = $oldConn->fetchAllAssociative(
+                'SELECT numjournee, MIN(datepartie) as date_min
                          FROM tvbaresultat
                          WHERE saison = :pouleAncienne
                          GROUP BY numjournee
                          ORDER BY numjournee ASC',
-                        ['pouleAncienne' => $nomPouleAncienne]
-                    );
+                ['pouleAncienne' => $nomPouleAncienne]
+            );
 
 
+            foreach ($oldJournees as $oldJ) {
+                $num = (int)$oldJ['numjournee'];
+                $dateMin = new \DateTimeImmutable($oldJ['date_min']); //
 
-                    foreach ($oldJournees as $oldJ) {
-                        $num = (int)$oldJ['numjournee'];
-                        $dateMin = new \DateTimeImmutable($oldJ['date_min']); //
+                // Normalisation : on se cale sur le lundi de la semaine de ce match
+                $dateLundi = $dateMin->modify('monday this week');
+                $dateDimanche = $dateLundi->modify('+6 days');
 
-                        // Normalisation : on se cale sur le lundi de la semaine de ce match
-                        $dateLundi = $dateMin->modify('monday this week');
-                        $dateDimanche = $dateLundi->modify('+6 days');
+                $journee = new Journee();
+                $journee->setNumero($num);
+                $journee->setNom("Semaine du " . $dateLundi->format('d/m'));
+                $journee->setDatedebut($dateLundi);
+                $journee->setDatefin($dateDimanche);
 
-                        $journee = new Journee();
-                        $journee->setNumero($num);
-                        $journee->setNom("Semaine du " . $dateLundi->format('d/m'));
-                        $journee->setDatedebut($dateLundi);
-                        $journee->setDatefin($dateDimanche);
+                // On lie la journée à la poule Symfony actuelle
+                $poule->addJournee($journee);
+                $em->persist($journee);
 
-                        // On lie la journée à la poule Symfony actuelle
-                        $poule->addJournee($journee);
-                        $em->persist($journee);
-
-                        // On stocke l'objet pour l'import des matchs (Partie)
-                        $journeeMapping[$nomPouleAncienne][$num] = $journee;
-                    }
-                }
-
+                // On stocke l'objet pour l'import des matchs (Partie)
+                $journeeMapping[$nomPouleAncienne][$num] = $journee;
+            }
+        }
 
 
         //Récupération des matchs
@@ -342,23 +385,21 @@ class ImportOldDataCommand extends Command
 
             // 4. Scores
 
-            if ($oldM['set1'] == 0 && $oldM['set2'] == 0){
+            if ($oldM['set1'] == 0 && $oldM['set2'] == 0) {
                 //match non joué
                 $partie->setNbSetGagnantReception(null);
                 $partie->setNbSetGagnantDeplacement(null);
-            }else{
+            } else {
                 $partie->setNbSetGagnantReception((int)$oldM['set1']);
                 $partie->setNbSetGagnantDeplacement((int)$oldM['set2']);
             }
-
 
 
             // 5. Liaison avec la Journée
             // On utilise le mapping multidimensionnel [$nomPouleAncienne][$numJournee]
             if (isset($journeeMapping[$oldM['saison']][$oldM['numjournee']])) {
                 $partie->setJournee($journeeMapping[$oldM['saison']][$oldM['numjournee']]);
-            }
-            else{
+            } else {
                 dump($oldM);
             }
 
@@ -374,13 +415,21 @@ class ImportOldDataCommand extends Command
         $io->newLine();
 
 
-
-
-
         $em->flush();
+
+        $io->section('Mise à jour des classements');
+
+        // On boucle sur toutes les phases et toutes les poules créées
+        foreach ($tabPhase as $phase) {
+            foreach ($phase->getPoules() as $poule) {
+                $io->text("Calcul du classement pour : " . $phase->getNom() . " - " . $poule->getNom());
+
+                // Le service gère le calcul des points, des sets et le tri (points, ratio, confrontation directe)
+                $this->classementService->mettreAJourClassementPoule($poule);
+            }
+        }
+
         $io->success('Migration terminée avec succès !');
-
-
 
 
         return Command::SUCCESS;
@@ -402,10 +451,10 @@ class ImportOldDataCommand extends Command
         if (count($parts) < 3) return null;
 
         $groupePart = $parts[1]; // "GroupeD"
-        $phasePart  = $parts[2]; // "Phase1"
+        $phasePart = $parts[2]; // "Phase1"
 
         // Extraction de l'index de la phase (Phase1 -> 0, Phase2 -> 1)
-        $phaseNum = (int) filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
+        $phaseNum = (int)filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
         $phaseIndex = $phaseNum - 1;
 
         if (isset($tabPhase[$phaseIndex])) {
