@@ -17,6 +17,7 @@ use App\Enum\PhaseType;
 use App\Factory\UserFactory;
 use Zenstruck\Foundry\Story;
 use function Zenstruck\Foundry\faker;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use App\Service\ClassementService;
 use Doctrine\Persistence\ManagerRegistry;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -30,7 +31,8 @@ class ImportOldDataCommand extends Command
 {
     public function __construct(
         private ManagerRegistry   $doctrine,
-        private ClassementService $classementService
+        private ClassementService $classementService,
+        private UserPasswordHasherInterface $passwordHasher
     )
     {
         parent::__construct();
@@ -192,16 +194,23 @@ class ImportOldDataCommand extends Command
             for ($y = 0; $y < 4; $y++) {
                 $poule = new Poule();
                 $poule->setNom($tabNomPoules[$y]);
-                if ($y != 3) {
-                    $poule->setNbDescenteDefaut(2);
-                } else {
-                    $poule->setNbDescenteDefaut(0);
+                switch ($y) {
+                    case 0:
+                        $poule->setNbMonteeDefaut(0);
+                        $poule->setNbDescenteDefaut(2);
+                        break;
+                    case 1:
+                    case 2:
+                        $poule->setNbMonteeDefaut(2);
+                        $poule->setNbDescenteDefaut(2);
+                        break;
+
+                    case 3:
+                        $poule->setNbMonteeDefaut(2);
+                        $poule->setNbDescenteDefaut(0);
+                        break;
                 }
-                if ($y != 0) {
-                    $poule->setNbDescenteDefaut(0);
-                } else {
-                    $poule->setNbDescenteDefaut(2);
-                }
+
                 $poule->setNiveau($y);
                 $poule->setPhase($tabPhase[$i]);
                 $tabPhase[$i]->addPoule($poule);
