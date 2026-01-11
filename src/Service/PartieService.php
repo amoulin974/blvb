@@ -58,79 +58,101 @@ class PartieService
 
     }
 
-    private function generateMatchJourneePhaseChampionnat(Poule $poule){
-
-            $equipes = $poule->getEquipes()->toArray();
+    private function generateMatchJourneePhaseChampionnat(Poule $poule)
+    {
+        $equipes = $poule->getEquipes()->toArray();
         $nbEquipe = count($equipes);
-        if ($nbEquipe<2){
-            $error="Il faut au moins deux équipes dans la poule";
-        }else{
-            //Algorithme de la ronde
-            $equipeArray = $equipes;
-            if ($nbEquipe % 2 != 0) {
-                $equipeBye = new Equipe();
-                $equipeBye->setNom("BYE");
-                $equipeArray[] = $equipeBye;
-                $nbEquipe++; // On met à jour le nombre total
-            }
-            $rounds = $nbEquipe - 1;
-            $matchesPerRound = $nbEquipe / 2;
-            $journees = $poule->getJournees()->toArray();
-            // Tri selon l’attribut "numero"
-            usort($journees, function($j1, $j2){
-                return $j1->getNumero() <=> $j2->getNumero();
-            });
 
-            for ($round = 0; $round < $rounds; $round++) {
-                $journee = $journees[$round];
-                for ($match = 0; $match < $matchesPerRound; $match++) {
-                    $home = ($round + $match) % ($nbEquipe - 1);
-                    $away = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
-
-                    // La dernière équipe reste fixe
-                    if ($match == 0) {
-                        $away = $nbEquipe - 1;
-                    }
-
-                    //LOGIQUE D'ALTERNANCE
-                    // Pour le pivot (match 0), on inverse domicile/extérieur chaque round
-                    // Pour les autres, on inverse si le numéro de round est impair
-                    if ($round % 2 == 1) {
-                        $temp = $home;
-                        $home = $away;
-                        $away = $temp;
-                    }
-
-
-                    // Si l'une des équipes est fictive, on ne crée pas le match
-                    if ($equipeArray[$home]->getNom() === "BYE" || $equipeArray[$away]->getNom() === "BYE") {
-                        continue;
-                    }
-
-                    $partie = new \App\Entity\Partie();
-                    $equipeHome = $equipeArray[$home];
-                    $equipeAway = $equipeArray[$away];
-
-                    $dateMatch = $this->calculerDateMatch(
-                        $journee->getDateDebut(),
-                        $equipeHome->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $equipeHome->getLieu()->getCreneaux()[0]->getHeureDebut(),
-                    );
-                    $partie->setDate($dateMatch);
-                    $partie->setLieu($equipeHome->getLieu());
-                    $partie->setIdEquipeRecoit($equipeHome);
-                    $partie->setIdEquipeDeplace($equipeAway);
-                    $journee->addParty($partie);
-                    $poule->addParty($partie);
-
-                    $this->em->persist($partie);
-                    $this->em->persist($journee);
-                    $this->em->persist($poule);
-                }
-            }
-            $this->em->flush();
-
+        if ($nbEquipe < 2) {
+            // Idéalement, lever une exception ou gérer l'erreur via un retour
+            return;
         }
+
+        // 1. Préparation du tableau d'équipes (Gestion du BYE)
+        $equipeArray = $equipes;
+        if ($nbEquipe % 2 != 0) {
+            $equipeBye = new Equipe();
+            $equipeBye->setNom("BYE");
+            $equipeArray[] = $equipeBye;
+            $nbEquipe++;
+        }
+
+        $rounds = $nbEquipe - 1;
+        $matchesPerRound = $nbEquipe / 2;
+        $journees = $poule->getJournees()->toArray();
+
+        usort($journees, function($j1, $j2){
+            return $j1->getNumero() <=> $j2->getNumero();
+        });
+
+        // 2. Algorithme de la Ronde (Circle Method)
+        for ($round = 0; $round < $rounds; $round++) {
+            $journee = $journees[$round];
+
+            for ($match = 0; $match < $matchesPerRound; $match++) {
+                // Calcul des indices théoriques
+                $idx1 = ($round + $match) % ($nbEquipe - 1);
+                $idx2 = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
+
+                // Cas particulier de l'équipe Pivot (la dernière du tableau)
+                if ($match == 0) {
+                    $idx2 = $nbEquipe - 1;
+                }
+
+                // LOGIQUE D'ALTERNANCE DOMICILE/EXTÉRIEUR
+                // On détermine qui est 'home' et qui est 'away'
+                if ($match == 0) {
+                    // Pour le pivot : il reçoit lors des rounds pairs, se déplace les rounds impairs
+                    if ($round % 2 == 0) {
+                        $homeIdx = $idx2;
+                        $awayIdx = $idx1;
+                    } else {
+                        $homeIdx = $idx1;
+                        $awayIdx = $idx2;
+                    }
+                } else {
+                    // Pour les autres matchs : on alterne selon la parité du round
+                    if ($round % 2 == 1) {
+                        $homeIdx = $idx1;
+                        $awayIdx = $idx2;
+                    } else {
+                        $homeIdx = $idx2;
+                        $awayIdx = $idx1;
+                    }
+                }
+
+                $equipeHome = $equipeArray[$homeIdx];
+                $equipeAway = $equipeArray[$awayIdx];
+
+                // 3. Exclusion du match si c'est un BYE
+                if ($equipeHome->getNom() === "BYE" || $equipeAway->getNom() === "BYE") {
+                    continue;
+                }
+
+                // 4. Création de la partie
+                $partie = new \App\Entity\Partie();
+
+                // Calcul de la date selon les préférences de l'équipe qui REÇOIT
+                $lieuMatch = $equipeHome->getLieu();
+                $creneau = $lieuMatch->getCreneaux()[0]; // On suppose qu'il y a au moins un créneau
+
+                $dateMatch = $this->calculerDateMatch(
+                    $journee->getDateDebut(),
+                    $creneau->getJourSemaine(),
+                    $creneau->getHeureDebut(),
+                );
+
+                $partie->setDate($dateMatch);
+                $partie->setLieu($lieuMatch);
+                $partie->setIdEquipeRecoit($equipeHome);
+                $partie->setIdEquipeDeplace($equipeAway);
+                $partie->setJournee($journee);
+                $partie->setPoule($poule);
+
+                $this->em->persist($partie);
+            }
+        }
+        $this->em->flush();
     }
     private function generateMatchJourneePhaseFinale(Poule $poule ){
         $lieuRepository = $this->em->getRepository(Lieu::class);
