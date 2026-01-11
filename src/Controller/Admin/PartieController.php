@@ -78,15 +78,26 @@ final class PartieController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}', name: 'delete', methods: ['POST'])]
+    #[Route('/admin/partie/{id}/delete', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Partie $partie, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$partie->getId(), $request->getPayload()->getString('_token'))) {
+        // On récupère les infos pour la redirection avant la suppression
+        $poule = $partie->getPoule();
+        $saisonId = $poule->getPhase()->getSaison()->getId();
+
+        // Vérification du jeton CSRF pour la sécurité
+        if ($this->isCsrfTokenValid('delete'.$partie->getId(), $request->request->get('_token'))) {
             $entityManager->remove($partie);
             $entityManager->flush();
+
+            $this->addFlash('success', 'Le match a été supprimé avec succès.');
         }
 
-        return $this->redirectToRoute('admin_partie_index', [], Response::HTTP_SEE_OTHER);
+        // On redirige vers la vue "show" de la saison en ajoutant l'ancre vers la poule
+        return $this->redirectToRoute('admin_saison_show', [
+            'id' => $saisonId,
+            'openPoule' => $poule->getId()
+        ]);
     }
 
     //fonction qui crée les matchs pour une poule

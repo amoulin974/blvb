@@ -6,6 +6,7 @@ use App\Entity\Saison;
 use App\Form\PouleType;
 use App\Form\SaisonType;
 use App\Repository\SaisonRepository;
+use App\Repository\PouleRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -118,8 +119,25 @@ final class SaisonController extends AbstractController
     //Affiche une saison
     //TODO ajouter des ancres pour qu'après la création des journées ou des matchs on arrive directement sur la bonne poule
     #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(Saison $saison): Response
+    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository): Response
     {
+
+        // 1. Déterminer la poule à ouvrir (via paramètre d'URL si présent)
+        $openPouleId = $request->query->get('openPoule');
+        $pouleOuverte = $openPouleId ? $pouleRepository->find($openPouleId) : null;
+
+        // 2. Déterminer la phase à ouvrir
+        // Si une poule est spécifiée, on ouvre sa phase parente
+        // Sinon, on utilise votre logique de "phase actuelle"
+        if ($pouleOuverte) {
+            $phaseOuverteId = $pouleOuverte->getPhase()->getId();
+            $pouleOuverteId = $pouleOuverte->getId();
+        } else {
+            $phaseActuelle = $this->getPhaseActuelle($saison); // Recopiez ou injectez cette méthode
+            $phaseOuverteId = $phaseActuelle ? $phaseActuelle->getId() : null;
+            $pouleOuverteId = null; // Par défaut, on ouvrira la première poule de la phase
+        }
+
         foreach($saison->getPhases() as &$phase){
             foreach($phase->getPoules() as $poule){
                 if ($poule->getJournees()->count()==0){
@@ -131,6 +149,19 @@ final class SaisonController extends AbstractController
         }
         return $this->render('admin/saison/show.html.twig', [
             'saison' => $saison,
+            'phaseOuverteId' => $phaseOuverteId,
+            'pouleOuverteId' => $pouleOuverteId,
         ]);
+    }
+
+    // Recopiez cette méthode du FrontController ou placez-la dans un Service
+    private function getPhaseActuelle(Saison $saison) {
+        $dateActuelle = new \DateTime();
+        foreach ($saison->getPhases() as $phase) {
+            if ($dateActuelle >= $phase->getDateDebut() && $dateActuelle <= $phase->getDateFin()) {
+                return $phase;
+            }
+        }
+        return $saison->getPhases()->first();
     }
 }

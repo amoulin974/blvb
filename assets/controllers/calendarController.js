@@ -42,6 +42,9 @@ export default class extends Controller {
 
         const nbMois = dateFin.diff(dateDebut, 'months') + 1;
 
+        // Récupération du paramètre editPartie dans l'URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const editPartieId = urlParams.get('editPartie');
 
 
         this.calendar = new Calendar(el, {
@@ -111,6 +114,19 @@ export default class extends Controller {
             // dateClick: this.onDateClick.bind(this),
             select: this.onDateClick.bind(this),
         });
+
+        if (editPartieId) {
+            // On attend un court instant que le calendrier soit chargé
+            setTimeout(() => {
+                const event = this.calendar.getEventById(editPartieId);
+                if (event) {
+                    // On déclenche manuellement la logique de clic sur l'événement
+                    this.onEventClickPartie({ event: event });
+                    // Optionnel : on fait défiler jusqu'à l'événement
+                    event.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 500);
+        }
 
         this.calendar.render();
     }
@@ -388,6 +404,7 @@ export default class extends Controller {
                 info.revert(); // annule le déplacement si erreur
             });
     }
+
 
     //
 }
