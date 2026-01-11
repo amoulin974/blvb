@@ -13,7 +13,11 @@
         </p>
             {% if app.user %}
                 <a href="{{ path("front_calendrier") }}"><button class="btn btn-primary">Saisir un résultat</button></a>
-                <a href="{{ path("front_equipes") }}"><button class="btn btn-primary">Voir son équipe</button></a>
+                {% if equipe %}
+                    <a href="{{ path("front_equipe_detail",  {'id': equipe.id})}}"><button class="btn btn-primary">Voir {{equipe.nom}}</button></a>
+                    {%  else %}
+                    <a href="{{ path("front_equipes") }}"><button class="btn btn-primary">Voir les équipes</button></a>
+                {% endif %}
             {% else %}
             <a href="{{ path("app_login") }}"><button class="btn btn-primary">Capitaine : Se connecter pour saisir un résultat</button></a>
             {% endif %}

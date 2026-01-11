@@ -33,7 +33,12 @@
 
                                                 {% endif %}
                                             </td>
-                                            <td>{{ classement.equipe.nom }} </td>
+                                            <td><a href="{{path('front_equipe_detail', {'id': classement.equipe.id})}}" class="link flex items-center justify-center">
+                                                    {{ classement.equipe.nom }} &nbsp;<span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                                                    </svg></span>
+
+                                                </a> </td>
                                             <td>{{ classement.points }}</td>
                                             <td>{{ classement.setGagnes}}</td>
                                             <td>{{ classement.setPerdus}}</td>
@@ -71,7 +76,12 @@
                                             {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) %}
                                                 !bg-warning{% endif %}">
                                         <div class="card-body {% if equipeid is defined and classement.equipe.id == equipeid %} bg-success font-bold {% endif %}" >
-                                                <p><strong>Equipe n° {{ classement.position}} : {{ classement.equipe.nom }} </strong>  </p>
+                                                <p><strong><a href="{{path('front_equipe_detail', {'id': classement.equipe.id})}}" class="link flex items-center justify-start">
+                                                            Equipe n° {{ classement.position}} : {{ classement.equipe.nom }} &nbsp;<span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                                                    </svg></span>
+
+                                                        </a> </strong>  </p>
                                                 <p>Points : {{ classement.points }}</p>
                                                 <p>Nombre set gagnés {{ classement.setGagnes}}</p>
                                                 <p>Nombre set perdus {{ classement.setPerdus}}</p>
