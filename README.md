@@ -103,12 +103,9 @@ INSERT INTO `user`(`id`, `email`, `roles`, `password`, `is_verified`, `nom`, `pr
 
 ### 8. Lancer le serveur de dev
 ```bash
-symfony serve
+symfony server:start
 ```
-ou
-```bash
-php -S localhost:8000 -t public
-```
+
 
 ---
 
