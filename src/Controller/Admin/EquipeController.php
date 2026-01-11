@@ -74,7 +74,7 @@ final class EquipeController extends AbstractController
             return $this->redirectToRoute('admin_equipe_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('admin/equipe/edit.html.twig', [
+        return $this->render('admin/equipe/profile_dit.html.twig', [
             'equipe' => $equipe,
             'form' => $form,
         ]);

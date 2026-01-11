@@ -67,7 +67,7 @@ final class JourneeController extends AbstractController
             return $this->redirectToRoute('admin_journee_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('admin/journee/edit.html.twig', [
+        return $this->render('admin/journee/profile_dit.html.twig', [
             'journee' => $journee,
             'form' => $form,
         ]);

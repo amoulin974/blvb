@@ -1,64 +1,111 @@
+{# templates/admin/user/_form.html.twig #}
 {{ form_start(form, { attr: { class: "space-y-6 max-w-xl mx-auto" } }) }}
-<div>
-    <label class="block text-sm font-medium mb-1" for="user_prenom">
-        Prenom*
-    </label>
-    {{ form_widget(form.prenom, { attr: { class: "input input-bordered w-full" } }) }}
-    {{ form_errors(form.prenom) }}
+{% if not form.vars.valid %}
+    <div class="alert alert-error mb-4">
+        {{ form_errors(form) }}
+    </div>
+{% endif %}
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div>
+        <label class="block text-sm font-medium mb-1" for="{{ form.prenom.vars.id }}">Prénom*</label>
+        {{ form_widget(form.prenom, { attr: { class: "input input-bordered w-full" } }) }}
+        {{ form_errors(form.prenom) }}
+    </div>
+    <div>
+        <label class="block text-sm font-medium mb-1" for="{{ form.nom.vars.id }}">Nom</label>
+        {{ form_widget(form.nom, { attr: { class: "input input-bordered w-full" } }) }}
+        {{ form_errors(form.nom) }}
+    </div>
 </div>
 
 <div>
-    <label class="block text-sm font-medium mb-1" for="user_nom">
-        Nom*
-    </label>
-    {{ form_widget(form.nom, { attr: { class: "input input-bordered w-full" } }) }}
-    {{ form_errors(form.nom) }}
-</div>
-
-<div>
-    <label class="block text-sm font-medium mb-1" for="user_telephone">
-        telephone
-    </label>
+    <label class="block text-sm font-medium mb-1" for="{{ form.telephone.vars.id }}">Téléphone</label>
     {{ form_widget(form.telephone, { attr: { class: "input input-bordered w-full" } }) }}
     {{ form_errors(form.telephone) }}
 </div>
 
 <div>
-    <label class="block text-sm font-medium mb-1" for="user_email">
-        Email
-    </label>
-    {{ form_widget(form.email, { attr: { class: "input input-bordered w-full" } }) }}
-    {{ form_errors(form.email) }}
-</div>
+    <label class="block text-sm font-medium mb-1" for="{{ form.email.vars.id }}">Email</label>
 
-<div>
-    <label class="block text-sm font-medium mb-1" for="user_email">
-        Mot de passe :
-    </label>
-    {{ form_widget(form.plainPassword, { attr: { class: "input input-bordered w-full" } }) }}
-    {{ form_errors(form.plainPassword) }}
-</div>
-
-<div>
-    <label class="block text-sm font-medium mb-1">
-        Rôles
-    </label>
-
-    {{ form_widget(form.roles, {
+    {{ form_widget(form.email, {
         attr: {
-            class: "select select-bordered w-full",
-            multiple: "multiple",
-            size: 4
+            class: "input input-bordered w-full" ~ (not is_granted('ROLE_ADMIN') ? " bg-base-200 cursor-not-allowed" : ""),
+            readonly: not is_granted('ROLE_ADMIN') ? "readonly" : false
         }
     }) }}
-    <p class="text-xs text-gray-500 mt-1">Maintenir Ctrl (ou Cmd) pour sélectionner plusieurs rôles.</p>
-
-    {{ form_errors(form.roles) }}
+    {{ form_errors(form.email) }}
+    {% if not is_granted('ROLE_ADMIN') %}
+        <p class="text-xs opacity-60 mt-1">L'adresse email ne peut être modifiée que par un administrateur.</p>
+    {% endif %}
 </div>
 
-<div class="flex justify-end gap-3">
-    <a href="{{ path('admin_user_index') }}" class="btn btn-ghost btn-sm">Annuler</a>
-    <button type="submit" class="btn btn-success btn-sm">Enregistrer</button>
-</div>
+{% if is_granted('ROLE_ADMIN') %}
+    {# --- ZONE RÉSERVÉE AUX ADMINISTRATEURS --- #}
+    <div class="divider">Administration</div>
 
-{{ form_end(form) }}
+    <div class="flex items-center gap-3 mb-4 p-2 bg-base-200 rounded-lg">
+        <label class="cursor-pointer label gap-3">
+            <span class="label-text font-medium">Compte vérifié</span>
+            {{ form_widget(form.isVerified, { attr: { class: "checkbox checkbox-primary" } }) }}
+        </label>
+        {{ form_errors(form.isVerified) }}
+    </div>
+
+    <div>
+        <label class="block text-sm font-medium mb-1" for="{{ form.plainPassword.vars.id }}">Définir un nouveau mot de passe</label>
+        {{ form_widget(form.plainPassword, { attr: { class: "input input-bordered w-full", placeholder: "Laisser vide pour ne pas modifier" } }) }}
+        {{ form_errors(form.plainPassword) }}
+    </div>
+
+    <div class="mt-4">
+        <label class="block text-sm font-medium mb-1">Rôles </label>
+        {{ form_widget(form.roles, {
+            attr: {
+                class: "select select-bordered w-full",
+                multiple: "multiple",
+                size: 4
+            }
+        }) }}
+        <p class="text-xs text-gray-500 mt-1">Maintenir Ctrl (ou Cmd) pour sélectionner plusieurs rôles.</p>
+        {{ form_errors(form.roles) }}
+    </div>
+
+{% else %}
+    {# --- ZONE SÉCURITÉ UTILISATEUR CLASSIQUE --- #}
+    <div class="bg-base-200 p-4 rounded-lg space-y-4 mt-8">
+        <h3 class="text-sm font-bold flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            Changer le mot de passe
+        </h3>
+
+        <div class="space-y-3">
+            {% if form.currentPassword is defined %}
+                <div>
+                    <label class="block text-xs font-medium mb-1">Mot de passe actuel</label>
+                    {{ form_widget(form.currentPassword, { attr: { class: "input input-bordered input-sm w-full" } }) }}
+                    {{ form_errors(form.currentPassword) }}
+                </div>
+            {% endif %}
+
+            <div>
+                <label class="block text-xs font-medium mb-1">Nouveau mot de passe</label>
+                {{ form_widget(form.plainPassword, { attr: { class: "input input-bordered input-sm w-full", autocomplete: "new-password" } }) }}
+                {{ form_errors(form.plainPassword) }}
+            </div>
+        </div>
+    </div>
+
+    {# Message pour la suppression de compte #}
+    <div class="alert mt-6 text-xs bg-base-200 border-none flex items-start gap-3">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-5 h-5 mt-0.5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <span>Pour demander la suppression de votre compte et de l'ensemble de vos données personnelles, veuillez contacter l'administrateur du site.</span>
+    </div>
+{% endif %}
+
+<div class="flex justify-end gap-3 mt-10">
+    <a href="{{ is_granted('ROLE_ADMIN') ? path('admin_user_index') : path('front_index') }}" class="btn btn-ghost btn-sm">Annuler</a>
+    <button type="submit" class="btn btn-success btn-sm">Enregistrer les modifications</button>
+</div>
+{# RENDU DU JETON CSRF : Indispensable quand render_rest est à false #}
+{{ form_row(form._token) }}
+{{ form_end(form, {render_rest: false}) }}

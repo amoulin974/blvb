@@ -89,7 +89,7 @@ final class SaisonController extends AbstractController
             return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('admin/saison/edit.html.twig', [
+        return $this->render('admin/saison/profile_dit.html.twig', [
             'saison' => $saison,
             'form' => $form,
         ]);

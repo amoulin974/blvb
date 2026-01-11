@@ -2,26 +2,29 @@
 
 namespace App\Controller\Front;
 
+
+use App\Entity\Equipe;
+use App\Entity\Partie;
+use App\Entity\Poule;
+use App\Entity\User;
+use App\Form\Front\UserChangePasswordType;
+use App\Form\Front\UserProfileType;
 use App\Repository\LieuRepository;
 use App\Repository\PartieRepository;
-use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use App\Entity\Saison;
-use Doctrine\ORM\EntityManagerInterface;
-use App\Entity\Partie;
-use App\Entity\Equipe;
-use App\Entity\Classement;
 use App\Repository\EquipeRepository;
+use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
+use App\Service\ClassementService;
+use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use App\Repository\SaisonRepository;
 use Symfony\Contracts\Cache\CacheInterface;
 use Symfony\Contracts\Cache\ItemInterface;
 use Symfony\Component\HttpFoundation\Session\SessionInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
-use Symfony\Component\Security\Http\Authentication\AuthenticationUtils;
-use App\Service\ClassementService;
 use Exception;
 
 #[Route('/', name: 'front_')]
@@ -404,6 +407,81 @@ final class FrontController extends AbstractController
 
         }
         return $saison->getPhases()->first(); // Retourne la première phase si aucune n'est ouverte
+    }
+
+    /**
+     * Permet de modifier le profil utilisateur
+     */
+    #[Route('/mon-profil', name: 'profile_edit', methods: ['GET', 'POST'])]
+    public function editProfile(
+        Request $request,
+        EntityManagerInterface $entityManager,
+        UserPasswordHasherInterface $passwordHasher,
+        SaisonRepository $saisonRepository,
+        EquipeRepository $equipeRepository,
+        CacheInterface $cache,
+        SessionInterface $session
+    ): Response {
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+
+        /** @var User $user */
+        $user = $this->getUser();
+        if (!$user) {
+            throw $this->createAccessDeniedException();
+        }
+
+        // Récupérer les équipes où l'utilisateur est capitaine
+        $equipesCapitaine = $equipeRepository->findBy(['capitaine' => $user]);
+
+        // Groupement par saison pour l'affichage
+        $equipesParSaison = [];
+        foreach ($equipesCapitaine as $equipe) {
+            /** @var Poule $poule */
+            foreach ($equipe->getPoules() as $poule) {
+                $nomSaison = $poule->getPhase()->getSaison()->getNom();
+                if (!isset($equipesParSaison[$nomSaison])) {
+                    $equipesParSaison[$nomSaison] = [];
+                }
+                if (!in_array($equipe->getNom(), $equipesParSaison[$nomSaison])) {
+                    $equipesParSaison[$nomSaison][] = $equipe->getNom();
+                }
+            }
+
+        }
+
+        // Initialisation des deux formulaires
+        $profileForm = $this->createForm(UserProfileType::class, $user);
+        $passwordForm = $this->createForm(UserChangePasswordType::class, $user);
+
+        $profileForm->handleRequest($request);
+        $passwordForm->handleRequest($request);
+
+        // Traitement de la mise à jour du profil
+        if ($profileForm->isSubmitted() && $profileForm->isValid()) {
+            $entityManager->flush();
+            $this->addFlash('success', 'Informations mises à jour.');
+            return $this->redirectToRoute('front_profile_edit');
+        }
+
+        // Traitement du changement de mot de passe
+        if ($passwordForm->isSubmitted() && $passwordForm->isValid()) {
+            $plainPassword = $passwordForm->get('plainPassword')->getData();
+            $user->setPassword($passwordHasher->hashPassword($user, $plainPassword));
+
+            $entityManager->flush();
+            $this->addFlash('success', 'Mot de passe modifié avec succès.');
+            return $this->redirectToRoute('front_profile_edit');
+        }
+
+        return $this->render('front/profile_edit.html.twig', [
+            'profileForm' => $profileForm->createView(),
+            'passwordForm' => $passwordForm->createView(),
+            'user' => $user,
+            'equipesParSaison' => $equipesParSaison,
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected
+        ]);
     }
 
 

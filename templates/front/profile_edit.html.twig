@@ -1,0 +1,114 @@
+{# templates/front/profile_edit.html.twig #}
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Mon Profil - {{ user.email }}{% endblock %}
+
+{% block body %}
+    <div class="max-w-2xl mx-auto py-8 px-4">
+        <h1 class="text-3xl font-extrabold mb-8 text-center text-primary">Gestion du Profil</h1>
+
+        <div role="tablist" class="tabs tabs-lifted tabs-lg">
+
+            {# --- ONGLET 1 : INFORMATIONS --- #}
+            <input type="radio" name="profile_tabs" role="tab" class="tab" aria-label="Mes informations" checked="checked" />
+            <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-8">
+
+                {{ form_start(profileForm) }}
+                <div class="grid grid-cols-1 gap-4">
+                    {# Email (Non modifiable) #}
+                    <div class="form-control w-full">
+                        <label class="label"><span class="label-text font-semibold text-base-content/70">Adresse Email (contactez l'admin pour changer)</span></label>
+                        {{ form_widget(profileForm.email, {'attr': {'class': 'input input-bordered w-full bg-base-200 cursor-not-allowed opacity-70'}}) }}
+                    </div>
+
+                    {# Champs modifiables #}
+                    {% for field in [profileForm.prenom, profileForm.nom, profileForm.telephone] %}
+                        <div class="form-control w-full">
+                            <label class="label"><span class="label-text font-semibold">{{ form_label(field) }}</span></label>
+                            {{ form_widget(field, {'attr': {'class': 'input input-bordered w-full'}}) }}
+                            {{ form_errors(field, {'attr': {'class': 'text-error text-xs'}}) }}
+                        </div>
+                    {% endfor %}
+                </div>
+
+                {# --- SECTION ÉQUIPES (NON MODIFIABLE) --- #}
+                <div class="mt-8 p-4 bg-base-200/50 rounded-lg border border-base-300">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-base-content/60 mb-4 flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4"><path stroke-linecap="round" stroke-linejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.97 5.97 0 0 0-.941-3.197m0 0a5.995 5.995 0 0 0-4.058-2.932m0 0a3 3 0 1 0-4.681 0m0 0a5.996 5.996 0 0 0-4.059 2.932m0 0A5.97 5.97 0 0 0 6 18.719m6-2.72a5.991 5.991 0 0 1-5.122-2.834m10.244 0A5.991 5.991 0 0 1 12 15.999a5.99 5.99 0 0 1-5.123-2.835M12 8.25a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm5.122 5.122a3 3 0 0 0-5.122-5.122m-5.122 5.122a3 3 0 0 1 5.122-5.122" /></svg>
+                        Mes responsabilités (Capitaine)
+                    </h3>
+                    {% if equipesParSaison is empty %}
+                        <p class="text-sm italic opacity-50">Aucune équipe enregistrée comme capitaine.</p>
+                    {% else %}
+                        <div class="space-y-3">
+                            {% for saison, equipes in equipesParSaison %}
+                                <div class="flex flex-col gap-1">
+                                    <span class="text-xs font-bold text-primary">{{ saison }}</span>
+                                    <div class="flex flex-wrap gap-2">
+                                        {% for equipe in equipes %}
+                                            <span class="badge badge-outline badge-md">{{ equipe }}</span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                </div>
+
+                {{ form_row(profileForm._token) }}
+                <button type="submit" class="btn btn-primary w-full mt-8">Enregistrer les modifications</button>
+                {{ form_end(profileForm, {'render_rest': false}) }}
+            </div>
+
+            {# --- ONGLET 2 : SÉCURITÉ (Idem précédent avec icône oeil) --- #}
+            <input type="radio" name="profile_tabs" role="tab" class="tab" aria-label="Sécurité" />
+            <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-8">
+                {{ form_start(passwordForm) }}
+                <div class="grid grid-cols-1 gap-6">
+                    <div class="form-control w-full">
+                        <label class="label"><span class="label-text font-semibold">Mot de passe actuel</span></label>
+                        <div class="relative">
+                            {{ form_widget(passwordForm.currentPassword, {'attr': {'class': 'input input-bordered w-full pr-12 js-password-input'}}) }}
+                            <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center js-password-toggle text-base-content/40 hover:text-primary">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                            </button>
+                        </div>
+                        {{ form_errors(passwordForm.currentPassword) }}
+                    </div>
+
+                    <div class="divider text-xs opacity-50 uppercase">Nouveau mot de passe</div>
+
+                    {% for passField in [passwordForm.plainPassword.first, passwordForm.plainPassword.second] %}
+                        <div class="form-control w-full">
+                            <label class="label"><span class="label-text font-semibold">{{ form_label(passField) }}</span></label>
+                            <div class="relative">
+                                {{ form_widget(passField, {'attr': {'class': 'input input-bordered w-full pr-12 js-password-input'}}) }}
+                                <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center js-password-toggle text-base-content/40 hover:text-primary">
+                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                    {{ form_errors(passwordForm.plainPassword.first) }}
+                </div>
+                {{ form_row(passwordForm._token) }}
+                <button type="submit" class="btn btn-warning w-full mt-8">Changer mon mot de passe</button>
+                {{ form_end(passwordForm, {'render_rest': false}) }}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_scripts %}
+    <script>
+        // Script pour basculer la visibilité du mot de passe
+        document.querySelectorAll('.js-password-toggle').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const input = this.closest('.relative').querySelector('.js-password-input');
+                const isPassword = input.type === 'password';
+                input.type = isPassword ? 'text' : 'password';
+                this.classList.toggle('text-primary', isPassword);
+            });
+        });
+    </script>
+{% endblock %}

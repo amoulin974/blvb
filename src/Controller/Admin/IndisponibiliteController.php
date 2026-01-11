@@ -62,7 +62,7 @@ final class IndisponibiliteController extends AbstractController
             return $this->redirectToRoute('app_indisponibilite_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('indisponibilite/edit.html.twig', [
+        return $this->render('indisponibilite/profile_dit.html.twig', [
             'indisponibilite' => $indisponibilite,
             'form' => $form,
         ]);

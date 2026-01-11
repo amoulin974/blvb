@@ -68,7 +68,7 @@ final class PhaseController extends AbstractController
             return $this->redirectToRoute('admin_phase_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('admin/phase/edit.html.twig', [
+        return $this->render('admin/phase/profile_dit.html.twig', [
             'phase' => $phase,
             'form' => $form,
         ]);

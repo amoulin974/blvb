@@ -56,36 +56,65 @@
                         <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
 
                         <li><a href="{{ path('front_classement')}}">Classement</a></li>
-                        <!-- Dropdown Calendrier -->
-                        <div class="hidden lg:flex justify-center items-center">
-                            <ul class=" menu-horizontal">
 
-                                <li>
-                                    <details>
-                                        <summary>Calendrier</summary>
-                                        <ul class="menu bg-base-200 w-58 [&_li>*]:rounded-none p-0">
-                                            <li><a href="{{ path('front_calendrier')}}" class="block px-1 py-2 hover:bg-gray-100">Par équipe</a>
-                                                <a href="{{ path('front_calendrierlieu')}}" class="block px-1 py-2 hover:bg-gray-100">Par gymnase</a></li>
-                                        </ul>
-                                    </details>
-                                </li>
 
-                            </ul>
-                        </div>
+                        <li>
+                            <details>
+                                <summary>Calendrier</summary>
+                                <ul class="bg-base-200 rounded-t-none p-2 z-[100] w-52 shadow-lg">
+                                    <li><a href="{{ path('front_calendrier')}}">Par équipe</a></li>
+                                    <li><a href="{{ path('front_calendrierlieu')}}">Par gymnase</a></li>
+                                </ul>
+                            </details>
+                        </li>
 
                         <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
                         {% if app.user %}
                             {% if is_granted('ROLE_ADMIN') %}
                                 <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
-                        {% endif %}
+                            {% endif %}
+                            <div class="dropdown dropdown-end">
+                                {# Le déclencheur doit avoir tabindex="0" pour être cliquable #}
+                                <div tabindex="0" role="button" class="btn btn-ghost rounded-full flex items-center px-2 gap-1">
+
+                                        {# Icône User Pleine et centrée #}
+                                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="black" class="size-6">
+                                            <path fill-rule="evenodd" d="M7.5 6a4.5 4.5 0 1 1 9 0 4.5 4.5 0 0 1-9 0ZM3.751 20.105a8.25 8.25 0 0 1 16.498 0 .75.75 0 0 1-.437.695A18.683 18.683 0 0 1 12 22.5c-2.786 0-5.433-.608-7.812-1.7a.75.75 0 0 1-.437-.695Z" clip-rule="evenodd" />
+                                        </svg>
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="size-3 opacity-60">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                                        </svg>
+
+                                </div>
+
+                                {# Le menu s'affiche grâce au focus sur le déclencheur ci-dessus #}
+                                <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 rounded-box z-[100] mt-3 w-52 p-2 shadow-2xl border border-base-300">
+                                    <li class="menu-title px-4 py-2 opacity-60">
+                                        {{ app.user.prenom|capitalize }} {{ app.user.nom|upper }}
+                                    </li>
+
+                                    <div class="divider my-0"></div>
+
+                                    <li>
+                                        <a href="{{ path('front_profile_edit') }}" class="py-3">
+                                            Mon Profil
+                                        </a>
+                                    </li>
+
+                                    <li>
+                                        {# Déconnexion via formulaire POST pour Turbo #}
+                                        <form action="{{ path('app_logout') }}" method="POST" class="p-0 w-full">
+                                            <button type="submit" class="flex items-center w-full px-3 py-2 text-error hover:bg-error/10 transition-colors rounded-lg">
+                                                Se déconnecter
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </div>
+                            {% else %}
                             <li>
-                                <form method="post" action="{{ path('app_logout') }}" class="inline-flex items-center">
-                                    <button type="submit" class="">Se déconnecter</button>
-                                </form>
+                                <a href="{{path('app_login')}}">Se connecter</a>
                             </li>
-                        {% else %}
-{#                        <li><a href="{{path('app_register')}}">Créer un compte</a></li>#}
-                        <li><a href="{{path('app_login')}}">Se connecter</a></li>
                         {% endif %}
                     {% endblock %}
                 </ul>

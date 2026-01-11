@@ -72,7 +72,7 @@ final class LieuController extends AbstractController
             return $this->redirectToRoute('admin_lieu_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('admin/lieu/edit.html.twig', [
+        return $this->render('admin/lieu/profile_dit.html.twig', [
             'lieu' => $lieu,
             'form' => $form,
         ]);
