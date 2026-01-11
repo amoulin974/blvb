@@ -53,7 +53,7 @@ class PhaseService
 
                 // 1. Calcul du niveau théorique (Promotion / Relégation)
                 $nouveauNiveau = $niveauActuel;
-                if ($pos <= $nbMontee && $niveauActuel > 1) {
+                if ($pos <= $nbMontee && $niveauActuel > 0) {
                     $nouveauNiveau--;
                 } elseif ($pos > ($total - $nbDescente)) {
                     $nouveauNiveau++;
