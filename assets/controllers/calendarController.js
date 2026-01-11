@@ -113,6 +113,32 @@ export default class extends Controller {
             //Click sur une date vide ou sélection de dates entraine la création d'une nouvelle journée
             // dateClick: this.onDateClick.bind(this),
             select: this.onDateClick.bind(this),
+
+            // --- AJOUT DE LA LOGIQUE DE SURVOL ---
+            eventMouseEnter: (info) => {
+                const tooltip = document.getElementById('calendar-tooltip');
+                const content = document.getElementById('tooltip-content');
+
+                // On remplit le contenu (Titre complet + Date + Lieu si dispo)
+                content.innerHTML = `
+                <div class="font-bold border-b border-slate-600 mb-1 pb-1">${info.event.title}</div>
+                <div class="text-xs opacity-90">
+                    ${moment(info.event.start).format('LLLL')}
+                </div>
+            `;
+
+                // Positionnement de la pop-up
+                const rect = info.el.getBoundingClientRect();
+                tooltip.style.left = `${rect.left + (rect.width / 2) - (tooltip.offsetWidth / 2)}px`;
+                tooltip.style.top = `${rect.top - tooltip.offsetHeight - 10}px`;
+
+                tooltip.classList.remove('hidden');
+            },
+
+            eventMouseLeave: () => {
+                const tooltip = document.getElementById('calendar-tooltip');
+                tooltip.classList.add('hidden');
+            },
         });
 
         if (editPartieId) {

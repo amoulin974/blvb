@@ -61,6 +61,13 @@
         </div>
         </div>
 {#        <script src="{{ asset('app.js') }}"></script>#}
+        <div id="calendar-tooltip"
+             class="fixed hidden z-[9999] bg-slate-800 text-white p-3 rounded-lg shadow-xl text-sm pointer-events-none max-w-xs border border-slate-600">
+            <div id="tooltip-content"></div>
+            {# Petite flèche #}
+            <div class="absolute w-2 h-2 bg-slate-800 rotate-45 -bottom-1 left-1/2 -translate-x-1/2"></div>
+        </div>
     {% endif %}
 
 {% endblock %}
+
