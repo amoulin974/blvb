@@ -90,21 +90,22 @@ class JourneeService
 
                 $this->em->flush();
 
+                // Récupération des indisponibilités de la saison
+                $indisponibilites = $poule->getPhase()->getSaison()->getIndisponibilites();
+
                 // Génération des journées
                 $currentDate = clone $debutPhase;
 
                 for ($i = 1; $i <= $nbJournee; $i++) {
 
-                    // Skip Noël et Jour de l'an
-                    $annee = (int)$currentDate->format('Y');
-                    $noel = new \DateTimeImmutable("$annee-12-25");
-                    $jourAn = new \DateTimeImmutable(($annee+1)."-01-01");
-
-                    while (($currentDate <= $finPhase) &&
-                        ($currentDate <= $noel && $currentDate >= $noel->modify('-6 days') ||
-                            $currentDate <= $jourAn && $currentDate >= $jourAn->modify('-6 days'))
-                    ) {
+                    // BOUCLE DE SAUT : On avance d'une semaine tant qu'on est sur une période indisponible
+                    while ($currentDate <= $finPhase && $this->isSemaineIndisponible($currentDate, $indisponibilites)) {
                         $currentDate = $currentDate->modify('+1 week');
+                    }
+
+                    // Sécurité : si on a épuisé le calendrier de la phase en sautant des semaines
+                    if ($currentDate > $finPhase) {
+                        return "La phase est trop courte pour placer les $nbJournee journées avec les indisponibilités saisies.";
                     }
 
                     $journee = new Journee();
@@ -195,4 +196,26 @@ class JourneeService
             default => "Tour " . $index,
         };
     }
+    /**
+     * Vérifie si une semaine donnée chevauche une période d'indisponibilité.
+     */
+    private function isSemaineIndisponible(\DateTimeImmutable $date, iterable $indisponibilites): bool
+    {
+        // On définit la plage de la semaine entière (du lundi 00:00 au dimanche 23:59)
+        $debutSemaine = $date->modify('monday this week')->setTime(0, 0, 0);
+        $finSemaine = $date->modify('sunday this week')->setTime(23, 59, 59);
+
+        foreach ($indisponibilites as $indispo) {
+            //
+            $debutIndispo = $indispo->getDateDebut()->setTime(0, 0, 0);
+            $finIndispo = $indispo->getDateFin()->setTime(23, 59, 59);
+
+            // Formule de chevauchement de deux périodes : (DébutA <= FinB) ET (FinA >= DébutB)
+            if ($debutSemaine <= $finIndispo && $finSemaine >= $debutIndispo) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 }

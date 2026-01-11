@@ -133,7 +133,7 @@ class ImportOldDataCommand extends Command
         $indisp4 = new Indisponibilite();
         $indisp4->setNom("Vacance de Paques");
         $indisp4->setSaison($saison);
-        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_ca1']);
+        $dateDebut = new \DateTimeImmutable($oldIndisponibilites['date_pa1']);
         $indisp4->setDateDebut($dateDebut);
         $date2semaine = new \DateTimeImmutable($oldIndisponibilites['date_pa2']);
         $dateFin = $date2semaine->modify('+6 day');
@@ -169,7 +169,7 @@ class ImportOldDataCommand extends Command
         $phase2->setClose(0);
 
         $phase3 = new Phase();
-        $phase3->setNom("Phase 2");
+        $phase3->setNom("Phase 3");
         $phase3->setType(PhaseType::FINALE);
         $phase3->setOrdre(2);
         $dateDebut = new \DateTimeImmutable('2026-06-01');

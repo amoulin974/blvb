@@ -7,6 +7,8 @@ use App\Entity\Phase;
 use App\Form\PhaseFormType;
 use App\Repository\PhaseRepository;
 use App\Service\PhaseService;
+use App\Service\JourneeService;
+use App\Service\PartieService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -88,7 +90,9 @@ final class PhaseController extends AbstractController
     public function cloturer(
         Phase $phase,
         EntityManagerInterface $entityManager,
-        PhaseService $phaseService
+        PhaseService $phaseService,
+        JourneeService $journeeService,
+        PartieService $partieService
     ): Response {
         $saison = $phase->getSaison();
         $phases = $saison->getPhases();
@@ -111,6 +115,10 @@ final class PhaseController extends AbstractController
             return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
         }else{
             $phaseService->cloturerEtBasculer($phase);
+            foreach($phaseSuivante->getPoules() as $poule){
+                $journeeService->creerJournees($poule);
+                $partieService->createCalendar($poule);
+            }
 
             $this->addFlash('success', 'Équipes basculées avec succès.');
         }

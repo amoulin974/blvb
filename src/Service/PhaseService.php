@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Phase;
 use App\Entity\Poule;
+use App\Repository\PhaseRepository;
 use App\Service\ClassementService;
 use Doctrine\ORM\EntityManagerInterface;
 

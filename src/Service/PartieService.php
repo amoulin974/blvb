@@ -38,6 +38,7 @@ class PartieService
     ) {}
 
 
+    //Crée les matchs pour une poule
     public function createCalendar(Poule $poule): ?string
     {
         // 1. Nettoyage des anciens matchs
