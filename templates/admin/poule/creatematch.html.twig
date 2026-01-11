@@ -7,7 +7,7 @@
     {% else %}
         <h1>Placer les matchs de la journée {{ journee.numero }} de la poule {{ poule.nom }}</h1>
         <div class="mb-4">
-            <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id}) }}">Voir la saison</a>
+            <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id, "openPoule": poule.id}) }}">Voir la saison</a>
             <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a>
         </div>
 
