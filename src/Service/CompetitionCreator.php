@@ -41,6 +41,7 @@ class CompetitionCreator
                 $phase->setType(\App\Enum\PhaseType::CHAMPIONNAT);
             }
             $phase->setOrdre($phaseData['ordre'] ?? 0);
+            $phase->setClose($phaseData['close'] ?? 0);
             $phase->setDateDebut(
                 $this->parseYamlDate($phaseData['date_debut'], $saison->getDateDebut())
             );

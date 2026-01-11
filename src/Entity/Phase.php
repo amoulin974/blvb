@@ -41,6 +41,9 @@ class Phase
     #[ORM\Column]
     private ?int $ordre = null;
 
+    #[ORM\Column]
+    private ?int $close = null;
+
 
     public function __construct()
     {
@@ -158,6 +161,18 @@ class Phase
     public function setOrdre(int $ordre): static
     {
         $this->ordre = $ordre;
+
+        return $this;
+    }
+
+    public function getClose(): ?int
+    {
+        return $this->close;
+    }
+
+    public function setClose(int $close): static
+    {
+        $this->close = $close;
 
         return $this;
     }

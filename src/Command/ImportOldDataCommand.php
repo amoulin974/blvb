@@ -132,6 +132,7 @@ class ImportOldDataCommand extends Command
         $dateFin=new \DateTimeImmutable('2026-01-11');
         $phase1->setDatedebut($dateDebut);
         $phase1->setDatefin($dateFin);
+        $phase1->setClose(0);
 
         $phase2=new Phase();
         $phase2->setNom("Phase 2");
@@ -141,6 +142,7 @@ class ImportOldDataCommand extends Command
         $dateFin=new \DateTimeImmutable('2026-05-31');
         $phase2->setDatedebut($dateDebut);
         $phase2->setDatefin($dateFin);
+        $phase2->setClose(0);
 
         $phase3=new Phase();
         $phase3->setNom("Phase 2");
@@ -150,7 +152,7 @@ class ImportOldDataCommand extends Command
         $dateFin=new \DateTimeImmutable('2026-06-30');
         $phase3->setDatedebut($dateDebut);
         $phase3->setDatefin($dateFin);
-
+        $phase3->setClose(0);
 
         $phase1->setSaison($saison);
         $phase2->setSaison($saison);

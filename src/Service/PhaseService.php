@@ -87,6 +87,9 @@ class PhaseService
         foreach ($phaseSuivante->getPoules() as $pNext) {
             $this->classementService->mettreAJourClassementPoule($pNext);
         }
+
+        //5 Cloture de la phase actuelle
+        $phaseActuelle->setClose(1);
         $this->em->flush();
     }
 }

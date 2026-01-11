@@ -52,7 +52,7 @@
                                             <td>
 
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    <span class="score_partie-{{partie.id}}">{{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}</span>
+                                                    <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
                                                 {% else %}
                                                     <span class="score_partie-{{partie.id}}">À venir</span>
                                                 {% endif %}
@@ -66,7 +66,11 @@
                                                                 data-partie-id="{{ partie.id }}"
                                                                 data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
                                                                 data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                                Saisir le résultat
+                                                                {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
+                                                                    Modifier le résultat
+                                                                {% else %}
+                                                                    Saisir le résultat
+                                                                {% endif  %}
                                                             </a>
                                                             {% endif %}
                                         </tr>
@@ -86,7 +90,7 @@
                                                 </a></p>
                                         <p>Résultat :
                                         {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    <span class="score_partie-{{partie.id}}">{{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}</span>
+                                            <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
                                                 {% else %}
                                                     <span class="score_partie-{{partie.id}}">À venir</span>
 
@@ -101,7 +105,11 @@
                                                                 data-partie-id="{{ partie.id }}"
                                                                 data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
                                                                 data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                                Saisir le résultat
+                                                                {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
+                                                                 Modifier le résultat
+                                                                 {% else %}
+                                                                 Saisir le résultat
+                                                                     {% endif  %}
                                                             </a>
                                                     {% endif %}
                                         </p>

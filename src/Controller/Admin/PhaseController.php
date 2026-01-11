@@ -111,6 +111,7 @@ final class PhaseController extends AbstractController
             return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
         }else{
             $phaseService->cloturerEtBasculer($phase);
+
             $this->addFlash('success', 'Équipes basculées avec succès.');
         }
 
