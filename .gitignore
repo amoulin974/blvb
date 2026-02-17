@@ -8,6 +8,7 @@
 /var/
 /vendor/
 /sauvegarde_donnes
+/tmp/
 ###< symfony/framework-bundle ###
 
 ###> phpunit/phpunit ###

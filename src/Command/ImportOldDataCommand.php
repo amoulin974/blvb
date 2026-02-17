@@ -224,68 +224,79 @@ class ImportOldDataCommand extends Command
 
 
         //Création des lieux et des équipes
-
         $oldEquipes = $oldConn->fetchAllAssociative('SELECT * FROM `tvbaequipe` WHERE saison like "2025/2026%"');
+
         $tabNewLieu = [];
-        $tabNewEquipe = [];
+        $tabNewEquipeByName = [];
+        $tabNewEquipeByCode = [];
+
         foreach ($oldEquipes as $oldEquipe) {
-            $nomOriginalLieu = $oldEquipe['lieu'];
-            //Si le lieu n'existe pas déjà
-            if (!isset($tabNewLieu[$nomOriginalLieu])) {
 
-                $newLieu = new Lieu();
+            if (!str_ends_with($oldEquipe['saison'], '2')) {
 
-                $posVirgule = strpos($nomOriginalLieu, ",");
-                $nomCourt = ($posVirgule !== false) ? substr($nomOriginalLieu, 0, $posVirgule) : $nomOriginalLieu;
-                $newLieu->setNom($nomCourt);
-                $newLieu->setAdresse($nomOriginalLieu);
+                $nomOriginalLieu = $oldEquipe['lieu'];
+                //Si le lieu n'existe pas déjà
+                if (!isset($tabNewLieu[$nomOriginalLieu])) {
+
+                    $newLieu = new Lieu();
+
+                    $posVirgule = strpos($nomOriginalLieu, ",");
+                    $nomCourt = ($posVirgule !== false) ? substr($nomOriginalLieu, 0, $posVirgule) : $nomOriginalLieu;
+                    $newLieu->setNom($nomCourt);
+                    $newLieu->setAdresse($nomOriginalLieu);
 
 
-                $creneau = new Creneau();
-                $creneau->setJourSemaine($this->mapJour($oldEquipe['jour']));
-                $heureStr = str_replace('h', ':', strtolower($oldEquipe['heure']));
-                $creneau->setHeureDebut(new \DateTimeImmutable($heureStr ?: '20:00'));
+                    $creneau = new Creneau();
+                    $creneau->setJourSemaine($this->mapJour($oldEquipe['jour']));
+                    $heureStr = str_replace('h', ':', strtolower($oldEquipe['heure']));
+                    $creneau->setHeureDebut(new \DateTimeImmutable($heureStr ?: '20:00'));
 
-                $creneau->setCapacite(2);
-                $creneau->setPrioritaire(1);
-                $heureFin = $creneau->getHeureDebut()->modify('+2 hours');
-                $creneau->setHeureFin($heureFin);
-                $newLieu->addCreneau($creneau);
-                $tabNewLieu[$nomOriginalLieu] = $newLieu;
-                $em->persist($newLieu);
-                $em->persist($creneau);
+                    $creneau->setCapacite(2);
+                    $creneau->setPrioritaire(1);
+                    $heureFin = $creneau->getHeureDebut()->modify('+2 hours');
+                    $creneau->setHeureFin($heureFin);
+                    $newLieu->addCreneau($creneau);
+                    $tabNewLieu[$nomOriginalLieu] = $newLieu;
+                    $em->persist($newLieu);
+                    $em->persist($creneau);
+                }
+
+                $equipe = new Equipe();
+                $equipe->setNom($oldEquipe['nom']);
+                $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
             }
-
-            $equipe = new Equipe();
-            $equipe->setNom($oldEquipe['nom']);
-            $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
-
+            else{
+                //Si la oldequipe est de phase2 alors on récupère l'équipe que l'on a créé dans le tableau temporaire lors de l'import de la phase 1
+                $equipe = $tabNewEquipeByName[$oldEquipe['nom']] ?? null;
+            }
             //Récupération des capitaines
-            $oldCapitaine = $oldConn->fetchAssociative(
-                'SELECT * FROM `tvbacontact` WHERE codeequipe = :codeEquipe',
-                ['codeEquipe' => $oldEquipe['code']]
-            );
 
-            if ($oldCapitaine && !empty($oldCapitaine['email'])) {
-                //Vérifier qu'un user n'existe pas déjà avec l'adresse du capitaine
-                $userActuel = $em->getRepository(User::class)->findOneBy(['email' => $oldCapitaine['email']]);
-                if ($userActuel) {
-                    $equipe->setCapitaine($userActuel);
-                } else {
-                    $user = new User();
-                    $user->setPrenom($oldCapitaine['nom']);
-                    $user->setEmail($oldCapitaine['email']);
-                    $user->setRoles(['ROLE_USER']);
-                    // Génération d'un mot de passe aléatoire haché
-                    $fakePassword = bin2hex(random_bytes(10));
-                    $hashedPassword = $this->passwordHasher->hashPassword($user, $fakePassword);
-                    $user->setPassword($hashedPassword);
-                    $user->setIsVerified(1);
-                    $equipe->setCapitaine($user);
-                    $em->persist($user);
+            if (!str_ends_with($oldEquipe['saison'], '2')) {
+                $oldCapitaine = $oldConn->fetchAssociative(
+                    'SELECT * FROM `tvbacontact` WHERE codeequipe = :codeEquipe',
+                    ['codeEquipe' => $oldEquipe['code']]
+                );
+
+                if ($oldCapitaine && !empty($oldCapitaine['email'])) {
+                    //Vérifier qu'un user n'existe pas déjà avec l'adresse du capitaine
+                    $userActuel = $em->getRepository(User::class)->findOneBy(['email' => $oldCapitaine['email']]);
+                    if ($userActuel) {
+                        $equipe->setCapitaine($userActuel);
+                    } else {
+                        $user = new User();
+                        $user->setPrenom($oldCapitaine['nom']);
+                        $user->setEmail($oldCapitaine['email']);
+                        $user->setRoles(['ROLE_USER']);
+                        // Génération d'un mot de passe aléatoire haché
+                        $fakePassword = bin2hex(random_bytes(10));
+                        $hashedPassword = $this->passwordHasher->hashPassword($user, $fakePassword);
+                        $user->setPassword($hashedPassword);
+                        $user->setIsVerified(1);
+                        $equipe->setCapitaine($user);
+                        $em->persist($user);
+                    }
                 }
             }
-
 
             //Affectation de l'équipe à une poule
             $poule = $this->findPouleByOldSaison($oldEquipe['saison'], $tabPhase);
@@ -293,7 +304,8 @@ class ImportOldDataCommand extends Command
                 $poule->addEquipe($equipe);
             }
 
-            $tabNewEquipe[$oldEquipe['code']] = $equipe;
+            $tabNewEquipeByName[$oldEquipe['nom']] = $equipe;
+            $tabNewEquipeByCode[$oldEquipe['code']] = $equipe;
             $em->persist($equipe);
 
 
@@ -303,7 +315,8 @@ class ImportOldDataCommand extends Command
         }
 
         //Création des journée pour les phases championnat
-        $tabPouleAncienne = ['2025/2026-GroupeA-Phase1', '2025/2026-GroupeB-Phase1', '2025/2026-GroupeC-Phase1', '2025/2026-GroupeD-Phase1'];
+        $tabPouleAncienne = ['2025/2026-GroupeA-Phase1', '2025/2026-GroupeB-Phase1', '2025/2026-GroupeC-Phase1', '2025/2026-GroupeD-Phase1',
+            '2025/2026-GroupeA-Phase2', '2025/2026-GroupeB-Phase2', '2025/2026-GroupeC-Phase2', '2025/2026-GroupeD-Phase2'];
         $journeeMapping = []; // Pour lier les matchs plus tard
         foreach ($tabPouleAncienne as $nomPouleAncienne) {
             $poule = $this->findPouleByOldSaison($nomPouleAncienne, $tabPhase);
@@ -356,8 +369,8 @@ class ImportOldDataCommand extends Command
 
             // 1. Liaison avec l'équipe Reçoit et Déplace
             // On utilise le tableau de mapping créé lors de l'import des équipes
-            $equipeRecoit = $tabNewEquipe[$oldM['equipe1']] ?? null;
-            $equipeDeplace = $tabNewEquipe[$oldM['equipe2']] ?? null;
+            $equipeRecoit = $tabNewEquipeByCode[$oldM['equipe1']] ?? null;
+            $equipeDeplace = $tabNewEquipeByCode[$oldM['equipe2']] ?? null;
 
             if (!$equipeRecoit || !$equipeDeplace) {
                 // Optionnel : logger l'erreur si une équipe est introuvable
@@ -456,6 +469,7 @@ class ImportOldDataCommand extends Command
         return $map[strtolower($jour)] ?? 1;
     }
 
+    /** Décompose le champ saison de la vieille base de données qui contient Sasion - Poule - Phase */
     private function findPouleByOldSaison(string $oldSaison, array $tabPhase): ?Poule
     {
         $parts = explode('-', $oldSaison);
