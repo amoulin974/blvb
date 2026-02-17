@@ -72,7 +72,7 @@ final class PartieController extends AbstractController
             return $this->redirectToRoute('admin_partie_index', [], Response::HTTP_SEE_OTHER);
         }
 
-        return $this->render('admin/partie/profile_dit.html.twig', [
+        return $this->render('admin/partie/edit.html.twig', [
             'partie' => $partie,
             'form' => $form,
         ]);

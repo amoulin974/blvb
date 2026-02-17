@@ -16,7 +16,7 @@ class EquipeType extends AbstractType
     {
         $builder
             ->add('nom')
-            ->add('id_lieu', EntityType::class, [
+            ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',
             ])

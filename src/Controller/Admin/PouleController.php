@@ -80,7 +80,7 @@ final class PouleController extends AbstractController
 
         }
 
-        return $this->render('admin/poule/profile_dit.html.twig', [
+        return $this->render('admin/poule/edit.html.twig', [
             'poule' => $poule,
             'form' => $form,
         ]);

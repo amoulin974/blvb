@@ -103,6 +103,71 @@
     array (
     ),
   ),
+  'moment' => 
+  array (
+    'version' => '2.30.1',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'moment/locale/fr' => 
+  array (
+    'version' => '2.30.1',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'tocbot' => 
+  array (
+    'version' => '4.36.4',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'preact' => 
+  array (
+    'version' => '10.12.1',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'preact/compat' => 
+  array (
+    'version' => '10.12.1',
+    'dependencies' => 
+    array (
+      0 => 'preact',
+      1 => 'preact',
+      2 => 'preact/hooks',
+      3 => 'preact/hooks',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'preact/hooks' => 
+  array (
+    'version' => '10.12.1',
+    'dependencies' => 
+    array (
+      0 => 'preact',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
   'fullcalendar' => 
   array (
     'version' => '6.1.20',
@@ -200,30 +265,6 @@
     array (
     ),
   ),
-  'preact' => 
-  array (
-    'version' => '10.12.1',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'preact/compat' => 
-  array (
-    'version' => '10.12.1',
-    'dependencies' => 
-    array (
-      0 => 'preact',
-      1 => 'preact',
-      2 => 'preact/hooks',
-      3 => 'preact/hooks',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
   '@fullcalendar/core/internal.js' => 
   array (
     'version' => '6.1.20',
@@ -258,17 +299,6 @@
     array (
       0 => '@fullcalendar/core/internal.js',
       1 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'preact/hooks' => 
-  array (
-    'version' => '10.12.1',
-    'dependencies' => 
-    array (
-      0 => 'preact',
     ),
     'extraFiles' => 
     array (
@@ -321,36 +351,6 @@
       1 => '@fullcalendar/daygrid/internal.js',
       2 => '@fullcalendar/core/internal.js',
       3 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'moment' => 
-  array (
-    'version' => '2.30.1',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'moment/locale/fr' => 
-  array (
-    'version' => '2.30.1',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'tocbot' => 
-  array (
-    'version' => '4.36.4',
-    'dependencies' => 
-    array (
     ),
     'extraFiles' => 
     array (

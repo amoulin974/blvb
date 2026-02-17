@@ -1,8 +1,4 @@
 import { Controller } from '@hotwired/stimulus';
-import { Calendar } from '@fullcalendar/core';
-import dayGridPlugin from '@fullcalendar/daygrid';
-import interactionPlugin from '@fullcalendar/interaction';
-import multiMonthPlugin from '@fullcalendar/multimonth';
 import moment from "moment";
 import "moment/locale/fr";
 
@@ -24,6 +20,25 @@ export default class extends Controller {
     }
 
     connect() {
+
+        console.log("FullCalendar global:", window.FullCalendar); // Pour vérifier si l'objet existe
+
+        if (!window.FullCalendar) {
+            console.error("FullCalendar n'est pas chargé !");
+            return;
+        }
+        const Calendar = window.FullCalendar.Calendar;
+        // ESSAIE AVEC DES MINUSCULES ICI :
+        const dayGridPlugin = window.FullCalendar.DayGrid.default;
+        const interactionPlugin = window.FullCalendar.Interaction.default;
+        const multiMonthPlugin = window.FullCalendar.MultiMonth.default;
+
+        // On vérifie que tout est bien là
+        if (!dayGridPlugin || !interactionPlugin || !multiMonthPlugin) {
+            console.error("Plugins non trouvés dans window.FullCalendar");
+            return;
+        }
+
         const el = this.element;
         if (!el) return;
         const dateDebut = moment(this.datedebutValue, "YYYY-MM-DD");
@@ -48,7 +63,7 @@ export default class extends Controller {
 
 
         this.calendar = new Calendar(el, {
-            plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin],
+            // plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin],
             initialView: this.initialviewValue,
             eventColor: '#f59e0b',
             initialDate: initialDate.format("YYYY-MM-DD"),

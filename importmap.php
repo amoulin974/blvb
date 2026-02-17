@@ -53,57 +53,6 @@ return [
         'version' => '2.5.1',
         'type' => 'css',
     ],
-    'fullcalendar' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/core/index.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/interaction/index.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/daygrid/index.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/timegrid/index.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/list/index.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/multimonth/index.js' => [
-        'version' => '6.1.20',
-    ],
-    'preact' => [
-        'version' => '10.12.1',
-    ],
-    'preact/compat' => [
-        'version' => '10.12.1',
-    ],
-    '@fullcalendar/core/internal.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/core/preact.js' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/daygrid/internal.js' => [
-        'version' => '6.1.20',
-    ],
-    'preact/hooks' => [
-        'version' => '10.12.1',
-    ],
-    '@fullcalendar/core' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/daygrid' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/interaction' => [
-        'version' => '6.1.20',
-    ],
-    '@fullcalendar/multimonth' => [
-        'version' => '6.1.20',
-    ],
     'moment' => [
         'version' => '2.30.1',
     ],
@@ -113,4 +62,5 @@ return [
     'tocbot' => [
         'version' => '4.36.4',
     ],
+
 ];
