@@ -232,7 +232,7 @@ class ImportOldDataCommand extends Command
 
         foreach ($oldEquipes as $oldEquipe) {
 
-            if (!str_ends_with($oldEquipe['saison'], '2')) {
+
 
                 $nomOriginalLieu = $oldEquipe['lieu'];
                 //Si le lieu n'existe pas déjà
@@ -260,15 +260,19 @@ class ImportOldDataCommand extends Command
                     $em->persist($newLieu);
                     $em->persist($creneau);
                 }
+                if (!str_ends_with($oldEquipe['saison'], '2')) {
+                    $equipe = new Equipe();
+                    $equipe->setNom($oldEquipe['nom']);
+                    $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
+                }
+                else{
+                    //Si la oldequipe est de phase2 alors on récupère l'équipe que l'on a créé dans le tableau temporaire lors de l'import de la phase 1
+                    $equipe = $tabNewEquipeByName[$oldEquipe['nom']] ?? null;
+                }
 
-                $equipe = new Equipe();
-                $equipe->setNom($oldEquipe['nom']);
-                $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
-            }
-            else{
-                //Si la oldequipe est de phase2 alors on récupère l'équipe que l'on a créé dans le tableau temporaire lors de l'import de la phase 1
-                $equipe = $tabNewEquipeByName[$oldEquipe['nom']] ?? null;
-            }
+
+
+
             //Récupération des capitaines
 
             if (!str_ends_with($oldEquipe['saison'], '2')) {
@@ -384,6 +388,7 @@ class ImportOldDataCommand extends Command
             // 2. Liaison avec le Lieu
             // L'ancienne base utilise 'lieupartie' pour le gymnase du match
             if (isset($tabNewLieu[$oldM['lieupartie']])) {
+
                 $partie->setLieu($tabNewLieu[$oldM['lieupartie']]);
             } else {
                 // Par défaut, on peut mettre le lieu de l'équipe qui reçoit

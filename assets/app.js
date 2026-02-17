@@ -1,20 +1,9 @@
-import './stimulus_bootstrap.js';
-import './bootstrap.js';
-/*
- * Welcome to your app's main JavaScript file!
- *
- * This file will be included onto the page via the importmap() Twig function,
- * which should already be in your base.html.twig.
- */
-import './styles/app.css';
-import { Application } from '@hotwired/stimulus';
-// import CreneauCollectionController from './controllers/creneau-collection-controller.js';
+import { app } from './stimulus_bootstrap.js';
 import CalendarController from './controllers/calendarController.js';
 import TocbotController from './controllers/tocbotController.js';
 
-console.log('App.js chargé - welcome to AssetMapper! 🎉');
+console.log('App.js chargé - version AssetMapper propre ! 🚀');
 
-const application = Application.start();
-application.register('calendar', CalendarController);
-application.register('tocbot', TocbotController);
-// application.register('creneau-collection', CreneauCollectionController);
+// On enregistre tes contrôleurs sur l'instance existante
+app.register('calendar', CalendarController);
+app.register('tocbot', TocbotController);

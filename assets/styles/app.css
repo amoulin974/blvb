@@ -1,13 +1,11 @@
 
 @import "tailwindcss";
-@import "tom-select/dist/css/tom-select.css";
-@import "tocbot/dist/tocbot.css";
-@plugin "daisyui";
+@import "../vendor/tom-select/dist/css/tom-select.css";
+@import "../vendor/tocbot/dist/tocbot.css";
+@import "../vendor/daisyui/daisyui.min.css";
 @source not "../../public";
-@plugin "daisyui/theme" {
-    name: "lofi";
-    default: false;
-    prefersdark: false;
+[data-theme="lofi"] {
+
     color-scheme: "light";
     --color-base-100: oklch(98% 0.003 247.858);
     --color-base-200: oklch(96% 0.007 247.896);
@@ -42,21 +40,21 @@
 
 
 body{
-    @apply bg-base-200
+    background-color: var(--color-base-200);
 }
 h1{
-    @apply text-3xl font-bold text-primary
+    @apply text-3xl font-bold; color: var(--color-primary);
 }
 
 h2{
-    @apply text-2xl font-bold text-secondary
+    @apply text-2xl font-bold; color: var(--color-secondary)
 }
 h3{
-    @apply text-xl font-bold text-secondary
+    @apply text-xl font-bold; color: var(--color-secondary)
 }
 
 h4{
-    @apply text-lg text-secondary font-bold
+    @apply text-lg font-bold; color: var(--color-secondary)
 }
 
 .ts-dropdown {
