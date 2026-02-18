@@ -65,7 +65,15 @@
                             </details>
                         </li>
 
-                        <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
+                        <li>
+                            <details>
+                                <summary>Le championnat</summary>
+                                <ul class="bg-base-200 rounded-t-none p-2 z-[100] w-52 shadow-lg">
+                                    <li><a href="{{ path('front_qui_sommes_nous')}}">Qui sommes-nous ?</a></li>
+                                    <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
+                                </ul>
+                            </details>
+                        </li>
                         {% if app.user %}
                             {% if is_granted('ROLE_ADMIN') %}
                                 <li><a href="{{path('app_admin_dashboard')}}">Admin dashboard</a></li>
@@ -147,7 +155,18 @@
                     </ul>
                 </li>
                 <li><a href="{{ path('front_classement')}}">Classement</a></li>
-                <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
+                <li tabindex="0">
+                    <a class="justify-between">Le championnat
+                        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                  d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </a>
+                    <ul class="p-2 bg-base-100">
+                        <li><a href="{{ path('front_qui_sommes_nous')}}">Qui sommes-nous ?</a></li>
+                        <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
+                    </ul>
+                </li>
 
                 {% if app.user %}
                     {% if is_granted('ROLE_ADMIN') %}

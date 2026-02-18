@@ -26,90 +26,12 @@
     </div>
   {% endblock %}
 {% block body %}
+<div class="container mx-auto max-w-5xl px-4">
+    {% include 'front/fragments/_calendrier_full.html.twig' %}
+</div>
 
-        <h2 class="text-center mb-4">Le championnat comprend</h2>
-        <div class="flex flex-col lg:flex-row justify-center items-center gap-6 w-full">
-            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md text-center">
-                <h3 class="font-semibold mb-2">Des équipes de clubs</h3>
-                <p>Anglet Olympique</p>
-                <p>Bayonne Volley-Ball</p>
-                <p>Volley-Ball Luzien Cibourien</p>
-                <p>Ondres Volley-Ball</p>
-                <p>JSA Angresse</p>
-            </div>
+{% endblock %}
 
-            {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
-
-            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md text-center">
-                <h3 class="font-semibold mb-2">Des associations</h3>
-                <p>ASPTT Bayonne</p>
-                <p>Leo Lagrange Bayonne</p>
-                <p>Tosse</p>
-                <p>Capbreton</p>
-                <p>D’entreprises (autrefois Quiksilver, Turbomeca...)</p>
-            </div>
-        </div>
-
-
-
-
-<section class="w-full flex flex-col justify-center items-center">
-
-  <h2 class="text-center mb-4 mt-10">Ces équipes sont réparties en 4 groupes de niveau</h2>
-
-{% for groupe in groupes %}
-    <div class="flex flex-col lg:flex-row justify-center items-center lg:items-stretch lg:gap-6 w-full mb-4">
-
-        {#  Le textes#}
-       {% if loop.index is odd %}
-            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center items-center text-center order-first">
-        {% else %}
-            <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center items-center text-center order-first lg:order-last">
-        {% endif %}
-                <h3 class="text-2xl font-bold text-primary mb-2">{{groupe.nom}}</h3>
-                <p>
-                    {{groupe.description}}
-                </p>
-                        <p><a href="{{ path('front_equipes')}}" class="btn btn-info mt-2">Voir les équipes</a></p>
-                </div>
-
-        {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
-
-       {% if loop.index is odd %}
-            <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last ">
-       {% else %}
-            <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last lg:order-first">
-       {% endif %}
-
-        <img src="{{ asset('images/'~groupe.image) }}" alt="{{ groupe.nom }}" class="max-w-[600px] h-auto w-full rounded-lg shadow-lg">
-        </div>
-    </div>
-{% endfor %}
-
-
-
-
-
-</section>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+{% block extra_scripts %}
 
 {% endblock %}

@@ -49,35 +49,16 @@ final class FrontController extends AbstractController
             $equipe = $equipeRepository->findOneByCapitaine($user);
         }
 
+        $saison=$saisonRepository->find($this->idSaisonSelected);
+        //Déterminer la phase à ouvrir
+        $phaseouverte=$this->getPhaseActuelle($saison);
 
-
-        $groupes=[
-            [
-                'nom'=> 'A ELITE DES AS',
-                'image'=>'t1_elite_des_as.jpg',
-                'description'=>'Le niveau le plus relevé ! Ici, les équipes s’affrontent avec passion et stratégie. Les matchs sont spectaculaires et intenses.'
-            ],
-            [
-                'nom'=> 'B ELITE',
-                'image'=>'terrain.jpg',
-                'description'=>'Les équipes ambitieuses rivalisent dans ce groupe. Les matchs sont équilibrés et chaque victoire se fête avec enthousiasme.'
-            ],
-            [
-                'nom'=> 'C ESPOIR',
-                'image'=>'salle.jpg',
-                'description'=>'Ici, les équipes apprennent et progressent. Chaque match est un moment convivial et amusant.'
-            ],
-            [
-                'nom'=> 'D HONNEUR',
-                'image'=>'trophee_honneur.jpg',
-                'description'=>'Le groupe parfait pour se lancer et s’amuser ! L’ambiance est détendue et conviviale.'
-            ]
-        ];
         return $this->render('front/index.html.twig', [
-            'groupes'=>$groupes,
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
-            'equipe'=>$equipe
+            'equipe'=>$equipe,
+            'saison' => $saison,
+            'phaseouverte' => $phaseouverte,
         ]);
     }
 
@@ -124,6 +105,45 @@ final class FrontController extends AbstractController
         return $this->render('front/reglement.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
+        ]);
+    }
+
+    //Route pour une page de qui-sommes-nous
+    #[Route('/qui-sommes-nous', name: 'qui_sommes_nous', methods: ['GET'])]
+    public function quiSommesNous(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
+    $saisonRepository): Response
+    {
+        //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
+        $this->getSaisonsCache($saisonRepository, $cache);
+        $this->getSaisonSession($session, $request);
+
+        $groupes=[
+            [
+                'nom'=> 'A ELITE DES AS',
+                'image'=>'t1_elite_des_as.jpg',
+                'description'=>'Le niveau le plus relevé ! Ici, les équipes s’affrontent avec passion et stratégie. Les matchs sont spectaculaires et intenses.'
+            ],
+            [
+                'nom'=> 'B ELITE',
+                'image'=>'terrain.jpg',
+                'description'=>'Les équipes ambitieuses rivalisent dans ce groupe. Les matchs sont équilibrés et chaque victoire se fête avec enthousiasme.'
+            ],
+            [
+                'nom'=> 'C ESPOIR',
+                'image'=>'salle.jpg',
+                'description'=>'Ici, les équipes apprennent et progressent. Chaque match est un moment convivial et amusant.'
+            ],
+            [
+                'nom'=> 'D HONNEUR',
+                'image'=>'trophee_honneur.jpg',
+                'description'=>'Le groupe parfait pour se lancer et s’amuser ! L’ambiance est détendue et conviviale.'
+            ]
+        ];
+
+        return $this->render('front/qui_sommes_nous.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+            'groupes' => $groupes
         ]);
     }
 
