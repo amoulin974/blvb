@@ -36,8 +36,18 @@
 
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                            <td>{{ partie.idEquipeRecoit.nom }} </td>
-                                            <td>{{ partie.idEquipeDeplace.nom }}</td>
+                                            <td>
+                                                <a href="href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}"" class="link flex items-center justify-start"">{{ partie.idEquipeRecoit.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                                                    </svg> </a>
+                               
+                                            </td>
+                                            <td class="">
+                                            <a href="href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}"" class="link flex items-center justify-start"">{{ partie.idEquipeDeplace.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                                                    </svg> </a>
+                                   
+                                            </td>
                                             <td>{{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
                                             <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
@@ -75,9 +85,22 @@
                                 </table>
                                 {# Affichage pour mobile sous forme de carte #}
                                 {% for partie in journee.parties %}
-                                <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                    <div class="card-body " >
-                                        <p><strong>{{ partie.idEquipeRecoit.nom }}</strong> vs <strong>{{ partie.idEquipeDeplace.nom }}</strong></p>
+                                <div class="card  bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                    <div class="card-body p-1" >
+                                        <p class="flex items-center justify-between w-full flex-wrap">
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" class="flex-1 basis-0 flex justify-end min-w-0">
+                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeRecoit.nom }} &nbsp;<span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                                                    </svg></span>
+                                                </strong>
+                                            </a> 
+                                            <span class="px-1 shrink-0">vs </span>
+                                                
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" class="flex-1 basis-0 flex justify-start min-w-0">
+                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeDeplace.nom }}&nbsp;<span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
+                                                    </svg></span></strong></a>
+                                        </p>
                                         <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
                                         <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
@@ -169,7 +192,6 @@ function filterMatches(phaseId, pouleId) {
 
     // Sélectionner uniquement les tabs de cette poule
     const tabs = document.querySelectorAll('[name="tabs_' + phaseId + '"][data-poule="'+pouleId+'"] + .tab-content table');
-    console.log(tabs)
     tabs.forEach(tab => {
         const rows = tab.querySelectorAll('tr[data-recoit]');
         rows.forEach(row => {
@@ -186,7 +208,7 @@ function filterMatches(phaseId, pouleId) {
 
     // Sélectionner uniquement les cartes de cette poule
     const cards = document.querySelectorAll('[name="tabs_' + phaseId + '"][data-poule="'+pouleId+'"] + .tab-content .card');
-    console.log(cards)
+
     cards.forEach(card => {
         const recoit = card.dataset.recoit;
         const deplace = card.dataset.deplace;

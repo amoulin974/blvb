@@ -16,6 +16,8 @@ https://github.com/amoulin974/blvb
 - **Node.js / npm**
 - **Doctrine ORM**
 - **Base de données** (MySQL conseillé)
+- **Docker**
+- **AssetMapper & Tailwind Bundle**
 
 ---
 
@@ -23,6 +25,7 @@ https://github.com/amoulin974/blvb
 
 | Outil | Version minimale | Lien |
 |------|------------------|------|
+| Docker | - | https://www.docker.com/ |
 | PHP | 8.2 | https://www.php.net/ |
 | Composer | 2.x | https://getcomposer.org/download/ |
 | Node.js | 18+ | https://nodejs.org |
@@ -37,6 +40,7 @@ php -v
 composer -V
 node -v
 npm -v
+docker -v
 ```
 
 ---
@@ -125,6 +129,12 @@ APP_DEBUG=0
 DATABASE_URL="mysql://user:password@serveur:3306/blvb"
 ```
 
+Compilation des assets :
+```bash
+php bin/console importmap:install
+php bin/console tailwind:build --minify
+```
+
 Migrations :
 ```bash
 php bin/console doctrine:migrations:migrate --no-interaction --env=prod
@@ -144,9 +154,7 @@ Racine web = **public/**
 | Commande | Description |
 |---------|-------------|
 | `php bin/console` | Liste toutes les commandes |
-| `npm run dev` | Compilation des assets en dev |
-| `npm run watch` | Compilation continue |
-| `npm run build` | Compilation optimisée prod |
+| `php bin/console tailwind:build -w` | Compilation CSS en continu (watch) |
 | `php bin/console cache:clear` | Vide le cache |
 | `php bin/console doctrine:schema:validate` | Vérifie la base |
 
@@ -154,4 +162,3 @@ Racine web = **public/**
 
 ## 🤝 Contribution
 Les contributions sont les bienvenues !
-

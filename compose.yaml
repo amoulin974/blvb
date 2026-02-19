@@ -48,16 +48,16 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-#  node:
-#    image: node:22-alpine
-#    working_dir: /app
-#    volumes:
-#      - .:/app
-#      - /app/node_modules # Volume anonyme pour la performance ⚡
-#    environment:
-#      NODE_ENV: development
-#    # On installe et on lance le mode "écoute" automatique
-#    command: sh -c "npm install && npm run watch"
+  node:
+    image: node:22-alpine
+    working_dir: /app
+    volumes:
+      - .:/app
+      - /app/node_modules # Volume anonyme pour la performance ⚡
+    environment:
+      NODE_ENV: development
+    # On installe et on lance le mode "écoute" automatique
+    command: sh -c "npm install && npm run watch"
   phpmyadmin:
       image: phpmyadmin
       restart: always
