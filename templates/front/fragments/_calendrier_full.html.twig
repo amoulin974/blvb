@@ -37,13 +37,13 @@
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                             <td>
-                                                <a href="href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}"" class="link flex items-center justify-start"">{{ partie.idEquipeRecoit.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" class="link flex items-center justify-start"">{{ partie.idEquipeRecoit.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
                                                     </svg> </a>
                                
                                             </td>
                                             <td class="">
-                                            <a href="href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}"" class="link flex items-center justify-start"">{{ partie.idEquipeDeplace.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" class="link flex items-center justify-start"">{{ partie.idEquipeDeplace.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
                                                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
                                                     </svg> </a>
                                    
