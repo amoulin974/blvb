@@ -4,8 +4,10 @@ export default class extends Controller {
     static targets = [ "modal", "title", "labelReception", "labelDeplacement", "inputReception", "inputDeplacement" ];
 
     connect() {
-        this.csrfTokenValue = document.querySelector('meta[name="csrf-token"]').content;
-        this.currentPartieId = null;
+        // this.csrfTokenValue = document.querySelector('meta[name="csrf-token"]').content;
+		const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+		this.csrfTokenValue = csrfMeta ? csrfMeta.content : '';
+		this.currentPartieId = null;
     }
 
     openModal(event) {
