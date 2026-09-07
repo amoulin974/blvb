@@ -1,5 +1,8 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
+#    router:
+#      default_uri: 'https://www.blvb.fr/blvb'
+#      default_uri: '%env(DEFAULT_URI)%'
     secret: '%env(APP_SECRET)%'
     default_locale: fr
     # Note that the session will be started ONLY if you read or write from it.
@@ -8,6 +11,14 @@ framework:
     #esi: true
     #fragments: true
 
+    trusted_proxies: '%env(default::SYMFONY_TRUSTED_PROXIES)%'
+    trusted_headers:
+        - x-forwarded-for
+        - x-forwarded-host
+        - x-forwarded-proto
+        - x-forwarded-port
+    assets:
+        base_path: '/blvb'      
 when@test:
     framework:
         test: true
