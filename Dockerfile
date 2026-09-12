@@ -1,5 +1,4 @@
 # syntax=docker/dockerfile:1
-
 #############################################
 # Base image (FrankenPHP + PHP 8.4)
 #############################################
@@ -30,7 +29,9 @@ RUN set -eux; \
         xml \
         xmlwriter \
         dom \
-        fileinfo
+        fileinfo \
+		bcmath \
+		sodium
 
 # Composer config
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -78,17 +79,38 @@ COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 # Install dependencies (cache Docker optimisé)
 COPY --link composer.* symfony.* ./
 
-RUN set -eux; \
-    composer install --no-dev --prefer-dist --no-progress --optimize-autoloader --no-interaction
+# Ces lignes ne sont plus forcemenet necessaires à cause des commandes php bin/console dans le dernier RUN
+#RUN set -eux; \
+# composer run-script post-install-cmd --no-dev || true
+# composer run-script post-install-cmd -vvv || true
 
-# Copy app source
+# en prod
+# Installer dépendances SANS scripts
+RUN set -eux; \
+#composer install --no-dev --prefer-dist --no-progress --no-interaction
+#composer install --no-dev --prefer-dist --no-progress --optimize-autoloader --no-interaction
+  composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
+
+# en debug
+# RUN composer install -vvv --no-interaction || true	
+
+# Aide
+# --no-scripts peremt de ne lancer aucun script
+# -vvv --no-interaction permet de debugger
+	
+# Copier le reste de l'app
 COPY --link --exclude=frankenphp/ . ./
 
-# Final build steps Symfony
+# Final build steps Symfony (execution des scripts)
 RUN set -eux; \
     mkdir -p var/cache var/log var/share; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    composer dump-env prod; \
-    composer run-script post-install-cmd --no-dev || true; \
+    #composer run-script post-install-cmd --no-dev || true; \
     chmod +x bin/console; \
+	php bin/console cache:clear --env=prod; \
+	php bin/console tailwind:build --minify; \
+	php bin/console asset-map:compile; \
     sync;
+	
+	#composer dump-env prod; \
+	    
