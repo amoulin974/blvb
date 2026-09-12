@@ -57,6 +57,7 @@ if [ "$1" = 'frankenphp' ] || [ "$1" = 'php' ] || [ "$1" = 'bin/console' ]; then
 		fi
 	fi
     echo 'Compiling Tailwind CSS...'
+    # on commente
     #php bin/console tailwind:build --minify
 	echo 'PHP app ready!'
 fi
