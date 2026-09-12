@@ -5,7 +5,6 @@ Ce projet est une application web permettant de gérer un championnat sportif de
 
 Référentiel du projet :  
 https://github.com/amoulin974/blvb
-
 ---
 
 ## 🚀 Technologies utilisées
