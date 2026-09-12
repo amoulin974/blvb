@@ -1,5 +1,5 @@
 <?php
-
+// j'ai remis 'all' a la place de 'dev' pour Tailwind
 return [
     Symfony\Bundle\FrameworkBundle\FrameworkBundle::class => ['all' => true],
     Doctrine\Bundle\DoctrineBundle\DoctrineBundle::class => ['all' => true],
