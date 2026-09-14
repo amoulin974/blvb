@@ -156,6 +156,7 @@ class ResetPasswordController extends AbstractController
             return $this->redirectToRoute('app_check_email');
         }
 
+        // chgt email
         $email = (new TemplatedEmail())
             ->from(new Address('blvb@vblc.fr', 'Admin reset password'))
             ->to((string) $user->getEmail())
