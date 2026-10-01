@@ -169,10 +169,10 @@ class ImportOldDataCommand extends Command
         $phase2->setClose(0);
 
         $phase3 = new Phase();
-        $phase3->setNom("Phase 3");
+        $phase3->setNom("Finale");
         $phase3->setType(PhaseType::FINALE);
         $phase3->setOrdre(2);
-        $dateDebut = new \DateTimeImmutable('2026-06-01');
+        $dateDebut = new \DateTimeImmutable('2026-04-27');
         $dateFin = new \DateTimeImmutable('2026-06-30');
         $phase3->setDatedebut($dateDebut);
         $phase3->setDatefin($dateFin);
@@ -260,13 +260,13 @@ class ImportOldDataCommand extends Command
                     $em->persist($newLieu);
                     $em->persist($creneau);
                 }
-                if (!str_ends_with($oldEquipe['saison'], '2')) {
+                if (!str_ends_with($oldEquipe['saison'], '2') && !str_ends_with($oldEquipe['saison'], 'Finale')) {
                     $equipe = new Equipe();
                     $equipe->setNom($oldEquipe['nom']);
                     $equipe->setLieu($tabNewLieu[$nomOriginalLieu]);
                 }
                 else{
-                    //Si la oldequipe est de phase2 alors on récupère l'équipe que l'on a créé dans le tableau temporaire lors de l'import de la phase 1
+                    //Si la oldequipe est de phase2 ou de finale, on récupère l'équipe créée lors de l'import de la phase 1
                     $equipe = $tabNewEquipeByName[$oldEquipe['nom']] ?? null;
                 }
 
@@ -275,7 +275,7 @@ class ImportOldDataCommand extends Command
 
             //Récupération des capitaines
 
-            if (!str_ends_with($oldEquipe['saison'], '2')) {
+            if (!str_ends_with($oldEquipe['saison'], '2') && !str_ends_with($oldEquipe['saison'], 'Finale')) {
                 $oldCapitaine = $oldConn->fetchAssociative(
                     'SELECT * FROM `tvbacontact` WHERE codeequipe = :codeEquipe',
                     ['codeEquipe' => $oldEquipe['code']]
@@ -320,33 +320,37 @@ class ImportOldDataCommand extends Command
 
         //Création des journée pour les phases championnat
         $tabPouleAncienne = ['2025/2026-GroupeA-Phase1', '2025/2026-GroupeB-Phase1', '2025/2026-GroupeC-Phase1', '2025/2026-GroupeD-Phase1',
-            '2025/2026-GroupeA-Phase2', '2025/2026-GroupeB-Phase2', '2025/2026-GroupeC-Phase2', '2025/2026-GroupeD-Phase2'];
+            '2025/2026-GroupeA-Phase2', '2025/2026-GroupeB-Phase2', '2025/2026-GroupeC-Phase2', '2025/2026-GroupeD-Phase2', 
+            '2025/2026-Poule1-Finale', '2025/2026-Poule2-Finale','2025/2026-Poule3-Finale','2025/2026-Poule4-Finale'];
         $journeeMapping = []; // Pour lier les matchs plus tard
         foreach ($tabPouleAncienne as $nomPouleAncienne) {
             $poule = $this->findPouleByOldSaison($nomPouleAncienne, $tabPhase);
             if (!$poule) continue;
 
 
+            $isFinale = str_ends_with($nomPouleAncienne, 'Finale');
+
             $oldJournees = $oldConn->fetchAllAssociative(
                 'SELECT numjournee, MIN(datepartie) as date_min
                          FROM tvbaresultat
                          WHERE saison = :pouleAncienne
                          GROUP BY numjournee
-                         ORDER BY numjournee ASC',
+                         ORDER BY ' . ($isFinale ? 'date_min ASC' : 'numjournee ASC'),
                 ['pouleAncienne' => $nomPouleAncienne]
             );
-
-
+            $compteurJournee = 1;
             foreach ($oldJournees as $oldJ) {
-                $num = (int)$oldJ['numjournee'];
-                $dateMin = new \DateTimeImmutable($oldJ['date_min']); //
+                $numOriginal = (int)$oldJ['numjournee'];
+                // Pour la finale, numjournee vaut 400, 500... on les renumérote 1, 2, 3...
+                $numAffichage = $isFinale ? $compteurJournee++ : $numOriginal;
+                $dateMin = new \DateTimeImmutable($oldJ['date_min']);
 
                 // Normalisation : on se cale sur le lundi de la semaine de ce match
                 $dateLundi = $dateMin->modify('monday this week');
                 $dateDimanche = $dateLundi->modify('+6 days');
 
                 $journee = new Journee();
-                $journee->setNumero($num);
+                $journee->setNumero($numAffichage);
                 $journee->setNom("Semaine du " . $dateLundi->format('d/m'));
                 $journee->setDatedebut($dateLundi);
                 $journee->setDatefin($dateDimanche);
@@ -355,8 +359,8 @@ class ImportOldDataCommand extends Command
                 $poule->addJournee($journee);
                 $em->persist($journee);
 
-                // On stocke l'objet pour l'import des matchs (Partie)
-                $journeeMapping[$nomPouleAncienne][$num] = $journee;
+                // On stocke l'objet avec la clé originale pour que le mapping des matchs fonctionne
+                $journeeMapping[$nomPouleAncienne][$numOriginal] = $journee;
             }
         }
 
@@ -436,6 +440,17 @@ class ImportOldDataCommand extends Command
             $poule = $this->findPouleByOldSaison($oldM['saison'], $tabPhase);
             $partie->setPoule($poule);
             $poule->addParty($partie);
+
+            // Pour la finale, les équipes ne sont pas dans tvbaequipe : on les lie ici depuis les matchs
+            if (str_ends_with($oldM['saison'], 'Finale')) {
+                if ($equipeRecoit && !$poule->getEquipes()->contains($equipeRecoit)) {
+                    $poule->addEquipe($equipeRecoit);
+                }
+                if ($equipeDeplace && !$poule->getEquipes()->contains($equipeDeplace)) {
+                    $poule->addEquipe($equipeDeplace);
+                }
+            }
+
             $em->persist($partie);
             $progressBar->advance();
         }
@@ -474,23 +489,30 @@ class ImportOldDataCommand extends Command
         return $map[strtolower($jour)] ?? 1;
     }
 
-    /** Décompose le champ saison de la vieille base de données qui contient Sasion - Poule - Phase */
+    /** Décompose le champ saison de la vieille base de données qui contient Saison - Poule - Phase */
     private function findPouleByOldSaison(string $oldSaison, array $tabPhase): ?Poule
     {
         $parts = explode('-', $oldSaison);
         if (count($parts) < 3) return null;
 
-        $groupePart = $parts[1]; // "GroupeD"
-        $phasePart = $parts[2]; // "Phase1"
+        $groupePart = $parts[1]; // "GroupeD" ou "Poule4"
+        $phasePart = $parts[2]; // "Phase1", "Phase2" ou "Finale"
 
-        // Extraction de l'index de la phase (Phase1 -> 0, Phase2 -> 1)
-        $phaseNum = (int)filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
-        $phaseIndex = $phaseNum - 1;
+        if ($phasePart === 'Finale') {
+            $phaseIndex = 2;
+            // Poule1 -> "Poule A", Poule2 -> "Poule B", Poule3 -> "Poule C", Poule4 -> "Poule D"
+            $numPoule = (int)filter_var($groupePart, FILTER_SANITIZE_NUMBER_INT);
+            $lettres = ['A', 'B', 'C', 'D'];
+            $nomPouleCherche = "Poule " . ($lettres[$numPoule - 1] ?? 'A');
+        } else {
+            // Phase1 -> 0, Phase2 -> 1
+            $phaseNum = (int)filter_var($phasePart, FILTER_SANITIZE_NUMBER_INT);
+            $phaseIndex = $phaseNum - 1;
+            $nomPouleCherche = "Poule " . str_replace('Groupe', '', $groupePart);
+        }
 
         if (isset($tabPhase[$phaseIndex])) {
             $currentPhase = $tabPhase[$phaseIndex];
-            $nomPouleCherche = "Poule " . str_replace('Groupe', '', $groupePart);
-
             foreach ($currentPhase->getPoules() as $poule) {
                 if ($poule->getNom() === $nomPouleCherche) {
                     return $poule;

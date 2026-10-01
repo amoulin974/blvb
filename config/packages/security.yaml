@@ -25,6 +25,10 @@ security:
                 login_path: app_login
                 check_path: app_login
                 enable_csrf: true
+                # Si l'utilisateur vient d'une autre page (Referer), on le renvoie dessus.
+                # S'il était sur la page de login elle-même (ou sans Referer), on le renvoie à l'accueil.
+                default_target_path: front_index
+                use_referer: true
 
             # activate different ways to authenticate
             # https://symfony.com/doc/current/security.html#the-firewall
