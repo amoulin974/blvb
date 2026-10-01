@@ -83,7 +83,7 @@ class ClassementService
     /**
      * Calcule les points pour une équipe (domicile + extérieur).
      */
-    public function calculerPointsEquipe(Equipe $equipe, Saison $saison, Poule $pouleContext = null): int
+    public function calculerPointsEquipe(Equipe $equipe, Saison $saison, ?Poule $pouleContext = null): int
     {
         $points = 0;
 
@@ -132,7 +132,7 @@ class ClassementService
     /**
      * Total sets gagnés.
      */
-    private function calculerTotalSetsGagnes(Equipe $equipe, Poule $pouleContext = null): int
+    private function calculerTotalSetsGagnes(Equipe $equipe, ?Poule $pouleContext = null): int
     {
         $total = 0;
 
@@ -159,7 +159,7 @@ class ClassementService
     /**
      * Total sets perdus.
      */
-    private function calculerTotalSetsPerdus(Equipe $equipe, Poule $pouleContext = null): int
+    private function calculerTotalSetsPerdus(Equipe $equipe, ?Poule $pouleContext = null): int
     {
         $total = 0;
 
