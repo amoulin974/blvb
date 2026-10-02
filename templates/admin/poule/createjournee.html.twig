@@ -20,7 +20,7 @@
             id="calendar"
             data-controller="calendar"
             data-calendar-datatype-value="journee"
-            data-calendar-events-url-value="/admin/journee/{{ poule.id }}/api/journees"
+            data-calendar-events-url-value="{{ path('admin_journee_api', {'id': poule.id}) }}"
             data-calendar-initialview-value="multiMonthFourMonth"
             data-calendar-duration-value="6"
             data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"
