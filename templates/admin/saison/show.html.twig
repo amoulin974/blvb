@@ -59,6 +59,11 @@
                                             <a class="btn btn-xs btn-info text-white" href="{{ path("admin_journee_getjourneecalendar", {'id': poule.id}) }}">Voir les journées</a>
                                         {% endif %}
 
+                                        {% if poule.parties|length > 0 %}
+                                            {% set premiereJournee = poule.journees|sort((a, b) => a.numero <=> b.numero)|first %}
+                                            <a class="btn btn-xs btn-info text-white" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee': premiereJournee.id}) }}">Voir les matchs</a>
+                                        {% endif %}
+
                                         {% if poule.equipes|length > 0 and poule.journees|length > 0 and poule.parties|length == 0 %}
                                             <form action="{{ path('admin_partie_createpartie', {'id': poule.id}) }}" method="POST">
                                                 <button type="submit" class="btn btn-xs btn-success text-white">Créer les matchs</button>
