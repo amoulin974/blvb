@@ -97,6 +97,20 @@ final class JourneeController extends AbstractController
         return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
     }
 
+    //Supprime toutes les journées d'une poule
+    #[Route('/{id}/deleteall', name: 'deleteall', methods: ['POST'])]
+    public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('deleteall'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+            foreach ($poule->getJournees() as $journee) {
+                $entityManager->remove($journee);
+            }
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
+    }
+
     #[Route('/{id}/api/journees', name: 'api', methods: ['GET'])]
     public function apiJournees(Poule $poule): JsonResponse
     {

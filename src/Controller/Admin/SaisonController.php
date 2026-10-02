@@ -128,12 +128,12 @@ final class SaisonController extends AbstractController
 
         // 2. Déterminer la phase à ouvrir
         // Si une poule est spécifiée, on ouvre sa phase parente
-        // Sinon, on utilise votre logique de "phase actuelle"
+        // Sinon, on utilise la logique de "phase actuelle"
         if ($pouleOuverte) {
             $phaseOuverteId = $pouleOuverte->getPhase()->getId();
             $pouleOuverteId = $pouleOuverte->getId();
         } else {
-            $phaseActuelle = $this->getPhaseActuelle($saison); // Recopiez ou injectez cette méthode
+            $phaseActuelle = $this->getPhaseActuelle($saison); 
             $phaseOuverteId = $phaseActuelle ? $phaseActuelle->getId() : null;
             $pouleOuverteId = null; // Par défaut, on ouvrira la première poule de la phase
         }
