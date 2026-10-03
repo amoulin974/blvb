@@ -138,12 +138,15 @@ final class SaisonController extends AbstractController
             $pouleOuverteId = null; // Par défaut, on ouvrira la première poule de la phase
         }
 
-        foreach($saison->getPhases() as &$phase){
+        // Une phase est cloturable si elle a au moins une poule et que TOUTES ses poules
+        // ont déjà des journées (sinon leur classement n'a pas de sens et basculer les
+        // équipes vers la phase suivante serait prématuré).
+        foreach($saison->getPhases() as $phase){
+            $phase->cloturable = count($phase->getPoules()) > 0;
             foreach($phase->getPoules() as $poule){
                 if ($poule->getJournees()->count()==0){
                     $phase->cloturable=false;
-                }else{
-                    $phase->cloturable=true;
+                    break;
                 }
             }
         }

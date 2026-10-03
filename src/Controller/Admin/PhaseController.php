@@ -185,10 +185,16 @@ final class PhaseController extends AbstractController
             $phaseService->cloturerEtBasculer($phase);
             foreach($phaseSuivante->getPoules() as $poule){
                 $journeeService->creerJournees($poule);
-                $partieService->createCalendar($poule);
             }
+            // Génération optimisée (toutes les poules de championnat de la phase suivante
+            // ensemble, pour tenir compte des lieux partagés) plutôt que le round-robin naïf.
+            $rapport = $partieService->creerCalendrierOptimise($phaseSuivante);
 
-            $this->addFlash('success', 'Équipes basculées avec succès.');
+            $surcharges = array_merge(...array_column($rapport, 'surcharges'));
+            $this->addFlash(
+                $surcharges === [] ? 'success' : 'warning',
+                'Équipes basculées avec succès.' . ($surcharges !== [] ? ' Attention : ' . implode(' ; ', $surcharges) : '')
+            );
         }
 
 
