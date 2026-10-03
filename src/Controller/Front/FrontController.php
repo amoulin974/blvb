@@ -41,7 +41,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
 
         $user= $this->getUser();
         $equipe=null;
@@ -70,7 +72,9 @@ final class FrontController extends AbstractController
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
 
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
         $saison=$saisonRepository->find($this->idSaisonSelected);
 
 
@@ -97,7 +101,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
         $saison=$saisonRepository->find($this->idSaisonSelected);
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
@@ -115,7 +121,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
 
         $groupes=[
             [
@@ -154,7 +162,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
         $saison=$saisonRepository->find($this->idSaisonSelected);
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
@@ -221,7 +231,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
         $saison=$saisonRepository->find($this->idSaisonSelected);
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
@@ -247,7 +259,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
 
         $saison=$saisonRepository->find($this->idSaisonSelected);
         //Déterminer la phase à ouvrir
@@ -306,7 +320,9 @@ final class FrontController extends AbstractController
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
         $saison=$saisonRepository->find($this->idSaisonSelected);
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
@@ -331,6 +347,16 @@ final class FrontController extends AbstractController
             $session->set('idSaisonSelected', $saison->getId());   // stocke la saison dans la session
         }
         return $this->redirectToRoute('front_index');  // retourne vers la page principale
+    }
+
+    //Page affichée quand il n'y a aucune saison en base de données (plus de saison favorite ni de saison récente à proposer)
+    #[Route('/aucune-saison', name: 'no_saison', methods: ['GET'])]
+    public function noSaison(): Response
+    {
+        return $this->render('front/no_saison.html.twig', [
+            'saisons' => [],
+            'idSaisonSelected' => null,
+        ]);
     }
 
     //Route appelé quand un admin ou un capitaine change le score d'une partie
@@ -405,14 +431,38 @@ final class FrontController extends AbstractController
 
     }
 
-    //Récupère la saison sélectionnée dans la session ou met la saison par défaut
-    public function getSaisonSession(SessionInterface $session, Request $request){
-        if ($session->has('idSaisonSelected')){
-            $this->idSaisonSelected = $session->get('idSaisonSelected');
-        } else{
-            $this->idSaisonSelected = $this->saisons[0]->getId() ;
+    //Récupère la saison sélectionnée dans la session et vérifie qu'elle existe toujours en base
+    //(ex: suppression de la saison depuis l'admin). Si elle n'existe pas (ou plus), on retombe sur
+    //la saison favorite, puis sur la plus récente. Retourne une redirection vers une page d'erreur
+    //s'il n'y a tout simplement aucune saison en base, sinon null pour continuer normalement.
+    public function getSaisonSession(SessionInterface $session, Request $request, SaisonRepository $saisonRepository): ?Response
+    {
+        $idSelected = $session->has('idSaisonSelected') ? $session->get('idSaisonSelected') : null;
+        $saison = $idSelected ? $saisonRepository->find($idSelected) : null;
+
+        if (!$saison) {
+            // L'id en session est absent, invalide ou ne correspond plus à une saison existante :
+            // on retombe sur la saison favorite...
+            $saison = $saisonRepository->findOneBy(['favori' => 1]);
+
+            // ... sinon sur la saison la plus récente...
+            if (!$saison) {
+                $saison = $saisonRepository->findOneBy([], ['date_debut' => 'DESC']);
+            }
+
+            // ... sinon il n'y a tout simplement aucune saison en base.
+            if (!$saison) {
+                $this->idSaisonSelected = null;
+
+                return $this->redirectToRoute('front_no_saison');
+            }
+
+            $session->set('idSaisonSelected', $saison->getId());
         }
 
+        $this->idSaisonSelected = $saison->getId();
+
+        return null;
     }
 
     //Détermine la phase actuelle d'une saison (la phase dont la date de début et de fin englobe la date actuelle)
@@ -443,7 +493,9 @@ final class FrontController extends AbstractController
         SessionInterface $session
     ): Response {
         $this->getSaisonsCache($saisonRepository, $cache);
-        $this->getSaisonSession($session, $request);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
 
         /** @var User $user */
         $user = $this->getUser();
