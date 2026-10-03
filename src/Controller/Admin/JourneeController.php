@@ -94,7 +94,10 @@ final class JourneeController extends AbstractController
             $this->addFlash('error', $error);
         }
 
-        return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
+        return $this->redirectToRoute('admin_saison_show', [
+            'id' => $poule->getPhase()->getSaison()->getId(),
+            'openPoule' => $poule->getId(),
+        ]);
     }
 
     //Supprime toutes les journées d'une poule
@@ -108,7 +111,10 @@ final class JourneeController extends AbstractController
             $entityManager->flush();
         }
 
-        return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
+        return $this->redirectToRoute('admin_saison_show', [
+            'id' => $poule->getPhase()->getSaison()->getId(),
+            'openPoule' => $poule->getId(),
+        ]);
     }
 
     #[Route('/{id}/api/journees', name: 'api', methods: ['GET'])]

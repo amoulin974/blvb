@@ -22,13 +22,13 @@
                             <a class="btn btn-xs btn-neutral join-item" href="{{ path("admin_phase_edit", {'id': phase.id}) }}">
                                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                </svg> Modifier
+                                </svg> Modifier la phase
                             </a>
-                            {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs', join:'join-item' }) }}
+                            {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs', join:'join-item', label: 'Supprimer la phase' }) }}
                             {% if not loop.last and phase.cloturable==true %}
                                 <form action="{{ path('admin_phase_cloturer', {'id': phase.id}) }}" method="POST" class="flex items-center">
                                     <button type="submit" class="btn btn-warning btn-xs join-item" onclick="return confirm('Êtes-vous sûr de vouloir clôturer cette phase ? Cette action est irréversible.')">
-                                        Clôturer
+                                        Clôturer la phase
                                     </button>
                                 </form>
                             {% endif %}
@@ -46,22 +46,17 @@
 
                                     {# Actions d'administration de la Poule [cite: 83, 86, 88, 90] #}
                                     <div class="flex flex-wrap gap-2 mb-6 p-2 bg-base-200 rounded-lg">
-                                        <a class="btn btn-xs btn-neutral" href="{{ path("admin_poule_edit", {'id': poule.id, origin: 'saison_show'}) }}">Modifier la poule</a>
-                                        {{ include('admin/poule/_delete_form.html.twig', { size: 'btn-xs' }) }}
+                                        <a class="btn btn-xs btn-neutral" href="{{ path("admin_poule_edit", {'id': poule.id, origin: 'saison_show'}) }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
+                                            </svg> Modifier la poule
+                                        </a>
+                                        {{ include('admin/poule/_delete_form.html.twig', { size: 'btn-xs', label: 'Supprimer la poule' }) }}
 
                                         {% if poule.equipes|length > 0 and poule.journees|length == 0 %}
                                             <form action="{{ path('admin_journee_createjournee', {'id': poule.id}) }}" method="POST">
                                                 <button type="submit" class="btn btn-xs btn-success text-white">Créer les journées</button>
                                             </form>
-                                        {% endif %}
-
-                                        {% if poule.equipes|length > 0 and poule.journees|length > 0 %}
-                                            <a class="btn btn-xs btn-info text-white" href="{{ path("admin_journee_getjourneecalendar", {'id': poule.id}) }}">Voir les journées</a>
-                                        {% endif %}
-
-                                        {% if poule.parties|length > 0 %}
-                                            {% set premiereJournee = poule.journees|sort((a, b) => a.numero <=> b.numero)|first %}
-                                            <a class="btn btn-xs btn-info text-white" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee': premiereJournee.id}) }}">Voir les matchs</a>
                                         {% endif %}
 
                                         {% if poule.equipes|length > 0 and poule.journees|length > 0 and poule.parties|length == 0 %}
@@ -86,15 +81,48 @@
 
                                         {# Liste des journées et matchs [cite: 94, 99] #}
                                         <div class="col-span-2">
-                                            <p class="font-bold mb-2 text-sm border-b">Aperçu des journées :</p>
+                                            <div class="flex justify-between items-center mb-2 border-b pb-1">
+                                                <p class="font-bold text-sm">Aperçu des journées :</p>
+                                                <div class="flex gap-2">
+                                                    {% if poule.equipes|length > 0 and poule.journees|length > 0 %}
+                                                        <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_journee_getjourneecalendar", {'id': poule.id}) }}">Voir les journées</a>
+                                                    {% endif %}
+
+                                                    {% if poule.journees|length > 0 %}
+                                                        <form action="{{ path('admin_journee_deleteall', {'id': poule.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer toutes les journées de cette poule ? Cette action est irréversible.');">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('deleteall' ~ poule.id) }}">
+                                                            <button type="submit" class="btn btn-ghost btn-xs text-error">Supprimer les journées</button>
+                                                        </form>
+                                                    {% endif %}
+
+                                                    {% if poule.parties|length > 0 %}
+                                                        {% set premiereJournee = poule.journees|sort((a, b) => a.numero <=> b.numero)|first %}
+                                                        <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee': premiereJournee.id}) }}">Voir les matchs</a>
+
+                                                        <form action="{{ path('admin_partie_deleteall', {'id': poule.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer tous les matchs de cette poule ? Cette action est irréversible.');">
+                                                            <input type="hidden" name="_token" value="{{ csrf_token('deleteallparties' ~ poule.id) }}">
+                                                            <button type="submit" class="btn btn-ghost btn-xs text-error">Supprimer les matchs</button>
+                                                        </form>
+                                                    {% endif %}
+                                                </div>
+                                            </div>
                                             <div class="space-y-4">
                                                 {% for journee in poule.journees %}
                                                     <div class="bg-base-200 p-2 rounded">
                                                         <div class="flex justify-between items-center mb-1">
-                                                            <span class="text-xs font-bold">Journée {{ journee.numero }} : {{ journee.nom }}</span>
-                                                            {% if journee.parties|length > 0 %}
-                                                                <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee':journee.id}) }}">Détails</a>
-                                                            {% endif %}
+                                                            <span class="text-xs font-bold">
+                                                                Journée {{ journee.numero }} : {{ journee.nom }}
+                                                                <span class="font-normal opacity-60">({{ journee.datedebut|date("d/m/Y") }} - {{ journee.datefin|date("d/m/Y") }})</span>
+                                                            </span>
+                                                            <div class="flex items-center gap-1">
+                                                                {% if journee.parties|length > 0 %}
+                                                                    <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee':journee.id}) }}">Voir la journée</a>
+                                                                    <form action="{{ path('admin_partie_deleteallbyjournee', {'id': poule.id, 'journee': journee.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer tous les matchs de cette journée ? Cette action est irréversible.');">
+                                                                        <input type="hidden" name="_token" value="{{ csrf_token('deleteallbyjournee' ~ journee.id) }}">
+                                                                        <button type="submit" class="btn btn-ghost btn-xs text-error">Supprimer les matchs</button>
+                                                                    </form>
+                                                                {% endif %}
+                                                            </div>
                                                         </div>
                                                         <ul class="space-y-1">
                                                             <ul class="space-y-2">

@@ -100,12 +100,53 @@ final class PartieController extends AbstractController
         ]);
     }
 
+    //Supprime tous les matchs d'une poule
+    #[Route('/{id}/deleteall', name: 'deleteall', methods: ['POST'])]
+    public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
+    {
+        if ($this->isCsrfTokenValid('deleteallparties'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+            foreach ($poule->getParties() as $partie) {
+                $entityManager->remove($partie);
+            }
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('admin_saison_show', [
+            'id' => $poule->getPhase()->getSaison()->getId(),
+            'openPoule' => $poule->getId(),
+        ]);
+    }
+
+    //Supprime tous les matchs d'une journée
+    #[Route('/{id}/deleteallbyjournee/{journee}', name: 'deleteallbyjournee', methods: ['POST'])]
+    public function deleteAllByJournee(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $entityManager): Response
+    {
+        if ($journee->getPoule() !== $poule) {
+            throw $this->createNotFoundException("Cette journée n'appartient pas à cette poule.");
+        }
+
+        if ($this->isCsrfTokenValid('deleteallbyjournee'.$journee->getId(), $request->getPayload()->getString('_token'))) {
+            foreach ($journee->getParties() as $partie) {
+                $entityManager->remove($partie);
+            }
+            $entityManager->flush();
+        }
+
+        return $this->redirectToRoute('admin_saison_show', [
+            'id' => $poule->getPhase()->getSaison()->getId(),
+            'openPoule' => $poule->getId(),
+        ]);
+    }
+
     //fonction qui crée les matchs pour une poule
     #[Route('/{id}/createpartie', name: 'createpartie', methods: ['POST'])]
     public function createPartie(Poule $poule, Request $request, EntityManagerInterface $entityManager, PartieService $partieService): Response
     {
         $partieService->createCalendar($poule);
-        return $this->redirectToRoute('admin_saison_show', ['id' => $poule->getPhase()->getSaison()->getId()]);
+        return $this->redirectToRoute('admin_saison_show', [
+            'id' => $poule->getPhase()->getSaison()->getId(),
+            'openPoule' => $poule->getId(),
+        ]);
     }
 
     //Affiche le calendrier des journées pour une poule
