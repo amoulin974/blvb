@@ -8,7 +8,9 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
         Créer une nouvelle fiche joueur</a>
-    <div class="rounded-box border-base-content/5 w-4/5 bg-base-100">
+    <div class="rounded-box border-base-content/5 w-4/5 bg-base-100 p-4" data-controller="datatable" data-datatable-per-page-value="10">
+        <input type="text" placeholder="Rechercher..." class="input input-bordered input-sm w-full max-w-xs mb-3"
+               data-datatable-target="search" data-action="input->datatable#filter">
         <table class="table table-xs table-zebra">
         <thead>
             <tr>
@@ -17,10 +19,10 @@
                 <th>Prénom</th>
                 <th>Email</th>
                 <th>Compte lié</th>
-                <th>actions</th>
+                <th data-datatable-no-sort>actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody data-datatable-target="body">
         {% for joueur in joueurs %}
             <tr class="hover:bg-base-300">
                 <td>{{ joueur.id }}</td>
@@ -50,5 +52,6 @@
         {% endfor %}
         </tbody>
     </table>
+    <div class="flex items-center justify-between mt-3" data-datatable-target="pagination"></div>
 </div>
 {% endblock %}
