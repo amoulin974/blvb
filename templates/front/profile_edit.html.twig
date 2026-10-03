@@ -63,7 +63,10 @@
             {# --- ONGLET 2 : SÉCURITÉ (Idem précédent avec icône oeil) --- #}
             <input type="radio" name="profile_tabs" role="tab" class="tab" aria-label="Sécurité" />
             <div role="tabpanel" class="tab-content bg-base-100 border-base-300 rounded-box p-8">
-                {{ form_start(passwordForm) }}
+                {{ form_start(passwordForm, {'attr': {
+                    'data-controller': 'password-rules',
+                    'data-action': 'submit->password-rules#preventInvalidSubmit'
+                }}) }}
                 <div class="grid grid-cols-1 gap-6">
                     <div class="form-control w-full">
                         <label class="label"><span class="label-text font-semibold">Mot de passe actuel</span></label>
@@ -82,17 +85,26 @@
                         <div class="form-control w-full">
                             <label class="label"><span class="label-text font-semibold">{{ form_label(passField) }}</span></label>
                             <div class="relative">
-                                {{ form_widget(passField, {'attr': {'class': 'input input-bordered w-full pr-12 js-password-input'}}) }}
+                                {{ form_widget(passField, {'attr': {
+                                    'class': 'input input-bordered w-full pr-12 js-password-input',
+                                    'data-password-rules-target': loop.first ? 'password' : 'confirm',
+                                    'data-action': 'input->password-rules#update'
+                                }}) }}
                                 <button type="button" class="absolute inset-y-0 right-0 px-4 flex items-center js-password-toggle text-base-content/40 hover:text-primary">
                                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg>
                                 </button>
                             </div>
+                            {% if loop.first %}
+                                <div data-password-rules-target="rules"></div>
+                            {% else %}
+                                <div data-password-rules-target="matchRules"></div>
+                            {% endif %}
                         </div>
                     {% endfor %}
                     {{ form_errors(passwordForm.plainPassword.first) }}
                 </div>
                 {{ form_row(passwordForm._token) }}
-                <button type="submit" class="btn btn-warning w-full mt-8">Changer mon mot de passe</button>
+                <button type="submit" class="btn btn-warning w-full mt-8" data-password-rules-target="submit">Changer mon mot de passe</button>
                 {{ form_end(passwordForm, {'render_rest': false}) }}
             </div>
         </div>

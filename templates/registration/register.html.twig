@@ -11,7 +11,10 @@
 
     {{ form_errors(registrationForm) }}
 
-    {{ form_start(registrationForm) }}
+    {{ form_start(registrationForm, {'attr': {
+        'data-controller': 'password-rules',
+        'data-action': 'submit->password-rules#preventInvalidSubmit'
+    }}) }}
         <div class="form-control">
             {{ form_label(registrationForm.email, 'Email* :', {'label_attr': {'class': 'label'}}) }}
             {{ form_widget(registrationForm.email, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Email', 'type':'email'}}) }}
@@ -19,7 +22,14 @@
         </div>
         <div class="form-control">
             {{ form_label(registrationForm.plainPassword, 'Mot de passe* :', {'label_attr': {'class': 'label'}}) }}
-            {{ form_widget(registrationForm.plainPassword, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Mot de passe', 'type':'password'}}) }}
+            {{ form_widget(registrationForm.plainPassword, {'attr': {
+                'class': 'input input-bordered w-full',
+                'placeholder': 'Mot de passe',
+                'type':'password',
+                'data-password-rules-target': 'password',
+                'data-action': 'input->password-rules#update'
+            }}) }}
+            <div data-password-rules-target="rules"></div>
             {{ form_errors(registrationForm.plainPassword) }}
         </div>
     <div class="form-control">
