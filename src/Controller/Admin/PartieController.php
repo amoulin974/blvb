@@ -149,6 +149,36 @@ final class PartieController extends AbstractController
         ]);
     }
 
+    //Supprime et recrée les matchs d'une poule, utilisé depuis la page d'optimisation
+    #[Route('/{id}/optimiser', name: 'optimiser', methods: ['POST'])]
+    public function optimiser(Request $request, Poule $poule, PartieService $partieService): Response
+    {
+        if ($this->isCsrfTokenValid('optimiser'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+            $resultat = $partieService->creerCalendrierOptimisePourPoule($poule);
+
+            if ($resultat['type'] === 'championnat') {
+                $this->addFlash(
+                    $resultat['surcharges'] === [] ? 'success' : 'warning',
+                    sprintf('%s : %d break(s)', $resultat['poule'], $resultat['nbBreaks'])
+                    . ($resultat['surcharges'] !== [] ? ' — ' . implode(' ; ', $resultat['surcharges']) : '')
+                );
+            }
+        }
+
+        return $this->redirectToRoute('admin_phase_optimiser', ['id' => $poule->getPhase()->getId()]);
+    }
+
+    //Affiche le calendrier de tous les matchs d'une poule, toutes journées confondues
+    #[Route('/{id}/getpartiecalendar', name: 'getpartiecalendarall', methods: ['GET'])]
+    public function getPartieCalendarAll(Poule $poule): Response
+    {
+        return $this->render('admin/poule/creatematch.html.twig', [
+            'error' => "",
+            'journee' => null,
+            'poule' => $poule,
+        ]);
+    }
+
     //Affiche le calendrier des journées pour une poule
 
     #[Route('/{id}/getpartiecalendar/{journee}', name: 'getpartiecalendar', methods: ['GET'])]
@@ -168,13 +198,23 @@ final class PartieController extends AbstractController
         ]);
     }
 
+    //Route utilisée par fullcalendar pour retrouver tous les matchs d'une poule, toutes journées confondues
+    #[Route('/{id}/api', name: 'apiall', methods: ['GET'])]
+    public function apiPartiesAll(Poule $poule): JsonResponse
+    {
+        return $this->json($this->serializeParties($poule->getParties()));
+    }
+
     //Route utilisé par fullcalendar pour retrouver les parties d'une journée
     #[Route('/{id}/api/{journee}', name: 'api', methods: ['GET'])]
     public function apiParties(Poule $poule, Journee $journee): JsonResponse
     {
+        return $this->json($this->serializeParties($journee->getParties()));
+    }
 
-        $parties = $journee->getParties();
-
+    //Transforme une liste de parties en tableau d'événements pour fullcalendar
+    private function serializeParties(iterable $parties): array
+    {
         $data = [];
 
         foreach ($parties as $partie) {
@@ -189,8 +229,6 @@ final class PartieController extends AbstractController
                 $title = $partie->getIdEquipeRecoit()->getNom(). "vs" . $partie->getIdEquipeDeplace()->getNom();
             }
 
-
-
             $data[] = [
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'id' => $partie->getId(),
@@ -200,7 +238,7 @@ final class PartieController extends AbstractController
             ];
         }
 
-        return $this->json($data);
+        return $data;
     }
 
     //Route utilisée par fullcalendar pour afficher le formulaire d'édit d'une partie
