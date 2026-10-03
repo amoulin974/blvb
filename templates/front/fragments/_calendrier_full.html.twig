@@ -63,8 +63,7 @@
                                                 {% endif %}
                                                 {% if is_granted('ROLE_ADMIN')
                                                             or (app.user is not null
-                                                                and partie.idEquipeRecoit.capitaine is not null
-                                                                and partie.idEquipeRecoit.capitaine.id == app.user.id) %}
+                                                                and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
 
                                                             <a href="#"
                                                                 class="btn btn-warning btn-xs"
@@ -116,8 +115,7 @@
                                                 {% endif %}
                                                     {% if is_granted('ROLE_ADMIN')
                                                             or (app.user is not null
-                                                                and partie.idEquipeRecoit.capitaine is not null
-                                                                and partie.idEquipeRecoit.capitaine.id == app.user.id) %}
+                                                                and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
 
                                                              <a href="#"
                                                                 class="btn btn-warning btn-xs"

@@ -64,6 +64,12 @@ class Saison
     #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'saison', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $indisponibilites;
 
+    /**
+     * @var Collection<int, MembreEquipe>
+     */
+    #[ORM\OneToMany(targetEntity: MembreEquipe::class, mappedBy: 'saison', orphanRemoval: true)]
+    private Collection $membres;
+
     public function __construct()
     {
 
@@ -72,6 +78,7 @@ class Saison
         $nextYear=(int)$this->date_debut->format('Y')+1;
         $this->date_fin = new \DateTimeImmutable("last day of july $nextYear"); // date actuelle par défaut
         $this->indisponibilites = new ArrayCollection();
+        $this->membres = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -260,6 +267,35 @@ class Saison
             // set the owning side to null (unless already changed)
             if ($indisponibilite->getSaison() === $this) {
                 $indisponibilite->setSaison(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, MembreEquipe>
+     */
+    public function getMembres(): Collection
+    {
+        return $this->membres;
+    }
+
+    public function addMembre(MembreEquipe $membre): static
+    {
+        if (!$this->membres->contains($membre)) {
+            $this->membres->add($membre);
+            $membre->setSaison($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMembre(MembreEquipe $membre): static
+    {
+        if ($this->membres->removeElement($membre)) {
+            if ($membre->getSaison() === $this) {
+                $membre->setSaison(null);
             }
         }
 

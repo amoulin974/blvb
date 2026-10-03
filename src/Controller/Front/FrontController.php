@@ -10,6 +10,7 @@ use App\Entity\User;
 use App\Form\Front\UserChangePasswordType;
 use App\Form\Front\UserProfileType;
 use App\Repository\LieuRepository;
+use App\Repository\MembreEquipeRepository;
 use App\Repository\PartieRepository;
 use App\Repository\EquipeRepository;
 use App\Repository\SaisonRepository;
@@ -37,7 +38,7 @@ final class FrontController extends AbstractController
 
     #[Route('', name: 'index')]
     public function index(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, EquipeRepository $equipeRepository): Response
+    $saisonRepository, EquipeRepository $equipeRepository, MembreEquipeRepository $membreEquipeRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -45,13 +46,16 @@ final class FrontController extends AbstractController
             return $redirect;
         }
 
-        $user= $this->getUser();
-        $equipe=null;
-        if ($user){
-            $equipe = $equipeRepository->findOneByCapitaine($user);
-        }
-
         $saison=$saisonRepository->find($this->idSaisonSelected);
+
+        $user= $this->getUser();
+        $equipesCapitaine=[];
+        if ($user){
+            $equipesCapitaine = $membreEquipeRepository->findEquipesOuCapitaine($user, $saison);
+        }
+        $equipe = $equipesCapitaine[0] ?? null;
+        $equipesCapitaineIds = array_map(static fn(Equipe $e) => $e->getId(), $equipesCapitaine);
+
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
 
@@ -59,6 +63,7 @@ final class FrontController extends AbstractController
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'equipe'=>$equipe,
+            'equipesCapitaineIds'=>$equipesCapitaineIds,
             'saison' => $saison,
             'phaseouverte' => $phaseouverte,
         ]);
@@ -158,7 +163,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository): Response
+    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -195,21 +200,25 @@ final class FrontController extends AbstractController
         foreach ($poules as $poule) {
             if ($poule->getPhase()->getId() === $phaseouverte->getId()) {
                 foreach ($poule->getEquipes() as $equipePoule) {
-                    if ($equipePoule->getCapitaine() !== null && !in_array($equipePoule->getCapitaine()->getId(), $listeCapitaines)){
-                        $listeCapitaines[] = $equipePoule->getCapitaine()->getId();
+                    $capitaineMembre = $membreEquipeRepository->findCapitaine($equipePoule, $saison);
+                    $capitaineUser = $capitaineMembre?->getJoueur()->getUser();
+                    if ($capitaineUser !== null && !in_array($capitaineUser->getId(), $listeCapitaines)){
+                        $listeCapitaines[] = $capitaineUser->getId();
                     }
                 }
             }
         }
 
-        //Si l'utilisateur connecté est dans cette liste on l'autorise à voir les coordonnées du capitaine de l'équipe sélectionnée
+        //Si l'utilisateur connecté est dans cette liste on l'autorise à voir les coordonnées des membres de l'équipe sélectionnée
         $user = $this->getUser();
         $canViewCapitaine = false;
         if (($user !== null && in_array($user->getId(), $listeCapitaines)) || $this->isGranted('ROLE_ADMIN')){
               $canViewCapitaine = true;
         }
 
-
+        //Composition de l'équipe pour la saison sélectionnée
+        $membres = $membreEquipeRepository->findRosterBySaison($equipe, $saison);
+        $estCapitaineDeCetteEquipe = $user !== null && $membreEquipeRepository->estCapitaine($user, $equipe, $saison);
 
 
 
@@ -220,14 +229,16 @@ final class FrontController extends AbstractController
             'phaseouverte'=>$phaseouverte,
             'canViewCapitaine'=>$canViewCapitaine,
             'equipe'=>$equipe,
-            'matchsByPoule'=>$matchsByPoule
+            'matchsByPoule'=>$matchsByPoule,
+            'membres'=>$membres,
+            'estCapitaineDeCetteEquipe'=>$estCapitaineDeCetteEquipe,
         ]);
     }
 
     //Route pour afficher le calendrier des matchs de la saison sélectionnée
     #[Route('/calendrier', name: 'calendrier', methods: ['GET'])]
     public function calendrier(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository): Response
+    $saisonRepository, MembreEquipeRepository $membreEquipeRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -238,11 +249,21 @@ final class FrontController extends AbstractController
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
 
+        $user = $this->getUser();
+        $equipesCapitaineIds = [];
+        if ($user) {
+            $equipesCapitaineIds = array_map(
+                static fn(Equipe $e) => $e->getId(),
+                $membreEquipeRepository->findEquipesOuCapitaine($user, $saison)
+            );
+        }
+
         return $this->render('front/calendrier.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
+            'equipesCapitaineIds'=>$equipesCapitaineIds,
         ]);
     }
     //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux
@@ -361,14 +382,19 @@ final class FrontController extends AbstractController
 
     //Route appelé quand un admin ou un capitaine change le score d'une partie
     #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
-    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
+    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService, MembreEquipeRepository $membreEquipeRepository): JsonResponse
     {
 
     $data = json_decode($request->getContent(), true);
     try{
         $user = $this->getUser();
-        //Vérifier si user à le role admin ou s'il est capitaine de l'équipe qui reçoit
-        if (!$this->isGranted('ROLE_ADMIN') && $partie->getIdEquipeRecoit()->getCapitaine()->getId() != $user->getId()) throw new Exception("Modification interdite");
+        //Vérifier si user à le role admin ou s'il est capitaine de l'équipe qui reçoit (pour la saison du match)
+        if (!$this->isGranted('ROLE_ADMIN')) {
+            $saisonPartie = $partie->getPoule()->getPhase()->getSaison();
+            if (!$user || !$membreEquipeRepository->estCapitaine($user, $partie->getIdEquipeRecoit(), $saisonPartie)) {
+                throw new Exception("Modification interdite");
+            }
+        }
 
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
@@ -488,7 +514,7 @@ final class FrontController extends AbstractController
         EntityManagerInterface $entityManager,
         UserPasswordHasherInterface $passwordHasher,
         SaisonRepository $saisonRepository,
-        EquipeRepository $equipeRepository,
+        MembreEquipeRepository $membreEquipeRepository,
         CacheInterface $cache,
         SessionInterface $session
     ): Response {
@@ -503,23 +529,19 @@ final class FrontController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        // Récupérer les équipes où l'utilisateur est capitaine
-        $equipesCapitaine = $equipeRepository->findBy(['capitaine' => $user]);
-
-        // Groupement par saison pour l'affichage
+        // Groupement par saison des équipes où l'utilisateur est capitaine, pour l'affichage
+        // (les objets Equipe/Saison sont conservés, pas juste leur nom, pour pouvoir lier vers
+        // la page de gestion de la composition de l'équipe pour cette saison)
         $equipesParSaison = [];
-        foreach ($equipesCapitaine as $equipe) {
-            /** @var Poule $poule */
-            foreach ($equipe->getPoules() as $poule) {
-                $nomSaison = $poule->getPhase()->getSaison()->getNom();
-                if (!isset($equipesParSaison[$nomSaison])) {
-                    $equipesParSaison[$nomSaison] = [];
-                }
-                if (!in_array($equipe->getNom(), $equipesParSaison[$nomSaison])) {
-                    $equipesParSaison[$nomSaison][] = $equipe->getNom();
-                }
+        foreach ($membreEquipeRepository->findMembresCapitaine($user) as $membre) {
+            $saison = $membre->getSaison();
+            if (!isset($equipesParSaison[$saison->getId()])) {
+                $equipesParSaison[$saison->getId()] = [
+                    'saison' => $saison,
+                    'equipes' => [],
+                ];
             }
-
+            $equipesParSaison[$saison->getId()]['equipes'][] = $membre->getEquipe();
         }
 
         // Initialisation des deux formulaires

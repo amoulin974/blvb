@@ -41,12 +41,14 @@
                         <p class="text-sm italic opacity-50">Aucune équipe enregistrée comme capitaine.</p>
                     {% else %}
                         <div class="space-y-3">
-                            {% for saison, equipes in equipesParSaison %}
+                            {% for groupe in equipesParSaison %}
                                 <div class="flex flex-col gap-1">
-                                    <span class="text-xs font-bold text-primary">{{ saison }}</span>
+                                    <span class="text-xs font-bold text-primary">{{ groupe.saison.nom }}</span>
                                     <div class="flex flex-wrap gap-2">
-                                        {% for equipe in equipes %}
-                                            <span class="badge badge-outline badge-md">{{ equipe }}</span>
+                                        {% for equipe in groupe.equipes %}
+                                            <a href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': groupe.saison.id}) }}" class="badge badge-outline badge-md hover:badge-primary">
+                                                {{ equipe.nom }}
+                                            </a>
                                         {% endfor %}
                                     </div>
                                 </div>

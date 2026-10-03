@@ -57,8 +57,17 @@ final class EquipeController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET'], requirements: ['id' => '\d+'])]
     public function show(Equipe $equipe): Response
     {
+        // Saisons distinctes où cette équipe joue (via ses poules), pour proposer un lien
+        // "Gérer la composition" par saison.
+        $saisons = [];
+        foreach ($equipe->getPoules() as $poule) {
+            $saison = $poule->getPhase()->getSaison();
+            $saisons[$saison->getId()] = $saison;
+        }
+
         return $this->render('admin/equipe/show.html.twig', [
             'equipe' => $equipe,
+            'saisons' => array_values($saisons),
         ]);
     }
 

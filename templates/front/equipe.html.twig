@@ -13,17 +13,29 @@
         {% for creneau in equipe.lieu.creneaux %}
             <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
         {% endfor %}
-        <p><span class="font-bold">Capitaine :</span>
-        {%if not equipe.capitaine %}
-            <span class="em">Aucun capitaine défini</span>   </p>
-        {% elseif not canViewCapitaine  %}
-        <span class="em">Ces information ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</span></p>
-
+        <h2 class="mt-4">Composition de l'équipe</h2>
+        {% if membres is empty %}
+            <p class="em">Composition non renseignée pour cette saison.</p>
+        {% elseif not canViewCapitaine %}
+            <p class="em">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
         {% else %}
-        </p>
-        <p><span class="font-bold">Nom :</span>  {{equipe.capitaine.prenom}} {{equipe.capitaine.nom}}</p>
-        <p><span class="font-bold">Tel :</span>  {{equipe.capitaine.telephone}} </p>
-        <p><span class="font-bold">Email :</span>  {{equipe.capitaine.email}} </p>
+            <ul class="list-disc list-inside">
+                {% for membre in membres %}
+                    <li>
+                        {{ membre.joueur.prenom }} {{ membre.joueur.nom }}
+                        {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
+                        {% if membre.joueur.telephone or membre.joueur.email %}
+                            —
+                            {% if membre.joueur.telephone %}Tel : {{ membre.joueur.telephone }}{% endif %}
+                            {% if membre.joueur.email %}Email : {{ membre.joueur.email }}{% endif %}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
+            <p class="mt-2"><a class="btn btn-sm btn-outline" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a></p>
         {% endif %}
 
         <h2 class="mt-4">Calendrier</h2>
