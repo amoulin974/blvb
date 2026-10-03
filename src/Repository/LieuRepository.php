@@ -19,7 +19,21 @@ class LieuRepository extends ServiceEntityRepository
     public function getLieuByDefaut(): ?Lieu
     {
         //TODO définir un paramètre de configuration
-        return $this->findOneBy(['nom' => 'St-Jean-de-Luz, Gymnase du college Chantaco']);
+        $lieu = $this->findOneBy(['nom' => 'St-Jean-de-Luz, Gymnase du college Chantaco']);
+        if ($lieu !== null) {
+            return $lieu;
+        }
+
+        // Si le lieu par défaut configuré n'existe pas dans cette base (ex: données de
+        // dev/import), on retombe sur le premier lieu qui a au moins un créneau défini,
+        // plutôt que de renvoyer null et faire planter la génération des matchs.
+        foreach ($this->findAll() as $candidat) {
+            if (!$candidat->getCreneaux()->isEmpty()) {
+                return $candidat;
+            }
+        }
+
+        return null;
     }
 
 //    /**

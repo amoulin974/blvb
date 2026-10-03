@@ -13,6 +13,9 @@
                     <input type="checkbox" class="peer" {% if phase.id == phaseOuverteId %}checked{% endif %} />
                     <div class="collapse-title flex items-center">
                         <span class="font-bold text-lg">{{ phase.nom }}</span>
+                        {% if phase.close %}
+                            <span class="badge badge-neutral ml-3">Clôturée</span>
+                        {% endif %}
                         <span class="ml-4 text-sm opacity-60">Début : {{ phase.datedebut|date("d/m/Y") }}</span>
                     </div>
 
@@ -26,7 +29,7 @@
                             </a>
                             <a class="btn btn-xs btn-neutral join-item" href="{{ path("admin_phase_optimiser", {'id': phase.id}) }}">Optimiser les matchs</a>
                             {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs', join:'join-item', label: 'Supprimer la phase' }) }}
-                            {% if not loop.last and phase.cloturable==true %}
+                            {% if not loop.last and phase.cloturable==true and not phase.close %}
                                 <form action="{{ path('admin_phase_cloturer', {'id': phase.id}) }}" method="POST" class="flex items-center">
                                     <button type="submit" class="btn btn-warning btn-xs join-item" onclick="return confirm('Êtes-vous sûr de vouloir clôturer cette phase ? Cette action est irréversible.')">
                                         Clôturer la phase
@@ -61,8 +64,9 @@
                                         {% endif %}
 
                                         {% if poule.equipes|length > 0 and poule.journees|length > 0 and poule.parties|length == 0 %}
-                                            <form action="{{ path('admin_partie_createpartie', {'id': poule.id}) }}" method="POST">
-                                                <button type="submit" class="btn btn-xs btn-success text-white">Créer les matchs</button>
+                                            <form action="{{ path('admin_partie_optimiser', {'id': poule.id}) }}" method="POST">
+                                                <input type="hidden" name="_token" value="{{ csrf_token('optimiser' ~ poule.id) }}">
+                                                <button type="submit" class="btn btn-xs btn-success text-white">Optimiser les matchs</button>
                                             </form>
                                         {% endif %}
                                     </div>

@@ -138,17 +138,6 @@ final class PartieController extends AbstractController
         ]);
     }
 
-    //fonction qui crée les matchs pour une poule
-    #[Route('/{id}/createpartie', name: 'createpartie', methods: ['POST'])]
-    public function createPartie(Poule $poule, Request $request, EntityManagerInterface $entityManager, PartieService $partieService): Response
-    {
-        $partieService->createCalendar($poule);
-        return $this->redirectToRoute('admin_saison_show', [
-            'id' => $poule->getPhase()->getSaison()->getId(),
-            'openPoule' => $poule->getId(),
-        ]);
-    }
-
     //Supprime et recrée les matchs d'une poule, utilisé depuis la page d'optimisation
     #[Route('/{id}/optimiser', name: 'optimiser', methods: ['POST'])]
     public function optimiser(Request $request, Poule $poule, PartieService $partieService): Response
