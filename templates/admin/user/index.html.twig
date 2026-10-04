@@ -4,7 +4,7 @@
 
 {% block body %}
     <h1>Liste des utilisateurs</h1>
-<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
+<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100 p-4" data-controller="datatable" data-datatable-per-page-value="10">
 <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_user_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
         </svg>
@@ -12,6 +12,8 @@
     <a href="{{ path('admin_user_excel_explication') }}" class="btn btn-secondary">
         Télécharger le modèle Excel pour importer en masse
     </a>
+    <input type="text" placeholder="Rechercher..." class="input input-bordered input-sm w-full max-w-xs mb-3 mt-3 block"
+           data-datatable-target="search" data-action="input->datatable#filter">
     <table class="border border-solid table table-xs table-zebra">
         <thead>
             <tr>
@@ -19,10 +21,10 @@
                 <th>Email</th>
                 <th>Roles</th>
                 <th>IsVerified</th>
-                <th>actions</th>
+                <th data-datatable-no-sort>actions</th>
             </tr>
         </thead>
-        <tbody>
+        <tbody data-datatable-target="body">
         {% for user in users %}
             <tr>
                 <td>{{ user.id }}</td>
@@ -44,6 +46,7 @@
         {% endfor %}
         </tbody>
     </table>
+    <div class="flex items-center justify-between mt-3" data-datatable-target="pagination"></div>
 </div>
 
 {% endblock %}

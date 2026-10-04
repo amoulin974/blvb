@@ -1,0 +1,34 @@
+{{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+<div class="form-control w-full">
+    {{ form_label(form.nom, 'Nom', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom'}}) }}
+    {{ form_errors(form.nom) }}
+</div>
+
+<div class="form-control w-full">
+    {{ form_label(form.prenom, 'Prénom', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.prenom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Prénom'}}) }}
+    {{ form_errors(form.prenom) }}
+</div>
+
+<div class="form-control w-full">
+    {{ form_label(form.email, 'Email', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.email, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Email'}}) }}
+    {{ form_errors(form.email) }}
+</div>
+
+<div class="form-control w-full">
+    {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.telephone, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Téléphone'}}) }}
+    {{ form_errors(form.telephone) }}
+</div>
+
+<div class="form-control mb-2 relative z-[9999]">
+    {{ form_label(form.user, 'Compte utilisateur lié :', {'label_attr': {'class': 'label-text'}}) }}
+    {{ form_widget(form.user, {'attr': {'class': 'w-full', 'data-controller': 'tom-select'}}) }}
+    {{ form_errors(form.user) }}
+</div>
+
+<button class="btn btn-success btn-sm">{{ button_label|default('Sauvegarder') }}</button>
+{{ form_end(form) }}

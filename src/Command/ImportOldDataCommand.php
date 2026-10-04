@@ -4,7 +4,9 @@
 namespace App\Command;
 
 use App\Entity\Indisponibilite;
+use App\Entity\Joueur;
 use App\Entity\Journee;
+use App\Entity\MembreEquipe;
 use App\Entity\Partie;
 use App\Entity\Saison;
 use App\Entity\Phase;
@@ -273,8 +275,15 @@ class ImportOldDataCommand extends Command
 
 
 
-            //Récupération des capitaines
+            //Affectation de l'équipe à une poule
+            $poule = $this->findPouleByOldSaison($oldEquipe['saison'], $tabPhase);
+            if ($poule) {
+                $poule->addEquipe($equipe);
+            }
 
+            //Récupération des capitaines : devient un membre "capitaine" de la composition
+            //de l'équipe pour la saison déduite de la poule (le capitaine n'est plus un
+            //attribut global de l'équipe, cf. App\Entity\MembreEquipe).
             if (!str_ends_with($oldEquipe['saison'], '2') && !str_ends_with($oldEquipe['saison'], 'Finale')) {
                 $oldCapitaine = $oldConn->fetchAssociative(
                     'SELECT * FROM `tvbacontact` WHERE codeequipe = :codeEquipe',
@@ -285,7 +294,7 @@ class ImportOldDataCommand extends Command
                     //Vérifier qu'un user n'existe pas déjà avec l'adresse du capitaine
                     $userActuel = $em->getRepository(User::class)->findOneBy(['email' => $oldCapitaine['email']]);
                     if ($userActuel) {
-                        $equipe->setCapitaine($userActuel);
+                        $user = $userActuel;
                     } else {
                         $user = new User();
                         $user->setPrenom($oldCapitaine['nom']);
@@ -296,16 +305,33 @@ class ImportOldDataCommand extends Command
                         $hashedPassword = $this->passwordHasher->hashPassword($user, $fakePassword);
                         $user->setPassword($hashedPassword);
                         $user->setIsVerified(1);
-                        $equipe->setCapitaine($user);
                         $em->persist($user);
                     }
-                }
-            }
 
-            //Affectation de l'équipe à une poule
-            $poule = $this->findPouleByOldSaison($oldEquipe['saison'], $tabPhase);
-            if ($poule) {
-                $poule->addEquipe($equipe);
+                    if ($poule) {
+                        $saison = $poule->getPhase()->getSaison();
+
+                        $joueur = $em->getRepository(Joueur::class)->findOneBy(['user' => $user]);
+                        if (!$joueur) {
+                            $joueur = new Joueur();
+                            $joueur->setNom($user->getNom() ?? ($oldCapitaine['nom'] ?? ''));
+                            $joueur->setPrenom($user->getPrenom() ?? '');
+                            $joueur->setEmail($user->getEmail());
+                            $joueur->setUser($user);
+                            $em->persist($joueur);
+                        }
+
+                        $membre = $em->getRepository(MembreEquipe::class)->findOneBy(['equipe' => $equipe, 'saison' => $saison, 'joueur' => $joueur]);
+                        if (!$membre) {
+                            $membre = new MembreEquipe();
+                            $membre->setEquipe($equipe);
+                            $membre->setSaison($saison);
+                            $membre->setJoueur($joueur);
+                            $membre->setCapitaine(true);
+                            $em->persist($membre);
+                        }
+                    }
+                }
             }
 
             $tabNewEquipeByName[$oldEquipe['nom']] = $equipe;

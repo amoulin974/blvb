@@ -128,22 +128,25 @@ final class SaisonController extends AbstractController
 
         // 2. Déterminer la phase à ouvrir
         // Si une poule est spécifiée, on ouvre sa phase parente
-        // Sinon, on utilise votre logique de "phase actuelle"
+        // Sinon, on utilise la logique de "phase actuelle"
         if ($pouleOuverte) {
             $phaseOuverteId = $pouleOuverte->getPhase()->getId();
             $pouleOuverteId = $pouleOuverte->getId();
         } else {
-            $phaseActuelle = $this->getPhaseActuelle($saison); // Recopiez ou injectez cette méthode
+            $phaseActuelle = $this->getPhaseActuelle($saison); 
             $phaseOuverteId = $phaseActuelle ? $phaseActuelle->getId() : null;
             $pouleOuverteId = null; // Par défaut, on ouvrira la première poule de la phase
         }
 
-        foreach($saison->getPhases() as &$phase){
+        // Une phase est cloturable si elle a au moins une poule et que TOUTES ses poules
+        // ont déjà des journées (sinon leur classement n'a pas de sens et basculer les
+        // équipes vers la phase suivante serait prématuré).
+        foreach($saison->getPhases() as $phase){
+            $phase->cloturable = count($phase->getPoules()) > 0;
             foreach($phase->getPoules() as $poule){
                 if ($poule->getJournees()->count()==0){
                     $phase->cloturable=false;
-                }else{
-                    $phase->cloturable=true;
+                    break;
                 }
             }
         }

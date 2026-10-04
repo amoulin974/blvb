@@ -1,0 +1,30 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Joueur{% endblock %}
+
+{% block body %}
+    <h1>Fiche de {{ joueur.prenom }} {{ joueur.nom }}</h1>
+
+    <ul>
+        <li>id : {{ joueur.id }}</li>
+        <li>Nom : {{ joueur.nom }}</li>
+        <li>Prénom : {{ joueur.prenom }}</li>
+        <li>Email : {{ joueur.email|default('non renseigné') }}</li>
+        <li>Téléphone : {{ joueur.telephone|default('non renseigné') }}</li>
+        <li>Compte utilisateur lié : {% if joueur.user %}{{ joueur.user.email }}{% else %}aucun{% endif %}</li>
+        <li>Équipes :</li>
+        <ul>
+            {% for membre in joueur.membres %}
+                <li>
+                    {{ membre.equipe.nom }} — {{ membre.saison.nom }}
+                    {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
+                </li>
+            {% else %}
+                <li>Aucune équipe pour l'instant</li>
+            {% endfor %}
+        </ul>
+    </ul>
+
+    <a class="btn btn-sm" href="{{ path('admin_joueur_index') }}">Voir tous les joueurs</a>
+    <a class="btn btn-sm" href="{{ path('admin_joueur_new') }}">Créer une nouvelle fiche joueur</a>
+{% endblock %}

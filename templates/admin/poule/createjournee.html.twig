@@ -9,12 +9,18 @@
         <div class="mb-4">
             <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id, 'openPoule':poule.id}) }}">Voir la saison</a>
             <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a>
+            {% if poule.journees|length > 0 %}
+                <form action="{{ path('admin_journee_deleteall', {'id': poule.id}) }}" method="POST" class="inline" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer toutes les journées de cette poule ? Cette action est irréversible.');">
+                    <input type="hidden" name="_token" value="{{ csrf_token('deleteall' ~ poule.id) }}">
+                    <button type="submit" class="btn btn-sm btn-error text-white">Supprimer toutes les journées</button>
+                </form>
+            {% endif %}
         </div>
         <div
             id="calendar"
             data-controller="calendar"
             data-calendar-datatype-value="journee"
-            data-calendar-events-url-value="/admin/journee/{{ poule.id }}/api/journees"
+            data-calendar-events-url-value="{{ path('admin_journee_api', {'id': poule.id}) }}"
             data-calendar-initialview-value="multiMonthFourMonth"
             data-calendar-duration-value="6"
             data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"

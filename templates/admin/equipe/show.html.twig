@@ -10,7 +10,6 @@
         <li>nom : {{ equipe.nom }}</li>
         <li>Lieu d'entrainement : {{ equipe.lieu.nom }}</li>
 
-        <li>Capitaine : {%  if equipe.capitaine %}{{ equipe.capitaine.nom }} {%  else  %} aucun capitaine défini {%  endif %}</li>
         <li>Liste des poules :</li>
             <ul>
         {% for poule in equipe.Poules %}
@@ -18,6 +17,18 @@
                 <li>Poule : {{ poule.nom }} de {{ poule.phase.saison.nom }} - {{ poule.phase.nom }}</li>
             {% endfor %}
             </ul>
+    </ul>
+
+    <h2 class="mt-4">Composition par saison</h2>
+    <ul>
+        {% for saison in saisons %}
+            <li>
+                {{ saison.nom }} —
+                <a class="link" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+            </li>
+        {% else %}
+            <li class="opacity-60">Cette équipe n'est encore rattachée à aucune saison (ajoutez-la à une poule).</li>
+        {% endfor %}
     </ul>
 
 

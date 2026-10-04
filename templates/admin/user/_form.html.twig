@@ -1,5 +1,10 @@
 {# templates/admin/user/_form.html.twig #}
-{{ form_start(form, { attr: { class: "space-y-6 max-w-xl mx-auto" } }) }}
+{{ form_start(form, { attr: {
+    class: "space-y-6 max-w-xl mx-auto",
+    'data-controller': 'password-rules',
+    'data-password-rules-optional-value': user.id ? 'true' : 'false',
+    'data-action': 'submit->password-rules#preventInvalidSubmit'
+} }) }}
 {% if not form.vars.valid %}
     <div class="alert alert-error mb-4">
         {{ form_errors(form) }}
@@ -53,7 +58,14 @@
 
     <div>
         <label class="block text-sm font-medium mb-1" for="{{ form.plainPassword.vars.id }}">Définir un nouveau mot de passe</label>
-        {{ form_widget(form.plainPassword, { attr: { class: "input input-bordered w-full", placeholder: "Laisser vide pour ne pas modifier" } }) }}
+        {{ form_widget(form.plainPassword, { attr: {
+            class: "input input-bordered w-full",
+            placeholder: "Laisser vide pour ne pas modifier",
+            'data-password-rules-target': 'password',
+            'data-action': 'input->password-rules#update'
+        } }) }}
+        <p class="text-xs opacity-60 mt-1">Laisser vide pour ne pas modifier.</p>
+        <div data-password-rules-target="rules"></div>
         {{ form_errors(form.plainPassword) }}
     </div>
 
@@ -90,6 +102,7 @@
             <div>
                 <label class="block text-xs font-medium mb-1">Nouveau mot de passe</label>
                 {{ form_widget(form.plainPassword, { attr: { class: "input input-bordered input-sm w-full", autocomplete: "new-password" } }) }}
+                <p class="text-xs opacity-60 mt-1">Au moins 12 caractères, avec au moins une majuscule, une minuscule, un chiffre et un caractère spécial.</p>
                 {{ form_errors(form.plainPassword) }}
             </div>
         </div>
@@ -104,7 +117,7 @@
 
 <div class="flex justify-end gap-3 mt-10">
     <a href="{{ is_granted('ROLE_ADMIN') ? path('admin_user_index') : path('front_index') }}" class="btn btn-ghost btn-sm">Annuler</a>
-    <button type="submit" class="btn btn-success btn-sm">Enregistrer les modifications</button>
+    <button type="submit" class="btn btn-success btn-sm" data-password-rules-target="submit">Enregistrer les modifications</button>
 </div>
 {# RENDU DU JETON CSRF : Indispensable quand render_rest est à false #}
 {{ form_row(form._token) }}

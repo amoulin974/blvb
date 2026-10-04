@@ -47,8 +47,11 @@ class Equipe
     #[ORM\OneToMany(targetEntity: Classement::class, mappedBy: 'equipe')]
     private Collection $classements;
 
-    #[ORM\ManyToOne]
-    private ?User $capitaine = null;
+    /**
+     * @var Collection<int, MembreEquipe>
+     */
+    #[ORM\OneToMany(targetEntity: MembreEquipe::class, mappedBy: 'equipe', orphanRemoval: true)]
+    private Collection $membres;
 
     public function __construct()
     {
@@ -56,6 +59,7 @@ class Equipe
         $this->parties_deplacement = new ArrayCollection();
         $this->Poules = new ArrayCollection();
         $this->classements = new ArrayCollection();
+        $this->membres = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -208,14 +212,31 @@ class Equipe
         return $this;
     }
 
-    public function getCapitaine(): ?User
+    /**
+     * @return Collection<int, MembreEquipe>
+     */
+    public function getMembres(): Collection
     {
-        return $this->capitaine;
+        return $this->membres;
     }
 
-    public function setCapitaine(?User $capitaine): static
+    public function addMembre(MembreEquipe $membre): static
     {
-        $this->capitaine = $capitaine;
+        if (!$this->membres->contains($membre)) {
+            $this->membres->add($membre);
+            $membre->setEquipe($this);
+        }
+
+        return $this;
+    }
+
+    public function removeMembre(MembreEquipe $membre): static
+    {
+        if ($this->membres->removeElement($membre)) {
+            if ($membre->getEquipe() === $this) {
+                $membre->setEquipe(null);
+            }
+        }
 
         return $this;
     }

@@ -4,6 +4,7 @@ namespace App\Controller;
 
 use App\Entity\User;
 use App\Form\RegistrationFormType;
+use App\Repository\JoueurRepository;
 use App\Security\EmailVerifier;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityManagerInterface;
@@ -37,16 +38,16 @@ class RegistrationController extends AbstractController
     }
 
     #[Route('/register', name: 'app_register')]
-    public function register(Request $request, 
-    UserPasswordHasherInterface $userPasswordHasher, 
-    EntityManagerInterface $entityManager, 
-   
+    public function register(Request $request,
+    UserPasswordHasherInterface $userPasswordHasher,
+    EntityManagerInterface $entityManager,
+    JoueurRepository $joueurRepository,
     ): Response
     {
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
-        
+
         if ($form->isSubmitted() && $form->isValid()) {
             /** @var string $plainPassword */
             $plainPassword = $form->get('plainPassword')->getData();
@@ -55,6 +56,14 @@ class RegistrationController extends AbstractController
             $user->setPassword($userPasswordHasher->hashPassword($user, $plainPassword));
 
             $entityManager->persist($user);
+
+            // Si une fiche joueur existante (pas encore liée à un compte) utilise cette
+            // même adresse email, on la relie automatiquement à ce nouveau compte.
+            $joueurExistant = $joueurRepository->findOneBy(['email' => $user->getEmail(), 'user' => null]);
+            if ($joueurExistant) {
+                $joueurExistant->setUser($user);
+            }
+
             $entityManager->flush();
 
             //Connexion automatique de l'utilisateur après son inscription

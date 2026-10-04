@@ -3,14 +3,15 @@
 namespace App\Form;
 
 use App\Entity\User;
+use App\Validator\PasswordPolicy;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\EmailType;
 use Symfony\Component\Form\Extension\Core\Type\PasswordType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
-use Symfony\Component\Validator\Constraints\Length;
 use Symfony\Component\Validator\Constraints\NotBlank;
 
 class UserAdminType extends AbstractType
@@ -37,10 +38,13 @@ class UserAdminType extends AbstractType
                 'mapped' => false,
                 'required' => !$isEdit,
                 'label' => $isEdit ? 'Changer le mot de passe (laisser vide pour inchangé)' : 'Mot de passe',
+                'help' => PasswordPolicy::HELP_TEXT,
                 'attr' => ['autocomplete' => 'new-password'],
-                'constraints' => $isEdit ? [] : [
-                    new NotBlank(['message' => 'Veuillez entrer un mot de passe']),
-                    new Length(['min' => 6, 'minMessage' => 'Minimum {{ limit }} caractères']),
+                'constraints' => [
+                    ...($isEdit ? [] : [new NotBlank(['message' => 'Veuillez entrer un mot de passe'])]),
+                    // Groupe "password_change" : validé uniquement si un nouveau mot de passe est réellement saisi
+                    // (en édition, un champ vide signifie "ne pas modifier le mot de passe").
+                    ...PasswordPolicy::constraints(['password_change']),
                 ],
             ]);
     }
@@ -50,6 +54,15 @@ class UserAdminType extends AbstractType
         $resolver->setDefaults([
             'data_class' => User::class,
             'is_edit' => false,
+            'validation_groups' => function (FormInterface $form): array {
+                $groups = ['Default'];
+                $plainPassword = $form->get('plainPassword')->getData();
+                if ($plainPassword !== null && $plainPassword !== '') {
+                    $groups[] = 'password_change';
+                }
+
+                return $groups;
+            },
         ]);
     }
 }
