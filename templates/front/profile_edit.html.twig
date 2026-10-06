@@ -103,7 +103,10 @@
                             {% endif %}
                         </div>
                     {% endfor %}
+                    {# Les erreurs de contraintes (longueur, etc.) sont sur .first ; l'erreur
+                       "les mots de passe ne correspondent pas" est sur le champ composé lui-même. #}
                     {{ form_errors(passwordForm.plainPassword.first) }}
+                    {{ form_errors(passwordForm.plainPassword) }}
                 </div>
                 {{ form_row(passwordForm._token) }}
                 <button type="submit" class="btn btn-warning w-full mt-8" data-password-rules-target="submit">Changer mon mot de passe</button>

@@ -40,6 +40,11 @@
             {% for error in resetForm.plainPassword.second.vars.errors %}
                 <p class="alert alert-error mt-2">{{ error.message }}</p>
             {% endfor %}
+            {# L'erreur "les mots de passe ne correspondent pas" est portée par le champ
+               composé plainPassword lui-même, pas par .first ni .second. #}
+            {% for error in resetForm.plainPassword.vars.errors %}
+                <p class="alert alert-error mt-2">{{ error.message }}</p>
+            {% endfor %}
         </div>
 
         <div class="form-control mt-4">
