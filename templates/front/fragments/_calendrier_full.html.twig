@@ -13,7 +13,8 @@
 
                         <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
-                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        {# Barre d'outils de la poule, séparée des journées #}
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 pb-4 border-b border-base-300">
                                 <label for="equipeFilter_{{ phase.id }}_{{poule.id}}">Filtrer par équipe</label>
                                 <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" class="select w-full text-base sm:w-72 md:select-sm md:text-sm" onchange="filterMatches({{phase.id}}, {{poule.id}})">
                                     <option value="all">Toutes les équipes</option>
@@ -24,7 +25,7 @@
                             </div>
                         {% for journee in poule.journees %}
 
-                            <h3 class="{{ loop.first ? 'mt-4' : 'mt-10' }} mb-2 uppercase tracking-wide text-(--color-primary)">Journée {{ journee.numero }}
+                            <h3 class="{{ loop.first ? 'mt-6' : 'mt-8 pt-6 border-t border-base-300' }} mb-3 text-2xl uppercase tracking-wide text-(--color-primary)">Journée {{ journee.numero }}
                                 {% if journee.dateDebut and journee.dateFin %}
                                     <span class="font-sans font-normal normal-case tracking-normal text-sm text-base-content">— du {{ journee.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ journee.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
                                 {% endif %}
@@ -36,66 +37,67 @@
                                 {# Le masquage mobile est porté par ce div : la classe daisyUI "table" impose display: table et l'emporterait sur "hidden". #}
                                 <div class="hidden md:block">
                                 <table class="table w-full table-fixed bg-base-100" >
+                                    {# Disposition « résultats sportifs » : les deux équipes encadrent le score au centre,
+                                       pour que l'œil n'ait pas à traverser toute la largeur pour relier équipes et résultat. #}
                                     <colgroup>
-                                        <col class="w-[22%]">
-                                        <col class="w-[22%]">
-                                        <col class="w-[22%]">
-                                        <col class="w-[17%]">
-                                        <col class="w-[17%]">
+                                        <col class="w-[16%]">
+                                        <col class="w-[27%]">
+                                        <col class="w-[12%]">
+                                        <col class="w-[27%]">
+                                        <col class="w-[18%]">
                                     </colgroup>
-                                    {# Pas de lignes alternées : de fins séparateurs suffisent sur des tableaux courts,
-                                       et un fond coloré reste disponible pour signaler une ligne (ex. « Mon équipe »). #}
-                                    <thead>
-                                        <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
-                                            <th>Équipe qui reçoit</th>
-                                            <th>Équipe qui se déplace</th>
+                                    {# En-têtes masqués visuellement (la disposition se lit d'elle-même et ils se répétaient
+                                       à chaque journée) mais conservés pour les lecteurs d'écran.
+                                       Pas de lignes alternées : de fins séparateurs suffisent sur des tableaux courts. #}
+                                    <thead class="sr-only">
+                                        <tr>
                                             <th>Date</th>
-                                            <th>Lieu</th>
+                                            <th>Équipe qui reçoit</th>
                                             <th>Résultat</th>
+                                            <th>Équipe qui se déplace</th>
+                                            <th>Lieu</th>
                                         </tr>
                                     </thead>
                                     <tbody>
 
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" class="hover:bg-(--color-base-200)" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                            <td>
+                                            <td class="whitespace-nowrap text-(--color-base-content)/80">{{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }}</td>
+                                            <td class="text-right">
                                                 <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
-                               
                                             </td>
-                                            <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
-                                   
-                                            </td>
-                                            <td>{{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }}</td>
-                                            <td><a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer">
-                                                    {{ partie.lieu.nom }}
-                                                </a></td>
-                                            <td class="font-display text-xl font-extrabold text-(--color-primary) tabular-nums">
-
+                                            <td class="text-center font-display text-xl font-extrabold text-(--color-primary) tabular-nums">
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
                                                     <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
                                                 {% else %}
                                                     <span class="score_partie-{{partie.id}}"><span class="opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span></span>
                                                 {% endif %}
                                                 {% if is_granted('ROLE_ADMIN')
-                                                            or (app.user is not null
-                                                                and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
-
-                                                            <a href="#"
-                                                                class="btn btn-accent btn-xs"
-                                                                data-action="click->score-modal#openModal"
-                                                                data-partie-id="{{ partie.id }}"
-                                                                data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
-                                                                data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                                {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
-                                                                    Modifier le résultat
-                                                                {% else %}
-                                                                    Saisir le résultat
-                                                                {% endif  %}
-                                                            </a>
+                                                        or (app.user is not null
+                                                            and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
+                                                    <div class="mt-1 font-sans">
+                                                        <a href="#"
+                                                            class="btn btn-accent btn-xs"
+                                                            aria-label="Saisir ou modifier le résultat {{ partie.idEquipeRecoit.nom }} contre {{ partie.idEquipeDeplace.nom }}"
+                                                            data-action="click->score-modal#openModal"
+                                                            data-partie-id="{{ partie.id }}"
+                                                            data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+                                                            data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
+                                                            {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
+                                                                Modifier
+                                                            {% else %}
+                                                                Saisir
                                                             {% endif %}
+                                                        </a>
+                                                    </div>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
+                                            </td>
+                                            <td class="text-right whitespace-nowrap"><a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer">{{ partie.lieu.nom }}</a></td>
                                         </tr>
 
                                     {% endfor %}
