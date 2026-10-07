@@ -15,10 +15,13 @@ export default class extends Controller {
 
         this.titleTarget.textContent = `Saisir le score : ${btn.dataset.equipeRecoit} vs ${btn.dataset.equipeDeplace}`;
         this.labelReceptionTarget.textContent = `Nombre sets gagnants ${btn.dataset.equipeRecoit} :`;
-        this.labelDeplacementTarget.textContent = `Nombre sets gagnats ${btn.dataset.equipeDeplace} :`;
+        this.labelDeplacementTarget.textContent = `Nombre sets gagnants ${btn.dataset.equipeDeplace} :`;
 
-        this.inputReceptionTarget.value = '';
-        this.inputDeplacementTarget.value = '';
+        // En modification, on pré-remplit avec le score affiché ("3 - 1") ; en saisie, champs vides.
+        const zone = document.querySelector('.score_partie-' + this.currentPartieId);
+        const scores = btn.dataset.scoreAction === 'modifier' && zone ? zone.textContent.trim().split(/\s*-\s*/) : [];
+        this.inputReceptionTarget.value = scores.length === 2 ? scores[0] : '';
+        this.inputDeplacementTarget.value = scores.length === 2 ? scores[1] : '';
 
         this.modalTarget.classList.add('modal-open');
     }
@@ -54,6 +57,7 @@ export default class extends Controller {
             const scoreZones = document.querySelectorAll('.score_partie-' + this.currentPartieId);
             const scores = json.newScore.split(' - ');
             scoreZones.forEach(zone => {
+                zone.classList.remove('hidden');
                 if (scores.length === 2) {
                     zone.innerHTML = `<strong>${scores[0]}</strong> - <strong>${scores[1]}</strong>`;
                 } else {
@@ -61,10 +65,9 @@ export default class extends Controller {
                 }
             });
 
-            // Mise à jour du texte du bouton
-            const buttons = document.querySelectorAll(`[data-partie-id="${this.currentPartieId}"]`);
-            buttons.forEach(btn => {
-                btn.textContent = 'Modifier le résultat';
+            // Le score est saisi : on remplace le bouton « Saisir » par le crayon « Modifier »
+            document.querySelectorAll(`[data-partie-id="${this.currentPartieId}"]`).forEach(btn => {
+                btn.classList.toggle('hidden', btn.dataset.scoreAction === 'saisir');
             });
 
             this.closeModal(new Event('submit'));

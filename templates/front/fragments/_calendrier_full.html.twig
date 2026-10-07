@@ -66,31 +66,8 @@
                                             <td class="text-right">
                                                 <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
                                             </td>
-                                            <td class="text-center font-display text-xl font-extrabold text-(--color-primary) tabular-nums">
-                                                {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
-                                                {% else %}
-                                                    <span class="score_partie-{{partie.id}}"><span class="opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span></span>
-                                                {% endif %}
-                                                {% if is_granted('ROLE_ADMIN')
-                                                        or (app.user is not null
-                                                            and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
-                                                    <div class="mt-1 font-sans">
-                                                        <a href="#"
-                                                            class="btn btn-accent btn-xs"
-                                                            aria-label="Saisir ou modifier le résultat {{ partie.idEquipeRecoit.nom }} contre {{ partie.idEquipeDeplace.nom }}"
-                                                            data-action="click->score-modal#openModal"
-                                                            data-partie-id="{{ partie.id }}"
-                                                            data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
-                                                            data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                            {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
-                                                                Modifier
-                                                            {% else %}
-                                                                Saisir
-                                                            {% endif %}
-                                                        </a>
-                                                    </div>
-                                                {% endif %}
+                                            <td class="text-center font-display text-xl font-extrabold text-(--color-primary) tabular-nums whitespace-nowrap">
+                                                {{ include('front/fragments/_score_partie.html.twig') }}
                                             </td>
                                             <td>
                                                 <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
@@ -116,11 +93,7 @@
                                                 <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-medium block py-0.5 break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
                                             </div>
                                             <div class="shrink-0 text-right font-display text-2xl font-extrabold text-(--color-primary) tabular-nums">
-                                                {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
-                                                {% else %}
-                                                    <span class="score_partie-{{partie.id}}"><span class="opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span></span>
-                                                {% endif %}
+                                                {{ include('front/fragments/_score_partie.html.twig') }}
                                             </div>
                                         </div>
                                         <p class="text-sm">
@@ -129,24 +102,7 @@
                                                 target="_blank"
                                                 rel="noopener noreferrer">{{ partie.lieu.nom }}</a>
                                         </p>
-                                        {% if is_granted('ROLE_ADMIN')
-                                                or (app.user is not null
-                                                    and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
-                                            <div>
-                                                <a href="#"
-                                                    class="btn btn-accent btn-xs"
-                                                    data-action="click->score-modal#openModal"
-                                                    data-partie-id="{{ partie.id }}"
-                                                    data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
-                                                    data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                    {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
-                                                        Modifier le résultat
-                                                    {% else %}
-                                                        Saisir le résultat
-                                                    {% endif %}
-                                                </a>
-                                            </div>
-                                        {% endif %}
+
                                     </div>
                                 </div>
                                 {% endfor %}
