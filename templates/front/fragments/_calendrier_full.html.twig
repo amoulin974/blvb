@@ -50,15 +50,15 @@
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link break-words">{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover break-words">{{ partie.idEquipeRecoit.nom }}</a>
                                
                                             </td>
                                             <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link break-words">{{ partie.idEquipeDeplace.nom }}</a>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover break-words">{{ partie.idEquipeDeplace.nom }}</a>
                                    
                                             </td>
                                             <td>{{ partie.date|format_datetime(pattern='EEEE dd/MM/yyyy', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
-                                            <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
+                                            <td><a class="link link-hover" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">
                                                     {{ partie.lieu.nom }}
