@@ -22,10 +22,23 @@
                             </div>
                         {% for journee in poule.journees %}
 
-                            <h3 class="mt-3 mb-2">Journée {{ journee.numero }} </h3>
+                            <h3 class="{{ loop.first ? 'mt-4' : 'mt-10' }} mb-2">Journée {{ journee.numero }}
+                                {% if journee.dateDebut and journee.dateFin %}
+                                    <span class="font-normal text-sm">— du {{ journee.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ journee.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
+                                {% endif %}
+                            </h3>
                             {% if journee.parties|length >0 %}
                                 {# Affichage pour grand écran sous forme de table #}
-                                <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
+                                {# table-fixed + colgroup : mêmes largeurs de colonnes pour toutes les journées ;
+                                   un nom d'équipe trop long passe sur plusieurs lignes. #}
+                                <table class="border border-solid table-xs table-zebra w-full table-fixed hidden md:table" >
+                                    <colgroup>
+                                        <col class="w-[22%]">
+                                        <col class="w-[22%]">
+                                        <col class="w-[22%]">
+                                        <col class="w-[17%]">
+                                        <col class="w-[17%]">
+                                    </colgroup>
                                     <tr >
                                         <th>Équipe qui reçoit</th>
                                         <th>Équipe qui se déplace</th>
@@ -37,18 +50,14 @@
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" class="link flex items-center justify-start"">{{ partie.idEquipeRecoit.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-                                                    </svg> </a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link break-words">{{ partie.idEquipeRecoit.nom }}</a>
                                
                                             </td>
                                             <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" class="link flex items-center justify-start"">{{ partie.idEquipeDeplace.nom }}&nbsp;<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-                                                    </svg> </a>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link break-words">{{ partie.idEquipeDeplace.nom }}</a>
                                    
                                             </td>
-                                            <td>{{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
+                                            <td>{{ partie.date|format_datetime(pattern='EEEE dd/MM/yyyy', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
                                             <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">
@@ -87,18 +96,14 @@
                                 <div class="card  bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                     <div class="card-body p-1" >
                                         <p class="flex items-center justify-between w-full flex-wrap">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" class="flex-1 basis-0 flex justify-end min-w-0">
-                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeRecoit.nom }} &nbsp;<span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-                                                    </svg></span>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="flex-1 basis-0 flex justify-end min-w-0">
+                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeRecoit.nom }}
                                                 </strong>
                                             </a> 
                                             <span class="px-1 shrink-0">vs </span>
                                                 
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" class="flex-1 basis-0 flex justify-start min-w-0">
-                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeDeplace.nom }}&nbsp;<span><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607ZM10.5 7.5v6m3-3h-6" />
-                                                    </svg></span></strong></a>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="flex-1 basis-0 flex justify-start min-w-0">
+                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeDeplace.nom }}</strong></a>
                                         </p>
                                         <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
                                         <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
