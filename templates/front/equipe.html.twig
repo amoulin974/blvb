@@ -2,144 +2,141 @@
 {% block title %}Équipe {{equipe.nom}} - Site du BLVB{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto max-w-5xl px-4">
-        <h1 class="text-center mb-4">{{equipe.nom}}</h1>
-        <h2 class="mt-4">Informations générales</h2>
-        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}"
-                                            target="_blank"
-                                            rel="noopener noreferrer">
-                                                {{ equipe.lieu.nom }}
-                                            </a></p>
-        {% for creneau in equipe.lieu.creneaux %}
-            <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
-        {% endfor %}
-        <h2 class="mt-4">Composition de l'équipe</h2>
-        {% if membres is empty %}
-            <p class="em">Composition non renseignée pour cette saison.</p>
-        {% elseif not canViewCapitaine %}
-            <p class="em">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
-        {% else %}
-            <ul class="list-disc list-inside">
-                {% for membre in membres %}
-                    <li>
-                        {{ membre.joueur.prenom }} {{ membre.joueur.nom }}
-                        {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
-                        {% if membre.joueur.telephone or membre.joueur.email %}
-                            —
-                            {% if membre.joueur.telephone %}Tel : {{ membre.joueur.telephone }}{% endif %}
-                            {% if membre.joueur.email %}Email : {{ membre.joueur.email }}{% endif %}
-                        {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+    <div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-6">
 
-        {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
-            <p class="mt-2"><a class="btn btn-sm btn-outline" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a></p>
-        {% endif %}
+        {# En-tête : nom de l'équipe, gymnase et créneaux de réception #}
+        <div>
+            <h1 class="text-4xl uppercase tracking-wide">{{ equipe.nom }}</h1>
+            <p class="mt-1">
+                Reçoit à
+                <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}"
+                   target="_blank"
+                   rel="noopener noreferrer">{{ equipe.lieu.nom }}</a>
+                {% for creneau in equipe.lieu.creneaux %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
+            </p>
+        </div>
 
-        <h2 class="mt-4">Calendrier</h2>
-        {% for phase in saison.phases %}
-            {% for poule in phase.poules %}
-
-                {%  if matchsByPoule[poule.id] is defined and matchsByPoule[poule.id]|length>0 %}
-                    <h3 class="mt-2 pl-4 pb-1">{{ phase.nom }} - {{ poule.nom }}</h3>
-
-            <table class="border border-solid table-xs  w-full hidden md:table">
-                <thead><tr class="text-center bg-base-300">
-                    <th>Date</th>
-                    <th>Les équipes</th>
-                    <th>Score</th>
-                    <th>Le lieu</th>
-                </tr></thead>
-                <tbody>
-
-                    {%  for match in matchsByPoule[poule.id] %}
-
-                        <tr class="text-center">
-                            <td>{{ match.date_match|format_datetime('short', locale='fr') }}</td>
-                            <td>{{ match.equipe_recoit }} {{ match.score_reception_match }} vs {{ match.equipe_deplace }} {{ match.score_deplacement_match }}</td>
-                            <td>
-                                {%  if match.score_reception_match is null and  match.score_deplacement_match is null %}
-                                    Match non joué
-                                    {% else %}
-                                        <div class="flex items-center justify-center"><span>{{ match.score_reception_match }} - {{ match.score_deplacement_match }}</span>
-                                            <span>
-                                        {% if match.resultat %}
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-success">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-
-                                        {% else %}
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-error">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-
-                                        {%  endif %}
-                                                </span>
-                                        </div>
-                                {%  endif %}
-
-                            </td>
-                            <td>
-                                <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer">
-                                    {{ match.lieu_nom}}
-                                </a>
-
-                            </td>
-                        </tr>
-
-                   {% endfor %}
-
-                </tbody>
-            </table>
-                    {%  for match in matchsByPoule[poule.id] %}
-                        <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
-                            <div class="card-body " >
-                                <p class="flex items-center">{{ match.equipe_recoit }} &nbsp; <strong>{{ match.score_reception_match }}</strong>&nbsp; vs &nbsp; {{ match.equipe_deplace }} &nbsp; <strong>{{ match.score_deplacement_match }}</strong>
-                                    {% if match.resultat %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-success">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-
-                                    {% else %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-error">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-
-                                    {%  endif %}
-                                </p>
-                                <p>Date : {{ match.date_match|format_datetime('short', locale='fr') }}</p>
-                                <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
-                                             target="_blank"
-                                             rel="noopener noreferrer">
-                                        {{ match.lieu_nom}}
-                                    </a>
-                                    </p>
-                            </div>
-
-                        </div>
-                    {% endfor %}
-            <p>Le fichier ics de ce calendrier : <a class="link" href="{{path("calendar_ics", {poule: poule.id, equipe: equipe.id})}}">Click droit copier l'adresse</a></p>
-                <p class="text-xs">Faite un clic droit "copier l'adresse" puis dans google agenda -> le + à coté de Autre Agenda --> A partir de l'URL et copier l'adresse</p>
-                {%  endif  %}
-            {% endfor %}
-    {% endfor %}
-
-
-        <h2 class="mt-4">Classement de la saison sélectionnée </h2>
-        {% for phase in saison.phases %}
-            {% for poule in phase.poules %}
-                {% if equipe in poule.equipes %}
-
-                <h3 class="mt-2 pl-4 pb-1">{{ phase.nom }} - {{ poule.nom }}</h3>
-                                {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
+        {# Composition #}
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="uppercase tracking-wide">Composition</h2>
+                {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
+                    <a class="btn btn-sm btn-outline btn-primary" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
                 {% endif %}
-            {% endfor %}
-        {% endfor %}
+            </div>
+            {% if membres is empty %}
+                <p class="mt-2">Composition non renseignée pour cette saison.</p>
+            {% elseif not canViewCapitaine %}
+                <p class="mt-2">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
+            {% else %}
+                <ul class="mt-2 divide-y divide-base-300">
+                    {% for membre in membres %}
+                        <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
+                            {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
+                            {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone }}">{{ membre.joueur.telephone }}</a>{% endif %}
+                            {% if membre.joueur.email %}<a class="link link-hover link-primary break-all" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </section>
 
+        {# Calendrier de l'équipe, même disposition que le calendrier général (score au centre) #}
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            <h2 class="uppercase tracking-wide">Calendrier</h2>
+            {% for phase in saison.phases %}
+                {% for poule in phase.poules %}
+                    {% if matchsByPoule[poule.id] is defined and matchsByPoule[poule.id]|length > 0 %}
+                        <h3 class="mt-6 mb-3 text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }} · {{ poule.nom }}</h3>
+
+                        {# Le masquage mobile est porté par ce div : la classe daisyUI "table" impose display: table. #}
+                        <div class="hidden md:block">
+                            <table class="table w-full table-fixed">
+                                <colgroup>
+                                    <col class="w-[16%]">
+                                    <col class="w-[27%]">
+                                    <col class="w-[12%]">
+                                    <col class="w-[27%]">
+                                    <col class="w-[18%]">
+                                </colgroup>
+                                <thead class="sr-only">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Équipe qui reçoit</th>
+                                        <th>Résultat</th>
+                                        <th>Équipe qui se déplace</th>
+                                        <th>Lieu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for match in matchsByPoule[poule.id] %}
+                                    <tr class="hover:bg-(--color-base-200)">
+                                        <td class="whitespace-nowrap text-(--color-base-content)/80">{{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }}</td>
+                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
+                                        <td class="text-center">
+                                            {{ include('front/fragments/_equipe_score.html.twig') }}
+                                        </td>
+                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
+                                        <td class="text-right whitespace-nowrap">
+                                            <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse|url_encode }}"
+                                               target="_blank"
+                                               rel="noopener noreferrer">{{ match.lieu_nom }}</a>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# Mobile : cartes compactes comme dans le calendrier général #}
+                        <div class="md:hidden flex flex-col gap-2">
+                            {% for match in matchsByPoule[poule.id] %}
+                                <div class="card card-xs bg-base-100 border border-base-300">
+                                    <div class="card-body px-3 py-2 gap-1">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
+                                                <div class="{{ match.equipe_recoit == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
+                                                <div class="{{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
+                                            </div>
+                                            <div class="shrink-0 text-right">
+                                                {{ include('front/fragments/_equipe_score.html.twig') }}
+                                            </div>
+                                        </div>
+                                        <p class="text-sm">
+                                            {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
+                                            <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse|url_encode }}"
+                                               target="_blank"
+                                               rel="noopener noreferrer">{{ match.lieu_nom }}</a>
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mt-3 text-sm">
+                            <p>Ajouter ce calendrier à votre agenda :
+                                <a class="link link-hover link-primary focus-visible:underline" href="{{ path("calendar_ics", {poule: poule.id, equipe: equipe.id}) }}">lien du calendrier (ICS)</a>
+                            </p>
+                            <p class="text-(--color-base-content)/80">Faites un clic droit sur le lien puis « Copier l'adresse du lien ». Dans Google Agenda : « + » à côté de « Autres agendas », puis « À partir de l'URL » et collez l'adresse.</p>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </section>
+
+        {# Classement #}
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            <h2 class="uppercase tracking-wide">Classement</h2>
+            {% for phase in saison.phases %}
+                {% for poule in phase.poules %}
+                    {% if equipe in poule.equipes %}
+                        <h3 class="mt-6 mb-3 text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }} · {{ poule.nom }}</h3>
+                        {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </section>
 
     </div>
 
