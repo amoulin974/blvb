@@ -51,15 +51,15 @@
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover break-words">{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words">{{ partie.idEquipeRecoit.nom }}</a>
                                
                                             </td>
                                             <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover break-words">{{ partie.idEquipeDeplace.nom }}</a>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words">{{ partie.idEquipeDeplace.nom }}</a>
                                    
                                             </td>
                                             <td>{{ partie.date|format_datetime(pattern='EEEE dd/MM/yyyy', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
-                                            <td><a class="link link-hover" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
+                                            <td><a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">
                                                     {{ partie.lieu.nom }}
@@ -100,8 +100,8 @@
                                     <div class="card-body px-3 py-2 gap-1">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-1 min-w-0 text-base leading-snug">
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="font-bold block break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="font-bold block break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-bold block py-0.5 break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-bold block py-0.5 break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
                                             </div>
                                             <div class="shrink-0 text-right text-base">
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
@@ -113,7 +113,7 @@
                                         </div>
                                         <p class="text-sm">
                                             {{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }} ·
-                                            <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
+                                            <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">{{ partie.lieu.nom }}</a>
                                         </p>
