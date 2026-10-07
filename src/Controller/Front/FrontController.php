@@ -385,6 +385,11 @@ final class FrontController extends AbstractController
     public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService, MembreEquipeRepository $membreEquipeRepository): JsonResponse
     {
 
+    // Jeton CSRF envoyé par score-modal-controller.js (balise <meta name="csrf-token"> de base_front)
+    if (!$this->isCsrfTokenValid('score_update', $request->headers->get('X-CSRF-TOKEN'))) {
+        return $this->json(['error' => 'Jeton de sécurité invalide, rechargez la page.'], 403);
+    }
+
     $data = json_decode($request->getContent(), true);
     try{
         $user = $this->getUser();

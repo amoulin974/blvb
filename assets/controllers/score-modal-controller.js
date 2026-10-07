@@ -50,8 +50,12 @@ export default class extends Controller {
                 scoreDeplacement: scoreDeplacement
             })
         })
-        .then(response => {
-            if (!response.ok) throw new Error('Erreur lors de la mise à jour');
+        .then(async response => {
+            if (!response.ok) {
+                // Message du serveur (score invalide, jeton expiré…) si disponible
+                const erreur = await response.json().catch(() => ({}));
+                throw new Error(erreur.error || 'Erreur lors de la mise à jour');
+            }
             return response.json();
         })
         .then(json => {
@@ -86,7 +90,8 @@ export default class extends Controller {
         })
         .catch(err => {
             console.error(err);
-            this.closeModal(new Event('submit'));
+            // On garde la fenêtre ouverte pour que la saisie ne soit pas perdue
+            alert(`Le score n'a pas été enregistré : ${err.message}`);
         });
     }
 }
