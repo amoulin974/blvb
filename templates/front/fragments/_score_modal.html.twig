@@ -1,0 +1,25 @@
+{# Fenêtre de saisie du score (score-modal-controller.js) : à placer dans un élément data-controller="score-modal". #}
+<div data-score-modal-target="modal" class="modal">
+    <div class="modal-box">
+        <h3 data-score-modal-target="title" class="font-bold text-lg mb-4">
+            Saisir le score
+        </h3>
+
+        <div class="mb-2">
+            <label data-score-modal-target="labelReception" class="block text-sm font-medium mb-1">Score Équipe 1 :</label>
+            <input type="text" data-score-modal-target="inputReception" class="input w-full text-base">
+        </div>
+
+        <div class="mb-4">
+            <label data-score-modal-target="labelDeplacement" class="block text-sm font-medium mb-1">Score Équipe 2 :</label>
+            <input type="text" data-score-modal-target="inputDeplacement" class="input w-full text-base">
+        </div>
+        <p class="text-sm">Saisir 3 et 1 si l'équipe qui reçoit gagne 3 sets à 1.</p>
+        <p class="text-sm">Si une équipe est forfait saisir un seul F dans son score et rien pour l'autre équipe.</p>
+        <p class="text-sm">Pour effacer un score saisi par erreur, laisser les deux champs vides.</p>
+        <div class="modal-action">
+            <button class="btn btn-accent" data-action="click->score-modal#submitForm">Valider</button>
+            <a href="#" class="btn btn-ghost" data-action="click->score-modal#closeModal">Annuler</a>
+        </div>
+    </div>
+</div>
