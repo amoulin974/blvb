@@ -13,8 +13,9 @@
 
                         <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
-                        <div>Filtrer par équipe :
-                                <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" onchange="filterMatches({{phase.id}}, {{poule.id}})">
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <label for="equipeFilter_{{ phase.id }}_{{poule.id}}">Filtrer par équipe</label>
+                                <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" class="select w-full text-base sm:w-72 md:select-sm md:text-sm" onchange="filterMatches({{phase.id}}, {{poule.id}})">
                                     <option value="all">Toutes les équipes</option>
                                     {% for equipe in poule.equipes %}
                                         <option value="{{equipe.id}}">{{equipe.nom}}</option>
