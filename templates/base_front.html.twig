@@ -13,7 +13,7 @@
         {{ importmap('app') }}
     {% endblock %}
 </head>
-<body class="bg-base-100 text-base-content" data-controller="mon-equipe">
+<body class="bg-base-100 text-base-content" data-controller="mon-equipe" data-mon-equipe-defaut-value="{{ (mon_equipe_defaut() ?? {'id': null})|json_encode }}">
 
 <div class="drawer drawer-mobile">
     <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />
@@ -56,6 +56,7 @@
                         <li><a href="{{ path('front_index') }}">Accueil</a></li>
                         {# Lien vers l'équipe suivie, affiché par mon_equipe_controller.js #}
                         <li class="hidden" data-mon-equipe-target="menu"><a href="#">Mon équipe</a></li>
+                        <li data-mon-equipe-target="menuChoisir"><a href="#" data-action="mon-equipe#ouvrirChoix">☆ Choisir mon équipe</a></li>
                         <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
 
                         <li><a href="{{ path('front_classement')}}">Classement</a></li>
@@ -149,6 +150,7 @@
             {% block sidebar_links %}
                 <li><a href="{{ path('front_index') }}">Accueil</a></li>
                 <li class="hidden" data-mon-equipe-target="menu"><a href="#">Mon équipe</a></li>
+                <li data-mon-equipe-target="menuChoisir"><a href="#" data-action="mon-equipe#ouvrirChoix">☆ Choisir mon équipe</a></li>
                 <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
                 <li tabindex="0">
                     <a class="justify-between">Calendrier
@@ -196,5 +198,24 @@
 </div>
 {%  include "front/fragments/_footer.html.twig" %}
 {% block extra_scripts %}{% endblock %}
+{# « Mon équipe » : fenêtre de choix (ouverte depuis le menu) et message de confirmation #}
+<dialog class="modal" data-mon-equipe-target="dialogue" aria-labelledby="titre-choisir-mon-equipe">
+    <div class="modal-box flex flex-col gap-3">
+        <h2 id="titre-choisir-mon-equipe" class="text-xl uppercase tracking-wide">Choisir mon équipe</h2>
+        <p>Sa poule s'ouvrira directement sur l'accueil, le calendrier, les équipes et le classement, et ses matchs seront surlignés. Ce choix reste dans votre navigateur.</p>
+        {% include 'front/fragments/_choisir_mon_equipe.html.twig' with {idSelect: 'mon-equipe-dialogue'} %}
+        <div class="modal-action mt-0">
+            <form method="dialog"><button class="btn btn-ghost">Annuler</button></form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+</dialog>
+<div role="status" aria-live="polite">
+    <div class="hidden" data-mon-equipe-target="confirmation">
+        <div class="toast toast-end toast-bottom z-[100]">
+            <div class="alert bg-primary text-primary-content border-0 shadow-lg max-w-sm whitespace-normal"><span data-mon-equipe-target="confirmationTexte"></span></div>
+        </div>
+    </div>
+</div>
 </body>
 </html>

@@ -1,36 +1,100 @@
 import { Controller } from '@hotwired/stimulus';
 
 /*
- * « Mon équipe » : le visiteur choisit l'équipe qu'il suit (bouton sur la fiche équipe).
- * Le choix est gardé dans le navigateur (localStorage), sans compte ni donnée côté serveur.
+ * « Mon équipe » : le visiteur choisit l'équipe qu'il suit. Le choix est gardé dans le navigateur
+ * (localStorage), sans compte ni donnée côté serveur.
  *
- * Sur les pages qui listent les poules (accueil, calendrier, équipes, classement) :
+ * Choisir son équipe :
+ *  - bouton de la fiche équipe (cible "bouton", paramètres id / nom) ;
+ *  - liste de choix (fragment _choisir_mon_equipe) : invitation de l'accueil et fenêtre ouverte depuis le menu.
+ * Capitaine connecté : son équipe (valeur "defaut", fournie par MonEquipeExtension) est utilisée tant que
+ * le visiteur n'a rien choisi lui-même ; « retirer » l'écarte explicitement.
+ *
+ * Effets sur les pages qui listent les poules (accueil, calendrier, équipes, classement) :
  *  - l'onglet de la poule qui contient l'équipe est ouvert : input.tab[data-equipes="id id …"] ;
- *  - les lignes et cartes de l'équipe reçoivent la classe "mon-equipe" :
- *    éléments [data-equipe], [data-recoit] ou [data-deplace] portant son id.
- * Dans le menu, les cibles "menu" (masquées par défaut) deviennent un lien vers sa fiche.
+ *  - ses lignes et cartes reçoivent la classe "mon-equipe" : éléments [data-equipe], [data-recoit] ou [data-deplace].
  *
- * Cibles : menu (éléments <li> du menu), bouton (bouton Suivre de la fiche équipe).
+ * Cibles : menu / menuChoisir (entrées du menu selon qu'une équipe est choisie ou non), bouton (fiche équipe),
+ * invitation (bandeau de l'accueil), dialogue (fenêtre de choix), confirmation / confirmationTexte (message après choix).
  */
 const CLE = 'blvb.monEquipe';
+const CLE_INVITATION = 'blvb.invitationMonEquipeFermee';
+const AUCUNE = { aucune: true };
 
 export default class extends Controller {
-    static targets = ['menu', 'bouton'];
+    static targets = ['menu', 'menuChoisir', 'bouton', 'invitation', 'dialogue', 'confirmation', 'confirmationTexte'];
+    static values = { defaut: Object };
 
     connect() {
         this.appliquer();
     }
 
-    // Bouton de la fiche équipe : suivre / ne plus suivre cette équipe
+    // Bouton de la fiche équipe : définir / retirer cette équipe
     basculer(event) {
         const { id, nom } = event.params;
-        const actuelle = this.lire();
-        this.ecrire(actuelle && actuelle.id === String(id) ? null : { id: String(id), nom });
+        const actuelle = this.equipe();
+        if (actuelle && actuelle.id === String(id)) {
+            this.ecrire(CLE, AUCUNE);
+            this.appliquer();
+        } else {
+            this.definir({ id: String(id), nom });
+        }
+    }
+
+    // Liste de choix (accueil ou fenêtre du menu)
+    choisir(event) {
+        const select = event.currentTarget.closest('[data-mon-equipe-choix]').querySelector('select');
+        if (!select.value) {
+            select.focus();
+            return;
+        }
+        this.definir({ id: select.value, nom: select.options[select.selectedIndex].text });
+        if (this.hasDialogueTarget && this.dialogueTarget.open) {
+            this.dialogueTarget.close();
+        }
+    }
+
+    ouvrirChoix(event) {
+        event.preventDefault();
+        // Sur mobile, on referme d'abord le menu latéral
+        const tiroir = document.getElementById('my-drawer-2');
+        if (tiroir) tiroir.checked = false;
+        this.dialogueTarget.showModal();
+    }
+
+    fermerInvitation() {
+        this.ecrire(CLE_INVITATION, true);
         this.appliquer();
     }
 
+    definir(equipe) {
+        this.ecrire(CLE, equipe);
+        this.appliquer();
+        this.confirmer(equipe.nom);
+    }
+
+    confirmer(nom) {
+        if (!this.hasConfirmationTarget) return;
+        this.confirmationTexteTarget.textContent =
+            `${nom} est maintenant votre équipe : sa poule s'ouvrira directement et ses matchs seront surlignés.`;
+        this.confirmationTarget.classList.remove('hidden');
+        clearTimeout(this.minuteur);
+        this.minuteur = setTimeout(() => this.confirmationTarget.classList.add('hidden'), 6000);
+    }
+
+    // Équipe effective : choix du visiteur, sinon équipe du capitaine connecté, sinon aucune
+    equipe() {
+        const choix = this.lire(CLE);
+        if (choix && choix.aucune) return null;
+        if (choix && choix.id) return choix;
+        if (this.hasDefautValue && this.defautValue && this.defautValue.id) {
+            return { id: String(this.defautValue.id), nom: this.defautValue.nom };
+        }
+        return null;
+    }
+
     appliquer() {
-        const equipe = this.lire();
+        const equipe = this.equipe();
         const id = equipe ? equipe.id : null;
 
         // Onglet de la poule de l'équipe
@@ -48,7 +112,7 @@ export default class extends Controller {
             el.classList.toggle('mon-equipe', concerne);
         });
 
-        // Lien « Mon équipe » dans le menu
+        // Entrées du menu
         this.menuTargets.forEach((li) => {
             li.classList.toggle('hidden', !id);
             const lien = li.querySelector('a');
@@ -58,30 +122,30 @@ export default class extends Controller {
                 lien.title = 'Mon équipe';
             }
         });
+        this.menuChoisirTargets.forEach((li) => li.classList.toggle('hidden', !!id));
+
+        // Invitation de l'accueil : tant qu'aucune équipe n'est choisie et qu'elle n'a pas été fermée
+        this.invitationTargets.forEach((el) => el.classList.toggle('hidden', !!id || this.lire(CLE_INVITATION) === true));
 
         // Bouton de la fiche équipe
         this.boutonTargets.forEach((bouton) => {
-            const suivie = id !== null && bouton.dataset.monEquipeIdParam === id;
-            bouton.textContent = suivie ? '★ Mon équipe (ne plus suivre)' : '☆ Suivre cette équipe';
-            bouton.setAttribute('aria-pressed', suivie ? 'true' : 'false');
+            const choisie = id !== null && bouton.dataset.monEquipeIdParam === id;
+            bouton.textContent = choisie ? '★ Mon équipe · retirer' : "☆ C'est mon équipe";
+            bouton.setAttribute('aria-pressed', choisie ? 'true' : 'false');
         });
     }
 
-    lire() {
+    lire(cle) {
         try {
-            return JSON.parse(localStorage.getItem(CLE));
+            return JSON.parse(localStorage.getItem(cle));
         } catch (e) {
             return null;
         }
     }
 
-    ecrire(valeur) {
+    ecrire(cle, valeur) {
         try {
-            if (valeur) {
-                localStorage.setItem(CLE, JSON.stringify(valeur));
-            } else {
-                localStorage.removeItem(CLE);
-            }
+            localStorage.setItem(cle, JSON.stringify(valeur));
         } catch (e) {
             // Stockage indisponible (navigation privée…) : la fonctionnalité est simplement inactive
         }

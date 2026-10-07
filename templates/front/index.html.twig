@@ -27,6 +27,17 @@
   {% endblock %}
 {% block body %}
 <div class="container mx-auto max-w-5xl md:px-4">
+    {# Invitation « Mon équipe » : affichée par mon_equipe_controller.js tant qu'aucune équipe n'est choisie #}
+    <section class="hidden mb-6 bg-base-100 border border-base-300 rounded-box p-4 md:p-6" data-mon-equipe-target="invitation" aria-labelledby="titre-invitation-mon-equipe">
+        <div class="flex items-start justify-between gap-3 mb-3">
+            <div>
+                <h2 id="titre-invitation-mon-equipe" class="text-xl uppercase tracking-wide">Quelle est votre équipe ?</h2>
+                <p>Retrouvez directement ses matchs et son classement. Ce choix reste dans votre navigateur.</p>
+            </div>
+            <button type="button" class="btn btn-ghost btn-sm btn-square shrink-0" aria-label="Fermer cette proposition" data-action="mon-equipe#fermerInvitation">✕</button>
+        </div>
+        {% include 'front/fragments/_choisir_mon_equipe.html.twig' with {idSelect: 'mon-equipe-invitation'} %}
+    </section>
     {% include 'front/fragments/_calendrier_full.html.twig' %}
 </div>
 
