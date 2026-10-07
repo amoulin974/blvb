@@ -25,31 +25,51 @@
             </p>
         </div>
 
-        {# Composition #}
-        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="uppercase tracking-wide">Composition</h2>
-                {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
-                    <a class="btn btn-sm btn-outline btn-primary" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+        {# Synthèse : classement dans la phase en cours, prochain match, dernier résultat #}
+        {% set tousMatchs = [] %}
+        {% for liste in matchsByPoule %}{% set tousMatchs = tousMatchs|merge(liste) %}{% endfor %}
+        {% set maintenant = date() %}
+        {% set prochain = tousMatchs|filter(m => m.date_match >= maintenant and m.score_reception_match is null)|sort((a, b) => a.date_match <=> b.date_match)|first %}
+        {% set dernier = tousMatchs|filter(m => m.score_reception_match is not null and m.score_deplacement_match is not null)|sort((a, b) => b.date_match <=> a.date_match)|first %}
+        {% set classementActuel = null %}
+        {% for poule in (phaseouverte ? phaseouverte.poules : []) %}
+            {% for c in poule.classements %}{% if c.equipe.id == equipe.id %}{% set classementActuel = {poule: poule, ligne: c} %}{% endif %}{% endfor %}
+        {% endfor %}
+        <div class="grid gap-3 sm:grid-cols-3">
+            <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Classement</p>
+                {% if classementActuel %}
+                    {% set position = classementActuel.ligne.position %}
+                    <p class="mt-1"><span class="font-display text-3xl font-extrabold text-(--color-primary)">{{ position }}<sup class="text-base">{{ position == 1 ? 'er' : 'e' }}</sup></span>
+                        <span class="font-semibold">· {{ classementActuel.ligne.points }} {{ classementActuel.ligne.points > 1 ? 'pts' : 'pt' }}</span></p>
+                    <p class="text-sm">{{ phaseouverte.nom }} · {{ classementActuel.poule.nom }}</p>
+                {% else %}
+                    <p class="mt-1">Pas encore de classement</p>
                 {% endif %}
             </div>
-            {% if membres is empty %}
-                <p class="mt-2">Composition non renseignée pour cette saison.</p>
-            {% elseif not canViewCapitaine %}
-                <p class="mt-2">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
-            {% else %}
-                <ul class="mt-2 divide-y divide-base-300">
-                    {% for membre in membres %}
-                        <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
-                            {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
-                            {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone }}">{{ membre.joueur.telephone }}</a>{% endif %}
-                            {% if membre.joueur.email %}<a class="link link-hover link-primary break-all" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </section>
+            <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Prochain match</p>
+                {% if prochain %}
+                    {% set domicile = prochain.equipe_recoit == equipe.nom %}
+                    <p class="mt-1 font-display text-2xl font-bold text-(--color-primary)">{{ prochain.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ prochain.date_match|format_time('short', locale='fr') }}</p>
+                    <p class="text-sm">contre <span class="font-semibold">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</span></p>
+                    <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
+                        <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ prochain.lieu_adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ prochain.lieu_nom }}</a></p>
+                {% else %}
+                    <p class="mt-1">Aucun match à venir</p>
+                {% endif %}
+            </div>
+            <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Dernier résultat</p>
+                {% if dernier %}
+                    <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
+                    <p class="text-sm">contre <span class="font-semibold">{{ dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace : dernier.equipe_recoit }}</span></p>
+                    <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
+                {% else %}
+                    <p class="mt-1">Aucun match joué</p>
+                {% endif %}
+            </div>
+        </div>
 
         {# Calendrier de l'équipe, même disposition que le calendrier général (score au centre) #}
         <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
@@ -145,6 +165,32 @@
                     {% endif %}
                 {% endfor %}
             {% endfor %}
+        </section>
+
+        {# Composition #}
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 class="uppercase tracking-wide">Composition</h2>
+                {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
+                    <a class="btn btn-sm btn-outline btn-primary" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+                {% endif %}
+            </div>
+            {% if membres is empty %}
+                <p class="mt-2">Composition non renseignée pour cette saison.</p>
+            {% elseif not canViewCapitaine %}
+                <p class="mt-2">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
+            {% else %}
+                <ul class="mt-2 divide-y divide-base-300">
+                    {% for membre in membres %}
+                        <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                            <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
+                            {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
+                            {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone }}">{{ membre.joueur.telephone }}</a>{% endif %}
+                            {% if membre.joueur.email %}<a class="link link-hover link-primary break-all" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
         </section>
 
     </div>
