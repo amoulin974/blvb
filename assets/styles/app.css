@@ -49,15 +49,16 @@ body{
         @apply text-3xl font-bold; color: var(--color-primary);
     }
 
+    /* Une seule couleur d'accent (primary, sur h1) : les sous-titres gardent la couleur du texte. */
     h2{
-        @apply text-2xl font-bold; color: var(--color-secondary)
+        @apply text-2xl font-bold; color: var(--color-base-content)
     }
     h3{
-        @apply text-xl font-bold; color: var(--color-secondary)
+        @apply text-xl font-bold; color: var(--color-base-content)
     }
 
     h4{
-        @apply text-lg font-bold; color: var(--color-secondary)
+        @apply text-lg font-bold; color: var(--color-base-content)
     }
 }
 
