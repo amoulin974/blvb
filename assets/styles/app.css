@@ -157,7 +157,34 @@ body{
     background-color: white;
 }
 
-#article-reglement img{
+/* Règlement : typographie de lecture (longue page de texte), sans toucher au contenu balise par balise. */
+@layer components {
+    #article-reglement { line-height: 1.6; }
+    #article-reglement h1 { margin-bottom: 1rem; }
+    #article-reglement h2 {
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: var(--color-primary);
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        border-top: 1px solid var(--color-base-300);
+    }
+    #article-reglement h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    #article-reglement p { margin-bottom: 0.75rem; max-width: 70ch; }
+    #article-reglement ul, #article-reglement ol { margin: 0 0 0.75rem 1.25rem; list-style: disc; }
+    #article-reglement li { margin-bottom: 0.25rem; }
+    #article-reglement img { max-width: 100%; height: auto; margin: 1rem auto; border-radius: var(--radius-box); }
+    #article-reglement table { margin: 1rem 0; border: 1px solid var(--color-base-300); }
+    #article-reglement thead tr { border-bottom: 2px solid var(--color-primary); }
+    #article-reglement th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
 }
+
+/* Sommaire du règlement : tocbot recopie le texte des h2 tel qu'affiché (en capitales), on le remet en casse normale.
+   Hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
+.js-toc .toc-link { display: block; padding: 0.25rem 0; text-decoration: none; text-transform: lowercase; color: var(--color-primary); }
+.js-toc .toc-link::first-letter { text-transform: uppercase; }
+.js-toc .toc-link:hover { text-decoration: underline; }
+.js-toc .is-active-link { font-weight: 700; }
 
