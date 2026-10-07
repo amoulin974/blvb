@@ -65,7 +65,7 @@
                                                 rel="noopener noreferrer">
                                                     {{ partie.lieu.nom }}
                                                 </a></td>
-                                            <td>
+                                            <td class="text-base tabular-nums">
 
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
                                                     <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
