@@ -3,7 +3,7 @@
 {% block title %}Calendrier par gymnase — {{ saison.nom }} - BLVB{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto max-w-5xl md:px-4">
+    <div class="container mx-auto max-w-7xl md:px-4">
         <h1>Calendrier par gymnase — {{ saison.nom }}</h1>
 {#        TODO enlever le badge du nombre d ematch, et ajouter les alerts dans la vue mobile#}
         {% for phase in saison.phases %}
@@ -18,12 +18,13 @@
                     {# --- FILTRE (barre d'outils séparée des gymnases) --- #}
                     <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
                         <label for="lieuFilter_{{phase.id}}">Filtrer par gymnase</label>
-                        <select id="lieuFilter_{{phase.id}}" class="select w-full text-base sm:w-72 md:select-sm md:text-sm" onchange="filterLieu({{phase.id}})">
+                        {# data-filtre-mon-equipe : mon_equipe_controller.js y sélectionne le gymnase de l'équipe suivie #}
+                        <select id="lieuFilter_{{phase.id}}" data-filtre-mon-equipe class="select w-full text-base sm:w-72 md:select-sm md:text-sm" onchange="filterLieu({{phase.id}})">
                             <option value="all">Tous les gymnases</option>
                             {% for lieu in lieux %}
                                 {# On n'affiche dans le select que les lieux qui ont des matchs pour cette phase #}
                                 {% if lieu.partiesByDate[phase.id] is defined %}
-                                    <option value="{{lieu.id}}">{{lieu.nom}}</option>
+                                    <option value="{{lieu.id}}" data-equipes="{{ lieu.equipes|map(e => e.id)|join(' ') }}">{{lieu.nom}}</option>
                                 {% endif %}
                             {% endfor %}
                         </select>
@@ -52,10 +53,10 @@
                                 <div class="hidden md:block">
                                     <table class="table w-full table-fixed">
                                         <colgroup>
-                                            <col class="w-[22%]">
-                                            <col class="w-[40%]">
-                                            <col class="w-[12%]">
-                                            <col class="w-[26%]">
+                                            <col class="w-[17%]">
+                                            <col class="w-[55%]">
+                                            <col class="w-[10%]">
+                                            <col class="w-[18%]">
                                         </colgroup>
                                         <thead>
                                         <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
@@ -75,7 +76,7 @@
                                                 <td>
                                                     <ul class="flex flex-col gap-1 text-base">
                                                         {% for partie in parties %}
-                                                            <li>
+                                                            <li class="rounded px-1 -mx-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                                                 <span class="font-display font-medium tracking-wide">{{ partie.idEquipeRecoit.nom }}</span>
                                                                 <span class="text-(--color-base-content)/70">contre</span>
                                                                 <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
@@ -105,7 +106,7 @@
                                                 </div>
                                                 <ul class="flex flex-col gap-0.5 text-base">
                                                     {% for partie in parties %}
-                                                        <li>
+                                                        <li class="rounded px-1 -mx-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                                             <span class="font-display font-medium tracking-wide">{{ partie.idEquipeRecoit.nom }}</span>
                                                             <span class="text-(--color-base-content)/70">contre</span>
                                                             <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>

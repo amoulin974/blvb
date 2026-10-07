@@ -14,6 +14,9 @@ import { Controller } from '@hotwired/stimulus';
  *  - l'onglet de la poule qui contient l'équipe est ouvert : input.tab[data-equipes="id id …"] ;
  *  - ses lignes et cartes reçoivent la classe "mon-equipe" : éléments [data-equipe], [data-recoit] ou [data-deplace].
  *
+ * Filtres liés à l'équipe : select[data-filtre-mon-equipe] dont une option[data-equipes] contient l'équipe
+ * (ex. son gymnase dans le calendrier par gymnase) → option sélectionnée automatiquement.
+ *
  * Cibles : menu / menuChoisir (entrées du menu selon qu'une équipe est choisie ou non), bouton (fiche équipe),
  * invitation (bandeau de l'accueil), dialogue (fenêtre de choix), confirmation / confirmationTexte (message après choix).
  */
@@ -105,6 +108,31 @@ export default class extends Controller {
                 }
             });
         }
+
+        // Filtres qui proposent un choix lié à l'équipe (ex. gymnase du calendrier par gymnase) :
+        // option[data-equipes="id id …"] de l'équipe sélectionnée automatiquement, sans écraser un choix manuel.
+        document.querySelectorAll('select[data-filtre-mon-equipe]').forEach((select) => {
+            const option = id ? [...select.options].find((o) => (o.dataset.equipes || '').split(' ').includes(id)) : null;
+            const automatique = select.dataset.choixAutomatique === '1';
+            if (option && (select.value === 'all' || automatique) && select.value !== option.value) {
+                select.value = option.value;
+                select.dataset.choixAutomatique = '1';
+                select.dispatchEvent(new Event('change'));
+            } else if (!option && automatique) {
+                select.value = 'all';
+                delete select.dataset.choixAutomatique;
+                select.dispatchEvent(new Event('change'));
+            }
+        });
+        // Un choix manuel dans le filtre n'est plus considéré comme automatique
+        document.querySelectorAll('select[data-filtre-mon-equipe]').forEach((select) => {
+            if (!select.dataset.ecouteChoix) {
+                select.dataset.ecouteChoix = '1';
+                select.addEventListener('change', (event) => {
+                    if (event.isTrusted) delete select.dataset.choixAutomatique;
+                });
+            }
+        });
 
         // Mise en évidence des lignes et cartes
         document.querySelectorAll('[data-equipe], [data-recoit], [data-deplace]').forEach((el) => {
