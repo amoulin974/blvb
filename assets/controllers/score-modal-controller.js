@@ -53,21 +53,31 @@ export default class extends Controller {
             return response.json();
         })
         .then(json => {
-            // Mise à jour du score
-            const scoreZones = document.querySelectorAll('.score_partie-' + this.currentPartieId);
-            const scores = json.newScore.split(' - ');
-            scoreZones.forEach(zone => {
-                zone.classList.remove('hidden');
-                if (scores.length === 2) {
+            // Mise à jour du score (newScore vaut null quand le score a été effacé)
+            const efface = json.newScore === null;
+            const scores = efface ? [] : json.newScore.split(' - ');
+            document.querySelectorAll('.score_partie-' + this.currentPartieId).forEach(zone => {
+                if (efface) {
+                    zone.innerHTML = '<span class="opacity-50" aria-hidden="true">–</span><span class="sr-only">Score non saisi</span>';
+                } else if (scores.length === 2) {
                     zone.innerHTML = `<strong>${scores[0]}</strong> - <strong>${scores[1]}</strong>`;
                 } else {
                     zone.textContent = json.newScore;
                 }
             });
 
-            // Le score est saisi : on remplace le bouton « Saisir » par le crayon « Modifier »
+            // Score saisi : crayon « Modifier » à la place de « Saisir ».
+            // Score effacé : retour au bouton « Saisir » si le match est passé, sinon au simple tiret.
             document.querySelectorAll(`[data-partie-id="${this.currentPartieId}"]`).forEach(btn => {
-                btn.classList.toggle('hidden', btn.dataset.scoreAction === 'saisir');
+                const passe = btn.dataset.matchPasse === '1';
+                const afficher = efface
+                    ? btn.dataset.scoreAction === 'saisir' && passe
+                    : btn.dataset.scoreAction === 'modifier';
+                btn.classList.toggle('hidden', !afficher);
+            });
+            document.querySelectorAll('.score_partie-' + this.currentPartieId).forEach(zone => {
+                const saisirVisible = efface && document.querySelector(`[data-partie-id="${this.currentPartieId}"][data-score-action="saisir"][data-match-passe="1"]`);
+                zone.classList.toggle('hidden', !!saisirVisible);
             });
 
             this.closeModal(new Event('submit'));

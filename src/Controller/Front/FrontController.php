@@ -399,15 +399,22 @@ final class FrontController extends AbstractController
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
 
-        if ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
+        if (trim($data['scoreReception']) === '' && trim($data['scoreDeplacement']) === ''){
+            //Les deux champs vides : on efface le score (ex. score saisi par erreur sur un match non joué)
+            $partie->setNbSetGagnantReception(null);
+            $partie->setNbSetGagnantDeplacement(null);
+            $newScore = null;
+        } elseif ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
             //Cas d'une forfait
             if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
             if ($data['scoreReception'] === 'F'){
                 $partie->setNbSetGagnantReception(-1);
                 $partie->setNbSetGagnantDeplacement(3);
+                $newScore = 'F - 3';
             } else{
                 $partie->setNbSetGagnantReception(3);
                 $partie->setNbSetGagnantDeplacement(-1);
+                $newScore = '3 - F';
             }
 
 
@@ -420,6 +427,7 @@ final class FrontController extends AbstractController
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);
+            $newScore = $scoreReception . ' - ' . $scoreDeplacement;
 
 
         }
@@ -430,7 +438,8 @@ final class FrontController extends AbstractController
         //Mise à jour du classement
         $classementService->mettreAJourClassementPoule($partie->getPoule());
         return $this->json([
-            'newScore' => $scoreReception . ' à ' . $scoreDeplacement,
+            // Même format que l'affichage du calendrier ("3 - 1"), null si le score a été effacé
+            'newScore' => $newScore,
 
             ],200);
 
