@@ -38,7 +38,7 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                    {% for equipe in poule.equipes %}
+                                    {% for equipe in poule.equipes|sort((a, b) => a.nom|lower <=> b.nom|lower) %}
                                         {% set position = null %}
                                         {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
                                         <tr class="hover:bg-(--color-base-200)">
@@ -65,7 +65,7 @@
                             </div>
                             {# Affichage pour mobile : cartes compactes, nom et classement en haut, gymnase et créneau dessous #}
                             <div class="md:hidden flex flex-col gap-2">
-                                {% for equipe in poule.equipes %}
+                                {% for equipe in poule.equipes|sort((a, b) => a.nom|lower <=> b.nom|lower) %}
                                     {% set position = null %}
                                     {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
                                     <div class="card card-xs bg-base-100 border border-base-300">
