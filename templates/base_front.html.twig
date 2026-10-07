@@ -38,7 +38,8 @@
                 <a class="mr-3" href="{{ path('front_index') }}">{% include 'front/fragments/_logo.html.twig' %}</a>
                 {# Sélecteur de saison absent sur les pages qui ne le fournissent pas (connexion, mot de passe…) #}
                 {% if saisons is defined %}
-                <div>
+                {# Sur mobile, le sélecteur de saison (rarement utilisé) est dans le menu latéral #}
+                <div class="hidden lg:block">
                     <form method="post" action="{{ path('front_set_saison') }}">
                     <select name="idSaisonSelected" aria-label="Saison" class="select select-sm w-auto text-base-content" onchange="this.form.submit()">
                         {% for saison in saisons %}
@@ -195,6 +196,18 @@
                 <li><a href="{{path('app_login')}}">Se connecter</a></li>
                 {% endif %}
             {% endblock %}
+            {% if saisons is defined %}
+                <li class="menu-title mt-4">Saison</li>
+                <li class="px-2">
+                    <form method="post" action="{{ path('front_set_saison') }}" class="p-0 bg-transparent">
+                        <select name="idSaisonSelected" aria-label="Saison" class="select w-full text-base" onchange="this.form.submit()">
+                            {% for saison in saisons %}
+                                <option value="{{ saison.id }}" {% if saison.id == idSaisonSelected %}selected{% endif %}>{{ saison.nom }}</option>
+                            {% endfor %}
+                        </select>
+                    </form>
+                </li>
+            {% endif %}
         </aside>
     </div>
 
