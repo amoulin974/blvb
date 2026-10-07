@@ -3,9 +3,11 @@
 namespace App\Controller\Admin;
 
 use App\Entity\Equipe;
+use App\Entity\Joueur;
 use App\Entity\User;
 use App\Form\Type\ImportExcelUserType;
 use App\Form\UserAdminType;
+use App\Repository\JoueurRepository;
 use App\Repository\LieuRepository;
 use App\Repository\UserRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -116,10 +118,14 @@ final class UserController extends AbstractController
         EntityManagerInterface $em,
         UserPasswordHasherInterface $passwordHasher,
         UserRepository $userRepository,
+        JoueurRepository $joueurRepository,
         ValidatorInterface $validator): Response
     {
         $rapportErreurs = [];
         $countImported = 0;
+        $countJoueursCrees = 0;
+        $countJoueursRelies = 0;
+        $emailsJoueurDejaLie = [];
 
         $form = $this->createForm(ImportExcelUserType::class);
         $form->handleRequest($request);
@@ -211,20 +217,49 @@ final class UserController extends AbstractController
 
                     $em->persist($user);
                     $countImported++;
+
+                    // --- FICHE JOUEUR ---
+                    // Si une fiche joueur porte déjà cet email, on la relie au nouveau compte
+                    // plutôt que d'en créer une seconde. Si elle est déjà liée à un autre
+                    // compte, on ne touche à rien et on le signale à l'admin.
+                    $joueur = $joueurRepository->findOneByEmail($email);
+                    if ($joueur === null) {
+                        $joueur = new Joueur();
+                        $joueur->setNom($nom);
+                        $joueur->setPrenom($prenom);
+                        $joueur->setEmail($email);
+                        $joueur->setTelephone($telephone !== '' ? $telephone : null);
+                        $joueur->setUser($user);
+                        $em->persist($joueur);
+                        $countJoueursCrees++;
+                    } elseif ($joueur->getUser() === null) {
+                        $joueur->setUser($user);
+                        if (!$joueur->getTelephone() && $telephone !== '') {
+                            $joueur->setTelephone($telephone);
+                        }
+                        $countJoueursRelies++;
+                    } else {
+                        $emailsJoueurDejaLie[] = $email;
+                    }
                 }
 
                 $em->flush();
+
+                $detailJoueurs = "$countJoueursCrees fiches joueurs créées, $countJoueursRelies reliées à une fiche existante";
+                if (!empty($emailsJoueurDejaLie)) {
+                    $this->addFlash('warning', 'Aucune fiche joueur n\'a été reliée pour ces comptes, car la fiche portant leur email est déjà liée à un autre compte : ' . implode(', ', $emailsJoueurDejaLie));
+                }
 
                 // Feedback complet pour l'admin
                 //Attention, après un post, il faut forcément faire une redirection vers une page GET pour éviter le F5 qui recharge les données
                 // . C'est pour cela que le rapport d'erreur est mis en session
                 if (empty($rapportErreurs)) {
                     // Tout est parfait, on redirige
-                    $this->addFlash('success', "Succès ! $countImported utilisateurs importés.");
+                    $this->addFlash('success', "Succès ! $countImported utilisateurs importés ($detailJoueurs).");
                     return $this->redirectToRoute('admin_user_index');
                 } else {
                     // Il y a eu des soucis, on ajoute un message d'avertissement
-                    $this->addFlash('warning', "L'import est terminé avec des rejets ($countImported succès). Voir le rapport ci-dessous.");
+                    $this->addFlash('warning', "L'import est terminé avec des rejets ($countImported succès, $detailJoueurs). Voir le rapport ci-dessous.");
                     // On ne redirige PAS, on laisse le code descendre jusqu'au render()
                     $request->getSession()->set('rapportErreursExcel', $rapportErreurs);
                     return $this->redirectToRoute('admin_user_excel_explication');

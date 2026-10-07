@@ -1,33 +1,49 @@
-{{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+{# Infos des comptes proposés, pour pré-remplir la fiche (cf. joueur_form_controller.js) #}
+{% set comptes = {} %}
+{% for choice in form.user.vars.choices %}
+    {% set comptes = comptes|merge({('_' ~ choice.value): {
+        'nom': choice.data.nom,
+        'prenom': choice.data.prenom,
+        'email': choice.data.email,
+        'telephone': choice.data.telephone
+    }}) %}
+{% endfor %}
+
+{{ form_start(form, {'attr': {
+    'class': 'space-y-4',
+    'data-controller': 'joueur-form',
+    'data-joueur-form-comptes-value': comptes|json_encode
+}}) }}
+
+<div class="form-control mb-2 relative z-[9999]">
+    {{ form_label(form.user, 'Compte utilisateur lié :', {'label_attr': {'class': 'label-text'}}) }}
+    {{ form_widget(form.user, {'attr': {'class': 'w-full', 'data-controller': 'tom-select', 'data-joueur-form-target': 'user', 'data-action': 'change->joueur-form#remplirDepuisCompte'}}) }}
+    <p class="text-sm opacity-70 mt-1">Choisir un compte (ou saisir son email ci-dessous) pré-remplit la fiche.</p>
+    {{ form_errors(form.user) }}
+</div>
 
 <div class="form-control w-full">
     {{ form_label(form.nom, 'Nom', {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom'}}) }}
+    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom', 'data-joueur-form-target': 'nom'}}) }}
     {{ form_errors(form.nom) }}
 </div>
 
 <div class="form-control w-full">
     {{ form_label(form.prenom, 'Prénom', {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.prenom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Prénom'}}) }}
+    {{ form_widget(form.prenom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Prénom', 'data-joueur-form-target': 'prenom'}}) }}
     {{ form_errors(form.prenom) }}
 </div>
 
 <div class="form-control w-full">
     {{ form_label(form.email, 'Email', {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.email, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Email'}}) }}
+    {{ form_widget(form.email, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Email', 'data-joueur-form-target': 'email', 'data-action': 'change->joueur-form#selectionnerCompteDepuisEmail'}}) }}
     {{ form_errors(form.email) }}
 </div>
 
 <div class="form-control w-full">
     {{ form_label(form.telephone, 'Téléphone', {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.telephone, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Téléphone'}}) }}
+    {{ form_widget(form.telephone, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Téléphone', 'data-joueur-form-target': 'telephone'}}) }}
     {{ form_errors(form.telephone) }}
-</div>
-
-<div class="form-control mb-2 relative z-[9999]">
-    {{ form_label(form.user, 'Compte utilisateur lié :', {'label_attr': {'class': 'label-text'}}) }}
-    {{ form_widget(form.user, {'attr': {'class': 'w-full', 'data-controller': 'tom-select'}}) }}
-    {{ form_errors(form.user) }}
 </div>
 
 <button class="btn btn-success btn-sm">{{ button_label|default('Sauvegarder') }}</button>

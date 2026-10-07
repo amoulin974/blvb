@@ -15,4 +15,16 @@ class JoueurRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, Joueur::class);
     }
+
+    // Recherche insensible à la casse : les emails des fiches joueurs saisies à la main
+    // ne sont pas forcément normalisés en minuscules comme ceux des comptes.
+    public function findOneByEmail(string $email): ?Joueur
+    {
+        return $this->createQueryBuilder('j')
+            ->andWhere('LOWER(j.email) = :email')
+            ->setParameter('email', strtolower(trim($email)))
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult();
+    }
 }

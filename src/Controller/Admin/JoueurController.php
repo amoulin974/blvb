@@ -38,7 +38,7 @@ final class JoueurController extends AbstractController
             // réutilise la fiche déjà liée à ce compte, s'il en a déjà une, plutôt que
             // d'en créer une seconde qui violerait la contrainte d'unicité sur Joueur::user).
             if ($joueur->getUser() === null && $joueur->getEmail()) {
-                $utilisateurExistant = $userRepository->findOneBy(['email' => $joueur->getEmail()]);
+                $utilisateurExistant = $userRepository->findOneBy(['email' => strtolower(trim($joueur->getEmail()))]);
                 if ($utilisateurExistant) {
                     $joueurExistant = $joueurRepository->findOneBy(['user' => $utilisateurExistant]);
                     if ($joueurExistant) {
