@@ -4,7 +4,9 @@ export default class extends Controller {
     static targets = [ "modal", "title", "labelReception", "labelDeplacement", "inputReception", "inputDeplacement" ];
 
     connect() {
-        this.csrfTokenValue = document.querySelector('meta[name="csrf-token"]').content;
+        // Jeton CSRF facultatif : la balise <meta name="csrf-token"> n'est pas présente dans les pages,
+        // on ne doit pas planter au démarrage (les visiteurs n'ont de toute façon pas accès à la saisie).
+        this.csrfTokenValue = document.querySelector('meta[name="csrf-token"]')?.content ?? null;
         this.currentPartieId = null;
     }
 
@@ -41,7 +43,7 @@ export default class extends Controller {
             headers: {
                 'Content-Type': 'application/json',
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': this.csrfTokenValue
+                ...(this.csrfTokenValue ? { 'X-CSRF-TOKEN': this.csrfTokenValue } : {})
             },
             body: JSON.stringify({
                 scoreReception: scoreReception,
