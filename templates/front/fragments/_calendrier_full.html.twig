@@ -68,7 +68,7 @@
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
                                                     <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
                                                 {% else %}
-                                                    <span class="score_partie-{{partie.id}}">À venir</span>
+                                                    <span class="score_partie-{{partie.id}}"><span class="opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span></span>
                                                 {% endif %}
                                                 {% if is_granted('ROLE_ADMIN')
                                                             or (app.user is not null
