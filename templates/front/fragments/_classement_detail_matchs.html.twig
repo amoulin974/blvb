@@ -1,0 +1,20 @@
+{# Liste dépliable des matchs d'une équipe dans la poule (variables : poule, classement). #}
+<details class="mt-1 text-sm">
+    <summary class="cursor-pointer w-fit link link-hover text-(--color-base-content)/80">Détail des matchs</summary>
+    <ul class="mt-1 flex flex-col gap-0.5">
+        {% for partie in poule.parties %}
+            {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
+                <li>
+                    {{ partie.idEquipeRecoit.nom }}
+                    {% if partie.getNbSetGagnantReception is null and partie.getNbSetGagnantDeplacement is null %}
+                        <span class="opacity-60">–</span>
+                    {% else %}
+                        <strong class="tabular-nums">{{ partie.getNbSetGagnantReception }} - {{ partie.getNbSetGagnantDeplacement }}</strong>
+                    {% endif %}
+                    {{ partie.idEquipeDeplace.nom }}
+                    {% if partie.getNbSetGagnantReception is null and partie.getNbSetGagnantDeplacement is null %}<span class="opacity-70">(à venir)</span>{% endif %}
+                </li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+</details>
