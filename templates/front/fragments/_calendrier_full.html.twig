@@ -1,17 +1,18 @@
-<div class="container mx-auto max-w-5xl px-4" data-controller="score-modal">
+{# Pas de conteneur ici : les pages qui incluent ce fragment (accueil, calendrier) en fournissent déjà un. #}
+<div data-controller="score-modal">
     <h1>Calendrier — {{ saison.nom }}</h1>
     {% for phase in saison.phases%}
-        <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+        <div class="bg-base-100 border-base-300 collapse collapse-arrow md:border">
             <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
             <div class="collapse-title">
                 {{ phase.nom }}
             </div>
-            <div class="collapse-content">
+            <div class="collapse-content px-0 md:px-4">
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
                         <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
-                        <div class="tab-content bg-base-100 border-base-300 p-6">
+                        <div class="tab-content bg-base-100 border-base-300 p-2 md:p-6">
                         <div>Filtrer par équipe :
                                 <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" onchange="filterMatches({{phase.id}}, {{poule.id}})">
                                     <option value="all">Toutes les équipes</option>
