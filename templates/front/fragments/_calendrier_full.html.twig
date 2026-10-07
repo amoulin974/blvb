@@ -94,51 +94,48 @@
                                 </table>
                                 {# Affichage pour mobile sous forme de carte #}
                                 {% for partie in journee.parties %}
-                                <div class="card  bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                    <div class="card-body p-1" >
-                                        <p class="flex items-center justify-between w-full flex-wrap">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="flex-1 basis-0 flex justify-end min-w-0">
-                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeRecoit.nom }}
-                                                </strong>
-                                            </a> 
-                                            <span class="px-1 shrink-0">vs </span>
-                                                
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="flex-1 basis-0 flex justify-start min-w-0">
-                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeDeplace.nom }}</strong></a>
-                                        </p>
-                                        <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
-                                        <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer">
-                                                    {{ partie.lieu.nom }}
-                                                </a></p>
-                                        <p>Résultat :
-                                        {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                            <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
+                                {# Carte compacte : équipe qui reçoit en haut, équipe qui se déplace en dessous,
+                                   score à droite ; date, heure et lieu sur une seule ligne. #}
+                                <div class="card bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                    <div class="card-body px-3 py-2 gap-1">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex-1 min-w-0 text-base leading-snug">
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="link font-bold block break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link font-bold block break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
+                                            </div>
+                                            <div class="shrink-0 text-right text-base">
+                                                {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
+                                                    <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
                                                 {% else %}
-                                                    <span class="score_partie-{{partie.id}}">À venir</span>
-
+                                                    <span class="score_partie-{{partie.id}}"><span class="opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span></span>
                                                 {% endif %}
-                                                    {% if is_granted('ROLE_ADMIN')
-                                                            or (app.user is not null
-                                                                and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
-
-                                                             <a href="#"
-                                                                class="btn btn-warning btn-xs"
-                                                                data-action="click->score-modal#openModal"
-                                                                data-partie-id="{{ partie.id }}"
-                                                                data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
-                                                                data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                                {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
-                                                                 Modifier le résultat
-                                                                 {% else %}
-                                                                 Saisir le résultat
-                                                                     {% endif  %}
-                                                            </a>
-                                                    {% endif %}
+                                            </div>
+                                        </div>
+                                        <p class="text-sm">
+                                            {{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }} ·
+                                            <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
+                                                target="_blank"
+                                                rel="noopener noreferrer">{{ partie.lieu.nom }}</a>
                                         </p>
+                                        {% if is_granted('ROLE_ADMIN')
+                                                or (app.user is not null
+                                                    and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
+                                            <div>
+                                                <a href="#"
+                                                    class="btn btn-warning btn-xs"
+                                                    data-action="click->score-modal#openModal"
+                                                    data-partie-id="{{ partie.id }}"
+                                                    data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+                                                    data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
+                                                    {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
+                                                        Modifier le résultat
+                                                    {% else %}
+                                                        Saisir le résultat
+                                                    {% endif %}
+                                                </a>
+                                            </div>
+                                        {% endif %}
                                     </div>
-
                                 </div>
                                 {% endfor %}
                             {% else %}
