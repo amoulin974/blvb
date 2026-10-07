@@ -59,14 +59,14 @@
                                     {% for partie in journee.parties %}
                                         <tr id="tr-partie-{{partie.id}}" class="hover:bg-(--color-base-200)" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-semibold text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
                                
                                             </td>
                                             <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-semibold text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
                                    
                                             </td>
-                                            <td>{{ partie.date|format_datetime(pattern='EEEE dd/MM/yyyy', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
+                                            <td>{{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }}</td>
                                             <td><a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                                                 target="_blank"
                                                 rel="noopener noreferrer">
@@ -110,8 +110,8 @@
                                     <div class="card-body px-3 py-2 gap-1">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-bold block py-0.5 break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-bold block py-0.5 break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-medium block py-0.5 break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-medium block py-0.5 break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
                                             </div>
                                             <div class="shrink-0 text-right font-display text-2xl font-extrabold text-(--color-primary) tabular-nums">
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
