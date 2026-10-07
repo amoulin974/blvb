@@ -4,7 +4,7 @@
     {% for phase in saison.phases%}
         <div class="bg-base-100 border-base-300 collapse collapse-arrow md:border">
             <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
-            <div class="collapse-title">
+            <div class="collapse-title font-display text-xl font-semibold">
                 {{ phase.nom }}
             </div>
             <div class="collapse-content px-0 md:px-4">
@@ -24,16 +24,18 @@
                             </div>
                         {% for journee in poule.journees %}
 
-                            <h3 class="{{ loop.first ? 'mt-4' : 'mt-10' }} mb-2">Journée {{ journee.numero }}
+                            <h3 class="{{ loop.first ? 'mt-4' : 'mt-10' }} mb-2 uppercase tracking-wide text-(--color-primary)">Journée {{ journee.numero }}
                                 {% if journee.dateDebut and journee.dateFin %}
-                                    <span class="font-normal text-sm">— du {{ journee.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ journee.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
+                                    <span class="font-sans font-normal normal-case tracking-normal text-sm text-base-content">— du {{ journee.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ journee.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
                                 {% endif %}
                             </h3>
                             {% if journee.parties|length >0 %}
                                 {# Affichage pour grand écran sous forme de table #}
                                 {# table-fixed + colgroup : mêmes largeurs de colonnes pour toutes les journées ;
                                    un nom d'équipe trop long passe sur plusieurs lignes. #}
-                                <table class="border border-solid table-xs table-zebra w-full table-fixed hidden md:table" >
+                                {# Le masquage mobile est porté par ce div : la classe daisyUI "table" impose display: table et l'emporterait sur "hidden". #}
+                                <div class="hidden md:block">
+                                <table class="table w-full table-fixed bg-base-100" >
                                     <colgroup>
                                         <col class="w-[22%]">
                                         <col class="w-[22%]">
@@ -41,22 +43,27 @@
                                         <col class="w-[17%]">
                                         <col class="w-[17%]">
                                     </colgroup>
-                                    <tr >
-                                        <th>Équipe qui reçoit</th>
-                                        <th>Équipe qui se déplace</th>
-                                        <th>Date</th>
-                                        <th>Lieu</th>
-                                        <th>Résultat</th>
-                                    </tr>
+                                    {# Pas de lignes alternées : de fins séparateurs suffisent sur des tableaux courts,
+                                       et un fond coloré reste disponible pour signaler une ligne (ex. « Mon équipe »). #}
+                                    <thead>
+                                        <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
+                                            <th>Équipe qui reçoit</th>
+                                            <th>Équipe qui se déplace</th>
+                                            <th>Date</th>
+                                            <th>Lieu</th>
+                                            <th>Résultat</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
 
                                     {% for partie in journee.parties %}
-                                        <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
+                                        <tr id="tr-partie-{{partie.id}}" class="hover:bg-(--color-base-200)" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words">{{ partie.idEquipeRecoit.nom }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-semibold text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
                                
                                             </td>
                                             <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words">{{ partie.idEquipeDeplace.nom }}</a>
+                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-semibold text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
                                    
                                             </td>
                                             <td>{{ partie.date|format_datetime(pattern='EEEE dd/MM/yyyy', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
@@ -65,7 +72,7 @@
                                                 rel="noopener noreferrer">
                                                     {{ partie.lieu.nom }}
                                                 </a></td>
-                                            <td class="text-base tabular-nums">
+                                            <td class="font-display text-xl font-extrabold text-(--color-primary) tabular-nums">
 
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
                                                     <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
@@ -92,7 +99,9 @@
                                         </tr>
 
                                     {% endfor %}
+                                    </tbody>
                                 </table>
+                                </div>
                                 {# Affichage pour mobile sous forme de carte #}
                                 {% for partie in journee.parties %}
                                 {# Carte compacte : équipe qui reçoit en haut, équipe qui se déplace en dessous,
@@ -100,11 +109,11 @@
                                 <div class="card bg-base-100 card-xs border border-base-300 block md:hidden liste-equipe-mobile mt-2" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                                     <div class="card-body px-3 py-2 gap-1">
                                         <div class="flex items-center gap-3">
-                                            <div class="flex-1 min-w-0 text-base leading-snug">
+                                            <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
                                                 <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-bold block py-0.5 break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
                                                 <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-bold block py-0.5 break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
                                             </div>
-                                            <div class="shrink-0 text-right text-base">
+                                            <div class="shrink-0 text-right font-display text-2xl font-extrabold text-(--color-primary) tabular-nums">
                                                 {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
                                                     <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
                                                 {% else %}
