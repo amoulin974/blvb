@@ -3,28 +3,19 @@
 {% block title %}Site du BLVB{% endblock %}
 
 {% block hero %}
-    <div class="hero min-h-[320px] md:min-h-[420px] w-full bg-cover bg-center mt-0" style="background-image: url({{ asset('images/ballon_1280.jpg')}});">
-    <div class="hero-overlay bg-(--color-primary)/70"></div>
-    <div class="hero-content text-neutral-content text-center">
-        <div class="max-w-2xl">
-        <h1 class="mb-5 text-4xl md:text-5xl font-bold text-white">Championnat Basque Landais Volley Ball</h1>
-        <p class="mb-5">
-            Le championnat de volley-ball loisir senior B.L.V.B. a lieu de septembre à mai sur la côte basque et landaise.
-        </p>
-            {% if app.user %}
-                <a href="{{ path("front_calendrier") }}"><button class="btn btn-accent">Saisir un résultat</button></a>
-                {% if equipe %}
-                    <a href="{{ path("front_equipe_detail",  {'id': equipe.id})}}"><button class="btn btn-accent">Voir {{equipe.nom}}</button></a>
-                    {%  else %}
-                    <a href="{{ path("front_equipes") }}"><button class="btn btn-accent">Voir les équipes</button></a>
-                {% endif %}
-            {% else %}
-            <a href="{{ path("app_login") }}"><button class="btn btn-accent">Capitaine : Se connecter pour saisir un résultat</button></a>
-            {% endif %}
+    {# Bandeau compact : le contenu utile (les matchs) doit être visible rapidement, surtout sur mobile #}
+    <div class="hero min-h-[150px] md:min-h-[240px] w-full bg-cover bg-center mt-0" style="background-image: url({{ asset('images/ballon_1280.jpg')}});">
+        <div class="hero-overlay bg-(--color-primary)/70"></div>
+        <div class="hero-content text-center py-6">
+            <div class="max-w-2xl">
+                <h1 class="text-3xl md:text-5xl font-bold text-white">Championnat Basque Landais Volley Ball</h1>
+                <p class="mt-3 text-white hidden sm:block">
+                    Le championnat de volley-ball loisir senior B.L.V.B. a lieu de septembre à mai sur la côte basque et landaise.
+                </p>
+            </div>
         </div>
     </div>
-    </div>
-  {% endblock %}
+{% endblock %}
 {% block body %}
 <div class="container mx-auto max-w-5xl md:px-4">
     {# Invitation « Mon équipe » : affichée par mon_equipe_controller.js tant qu'aucune équipe n'est choisie #}
@@ -38,7 +29,51 @@
         </div>
         {% include 'front/fragments/_choisir_mon_equipe.html.twig' with {idSelect: 'mon-equipe-invitation'} %}
     </section>
-    {% include 'front/fragments/_calendrier_full.html.twig' %}
+    {# Matchs de la phase en cours : par poule, la journée en cours (ou la prochaine) et les derniers résultats.
+       Le calendrier complet reste accessible sur /calendrier. #}
+    {% set phase = phaseouverte ?? saison.phases|last %}
+    <section aria-labelledby="titre-matchs-accueil" data-controller="score-modal">
+        <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3">
+            <h2 id="titre-matchs-accueil" class="text-2xl uppercase tracking-wide">Les matchs{% if phase %} — {{ phase.nom }}{% endif %}</h2>
+            <a href="{{ path('front_calendrier') }}" class="link link-hover link-primary">Tout le calendrier →</a>
+        </div>
+        {% if phase and phase.poules|length > 0 %}
+            {% set aujourdhui = 'now'|date('Y-m-d') %}
+            <div class="tabs tabs-lift">
+                {% for poule in phase.poules %}
+                    <input type="radio" name="accueil_poules" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab" aria-label="{{ poule.nom }}" {% if loop.first %}checked{% endif %} />
+                    <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
+                        {% set courante = poule.journees|filter(j => j.dateFin and j.dateFin|date('Y-m-d') >= aujourdhui)|first %}
+                        {% set precedente = poule.journees|filter(j => j.dateFin and j.dateFin|date('Y-m-d') < aujourdhui)|last %}
+
+                        {% if courante %}
+                            <h3 class="mt-2 mb-3 text-2xl uppercase tracking-wide text-(--color-primary)">Journée {{ courante.numero }}
+                                <span class="badge badge-accent align-middle font-sans font-semibold normal-case tracking-normal">{{ courante.dateDebut and courante.dateDebut|date('Y-m-d') <= aujourdhui ? 'En cours' : 'Prochaine journée' }}</span>
+                                {% if courante.dateDebut %}
+                                    <span class="font-sans font-normal normal-case tracking-normal text-sm text-base-content">— du {{ courante.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ courante.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
+                                {% endif %}
+                            </h3>
+                            {{ include('front/fragments/_journee_matchs.html.twig', {journee: courante}) }}
+                        {% endif %}
+
+                        {% if precedente %}
+                            <h3 class="{{ courante ? 'mt-8 pt-6 border-t border-base-300' : 'mt-2' }} mb-3 text-2xl uppercase tracking-wide text-(--color-primary)">Derniers résultats
+                                <span class="font-sans font-normal normal-case tracking-normal text-sm text-base-content">— Journée {{ precedente.numero }}</span>
+                            </h3>
+                            {{ include('front/fragments/_journee_matchs.html.twig', {journee: precedente}) }}
+                        {% endif %}
+
+                        {% if not courante and not precedente %}
+                            <p class="alert alert-info">Aucun match programmé pour cette poule.</p>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="alert alert-info">Aucun match programmé pour le moment.</p>
+        {% endif %}
+        {{ include('front/fragments/_score_modal.html.twig') }}
+    </section>
 </div>
 
 {% endblock %}
