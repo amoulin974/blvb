@@ -188,3 +188,6 @@ body{
 .js-toc .toc-link:hover { text-decoration: underline; }
 .js-toc .is-active-link { font-weight: 700; }
 
+/* « Mon équipe » (mon_equipe_controller.js) : lignes et cartes de l'équipe suivie, teintées du jaune d'accent.
+   Hors couche pour passer devant les fonds utilitaires (zones de montée/descente, survol). */
+.mon-equipe { background-color: color-mix(in oklab, var(--color-accent) 22%, var(--color-base-100)) !important; }

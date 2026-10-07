@@ -6,7 +6,16 @@
 
         {# En-tête : nom de l'équipe, gymnase et créneaux de réception #}
         <div>
-            <h1 class="text-4xl uppercase tracking-wide">{{ equipe.nom }}</h1>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h1 class="text-4xl uppercase tracking-wide">{{ equipe.nom }}</h1>
+                {# Libellé et état gérés par mon_equipe_controller.js (choix gardé dans le navigateur) #}
+                <button type="button" class="btn btn-sm btn-outline btn-primary"
+                        data-mon-equipe-target="bouton"
+                        data-action="mon-equipe#basculer"
+                        data-mon-equipe-id-param="{{ equipe.id }}"
+                        data-mon-equipe-nom-param="{{ equipe.nom }}"
+                        aria-pressed="false">☆ Suivre cette équipe</button>
+            </div>
             <p class="mt-1">
                 Reçoit à
                 <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}"

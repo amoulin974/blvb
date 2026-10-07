@@ -11,7 +11,7 @@
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
-                        <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
                         {# Barre d'outils de la poule, séparée des journées #}
                         <div class="flex flex-wrap items-center gap-x-3 gap-y-1 pb-4 border-b border-base-300">

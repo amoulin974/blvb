@@ -14,7 +14,7 @@
             <div class="collapse-content px-0 md:px-4">
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
-                    <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                    <input type="radio" name="tabs_{{phase.id}}" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                     <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
                         {% include '/front/fragments/_classement_poule_unique.html.twig' %}
                     </div>

@@ -30,7 +30,7 @@
                 {% set montee = zonesActives and classement.position <= poule.NbMonteeDefaut %}
                 {% set descente = zonesActives and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
                 {% set courante = equipeid is defined and classement.equipe.id == equipeid %}
-                <tr class="align-top {{ courante ? 'bg-(--color-base-200)' : (montee ? 'bg-(--color-success)/10' : (descente ? 'bg-(--color-warning)/10' : '')) }}">
+                <tr data-equipe="{{ classement.equipe.id }}" class="align-top {{ courante ? 'bg-(--color-base-200)' : (montee ? 'bg-(--color-success)/10' : (descente ? 'bg-(--color-warning)/10' : '')) }}">
                     <td class="text-center font-display text-2xl font-extrabold text-(--color-primary) tabular-nums whitespace-nowrap">
                         {{ classement.position }}
                         {% if montee %}<span class="text-sm text-(--color-success)" title="Zone de montée" aria-hidden="true">▲</span><span class="sr-only">(zone de montée)</span>{% endif %}
@@ -55,7 +55,7 @@
             {% set montee = zonesActives and classement.position <= poule.NbMonteeDefaut %}
             {% set descente = zonesActives and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
             {% set courante = equipeid is defined and classement.equipe.id == equipeid %}
-            <div class="card card-xs border border-base-300 {{ courante ? 'bg-(--color-base-200)' : (montee ? 'bg-(--color-success)/10' : (descente ? 'bg-(--color-warning)/10' : 'bg-base-100')) }}">
+            <div data-equipe="{{ classement.equipe.id }}" class="card card-xs border border-base-300 {{ courante ? 'bg-(--color-base-200)' : (montee ? 'bg-(--color-success)/10' : (descente ? 'bg-(--color-warning)/10' : 'bg-base-100')) }}">
                 <div class="card-body px-3 py-2 gap-1">
                     <div class="flex items-center gap-3">
                         <div class="shrink-0 w-10 text-center font-display text-2xl font-extrabold text-(--color-primary) tabular-nums leading-none">

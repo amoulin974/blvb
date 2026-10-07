@@ -15,7 +15,7 @@
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
-                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <input type="radio" name="tabs_{{phase.id}}" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
                         <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
                         {% if poule.equipes|length ==0 %}
                             <p class="alert alert-info">Aucune équipe dans cette poule.</p>
@@ -41,7 +41,7 @@
                                     {% for equipe in poule.equipes|sort((a, b) => a.nom|lower <=> b.nom|lower) %}
                                         {% set position = null %}
                                         {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
-                                        <tr class="hover:bg-(--color-base-200)">
+                                        <tr class="hover:bg-(--color-base-200)" data-equipe="{{ equipe.id }}">
                                             <td>
                                                 <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ equipe.nom }}</a>
                                             </td>
@@ -68,7 +68,7 @@
                                 {% for equipe in poule.equipes|sort((a, b) => a.nom|lower <=> b.nom|lower) %}
                                     {% set position = null %}
                                     {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
-                                    <div class="card card-xs bg-base-100 border border-base-300">
+                                    <div class="card card-xs bg-base-100 border border-base-300" data-equipe="{{ equipe.id }}">
                                         <div class="card-body px-3 py-2 gap-1">
                                             <div class="flex items-center gap-3">
                                                 <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="flex-1 min-w-0 link link-hover link-primary focus-visible:underline font-display font-medium text-lg tracking-wide py-0.5 break-words">{{ equipe.nom }}</a>
