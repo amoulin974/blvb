@@ -1,22 +1,24 @@
 {% extends 'base_front.html.twig' %}
 
+{% block title %}Calendrier par gymnase — {{ saison.nom }} - BLVB{% endblock %}
+
 {% block body %}
-    <div class="container mx-auto max-w-5xl px-4">
-        <h1 class="text-2xl font-bold mb-6">Le calendrier par gymnase - {{ saison.nom }}</h1>
+    <div class="container mx-auto max-w-5xl md:px-4">
+        <h1>Calendrier par gymnase — {{ saison.nom }}</h1>
 {#        TODO enlever le badge du nombre d ematch, et ajouter les alerts dans la vue mobile#}
         {% for phase in saison.phases %}
-            <div class="bg-base-100 border-base-300 collapse collapse-arrow border mb-4">
+            <div class="bg-base-100 border-base-300 collapse collapse-arrow md:border mb-4">
                 <input type="checkbox" {% if phaseouverte and phaseouverte.id == phase.id %}checked{% endif %} class="peer" />
 
-                <div class="collapse-title text-xl font-medium">
+                <div class="collapse-title font-display text-xl font-semibold">
                     {{ phase.nom }}
                 </div>
 
-                <div class="collapse-content">
-                    {# --- FILTRE --- #}
-                    <div class="py-4">
-                        <label class="label-text mr-2">Filtrer par gymnase :</label>
-                        <select id="lieuFilter_{{phase.id}}" class="select select-bordered w-full max-w-xs" onchange="filterLieu({{phase.id}})">
+                <div class="collapse-content px-2 md:px-4">
+                    {# --- FILTRE (barre d'outils séparée des gymnases) --- #}
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <label for="lieuFilter_{{phase.id}}">Filtrer par gymnase</label>
+                        <select id="lieuFilter_{{phase.id}}" class="select w-full text-base sm:w-72 md:select-sm md:text-sm" onchange="filterLieu({{phase.id}})">
                             <option value="all">Tous les gymnases</option>
                             {% for lieu in lieux %}
                                 {# On n'affiche dans le select que les lieux qui ont des matchs pour cette phase #}
@@ -32,160 +34,86 @@
                         {# On vérifie s'il y a des matchs pour ce lieu et cette phase #}
                         {% if lieu.partiesByDate[phase.id] is defined %}
 
-                            <div class="mb-8 border-t pt-4" data-idphase="{{ phase.id }}" data-lieu="{{ lieu.id }}">
+                            <div class="pt-6 mt-4 border-t border-base-300" data-idphase="{{ phase.id }}" data-lieu="{{ lieu.id }}">
 
-                                {# En-tête du Lieu avec les nouveaux Créneaux #}
-                                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                                    <div>
-                                        <h3 class="text-lg font-bold text-primary">{{ lieu.nom }}</h3>
-                                        <a class="link text-xs" href="https://maps.google.com/?q={{ lieu.adresse|url_encode }}" target="_blank">📍 {{ lieu.adresse }}</a>
-                                    </div>
-                                    <div class="text-sm text-gray-500 mt-2 md:mt-0">
-                                        Disponibilités :
-                                        {% for creneau in lieu.creneaux %}
-                                            <span class="badge badge-ghost badge-sm">{{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}</span>
-                                        {% else %}
-                                            <span class="text-xs italic">Aucun créneau défini</span>
-                                        {% endfor %}
-                                    </div>
+                                {# En-tête du gymnase : nom, adresse, créneaux #}
+                                <div class="mb-3">
+                                    <h3 class="text-2xl uppercase tracking-wide text-(--color-primary)">{{ lieu.nom }}</h3>
+                                    <p class="text-sm">
+                                        <a class="link link-hover link-primary focus-visible:underline" href="https://maps.google.com/?q={{ lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ lieu.adresse }}</a>
+                                    </p>
+                                    <p class="text-sm">
+                                        Créneaux :
+                                        {% for creneau in lieu.creneaux %}{{ loop.first ? '' : ' · ' }}{{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% else %}<span class="italic">aucun créneau défini</span>{% endfor %}
+                                    </p>
                                 </div>
 
-                                {# --- VUE TABLEAU (Desktop) --- #}
-                                <div class="hidden md:block overflow-x-auto">
-                                    <table class="table table-zebra table-sm w-full">
+                                {# --- VUE TABLEAU (ordinateur) --- #}
+                                <div class="hidden md:block">
+                                    <table class="table w-full table-fixed">
+                                        <colgroup>
+                                            <col class="w-[22%]">
+                                            <col class="w-[40%]">
+                                            <col class="w-[12%]">
+                                            <col class="w-[26%]">
+                                        </colgroup>
                                         <thead>
-                                        <tr>
+                                        <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
                                             <th>Date</th>
                                             <th>Matchs</th>
-                                            <th>Alertes</th>
-                                            <th>Détails</th>
+                                            <th class="text-center">Occupation</th>
+                                            <th>Statut</th>
                                         </tr>
                                         </thead>
                                         <tbody>
                                         {% for date, parties in lieu.partiesByDate[phase.id] %}
                                             {# On récupère l'analyse calculée dans le contrôleur #}
                                             {% set analyse = lieu.analysesByDate[phase.id][date] %}
-                                            <tr class="{% if analyse.alerte_capacite %}bg-red-10{% endif %}">
-                                                {#  Date#}
-                                                <td class="font-bold whitespace-nowrap">{{ date|format_date('full', locale='fr')|capitalize }}</td>
-                                                {#  Nombre match #}
-                                                <td class="{% if not analyse.alerte_horscrenau and not analyse.alerte_capacite and not analyse.alerte_priorite %}bg-success{% else %}bg-warning text-white{% endif %}">
-
-                                                        {{ parties|length }} / {{ analyse.capacite_max }}
-
-                                                </td>
-                                                {#  Alertes #}
+                                            {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite %}
+                                            <tr class="align-top {{ alerte ? 'bg-(--color-error)/5' : '' }}">
+                                                <td class="font-display text-[17px] font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</td>
                                                 <td>
-                                                    <div class=" text-center">
-
-
-
-
-                                                        {# Alerte hors creneau #}
-                                                        {% if analyse.alerte_horscrenau %}
-                                                            <div class="text-error text-xs gap-1 font-semibold tooltip flex items-center justify-center">
-                                                                <span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>
-
-                                                                Match(s) placé(s) en dehors d'un créneau prévu
-                                                            </div>
-                                                        {% else %}
-                                                            {# Alerte Priorité #}
-                                                            {% if analyse.alerte_priorite %}
-                                                                <div class="text-warning text-xs gap-1 font-semibold tooltip flex items-center justify-center"
-                                                                     data-tip="Ce jour est priorité {{ analyse.priorite_actuelle }}, le {{ analyse.jour_prefere }} est priorité {{ analyse.priorite_max }}">
-                                                                    <span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>
-                                                                    Match(s) placé(s) sur un créneaux qui n'est pas prioritaire
-                                                                </div>
-                                                            {% endif %}
-                                                            {# Alerte Capacité #}
-                                                            {% if analyse.alerte_capacite %}
-                                                                <div class="text-error text-xs gap-1 font-semibold flex items-center justify-center">
-                                                                    <span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>
-                                                                    Trop de matchs par rapport à la capacité d'accueil
-                                                                </div>
-                                                            {% endif %}
-                                                        {% endif %}
-
-                                                        {# Si tout va bien #}
-                                                        {% if not analyse.alerte_horscrenau and not analyse.alerte_capacite and not analyse.alerte_priorite %}
-                                                            <span class="text-success text-xs flex items-center gap-1 flex items-center justify-center">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                                            OK
-                                                            </span>
-                                                        {% endif %}
-                                                    </div>
-                                                </td>
-
-                                                <td>
-                                                    <ul class="space-y-1">
+                                                    <ul class="flex flex-col gap-1 text-base">
                                                         {% for partie in parties %}
-                                                            <li class="text-xs">
-                                                                <span class="font-semibold">{{ partie.idEquipeRecoit.nom }}</span>
-                                                                vs
-                                                                <span class="font-semibold">{{ partie.idEquipeDeplace.nom }}</span>
-                                                                <span class="text-gray-500 ml-1">({{ partie.poule.nom }})</span>
+                                                            <li>
+                                                                <span class="font-display font-medium tracking-wide">{{ partie.idEquipeRecoit.nom }}</span>
+                                                                <span class="text-(--color-base-content)/70">contre</span>
+                                                                <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
+                                                                <span class="text-sm text-(--color-base-content)/70 whitespace-nowrap">· {{ partie.poule.nom }}</span>
                                                             </li>
                                                         {% endfor %}
                                                     </ul>
                                                 </td>
+                                                <td class="text-center font-display text-xl font-bold tabular-nums whitespace-nowrap">{{ parties|length }} / {{ analyse.capacite_max }}</td>
+                                                <td>{{ include('front/fragments/_lieu_alertes.html.twig') }}</td>
                                             </tr>
                                         {% endfor %}
                                         </tbody>
                                     </table>
                                 </div>
 
-                                {# --- VUE CARTES (Mobile) --- #}
-                                <div class="md:hidden flex flex-col gap-3">
+                                {# --- VUE CARTES (mobile) --- #}
+                                <div class="md:hidden flex flex-col gap-2">
                                     {% for date, parties in lieu.partiesByDate[phase.id] %}
                                         {% set analyse = lieu.analysesByDate[phase.id][date] %}
-                                        <div class="card shadow-sm
-                                            {%  if not analyse.alerte_horscrenau and not analyse.alerte_priorite and not analyse.alerte_capacite %}bg-base-200
-                                            {% else %}bg-red-200
-                                            {%  endif %} ">
-                                            <div class="card-body p-3">
-                                                <h4 class="card-title text-sm">{{ date|format_date('full', locale='fr')|capitalize }}</h4>
-                                                <div class="divider my-0"></div>
-                                                {% for partie in parties %}
-                                                    <div class="text-sm mb-1">
-                                                        <span class="font-bold">{{ partie.idEquipeRecoit.nom }}</span>
-                                                        <span class="text-xs text-gray-500">vs</span>
-                                                        <span class="font-bold">{{ partie.idEquipeDeplace.nom }}</span>
-                                                        <div class="text-xs text-gray-500">Poule {{ partie.poule.nom }}</div>
-
-                                                    </div>
-                                                {% endfor %}
-                                                {# Alerte hors creneau #}
-                                                {% if analyse.alerte_horscrenau %}
-                                                    <div class="text-error text-xs gap-1 font-semibold tooltip flex items-center justify-center">
-                                                        <span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>
-
-                                                        Match(s) placé(s) en dehors d'un créneau prévu
-                                                    </div>
-                                                {% else %}
-                                                    {# Alerte Priorité #}
-                                                    {% if analyse.alerte_priorite %}
-                                                        <div class="text-warning text-xs gap-1 font-semibold tooltip flex items-center justify-center"
-                                                             data-tip="Ce jour est priorité {{ analyse.priorite_actuelle }}, le {{ analyse.jour_prefere }} est priorité {{ analyse.priorite_max }}">
-                                                            <span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>
-                                                            Match(s) placé(s) sur un créneaux qui n'est pas prioritaire
-                                                        </div>
-                                                    {% endif %}
-                                                    {# Alerte Capacité #}
-                                                    {% if analyse.alerte_capacite %}
-                                                        <div class="text-error text-xs gap-1 font-semibold flex items-center justify-center">
-                                                            <span><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg></span>
-                                                            Trop de matchs par rapport à la capacité d'accueil
-                                                        </div>
-                                                    {% endif %}
-                                                {% endif %}
-
-                                                {# Si tout va bien #}
-                                                {% if not analyse.alerte_horscrenau and not analyse.alerte_capacite and not analyse.alerte_priorite %}
-                                                    <span class="text-success text-xs flex items-center gap-1 flex items-center justify-center">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
-                                                        OK
-                                                    </span>
-                                                {% endif %}
+                                        {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite %}
+                                        <div class="card card-xs border border-base-300 {{ alerte ? 'bg-(--color-error)/5' : 'bg-base-100' }}">
+                                            <div class="card-body px-3 py-2 gap-1">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <h4 class="font-display text-lg font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</h4>
+                                                    <span class="shrink-0 font-display text-lg font-bold tabular-nums"><span class="sr-only">Occupation : </span>{{ parties|length }} / {{ analyse.capacite_max }}</span>
+                                                </div>
+                                                <ul class="flex flex-col gap-0.5 text-base">
+                                                    {% for partie in parties %}
+                                                        <li>
+                                                            <span class="font-display font-medium tracking-wide">{{ partie.idEquipeRecoit.nom }}</span>
+                                                            <span class="text-(--color-base-content)/70">contre</span>
+                                                            <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
+                                                            <span class="text-sm text-(--color-base-content)/70 whitespace-nowrap">· {{ partie.poule.nom }}</span>
+                                                        </li>
+                                                    {% endfor %}
+                                                </ul>
+                                                {{ include('front/fragments/_lieu_alertes.html.twig') }}
                                             </div>
                                         </div>
                                     {% endfor %}

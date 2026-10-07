@@ -1,0 +1,21 @@
+{# Statut d'occupation d'un gymnase pour une date (variable : analyse, calculée par CalendrierAnalyseService).
+   Chaque alerte a une icône et un texte : l'information ne repose pas sur la couleur seule. #}
+{% set warningIcon %}<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>{% endset %}
+<div class="flex flex-col gap-1 text-sm">
+    {% if analyse.alerte_horscrenau %}
+        <div class="flex items-start gap-1 text-(--color-error) font-medium">{{ warningIcon }}<span>Match(s) placé(s) en dehors d'un créneau prévu</span></div>
+    {% else %}
+        {% if analyse.alerte_priorite %}
+            <div class="flex items-start gap-1 text-(--color-warning) font-medium">{{ warningIcon }}<span>Créneau non prioritaire (ce jour : priorité {{ analyse.priorite_actuelle }}, le {{ analyse.jour_prefere }} : priorité {{ analyse.priorite_max }})</span></div>
+        {% endif %}
+        {% if analyse.alerte_capacite %}
+            <div class="flex items-start gap-1 text-(--color-error) font-medium">{{ warningIcon }}<span>Trop de matchs par rapport à la capacité d'accueil</span></div>
+        {% endif %}
+    {% endif %}
+    {% if not analyse.alerte_horscrenau and not analyse.alerte_capacite and not analyse.alerte_priorite %}
+        <span class="flex items-center gap-1 text-(--color-success) font-medium">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            OK
+        </span>
+    {% endif %}
+</div>
