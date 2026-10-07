@@ -1,12 +1,13 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_auth.html.twig' %}
 
-{% block title %}Un email de changement de mot de passe a été envoyé{% endblock %}
+{% block title %}E-mail envoyé - BLVB{% endblock %}
 
-{% block body %}
+{% block auth_body %}
+    <h1>Vérifiez votre boîte mail</h1>
     <p>
-        Si un compte correspond à cette adresse, alors un mail sera envoyé à cette adresse. 
+        Si un compte correspond à cette adresse, un e-mail vient d'y être envoyé. 
         Ce mail contiendra un lien qui vous permettra de réinitialiser votre mot de passe. 
-        Attention ce mail expire dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
+        Attention, ce lien expire dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
     </p>
-    <p>Si vous ne recevez pas de mail, vérifiez dans les mail sinon <a href="{{ path('app_forgot_password_request') }}">essayez une nouvelle fois.</a>.</p>
+    <p>Vous ne l'avez pas reçu ? Vérifiez vos courriers indésirables, sinon <a class="link link-hover link-primary" href="{{ path('app_forgot_password_request') }}">faites une nouvelle demande</a>.</p>
 {% endblock %}

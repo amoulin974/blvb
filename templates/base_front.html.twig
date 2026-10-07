@@ -33,6 +33,8 @@
 
             <div class="flex flex-1 px-2 mx-2 font-bold text-lg items-center">
                 <a class="mr-3" href="{{ path('front_index') }}">{% include 'front/fragments/_logo.html.twig' %}</a>
+                {# Sélecteur de saison absent sur les pages qui ne le fournissent pas (connexion, mot de passe…) #}
+                {% if saisons is defined %}
                 <div>
                     <form method="post" action="{{ path('front_set_saison') }}">
                     <select name="idSaisonSelected" aria-label="Saison" class="select select-sm w-auto text-base-content" onchange="this.form.submit()">
@@ -44,6 +46,7 @@
                     </select>
                     </form>
                 </div>
+                {% endif %}
             </div>
 
             {# Menu desktop #}
