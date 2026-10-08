@@ -2,12 +2,17 @@
 {% block title %}Équipe {{equipe.nom}} - Site du BLVB{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-6">
+    {# Abonnement à l'agenda : adresse https pour Google / copie, adresse webcal:// pour Apple, Outlook et la plupart des téléphones.
+       L'agenda couvre UNE saison (celle affichée) : il ne bascule jamais sur la suivante. #}
+    {% set agendaUrl = url('calendar_ics_equipe', {saison: saison.id, equipe: equipe.id}) %}
+    {% set agendaWebcal = agendaUrl|replace({'https://': 'webcal://', 'http://': 'webcal://'}) %}
+    <div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-6" data-controller="abonnement-agenda" data-abonnement-agenda-adresse-value="{{ agendaUrl }}">
 
         {# En-tête : nom de l'équipe, gymnase et créneaux de réception #}
         <div>
             <div class="flex flex-wrap items-center justify-between gap-3">
                 <h1 class="text-4xl uppercase tracking-wide">{{ equipe.nom }}</h1>
+                <div class="flex flex-wrap gap-2">
                 {# Libellé et état gérés par mon_equipe_controller.js (choix gardé dans le navigateur) #}
                 <button type="button" class="btn btn-outline btn-primary md:btn-sm"
                         data-mon-equipe-target="bouton"
@@ -15,6 +20,8 @@
                         data-mon-equipe-id-param="{{ equipe.id }}"
                         data-mon-equipe-nom-param="{{ equipe.nom }}"
                         aria-pressed="false">☆ C'est mon équipe</button>
+                <button type="button" class="btn btn-outline btn-primary md:btn-sm" data-action="abonnement-agenda#ouvrir">Ajouter à mon agenda</button>
+                </div>
             </div>
             <p class="mt-1">
                 Reçoit à
@@ -85,6 +92,7 @@
                     <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
                         <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ prochain.lieu_adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ prochain.lieu_nom }}</a></p>
+                    <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
                     {% if canViewCapitaine %}
                         {{ include('front/fragments/_contact_capitaine.html.twig', {contact: capitainesAdverses[advId] ?? null}) }}
@@ -178,12 +186,6 @@
                             {% endfor %}
                         </div>
 
-                        <div class="mt-3 text-sm">
-                            <p>Ajouter ce calendrier à votre agenda :
-                                <a class="link link-hover link-primary focus-visible:underline" href="{{ path("calendar_ics", {poule: poule.id, equipe: equipe.id}) }}">lien du calendrier (ICS)</a>
-                            </p>
-                            <p class="text-(--color-base-content)/80">Faites un clic droit sur le lien puis « Copier l'adresse du lien ». Dans Google Agenda : « + » à côté de « Autres agendas », puis « À partir de l'URL » et collez l'adresse.</p>
-                        </div>
                     {% endif %}
                 {% endfor %}
             {% endfor %}
@@ -228,6 +230,36 @@
                 {% endif %}
             </section>
         {% endif %}
+
+
+        {# Fenêtre « Ajouter à mon agenda » #}
+        <dialog class="modal" data-abonnement-agenda-target="dialogue" aria-labelledby="titre-agenda">
+            <div class="modal-box flex flex-col gap-4">
+                <h2 id="titre-agenda" class="text-xl uppercase tracking-wide">Ajouter à mon agenda</h2>
+                <p>Les matchs de <strong>{{ equipe.nom }}</strong> pour la <strong>{{ saison.nom|lower }}</strong>. Votre agenda se met à jour tout seul quand un horaire ou un lieu change (jusqu'à 24 h de délai selon l'application).</p>
+
+                <div class="flex flex-col gap-2">
+                    <a class="btn btn-accent" href="https://calendar.google.com/calendar/r?cid={{ agendaWebcal|url_encode }}" target="_blank" rel="noopener noreferrer">Google Agenda</a>
+                    <a class="btn btn-accent" href="{{ agendaWebcal }}">Apple, Outlook et autres agendas</a>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="agenda-adresse" class="font-medium">Autre application : copiez cette adresse</label>
+                    <div class="flex gap-2">
+                        <input id="agenda-adresse" type="text" readonly value="{{ agendaUrl }}" class="input w-full text-base min-w-0">
+                        <button type="button" class="btn btn-outline btn-primary" data-action="abonnement-agenda#copier">Copier</button>
+                    </div>
+                    <p class="text-sm" role="status" data-abonnement-agenda-target="confirmation"></p>
+                </div>
+
+                <p class="text-sm">Utilisez ces boutons plutôt que de télécharger le fichier : <strong>un fichier téléchargé est une copie qui n'est jamais mise à jour</strong>. Cet agenda ne couvre que cette saison ; la saison suivante, vous vous abonnerez à l'équipe que vous aurez rejointe.</p>
+
+                <div class="modal-action mt-0">
+                    <form method="dialog"><button class="btn btn-ghost">Fermer</button></form>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+        </dialog>
 
     </div>
 
