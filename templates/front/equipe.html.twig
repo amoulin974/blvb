@@ -25,10 +25,8 @@
             </div>
             <p class="mt-1">
                 Reçoit à
-                <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}"
-                   target="_blank"
-                   rel="noopener noreferrer">{{ equipe.lieu.nom }}</a>
-                {% for creneau in equipe.lieu.creneaux %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
+                {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
+                {% for creneau in (equipe.lieu ? equipe.lieu.creneaux : []) %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
             </p>
 
             {# Capitaine : coordonnées visibles des capitaines de la poule, des membres de l'équipe et des administrateurs #}
@@ -91,7 +89,7 @@
                     {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
                     <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
-                        <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ prochain.lieu_adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ prochain.lieu_nom }}</a></p>
+                        {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}</p>
                     <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
                     {% if canViewCapitaine %}
@@ -151,9 +149,7 @@
                                         </td>
                                         <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
                                         <td class="text-right whitespace-nowrap">
-                                            <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse|url_encode }}"
-                                               target="_blank"
-                                               rel="noopener noreferrer">{{ match.lieu_nom }}</a>
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -177,9 +173,7 @@
                                         </div>
                                         <p class="text-sm">
                                             {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
-                                            <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse|url_encode }}"
-                                               target="_blank"
-                                               rel="noopener noreferrer">{{ match.lieu_nom }}</a>
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
                                         </p>
                                     </div>
                                 </div>

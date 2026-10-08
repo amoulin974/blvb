@@ -47,9 +47,7 @@
                     <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
                     {% if contactAdverse and contactAdverse.adversaire.id == partie.idEquipeDeplace.id %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
                 </td>
-                <td class="text-right whitespace-nowrap"><a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
-                    target="_blank"
-                    rel="noopener noreferrer">{{ partie.lieu.nom }}</a></td>
+                <td class="text-right whitespace-nowrap">{{ include('front/fragments/_lieu_lien.html.twig', {nom: partie.lieu ? partie.lieu.nom : null, adresse: partie.lieu ? partie.lieu.adresse : null}) }}</td>
             </tr>
 
         {% endfor %}
@@ -75,9 +73,7 @@
             </div>
             <p class="text-sm">
                 {{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }} ·
-                <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
-                    target="_blank"
-                    rel="noopener noreferrer">{{ partie.lieu.nom }}</a>
+                {{ include('front/fragments/_lieu_lien.html.twig', {nom: partie.lieu ? partie.lieu.nom : null, adresse: partie.lieu ? partie.lieu.adresse : null}) }}
             </p>
             {% if contactAdverse %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
 

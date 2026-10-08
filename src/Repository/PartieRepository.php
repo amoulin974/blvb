@@ -72,7 +72,7 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('l.adresse AS lieu_adresse')
             ->addSelect('j.id AS journee_id')
 
-            ->join('m.lieu', 'l')
+            ->leftJoin('m.lieu', 'l')  // un match peut ne pas avoir (encore) de gymnase
             ->join('m.journee', 'j')
             ->join('m.poule', 'poule')
 

@@ -1,0 +1,3 @@
+{# Lien vers le gymnase sur Google Maps, ou « Gymnase à définir » quand le match ou l'équipe n'a pas (encore) de gymnase.
+   Variables : nom, adresse (peuvent être vides). #}
+{% if nom %}<a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ adresse|default(nom)|url_encode }}" target="_blank" rel="noopener noreferrer">{{ nom }}</a>{% else %}<span class="text-(--color-base-content)/70">Gymnase à définir</span>{% endif %}

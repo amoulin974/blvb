@@ -46,10 +46,10 @@
                                                 <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ equipe.nom }}</a>
                                             </td>
                                             <td>
-                                                <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ equipe.lieu.nom }}</a>
+                                                {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
                                             </td>
                                             <td>
-                                                {% for creneau in equipe.lieu.creneaux %}
+                                                {% for creneau in (equipe.lieu ? equipe.lieu.creneaux : []) %}
                                                     <div>{{ creneau.jourLibelle }} · {{ creneau.heureDebut|format_time('short', locale='fr') }}</div>
                                                 {% else %}
                                                     <span class="text-(--color-base-content)/70">Non défini</span>
@@ -77,8 +77,8 @@
                                                 {% endif %}
                                             </div>
                                             <p class="text-sm">
-                                                <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ equipe.lieu.nom }}</a>
-                                                {% for creneau in equipe.lieu.creneaux %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
+                                                {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
+                                                {% for creneau in (equipe.lieu ? equipe.lieu.creneaux : []) %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
                                             </p>
                                         </div>
                                     </div>
