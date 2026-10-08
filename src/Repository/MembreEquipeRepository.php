@@ -110,6 +110,24 @@ class MembreEquipeRepository extends ServiceEntityRepository
     }
 
     /**
+     * Cet utilisateur fait-il partie de la composition de l'équipe pour la saison (capitaine ou simple joueur) ?
+     */
+    public function estMembre(User $user, Equipe $equipe, Saison $saison): bool
+    {
+        return $this->createQueryBuilder('m')
+            ->select('COUNT(m.id)')
+            ->innerJoin('m.joueur', 'j')
+            ->andWhere('j.user = :user')
+            ->andWhere('m.equipe = :equipe')
+            ->andWhere('m.saison = :saison')
+            ->setParameter('user', $user)
+            ->setParameter('equipe', $equipe)
+            ->setParameter('saison', $saison)
+            ->getQuery()
+            ->getSingleScalarResult() > 0;
+    }
+
+    /**
      * Désigne $nouveauCapitaine comme seul capitaine de l'équipe pour cette saison
      * (démarque les éventuels autres capitaines au passage).
      */

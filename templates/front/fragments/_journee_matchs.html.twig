@@ -32,16 +32,20 @@
         <tbody>
 
         {% for partie in journee.parties %}
+            {# Capitaine connecté dont l'équipe joue ce match : coordonnées du capitaine adverse (règle appliquée côté serveur) #}
+            {% set contactAdverse = app.user ? contact_capitaine_adverse(partie, saison) : null %}
             <tr id="tr-partie-{{partie.id}}" class="hover:bg-(--color-base-200)" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                 <td class="whitespace-nowrap text-(--color-base-content)/80">{{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }}</td>
                 <td class="text-right">
                     <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
+                    {% if contactAdverse and contactAdverse.adversaire.id == partie.idEquipeRecoit.id %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
                 </td>
                 <td class="text-center font-display text-xl font-extrabold text-(--color-primary) tabular-nums whitespace-nowrap">
                     {{ include('front/fragments/_score_partie.html.twig') }}
                 </td>
                 <td>
                     <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
+                    {% if contactAdverse and contactAdverse.adversaire.id == partie.idEquipeDeplace.id %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
                 </td>
                 <td class="text-right whitespace-nowrap"><a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
                     target="_blank"
@@ -54,6 +58,8 @@
     </div>
     {# Affichage pour mobile sous forme de carte #}
     {% for partie in journee.parties %}
+    {# Capitaine connecté dont l'équipe joue ce match : coordonnées du capitaine adverse (règle appliquée côté serveur) #}
+    {% set contactAdverse = app.user ? contact_capitaine_adverse(partie, saison) : null %}
     {# Carte compacte : équipe qui reçoit en haut, équipe qui se déplace en dessous,
        score à droite ; date, heure et lieu sur une seule ligne. #}
     <div class="card bg-base-100 card-xs border border-base-300 block md:hidden liste-equipe-mobile mt-2" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
@@ -73,6 +79,7 @@
                     target="_blank"
                     rel="noopener noreferrer">{{ partie.lieu.nom }}</a>
             </p>
+            {% if contactAdverse %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
 
         </div>
     </div>

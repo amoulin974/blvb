@@ -17,6 +17,7 @@ use App\Repository\EquipeRepository;
 use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
 use App\Service\ClassementService;
+use App\Service\ContactCapitaineService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -164,7 +165,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository): Response
+    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository, ContactCapitaineService $contactCapitaineService): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -196,32 +197,44 @@ final class FrontController extends AbstractController
             }
         }
 
+        // Droits d'accès aux coordonnées, du plus large au plus restreint :
+        //  - capitaine de l'équipe consultée : réservé aux capitaines des équipes de sa poule (phase en cours) et aux administrateurs ;
+        //  - coordonnées des autres joueurs : réservées aux membres de l'équipe (et aux administrateurs).
+        // Un capitaine ne voit donc jamais que les coordonnées du capitaine adverse.
+        $user = $this->getUser();
+        $estAdmin = $this->isGranted('ROLE_ADMIN');
+        $estMembre = $user !== null && $membreEquipeRepository->estMembre($user, $equipe, $saison);
+
         //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
         $listeCapitaines=[];
+        $capitainesAdverses=[]; // id équipe adverse => coordonnées du capitaine (ou null si non désigné)
         foreach ($poules as $poule) {
-            if ($poule->getPhase()->getId() === $phaseouverte->getId()) {
-                foreach ($poule->getEquipes() as $equipePoule) {
-                    $capitaineMembre = $membreEquipeRepository->findCapitaine($equipePoule, $saison);
+            $phaseEnCours = $phaseouverte !== null && $poule->getPhase()->getId() === $phaseouverte->getId();
+            foreach ($poule->getEquipes() as $equipePoule) {
+                $capitaineMembre = $membreEquipeRepository->findCapitaine($equipePoule, $saison);
+                if ($phaseEnCours) {
                     $capitaineUser = $capitaineMembre?->getJoueur()->getUser();
                     if ($capitaineUser !== null && !in_array($capitaineUser->getId(), $listeCapitaines)){
                         $listeCapitaines[] = $capitaineUser->getId();
                     }
                 }
+                if ($equipePoule->getId() !== $equipe->getId()) {
+                    $capitainesAdverses[$equipePoule->getId()] = $contactCapitaineService->pour($equipePoule, $saison);
+                }
             }
         }
 
-        //Si l'utilisateur connecté est dans cette liste on l'autorise à voir les coordonnées des membres de l'équipe sélectionnée
-        $user = $this->getUser();
-        $canViewCapitaine = false;
-        if (($user !== null && in_array($user->getId(), $listeCapitaines)) || $this->isGranted('ROLE_ADMIN')){
-              $canViewCapitaine = true;
+        $canViewCapitaine = $estAdmin || ($user !== null && in_array($user->getId(), $listeCapitaines));
+        $peutVoirCapitaine = $canViewCapitaine || $estMembre;
+        $peutVoirMembres = $estMembre || $estAdmin;
+        if (!$canViewCapitaine) {
+            $capitainesAdverses = []; // rien ne doit sortir du serveur pour les autres visiteurs
         }
 
-        //Composition de l'équipe pour la saison sélectionnée
-        $membres = $membreEquipeRepository->findRosterBySaison($equipe, $saison);
+        $capitaine = $peutVoirCapitaine ? $contactCapitaineService->pour($equipe, $saison) : null;
+        //Composition complète (avec coordonnées des joueurs) : seulement pour les membres de l'équipe et les administrateurs
+        $membres = $peutVoirMembres ? $membreEquipeRepository->findRosterBySaison($equipe, $saison) : [];
         $estCapitaineDeCetteEquipe = $user !== null && $membreEquipeRepository->estCapitaine($user, $equipe, $saison);
-
-
 
         return $this->render('front/equipe.html.twig', [
             'saisons' => $this->saisons,
@@ -229,6 +242,10 @@ final class FrontController extends AbstractController
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
             'canViewCapitaine'=>$canViewCapitaine,
+            'peutVoirCapitaine'=>$peutVoirCapitaine,
+            'peutVoirMembres'=>$peutVoirMembres,
+            'capitaine'=>$capitaine,
+            'capitainesAdverses'=>$capitainesAdverses,
             'equipe'=>$equipe,
             'matchsByPoule'=>$matchsByPoule,
             'membres'=>$membres,

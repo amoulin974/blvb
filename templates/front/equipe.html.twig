@@ -23,6 +23,35 @@
                    rel="noopener noreferrer">{{ equipe.lieu.nom }}</a>
                 {% for creneau in equipe.lieu.creneaux %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
             </p>
+
+            {# Capitaine : coordonnées visibles des capitaines de la poule, des membres de l'équipe et des administrateurs #}
+            {% if peutVoirCapitaine %}
+                <div class="mt-3 bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Capitaine">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Capitaine</p>
+                        {% if capitaine %}
+                            <p class="font-display text-xl font-semibold">{{ capitaine.prenom }} {{ capitaine.nom }}</p>
+                        {% else %}
+                            <p>Capitaine non désigné pour le moment</p>
+                        {% endif %}
+                    </div>
+                    {% if capitaine %}
+                        <div class="flex flex-wrap gap-2 md:ml-auto">
+                            {% if capitaine.telephone %}
+                                <a class="btn btn-outline btn-primary md:btn-sm" href="tel:{{ capitaine.telephone|replace({' ': '', '.': '', '-': ''}) }}">Appeler · {{ capitaine.telephone }}</a>
+                            {% endif %}
+                            {% if capitaine.email %}
+                                <a class="btn btn-outline btn-primary md:btn-sm" href="mailto:{{ capitaine.email }}">Écrire · <span class="wrap-anywhere">{{ capitaine.email }}</span></a>
+                            {% endif %}
+                            {% if not capitaine.telephone and not capitaine.email %}
+                                <span>Coordonnées non renseignées</span>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="mt-2 text-sm">Coordonnées du capitaine réservées aux capitaines de la poule.</p>
+            {% endif %}
         </div>
 
         {# Synthèse : classement dans la phase en cours, prochain match, dernier résultat #}
@@ -52,9 +81,14 @@
                 {% if prochain %}
                     {% set domicile = prochain.equipe_recoit == equipe.nom %}
                     <p class="mt-1 font-display text-2xl font-bold text-(--color-primary)">{{ prochain.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ prochain.date_match|format_time('short', locale='fr') }}</p>
-                    <p class="text-sm">contre <span class="font-semibold">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</span></p>
+                    {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
+                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
                         <a class="link link-hover link-primary focus-visible:underline" href="https://www.google.com/maps/search/?api=1&query={{ prochain.lieu_adresse|url_encode }}" target="_blank" rel="noopener noreferrer">{{ prochain.lieu_nom }}</a></p>
+                    {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
+                    {% if canViewCapitaine %}
+                        {{ include('front/fragments/_contact_capitaine.html.twig', {contact: capitainesAdverses[advId] ?? null}) }}
+                    {% endif %}
                 {% else %}
                     <p class="mt-1">Aucun match à venir</p>
                 {% endif %}
@@ -63,7 +97,8 @@
                 <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Dernier résultat</p>
                 {% if dernier %}
                     <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
-                    <p class="text-sm">contre <span class="font-semibold">{{ dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace : dernier.equipe_recoit }}</span></p>
+                    {% set advDernierId = dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace_id : dernier.equipe_recoit_id %}
+                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
                 {% else %}
                     <p class="mt-1">Aucun match joué</p>
@@ -167,31 +202,32 @@
             {% endfor %}
         </section>
 
-        {# Composition #}
-        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-                <h2 class="uppercase tracking-wide">Composition</h2>
-                {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
-                    <a class="btn btn-sm btn-outline btn-primary" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+        {# Composition complète avec coordonnées : réservée aux membres de l'équipe et aux administrateurs.
+           Les autres capitaines de la poule ne voient que le capitaine (bloc en haut de page). #}
+        {% if peutVoirMembres %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h2 class="uppercase tracking-wide">Composition</h2>
+                    {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
+                        <a class="btn btn-sm btn-outline btn-primary" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+                    {% endif %}
+                </div>
+                {% if membres is empty %}
+                    <p class="mt-2">Composition non renseignée pour cette saison.</p>
+                {% else %}
+                    <ul class="mt-2 divide-y divide-base-300">
+                        {% for membre in membres %}
+                            <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
+                                {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
+                                {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ membre.joueur.telephone }}</a>{% endif %}
+                                {% if membre.joueur.email %}<a class="link link-hover link-primary wrap-anywhere" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
                 {% endif %}
-            </div>
-            {% if membres is empty %}
-                <p class="mt-2">Composition non renseignée pour cette saison.</p>
-            {% elseif not canViewCapitaine %}
-                <p class="mt-2">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
-            {% else %}
-                <ul class="mt-2 divide-y divide-base-300">
-                    {% for membre in membres %}
-                        <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
-                            <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
-                            {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
-                            {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone }}">{{ membre.joueur.telephone }}</a>{% endif %}
-                            {% if membre.joueur.email %}<a class="link link-hover link-primary break-all" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% endif %}
-        </section>
+            </section>
+        {% endif %}
 
     </div>
 

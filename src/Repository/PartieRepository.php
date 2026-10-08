@@ -42,6 +42,8 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('m.date AS date_match')
             ->addSelect('m.nb_set_gagnant_reception AS score_reception_match')
             ->addSelect('m.nb_set_gagnant_deplacement AS score_deplacement_match')
+            ->addSelect('er.id AS equipe_recoit_id')
+            ->addSelect('ed.id AS equipe_deplace_id')
             ->addSelect('er.nom AS equipe_recoit')
             ->addSelect('ed.nom AS equipe_deplace')
             ->addSelect('l.nom AS lieu_nom')
