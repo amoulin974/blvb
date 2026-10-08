@@ -28,14 +28,22 @@
                                 {% endif %}
                             {% endfor %}
                         </select>
+                        {# Pour les responsables de gymnase : ne garder que les dates en surcharge ou hors créneau #}
+                        <label class="flex items-center gap-2 cursor-pointer md:ml-auto py-1">
+                            <input type="checkbox" id="alertesSeules_{{phase.id}}" class="checkbox checkbox-sm" onchange="filterLieu({{phase.id}})">
+                            Seulement les dates à problème
+                        </label>
                     </div>
+                    <p id="aucuneAlerte_{{phase.id}}" class="hidden alert alert-success mt-4" role="status">Aucune date à problème pour cette sélection.</p>
+                    {% set aujourdhui = 'now'|date('Y-m-d') %}
 
                     {# --- LISTE DES LIEUX --- #}
                     {% for lieu in lieux %}
                         {# On vérifie s'il y a des matchs pour ce lieu et cette phase #}
                         {% if lieu.partiesByDate[phase.id] is defined %}
 
-                            <div class="pt-6 mt-4 border-t border-base-300" data-idphase="{{ phase.id }}" data-lieu="{{ lieu.id }}">
+                            {% set aAlerte = lieu.analysesByDate[phase.id]|filter(a => a.alerte_horscrenau or a.alerte_capacite or a.alerte_priorite)|length > 0 %}
+                            <div class="pt-6 mt-4 border-t border-base-300" data-idphase="{{ phase.id }}" data-lieu="{{ lieu.id }}" data-a-alerte="{{ aAlerte ? 1 : 0 }}">
 
                                 {# En-tête du gymnase : nom, adresse, créneaux #}
                                 <div class="mb-3">
@@ -49,77 +57,21 @@
                                     </p>
                                 </div>
 
-                                {# --- VUE TABLEAU (ordinateur) --- #}
-                                <div class="hidden md:block">
-                                    <table class="table w-full table-fixed">
-                                        <colgroup>
-                                            <col class="w-[17%]">
-                                            <col class="w-[55%]">
-                                            <col class="w-[10%]">
-                                            <col class="w-[18%]">
-                                        </colgroup>
-                                        <thead>
-                                        <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
-                                            <th>Date</th>
-                                            <th>Matchs</th>
-                                            <th class="text-center">Occupation</th>
-                                            <th>Statut</th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        {% for date, parties in lieu.partiesByDate[phase.id] %}
-                                            {# On récupère l'analyse calculée dans le contrôleur #}
-                                            {% set analyse = lieu.analysesByDate[phase.id][date] %}
-                                            {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite %}
-                                            <tr class="align-top {{ alerte ? 'bg-(--color-error)/5' : '' }}">
-                                                <td class="font-display text-[17px] font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</td>
-                                                <td>
-                                                    <ul class="flex flex-col gap-1 text-base">
-                                                        {% for partie in parties %}
-                                                            <li class="rounded px-1 -mx-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                                                <span class="font-display font-medium tracking-wide">{{ partie.idEquipeRecoit.nom }}</span>
-                                                                <span class="text-(--color-base-content)/70">contre</span>
-                                                                <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
-                                                                <span class="text-sm text-(--color-base-content)/70 whitespace-nowrap">· {{ partie.poule.nom }}</span>
-                                                            </li>
-                                                        {% endfor %}
-                                                    </ul>
-                                                </td>
-                                                <td class="text-center font-display text-xl font-bold tabular-nums whitespace-nowrap">{{ parties|length }} / {{ analyse.capacite_max }}</td>
-                                                <td>{{ include('front/fragments/_lieu_alertes.html.twig') }}</td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {# --- VUE CARTES (mobile) --- #}
-                                <div class="md:hidden flex flex-col gap-2">
-                                    {% for date, parties in lieu.partiesByDate[phase.id] %}
-                                        {% set analyse = lieu.analysesByDate[phase.id][date] %}
-                                        {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite %}
-                                        <div class="card card-xs border border-base-300 {{ alerte ? 'bg-(--color-error)/5' : 'bg-base-100' }}">
-                                            <div class="card-body px-3 py-2 gap-1">
-                                                <div class="flex items-center justify-between gap-3">
-                                                    <h4 class="font-display text-lg font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</h4>
-                                                    <span class="shrink-0 font-display text-lg font-bold tabular-nums"><span class="sr-only">Occupation : </span>{{ parties|length }} / {{ analyse.capacite_max }}</span>
-                                                </div>
-                                                <ul class="flex flex-col gap-0.5 text-base">
-                                                    {% for partie in parties %}
-                                                        <li class="rounded px-1 -mx-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                                            <span class="font-display font-medium tracking-wide">{{ partie.idEquipeRecoit.nom }}</span>
-                                                            <span class="text-(--color-base-content)/70">contre</span>
-                                                            <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
-                                                            <span class="text-sm text-(--color-base-content)/70 whitespace-nowrap">· {{ partie.poule.nom }}</span>
-                                                        </li>
-                                                    {% endfor %}
-                                                </ul>
-                                                {{ include('front/fragments/_lieu_alertes.html.twig') }}
-                                            </div>
-                                        </div>
-                                    {% endfor %}
-                                </div>
-
+                                {# Dates passées repliées ; la page s'ouvre sur les prochaines dates #}
+                                {% set datesLieu = lieu.partiesByDate[phase.id] %}
+                                {% set passees = datesLieu|filter((parties, date) => date < aujourdhui) %}
+                                {% set aVenir = datesLieu|filter((parties, date) => date >= aujourdhui) %}
+                                {% if passees|length > 0 %}
+                                    <details class="mb-3" data-passees>
+                                        <summary class="cursor-pointer w-fit link link-hover link-primary">Dates passées ({{ passees|length }})</summary>
+                                        <div class="mt-2">{{ include('front/fragments/_lieu_dates.html.twig', {dates: passees}) }}</div>
+                                    </details>
+                                {% endif %}
+                                {% if aVenir|length > 0 %}
+                                    {{ include('front/fragments/_lieu_dates.html.twig', {dates: aVenir}) }}
+                                {% else %}
+                                    <p>Plus aucun match programmé dans ce gymnase pour cette phase.</p>
+                                {% endif %}
                             </div>
                         {% endif %}
                     {% endfor %}
@@ -131,23 +83,29 @@
 
 {% block extra_scripts %}
     <script>
+        // Filtres du calendrier par gymnase : gymnase choisi + case « Seulement les dates à problème »
         function filterLieu(phaseId) {
-            const select = document.getElementById('lieuFilter_' + phaseId);
-            const value = select.value; // L'ID du lieu ou "all"
+            const lieu = document.getElementById('lieuFilter_' + phaseId).value; // id du lieu ou "all"
+            const alertesSeules = document.getElementById('alertesSeules_' + phaseId).checked;
+            let unVisible = false;
 
-            // On sélectionne tous les conteneurs de cette phase qui ont un attribut data-lieu
-            const divs = document.querySelectorAll(`div[data-idphase="${phaseId}"][data-lieu]`);
+            document.querySelectorAll(`div[data-idphase="${phaseId}"][data-lieu]`).forEach(div => {
+                let visible = lieu === 'all' || div.dataset.lieu === lieu;
+                if (visible && alertesSeules) visible = div.dataset.aAlerte === '1';
+                div.style.display = visible ? '' : 'none';
+                unVisible = unVisible || visible;
 
-            divs.forEach(div => {
-                // Si "all" est sélectionné OU si l'ID correspond
-                if (value === 'all' || div.dataset.lieu === value) {
-                    div.style.display = ''; // On affiche (retour au style par défaut)
-                    // Animation optionnelle pour faire joli
-                    div.style.opacity = '1';
-                } else {
-                    div.style.display = 'none'; // On cache
-                }
+                // Lignes et cartes sans problème masquées quand la case est cochée
+                div.querySelectorAll('[data-alerte]').forEach(el => {
+                    el.style.display = alertesSeules && el.dataset.alerte !== '1' ? 'none' : '';
+                });
+                // Dates passées dépliées si elles contiennent un problème à montrer
+                div.querySelectorAll('details[data-passees]').forEach(d => {
+                    if (alertesSeules) d.open = !!d.querySelector('[data-alerte="1"]');
+                });
             });
+
+            document.getElementById('aucuneAlerte_' + phaseId).classList.toggle('hidden', !(alertesSeules && !unVisible));
         }
     </script>
 {% endblock %}
