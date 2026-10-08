@@ -1,5 +1,5 @@
 {# Dates d'un gymnase (calendrier par gymnase) : tableau (ordinateur) et cartes (mobile).
-   Variables : lieu, phase, dates (date "Y-m-d" => liste des matchs).
+   Variables : lieu, phase, dates (date "Y-m-d" => liste des matchs, vide pour une date de créneau libre).
    data-alerte="1|0" : utilisé par le filtre « Seulement les dates à problème ». #}
 {# --- VUE TABLEAU (ordinateur) --- #}
 <div class="hidden md:block">
@@ -19,7 +19,7 @@
         <tbody>
         {% for date, parties in dates %}
             {% set analyse = lieu.analysesByDate[phase.id][date] %}
-            {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite %}
+            {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite or analyse.alerte_vacances %}
             <tr data-alerte="{{ alerte ? 1 : 0 }}" class="align-top {{ alerte ? 'bg-(--color-error)/5' : '' }}">
                 <td class="font-display text-[17px] font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</td>
                 <td>
@@ -31,6 +31,8 @@
                                 <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
                                 <span class="text-sm text-(--color-base-content)/70 whitespace-nowrap">· {{ partie.poule.nom }}</span>
                             </li>
+                        {% else %}
+                            <li class="text-(--color-base-content)/70">Aucun match</li>
                         {% endfor %}
                     </ul>
                 </td>
@@ -45,7 +47,7 @@
 <div class="md:hidden flex flex-col gap-2">
     {% for date, parties in dates %}
         {% set analyse = lieu.analysesByDate[phase.id][date] %}
-        {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite %}
+        {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite or analyse.alerte_vacances %}
         <div data-alerte="{{ alerte ? 1 : 0 }}" class="card card-xs border border-base-300 {{ alerte ? 'bg-(--color-error)/5' : 'bg-base-100' }}">
             <div class="card-body px-3 py-2 gap-2">
                 <h4 class="font-display text-lg font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</h4>
@@ -58,6 +60,8 @@
                             <span class="font-display font-medium tracking-wide">{{ partie.idEquipeDeplace.nom }}</span>
                             <span class="text-sm text-(--color-base-content)/70 whitespace-nowrap">· {{ partie.poule.nom }}</span>
                         </li>
+                    {% else %}
+                        <li class="text-(--color-base-content)/70">Aucun match</li>
                     {% endfor %}
                 </ul>
             </div>

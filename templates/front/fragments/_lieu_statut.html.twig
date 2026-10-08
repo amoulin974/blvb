@@ -1,7 +1,8 @@
 {# Disponibilité d'un gymnase pour une date (calendrier par gymnase).
    Variables : analyse (CalendrierAnalyseService), nbMatchs.
    Ligne principale, en langage direct pour les joueurs : terrains libres / complet / surcharge.
-   Lignes secondaires, pour les responsables de gymnase : match hors créneau, créneau non prioritaire.
+   Lignes secondaires, pour les responsables de gymnase : match hors créneau, créneau non prioritaire,
+   match placé pendant les vacances scolaires (à vérifier) ; mention des vacances sur les dates libres.
    Chaque information a une icône et un texte : rien ne repose sur la couleur seule. #}
 {% set capacite = analyse.capacite_max %}
 {% set libres = capacite - nbMatchs %}
@@ -21,5 +22,10 @@
         <div class="flex items-start gap-1 text-sm text-(--color-error)">{{ iconeAlerte }}<span>Match(s) placé(s) en dehors d'un créneau prévu</span></div>
     {% elseif analyse.alerte_priorite %}
         <div class="flex items-start gap-1 text-sm text-(--color-warning)">{{ iconeAlerte }}<span>Créneau non prioritaire (ce jour : priorité {{ analyse.priorite_actuelle }}, le {{ analyse.jour_prefere }} : priorité {{ analyse.priorite_max }})</span></div>
+    {% endif %}
+    {% if analyse.alerte_vacances %}
+        <div class="flex items-start gap-1 text-sm text-(--color-warning)">{{ iconeAlerte }}<span>Match pendant les vacances scolaires ({{ analyse.vacances }}) : vérifier l'ouverture du gymnase</span></div>
+    {% elseif analyse.vacances %}
+        <div class="text-sm">Pendant les vacances scolaires ({{ analyse.vacances }})</div>
     {% endif %}
 </div>

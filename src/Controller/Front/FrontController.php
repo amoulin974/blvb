@@ -4,6 +4,7 @@ namespace App\Controller\Front;
 
 
 use App\Entity\Equipe;
+use App\Enum\PhaseType;
 use App\Entity\Partie;
 use App\Entity\Poule;
 use App\Entity\User;
@@ -289,36 +290,73 @@ final class FrontController extends AbstractController
         $phaseouverte=$this->getPhaseActuelle($saison);
         $lieux=$lieuRepository->findAll();
 
+        // Vacances scolaires de la saison (indisponibilités), comparées au format "Y-m-d"
+        $vacances = [];
+        foreach ($saison->getIndisponibilites() as $indispo) {
+            $vacances[] = [
+                'nom' => $indispo->getNom(),
+                'debut' => $indispo->getDateDebut()->format('Y-m-d'),
+                'fin' => $indispo->getDateFin()->format('Y-m-d'),
+            ];
+        }
+        $nomVacances = static function (string $dateKey) use ($vacances): ?string {
+            foreach ($vacances as $periode) {
+                if ($dateKey >= $periode['debut'] && $dateKey <= $periode['fin']) {
+                    return $periode['nom'];
+                }
+            }
+            return null;
+        };
+
         foreach ($lieux as $lieu) {
             $partiesDuLieu = [];
+            $analysesDuLieu = [];
 
-            // 1. Regroupement
+            // 1. Regroupement des matchs par phase et par date
             foreach ($lieu->getParties() as $partie) {
                 $phaseId = $partie->getPoule()->getPhase()->getId();
                 $dateKey = $partie->getDate()->format('Y-m-d');
-
-                if (!isset($partiesDuLieu[$phaseId])) {
-                    $partiesDuLieu[$phaseId] = [];
-                }
-                if (!isset($partiesDuLieu[$phaseId][$dateKey])) {
-                    $partiesDuLieu[$phaseId][$dateKey] = [];
-                }
-
                 $partiesDuLieu[$phaseId][$dateKey][] = $partie;
             }
-            // 2. Analyse via le Service (Nettoyé)
-            foreach ($partiesDuLieu as $phaseId => $dates) {
-                foreach ($dates as $dateKey => $matchs) {
-                    $dateObjet = new \DateTime($dateKey);
 
-
-                    $analysesDuLieu[$phaseId][$dateKey] = $analyseService->analyser(
-                        $lieu,
-                        $dateObjet,
-                        count($matchs)
-                    );
+            // 1 bis. Dates de créneau sans match, pour les phases de championnat : les joueurs y voient
+            // les terrains libres pour s'entraîner, les organisateurs une vue complète de la phase.
+            // Intervalle [début, fin[ de la phase pour qu'un jour charnière n'apparaisse pas dans deux phases.
+            $joursCreneau = [];
+            foreach ($lieu->getCreneaux() as $creneau) {
+                $joursCreneau[$creneau->getJourSemaine()] = true;
+            }
+            if ($joursCreneau) {
+                foreach ($saison->getPhases() as $phase) {
+                    if ($phase->getType() !== PhaseType::CHAMPIONNAT || !$phase->getDatedebut() || !$phase->getDatefin()) {
+                        continue;
+                    }
+                    $jour = \DateTimeImmutable::createFromInterface($phase->getDatedebut())->setTime(0, 0);
+                    $finPhase = \DateTimeImmutable::createFromInterface($phase->getDatefin())->setTime(0, 0);
+                    for (; $jour < $finPhase; $jour = $jour->modify('+1 day')) {
+                        if (isset($joursCreneau[(int) $jour->format('N')])) {
+                            $partiesDuLieu[$phase->getId()][$jour->format('Y-m-d')] ??= [];
+                        }
+                    }
                 }
             }
+
+            // 2. Analyse de chaque date (capacité, priorité, créneau) et vacances scolaires
+            foreach ($partiesDuLieu as $phaseId => &$dates) {
+                ksort($dates);
+                foreach ($dates as $dateKey => $matchs) {
+                    $analyse = $analyseService->analyser($lieu, new \DateTime($dateKey), count($matchs));
+                    $analyse['vacances'] = $nomVacances($dateKey);
+                    if (count($matchs) === 0) {
+                        // Date libre : rien à signaler
+                        $analyse['alerte_capacite'] = $analyse['alerte_priorite'] = $analyse['alerte_horscrenau'] = false;
+                    }
+                    // Match placé pendant les vacances : à vérifier par le responsable du gymnase
+                    $analyse['alerte_vacances'] = count($matchs) > 0 && $analyse['vacances'] !== null;
+                    $analysesDuLieu[$phaseId][$dateKey] = $analyse;
+                }
+            }
+            unset($dates);
 
             $lieu->partiesByDate = $partiesDuLieu;
             $lieu->analysesByDate = $analysesDuLieu;

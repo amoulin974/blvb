@@ -42,7 +42,7 @@
                         {# On vérifie s'il y a des matchs pour ce lieu et cette phase #}
                         {% if lieu.partiesByDate[phase.id] is defined %}
 
-                            {% set aAlerte = lieu.analysesByDate[phase.id]|filter(a => a.alerte_horscrenau or a.alerte_capacite or a.alerte_priorite)|length > 0 %}
+                            {% set aAlerte = lieu.analysesByDate[phase.id]|filter(a => a.alerte_horscrenau or a.alerte_capacite or a.alerte_priorite or a.alerte_vacances)|length > 0 %}
                             <div class="pt-6 mt-4 border-t border-base-300" data-idphase="{{ phase.id }}" data-lieu="{{ lieu.id }}" data-a-alerte="{{ aAlerte ? 1 : 0 }}">
 
                                 {# En-tête du gymnase : nom, adresse, créneaux #}
@@ -70,7 +70,7 @@
                                 {% if aVenir|length > 0 %}
                                     {{ include('front/fragments/_lieu_dates.html.twig', {dates: aVenir}) }}
                                 {% else %}
-                                    <p>Plus aucun match programmé dans ce gymnase pour cette phase.</p>
+                                    <p>Plus aucune date à venir dans ce gymnase pour cette phase.</p>
                                 {% endif %}
                             </div>
                         {% endif %}
