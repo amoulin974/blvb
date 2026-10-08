@@ -4,21 +4,105 @@
 @import "../vendor/tocbot/dist/tocbot.css";
 @import "../vendor/daisyui/daisyui.min.css";
 @source not "../../public";
+
+/* Polices de la direction D, hébergées localement (pas d'appel à Google Fonts depuis les pages) :
+   Barlow pour le texte, Barlow Condensed pour les titres et les scores, Saira Condensed pour le logo. */
+@font-face {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url('../fonts/barlow-400-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/barlow-500-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/barlow-600-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/barlow-700-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    src: url('../fonts/barlow-condensed-500-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 600;
+    font-display: swap;
+    src: url('../fonts/barlow-condensed-600-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url('../fonts/barlow-condensed-700-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Barlow Condensed';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('../fonts/barlow-condensed-800-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Saira Condensed';
+    font-style: normal;
+    font-weight: 800;
+    font-display: swap;
+    src: url('../fonts/saira-condensed-800-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme {
+    --font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Barlow Condensed', 'Barlow', ui-sans-serif, system-ui, sans-serif;
+    --font-logo: 'Saira Condensed', 'Barlow Condensed', ui-sans-serif, sans-serif;
+}
+/* Thème « Monogramme × Océan & ballon » (direction D de la refonte design-2).
+   Règle : le bleu marine (primary) porte la marque, les titres et les liens ;
+   le jaune ballon (accent) est réservé au logo et aux boutons d'action. */
 [data-theme="lofi"] {
 
     color-scheme: "light";
-    --color-base-100: oklch(98% 0.003 247.858);
-    --color-base-200: oklch(96% 0.007 247.896);
-    --color-base-300: oklch(92% 0.013 255.508);
-    --color-base-content: oklch(20% 0.042 265.755);
-    --color-primary: oklch(51% 0.262 276.966);
-    --color-primary-content: oklch(96% 0.018 272.314);
-    --color-secondary: oklch(58% 0.158 241.966);
-    --color-secondary-content: oklch(97% 0.013 236.62);
-    --color-accent: oklch(64% 0.222 41.116);
-    --color-accent-content: oklch(98% 0.016 73.684);
-    --color-neutral: oklch(12% 0.042 264.695);
-    --color-neutral-content: oklch(98% 0.003 247.858);
+    --color-base-100: #FFFFFF;
+    --color-base-200: #F4F6F9;
+    --color-base-300: #DCE2EA;
+    --color-base-content: #1A2233;
+    --color-primary: #14306B;
+    --color-primary-content: #FFFFFF;
+    --color-secondary: #1F8A8A;
+    --color-secondary-content: #FFFFFF;
+    --color-accent: #F2B705;
+    --color-accent-content: #14306B;
+    --color-neutral: #1A2233;
+    --color-neutral-content: #FFFFFF;
     --color-info: oklch(58% 0.158 241.966);
     --color-info-content: oklch(97% 0.013 236.62);
     --color-success: oklch(60% 0.118 184.704);
@@ -27,9 +111,9 @@
     --color-warning-content: oklch(98% 0.022 95.277);
     --color-error: oklch(57% 0.245 27.325);
     --color-error-content: oklch(97% 0.013 17.38);
-    --radius-selector: 2rem;
-    --radius-field: 1rem;
-    --radius-box: 0.25rem;
+    --radius-selector: 0.375rem;
+    --radius-field: 0.375rem;
+    --radius-box: 0.5rem;
     --size-selector: 0.25rem;
     --size-field: 0.25rem;
     --border: 1px;
@@ -42,19 +126,27 @@
 body{
     background-color: var(--color-base-200);
 }
-h1{
-    @apply text-3xl font-bold; color: var(--color-primary);
-}
+/* Styles par défaut des titres, dans la couche "base" pour que les classes utilitaires
+   posées sur un titre (taille, couleur...) puissent les surcharger. */
+@layer base {
+    h1, h2, h3, h4{
+        font-family: var(--font-display);
+    }
+    h1{
+        @apply text-3xl font-bold; color: var(--color-primary);
+    }
 
-h2{
-    @apply text-2xl font-bold; color: var(--color-secondary)
-}
-h3{
-    @apply text-xl font-bold; color: var(--color-secondary)
-}
+    /* Une seule couleur d'accent (primary, sur h1) : les sous-titres gardent la couleur du texte. */
+    h2{
+        @apply text-2xl font-bold; color: var(--color-base-content)
+    }
+    h3{
+        @apply text-xl font-bold; color: var(--color-base-content)
+    }
 
-h4{
-    @apply text-lg font-bold; color: var(--color-secondary)
+    h4{
+        @apply text-lg font-bold; color: var(--color-base-content)
+    }
 }
 
 .ts-dropdown {
@@ -65,7 +157,37 @@ h4{
     background-color: white;
 }
 
-#article-reglement img{
+/* Règlement : typographie de lecture (longue page de texte), sans toucher au contenu balise par balise. */
+@layer components {
+    #article-reglement { line-height: 1.6; }
+    #article-reglement h1 { margin-bottom: 1rem; }
+    #article-reglement h2 {
+        text-transform: uppercase;
+        letter-spacing: 0.025em;
+        color: var(--color-primary);
+        margin-top: 2.5rem;
+        padding-top: 1.5rem;
+        margin-bottom: 0.75rem;
+        border-top: 1px solid var(--color-base-300);
+    }
+    #article-reglement h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    #article-reglement p { margin-bottom: 0.75rem; max-width: 70ch; }
+    #article-reglement ul, #article-reglement ol { margin: 0 0 0.75rem 1.25rem; list-style: disc; }
+    #article-reglement li { margin-bottom: 0.25rem; }
+    #article-reglement img { max-width: 100%; height: auto; margin: 1rem auto; border-radius: var(--radius-box); }
+    #article-reglement table { margin: 1rem 0; border: 1px solid var(--color-base-300); }
+    #article-reglement thead tr { border-bottom: 2px solid var(--color-primary); }
+    #article-reglement th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
 }
 
+/* Sommaire du règlement : tocbot recopie le texte des h2 tel qu'affiché (en capitales), on le remet en casse normale.
+   Hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
+.js-toc .toc-link { display: block; padding: 0.25rem 0; text-decoration: none; text-transform: lowercase; color: var(--color-primary); }
+.js-toc .toc-link::first-letter { text-transform: uppercase; }
+.js-toc .toc-link:hover { text-decoration: underline; }
+.js-toc .is-active-link { font-weight: 700; }
+
+/* « Mon équipe » (mon_equipe_controller.js) : lignes et cartes de l'équipe suivie, teintées du jaune d'accent.
+   Hors couche pour passer devant les fonds utilitaires (zones de montée/descente, survol). */
+.mon-equipe { background-color: color-mix(in oklab, var(--color-accent) 22%, var(--color-base-100)) !important; }

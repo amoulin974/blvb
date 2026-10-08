@@ -2,144 +2,258 @@
 {% block title %}Équipe {{equipe.nom}} - Site du BLVB{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto max-w-5xl px-4">
-        <h1 class="text-center mb-4">{{equipe.nom}}</h1>
-        <h2 class="mt-4">Informations générales</h2>
-        <p><span class="font-bold">Adresse du gymnase :</span> <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}"
-                                            target="_blank"
-                                            rel="noopener noreferrer">
-                                                {{ equipe.lieu.nom }}
-                                            </a></p>
-        {% for creneau in equipe.lieu.creneaux %}
-            <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
-        {% endfor %}
-        <h2 class="mt-4">Composition de l'équipe</h2>
-        {% if membres is empty %}
-            <p class="em">Composition non renseignée pour cette saison.</p>
-        {% elseif not canViewCapitaine %}
-            <p class="em">Ces informations ne sont visibles que par les capitaines d'une équipe évoluant dans la même poule ou les administrateurs du site.</p>
-        {% else %}
-            <ul class="list-disc list-inside">
-                {% for membre in membres %}
-                    <li>
-                        {{ membre.joueur.prenom }} {{ membre.joueur.nom }}
-                        {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
-                        {% if membre.joueur.telephone or membre.joueur.email %}
-                            —
-                            {% if membre.joueur.telephone %}Tel : {{ membre.joueur.telephone }}{% endif %}
-                            {% if membre.joueur.email %}Email : {{ membre.joueur.email }}{% endif %}
+    {# Abonnement à l'agenda : adresse https pour Google / copie, adresse webcal:// pour Apple, Outlook et la plupart des téléphones.
+       L'agenda couvre UNE saison (celle affichée) : il ne bascule jamais sur la suivante. #}
+    {% set agendaUrl = url('calendar_ics_equipe', {saison: saison.id, equipe: equipe.id}) %}
+    {% set agendaWebcal = agendaUrl|replace({'https://': 'webcal://', 'http://': 'webcal://'}) %}
+    <div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-6" data-controller="abonnement-agenda" data-abonnement-agenda-adresse-value="{{ agendaUrl }}">
+
+        {# En-tête : nom de l'équipe, gymnase et créneaux de réception #}
+        <div>
+            <div class="flex flex-wrap items-center justify-between gap-3">
+                <h1 class="text-4xl uppercase tracking-wide">{{ equipe.nom }}</h1>
+                <div class="flex flex-wrap gap-2">
+                {# Libellé et état gérés par mon_equipe_controller.js (choix gardé dans le navigateur) #}
+                <button type="button" class="btn btn-outline btn-primary md:btn-sm"
+                        data-mon-equipe-target="bouton"
+                        data-action="mon-equipe#basculer"
+                        data-mon-equipe-id-param="{{ equipe.id }}"
+                        data-mon-equipe-nom-param="{{ equipe.nom }}"
+                        aria-pressed="false">☆ C'est mon équipe</button>
+                <button type="button" class="btn btn-outline btn-primary md:btn-sm" data-action="abonnement-agenda#ouvrir">Ajouter à mon agenda</button>
+                </div>
+            </div>
+            <p class="mt-1">
+                Reçoit à
+                {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
+                {% for creneau in (equipe.lieu ? equipe.lieu.creneaux : []) %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
+            </p>
+
+            {# Capitaine : coordonnées visibles des capitaines de la poule, des membres de l'équipe et des administrateurs #}
+            {% if peutVoirCapitaine %}
+                <div class="mt-3 bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-wrap items-center gap-x-4 gap-y-2" aria-label="Capitaine">
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Capitaine</p>
+                        {% if capitaine %}
+                            <p class="font-display text-xl font-semibold">{{ capitaine.prenom }} {{ capitaine.nom }}</p>
+                        {% else %}
+                            <p>Capitaine non désigné pour le moment</p>
                         {% endif %}
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
-
-        {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
-            <p class="mt-2"><a class="btn btn-sm btn-outline" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a></p>
-        {% endif %}
-
-        <h2 class="mt-4">Calendrier</h2>
-        {% for phase in saison.phases %}
-            {% for poule in phase.poules %}
-
-                {%  if matchsByPoule[poule.id] is defined and matchsByPoule[poule.id]|length>0 %}
-                    <h3 class="mt-2 pl-4 pb-1">{{ phase.nom }} - {{ poule.nom }}</h3>
-
-            <table class="border border-solid table-xs  w-full hidden md:table">
-                <thead><tr class="text-center bg-base-300">
-                    <th>Date</th>
-                    <th>Les équipes</th>
-                    <th>Score</th>
-                    <th>Le lieu</th>
-                </tr></thead>
-                <tbody>
-
-                    {%  for match in matchsByPoule[poule.id] %}
-
-                        <tr class="text-center">
-                            <td>{{ match.date_match|format_datetime('short', locale='fr') }}</td>
-                            <td>{{ match.equipe_recoit }} {{ match.score_reception_match }} vs {{ match.equipe_deplace }} {{ match.score_deplacement_match }}</td>
-                            <td>
-                                {%  if match.score_reception_match is null and  match.score_deplacement_match is null %}
-                                    Match non joué
-                                    {% else %}
-                                        <div class="flex items-center justify-center"><span>{{ match.score_reception_match }} - {{ match.score_deplacement_match }}</span>
-                                            <span>
-                                        {% if match.resultat %}
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-success">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-
-                                        {% else %}
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-error">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                            </svg>
-
-                                        {%  endif %}
-                                                </span>
-                                        </div>
-                                {%  endif %}
-
-                            </td>
-                            <td>
-                                <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
-                                   target="_blank"
-                                   rel="noopener noreferrer">
-                                    {{ match.lieu_nom}}
-                                </a>
-
-                            </td>
-                        </tr>
-
-                   {% endfor %}
-
-                </tbody>
-            </table>
-                    {%  for match in matchsByPoule[poule.id] %}
-                        <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1">
-                            <div class="card-body " >
-                                <p class="flex items-center">{{ match.equipe_recoit }} &nbsp; <strong>{{ match.score_reception_match }}</strong>&nbsp; vs &nbsp; {{ match.equipe_deplace }} &nbsp; <strong>{{ match.score_deplacement_match }}</strong>
-                                    {% if match.resultat %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-success">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-
-                                    {% else %}
-                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6 text-error">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                                        </svg>
-
-                                    {%  endif %}
-                                </p>
-                                <p>Date : {{ match.date_match|format_datetime('short', locale='fr') }}</p>
-                                <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ match.lieu_adresse |url_encode }}"
-                                             target="_blank"
-                                             rel="noopener noreferrer">
-                                        {{ match.lieu_nom}}
-                                    </a>
-                                    </p>
-                            </div>
-
+                    </div>
+                    {% if capitaine %}
+                        <div class="flex flex-wrap gap-2 md:ml-auto">
+                            {% if capitaine.telephone %}
+                                <a class="btn btn-outline btn-primary md:btn-sm" href="tel:{{ capitaine.telephone|replace({' ': '', '.': '', '-': ''}) }}">Appeler · {{ capitaine.telephone }}</a>
+                            {% endif %}
+                            {% if capitaine.email %}
+                                <a class="btn btn-outline btn-primary md:btn-sm" href="mailto:{{ capitaine.email }}">Écrire · <span class="wrap-anywhere">{{ capitaine.email }}</span></a>
+                            {% endif %}
+                            {% if not capitaine.telephone and not capitaine.email %}
+                                <span>Coordonnées non renseignées</span>
+                            {% endif %}
                         </div>
-                    {% endfor %}
-            <p>Le fichier ics de ce calendrier : <a class="link" href="{{path("calendar_ics", {poule: poule.id, equipe: equipe.id})}}">Click droit copier l'adresse</a></p>
-                <p class="text-xs">Faite un clic droit "copier l'adresse" puis dans google agenda -> le + à coté de Autre Agenda --> A partir de l'URL et copier l'adresse</p>
-                {%  endif  %}
-            {% endfor %}
-    {% endfor %}
+                    {% endif %}
+                </div>
+            {% else %}
+                <p class="mt-2 text-sm">Coordonnées du capitaine réservées aux capitaines de la poule.</p>
+            {% endif %}
+        </div>
 
-
-        <h2 class="mt-4">Classement de la saison sélectionnée </h2>
-        {% for phase in saison.phases %}
-            {% for poule in phase.poules %}
-                {% if equipe in poule.equipes %}
-
-                <h3 class="mt-2 pl-4 pb-1">{{ phase.nom }} - {{ poule.nom }}</h3>
-                                {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
-                {% endif %}
-            {% endfor %}
+        {# Synthèse : classement dans la phase en cours, prochain match, dernier résultat #}
+        {% set tousMatchs = [] %}
+        {% for liste in matchsByPoule %}{% set tousMatchs = tousMatchs|merge(liste) %}{% endfor %}
+        {% set maintenant = date() %}
+        {% set prochain = tousMatchs|filter(m => m.date_match >= maintenant and m.score_reception_match is null)|sort((a, b) => a.date_match <=> b.date_match)|first %}
+        {% set dernier = tousMatchs|filter(m => m.score_reception_match is not null and m.score_deplacement_match is not null)|sort((a, b) => b.date_match <=> a.date_match)|first %}
+        {% set classementActuel = null %}
+        {% for poule in (phaseouverte ? phaseouverte.poules : []) %}
+            {% for c in poule.classements %}{% if c.equipe.id == equipe.id %}{% set classementActuel = {poule: poule, ligne: c} %}{% endif %}{% endfor %}
         {% endfor %}
+        <div class="grid gap-3 sm:grid-cols-3">
+            <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Classement</p>
+                {% if classementActuel %}
+                    {% set position = classementActuel.ligne.position %}
+                    <p class="mt-1"><span class="font-display text-3xl font-extrabold text-(--color-primary)">{{ position }}<sup class="text-base">{{ position == 1 ? 'er' : 'e' }}</sup></span>
+                        <span class="font-semibold">· {{ classementActuel.ligne.points }} {{ classementActuel.ligne.points > 1 ? 'pts' : 'pt' }}</span></p>
+                    <p class="text-sm">{{ phaseouverte.nom }} · {{ classementActuel.poule.nom }}</p>
+                {% else %}
+                    <p class="mt-1">Pas encore de classement</p>
+                {% endif %}
+            </div>
+            <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Prochain match</p>
+                {% if prochain %}
+                    {% set domicile = prochain.equipe_recoit == equipe.nom %}
+                    <p class="mt-1 font-display text-2xl font-bold text-(--color-primary)">{{ prochain.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ prochain.date_match|format_time('short', locale='fr') }}</p>
+                    {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
+                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
+                    <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
+                        {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}</p>
+                    <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
+                    {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
+                    {% if canViewCapitaine %}
+                        {{ include('front/fragments/_contact_capitaine.html.twig', {contact: capitainesAdverses[advId] ?? null}) }}
+                    {% endif %}
+                {% else %}
+                    <p class="mt-1">Aucun match à venir</p>
+                {% endif %}
+            </div>
+            <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Dernier résultat</p>
+                {% if dernier %}
+                    <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
+                    {% set advDernierId = dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace_id : dernier.equipe_recoit_id %}
+                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
+                    <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
+                {% else %}
+                    <p class="mt-1">Aucun match joué</p>
+                {% endif %}
+            </div>
+        </div>
 
+        {# Calendrier de l'équipe, même disposition que le calendrier général (score au centre) #}
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            <h2 class="uppercase tracking-wide">Calendrier</h2>
+            {% for phase in saison.phases %}
+                {% for poule in phase.poules %}
+                    {% if matchsByPoule[poule.id] is defined and matchsByPoule[poule.id]|length > 0 %}
+                        <h3 class="mt-6 mb-3 text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }} · {{ poule.nom }}</h3>
+
+                        {# Le masquage mobile est porté par ce div : la classe daisyUI "table" impose display: table. #}
+                        <div class="hidden md:block">
+                            <table class="table w-full table-fixed">
+                                <colgroup>
+                                    <col class="w-[16%]">
+                                    <col class="w-[27%]">
+                                    <col class="w-[12%]">
+                                    <col class="w-[27%]">
+                                    <col class="w-[18%]">
+                                </colgroup>
+                                <thead class="sr-only">
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Équipe qui reçoit</th>
+                                        <th>Résultat</th>
+                                        <th>Équipe qui se déplace</th>
+                                        <th>Lieu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for match in matchsByPoule[poule.id] %}
+                                    <tr class="hover:bg-(--color-base-200)">
+                                        <td class="whitespace-nowrap text-(--color-base-content)/80">{{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }}</td>
+                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
+                                        <td class="text-center">
+                                            {{ include('front/fragments/_equipe_score.html.twig') }}
+                                        </td>
+                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
+                                        <td class="text-right whitespace-nowrap">
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {# Mobile : cartes compactes comme dans le calendrier général #}
+                        <div class="md:hidden flex flex-col gap-2">
+                            {% for match in matchsByPoule[poule.id] %}
+                                <div class="card card-xs bg-base-100 border border-base-300">
+                                    <div class="card-body px-3 py-2 gap-1">
+                                        <div class="flex items-center gap-3">
+                                            <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
+                                                <div class="{{ match.equipe_recoit == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
+                                                <div class="{{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
+                                            </div>
+                                            <div class="shrink-0 text-right">
+                                                {{ include('front/fragments/_equipe_score.html.twig') }}
+                                            </div>
+                                        </div>
+                                        <p class="text-sm">
+                                            {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
+                                        </p>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </section>
+
+        {# Classement #}
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            <h2 class="uppercase tracking-wide">Classement</h2>
+            {% for phase in saison.phases %}
+                {% for poule in phase.poules %}
+                    {% if equipe in poule.equipes %}
+                        <h3 class="mt-6 mb-3 text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }} · {{ poule.nom }}</h3>
+                        {% include '/front/fragments/_classement_poule_unique.html.twig' with { 'poule': poule, "equipeid": equipe.id } %}
+                    {% endif %}
+                {% endfor %}
+            {% endfor %}
+        </section>
+
+        {# Composition complète avec coordonnées : réservée aux membres de l'équipe et aux administrateurs.
+           Les autres capitaines de la poule ne voient que le capitaine (bloc en haut de page). #}
+        {% if peutVoirMembres %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+                <div class="flex flex-wrap items-center justify-between gap-2">
+                    <h2 class="uppercase tracking-wide">Composition</h2>
+                    {% if estCapitaineDeCetteEquipe or is_granted('ROLE_ADMIN') %}
+                        <a class="btn btn-sm btn-outline btn-primary" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+                    {% endif %}
+                </div>
+                {% if membres is empty %}
+                    <p class="mt-2">Composition non renseignée pour cette saison.</p>
+                {% else %}
+                    <ul class="mt-2 divide-y divide-base-300">
+                        {% for membre in membres %}
+                            <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
+                                {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
+                                {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ membre.joueur.telephone }}</a>{% endif %}
+                                {% if membre.joueur.email %}<a class="link link-hover link-primary wrap-anywhere" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </section>
+        {% endif %}
+
+
+        {# Fenêtre « Ajouter à mon agenda » #}
+        <dialog class="modal" data-abonnement-agenda-target="dialogue" aria-labelledby="titre-agenda">
+            <div class="modal-box flex flex-col gap-4">
+                <h2 id="titre-agenda" class="text-xl uppercase tracking-wide">Ajouter à mon agenda</h2>
+                <p>Les matchs de <strong>{{ equipe.nom }}</strong> pour la <strong>{{ saison.nom|lower }}</strong>. Votre agenda se met à jour tout seul quand un horaire ou un lieu change (jusqu'à 24 h de délai selon l'application).</p>
+
+                <div class="flex flex-col gap-2">
+                    <a class="btn btn-accent" href="https://calendar.google.com/calendar/r?cid={{ agendaWebcal|url_encode }}" target="_blank" rel="noopener noreferrer">Google Agenda</a>
+                    <a class="btn btn-accent" href="{{ agendaWebcal }}">Apple, Outlook et autres agendas</a>
+                </div>
+
+                <div class="flex flex-col gap-1">
+                    <label for="agenda-adresse" class="font-medium">Autre application : copiez cette adresse</label>
+                    <div class="flex gap-2">
+                        <input id="agenda-adresse" type="text" readonly value="{{ agendaUrl }}" class="input w-full text-base min-w-0">
+                        <button type="button" class="btn btn-outline btn-primary" data-action="abonnement-agenda#copier">Copier</button>
+                    </div>
+                    <p class="text-sm" role="status" data-abonnement-agenda-target="confirmation"></p>
+                </div>
+
+                <p class="text-sm">Utilisez ces boutons plutôt que de télécharger le fichier : <strong>un fichier téléchargé est une copie qui n'est jamais mise à jour</strong>. Cet agenda ne couvre que cette saison ; la saison suivante, vous vous abonnerez à l'équipe que vous aurez rejointe.</p>
+
+                <div class="modal-action mt-0">
+                    <form method="dialog"><button class="btn btn-ghost">Fermer</button></form>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+        </dialog>
 
     </div>
 

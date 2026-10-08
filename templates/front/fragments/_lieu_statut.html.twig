@@ -1,0 +1,32 @@
+{# Disponibilité d'un gymnase pour une date (calendrier par gymnase).
+   Variables : analyse (CalendrierAnalyseService), nbMatchs.
+   Ligne principale, en langage direct pour les joueurs : terrains libres / complet / surcharge.
+   Lignes secondaires, pour les responsables de gymnase : match hors créneau, créneau non prioritaire,
+   match placé pendant les vacances scolaires (à vérifier) ; mention des vacances sur les dates libres.
+   Chaque information a une icône et un texte : rien ne repose sur la couleur seule. #}
+{% set capacite = analyse.capacite_max %}
+{% set libres = capacite - nbMatchs %}
+{% set iconeAlerte %}<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>{% endset %}
+<div class="flex flex-col gap-1">
+    {% if analyse.alerte_horscrenau %}
+        {# Pas de créneau ce jour-là : capacité 0, on le dit plutôt que d'afficher « surcharge » #}
+        <div class="flex items-start gap-1 text-(--color-error) font-semibold">{{ iconeAlerte }}<span>Aucun terrain prévu ce jour-là : {{ nbMatchs }} match{{ nbMatchs > 1 ? 's' : '' }} hors créneau</span></div>
+    {% elseif analyse.alerte_capacite %}
+        <div class="flex items-start gap-1 text-(--color-error) font-semibold">{{ iconeAlerte }}<span>Surcharge : {{ nbMatchs }} match{{ nbMatchs > 1 ? 's' : '' }} pour {{ capacite }} terrain{{ capacite > 1 ? 's' : '' }}</span></div>
+    {% elseif libres > 0 %}
+        <div class="flex items-start gap-1 text-(--color-success) font-semibold">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" /></svg>
+            <span>{{ libres }} terrain{{ libres > 1 ? 's' : '' }} libre{{ libres > 1 ? 's' : '' }} <span class="font-normal text-(--color-base-content)/80">sur {{ capacite }}</span></span>
+        </div>
+    {% else %}
+        <div class="font-semibold">Complet <span class="font-normal text-(--color-base-content)/80">({{ capacite }} terrain{{ capacite > 1 ? 's' : '' }} occupé{{ capacite > 1 ? 's' : '' }})</span></div>
+    {% endif %}
+    {% if analyse.alerte_priorite and not analyse.alerte_horscrenau %}
+        <div class="flex items-start gap-1 text-sm text-(--color-warning)">{{ iconeAlerte }}<span>Créneau non prioritaire (ce jour : priorité {{ analyse.priorite_actuelle }}, le {{ analyse.jour_prefere }} : priorité {{ analyse.priorite_max }})</span></div>
+    {% endif %}
+    {% if analyse.alerte_vacances %}
+        <div class="flex items-start gap-1 text-sm text-(--color-warning)">{{ iconeAlerte }}<span>Match pendant les vacances scolaires ({{ analyse.vacances }}) : vérifier l'ouverture du gymnase</span></div>
+    {% elseif analyse.vacances %}
+        <div class="text-sm">Pendant les vacances scolaires ({{ analyse.vacances }})</div>
+    {% endif %}
+</div>

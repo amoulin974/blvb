@@ -1,0 +1,14 @@
+{# Score d'un match sur la fiche équipe, avec un badge Victoire / Défaite (lettre + couleur, pas la couleur seule).
+   match.resultat vaut "1" (victoire), "0" (défaite) ou "" (non joué / égalité). #}
+{% if match.score_reception_match is null and match.score_deplacement_match is null %}
+    <span class="font-display text-xl font-extrabold opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span>
+{% else %}
+    <span class="inline-flex items-center gap-2">
+        <span class="font-display text-xl font-extrabold text-(--color-primary) tabular-nums">{{ match.score_reception_match }} - {{ match.score_deplacement_match }}</span>
+        {% if match.resultat == '1' %}
+            <span class="badge badge-success badge-sm font-bold" title="Victoire">V<span class="sr-only">ictoire</span></span>
+        {% elseif match.resultat == '0' %}
+            <span class="badge badge-error badge-sm font-bold" title="Défaite">D<span class="sr-only">éfaite</span></span>
+        {% endif %}
+    </span>
+{% endif %}

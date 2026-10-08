@@ -4,6 +4,7 @@ namespace App\Controller\Front;
 
 
 use App\Entity\Equipe;
+use App\Enum\PhaseType;
 use App\Entity\Partie;
 use App\Entity\Poule;
 use App\Entity\User;
@@ -16,6 +17,7 @@ use App\Repository\EquipeRepository;
 use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
 use App\Service\ClassementService;
+use App\Service\ContactCapitaineService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -163,7 +165,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository): Response
+    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository, ContactCapitaineService $contactCapitaineService): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -195,32 +197,44 @@ final class FrontController extends AbstractController
             }
         }
 
+        // Droits d'accès aux coordonnées, du plus large au plus restreint :
+        //  - capitaine de l'équipe consultée : réservé aux capitaines des équipes de sa poule (phase en cours) et aux administrateurs ;
+        //  - coordonnées des autres joueurs : réservées aux membres de l'équipe (et aux administrateurs).
+        // Un capitaine ne voit donc jamais que les coordonnées du capitaine adverse.
+        $user = $this->getUser();
+        $estAdmin = $this->isGranted('ROLE_ADMIN');
+        $estMembre = $user !== null && $membreEquipeRepository->estMembre($user, $equipe, $saison);
+
         //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
         $listeCapitaines=[];
+        $capitainesAdverses=[]; // id équipe adverse => coordonnées du capitaine (ou null si non désigné)
         foreach ($poules as $poule) {
-            if ($poule->getPhase()->getId() === $phaseouverte->getId()) {
-                foreach ($poule->getEquipes() as $equipePoule) {
-                    $capitaineMembre = $membreEquipeRepository->findCapitaine($equipePoule, $saison);
+            $phaseEnCours = $phaseouverte !== null && $poule->getPhase()->getId() === $phaseouverte->getId();
+            foreach ($poule->getEquipes() as $equipePoule) {
+                $capitaineMembre = $membreEquipeRepository->findCapitaine($equipePoule, $saison);
+                if ($phaseEnCours) {
                     $capitaineUser = $capitaineMembre?->getJoueur()->getUser();
                     if ($capitaineUser !== null && !in_array($capitaineUser->getId(), $listeCapitaines)){
                         $listeCapitaines[] = $capitaineUser->getId();
                     }
                 }
+                if ($equipePoule->getId() !== $equipe->getId()) {
+                    $capitainesAdverses[$equipePoule->getId()] = $contactCapitaineService->pour($equipePoule, $saison);
+                }
             }
         }
 
-        //Si l'utilisateur connecté est dans cette liste on l'autorise à voir les coordonnées des membres de l'équipe sélectionnée
-        $user = $this->getUser();
-        $canViewCapitaine = false;
-        if (($user !== null && in_array($user->getId(), $listeCapitaines)) || $this->isGranted('ROLE_ADMIN')){
-              $canViewCapitaine = true;
+        $canViewCapitaine = $estAdmin || ($user !== null && in_array($user->getId(), $listeCapitaines));
+        $peutVoirCapitaine = $canViewCapitaine || $estMembre;
+        $peutVoirMembres = $estMembre || $estAdmin;
+        if (!$canViewCapitaine) {
+            $capitainesAdverses = []; // rien ne doit sortir du serveur pour les autres visiteurs
         }
 
-        //Composition de l'équipe pour la saison sélectionnée
-        $membres = $membreEquipeRepository->findRosterBySaison($equipe, $saison);
+        $capitaine = $peutVoirCapitaine ? $contactCapitaineService->pour($equipe, $saison) : null;
+        //Composition complète (avec coordonnées des joueurs) : seulement pour les membres de l'équipe et les administrateurs
+        $membres = $peutVoirMembres ? $membreEquipeRepository->findRosterBySaison($equipe, $saison) : [];
         $estCapitaineDeCetteEquipe = $user !== null && $membreEquipeRepository->estCapitaine($user, $equipe, $saison);
-
-
 
         return $this->render('front/equipe.html.twig', [
             'saisons' => $this->saisons,
@@ -228,6 +242,10 @@ final class FrontController extends AbstractController
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
             'canViewCapitaine'=>$canViewCapitaine,
+            'peutVoirCapitaine'=>$peutVoirCapitaine,
+            'peutVoirMembres'=>$peutVoirMembres,
+            'capitaine'=>$capitaine,
+            'capitainesAdverses'=>$capitainesAdverses,
             'equipe'=>$equipe,
             'matchsByPoule'=>$matchsByPoule,
             'membres'=>$membres,
@@ -289,36 +307,73 @@ final class FrontController extends AbstractController
         $phaseouverte=$this->getPhaseActuelle($saison);
         $lieux=$lieuRepository->findAll();
 
+        // Vacances scolaires de la saison (indisponibilités), comparées au format "Y-m-d"
+        $vacances = [];
+        foreach ($saison->getIndisponibilites() as $indispo) {
+            $vacances[] = [
+                'nom' => $indispo->getNom(),
+                'debut' => $indispo->getDateDebut()->format('Y-m-d'),
+                'fin' => $indispo->getDateFin()->format('Y-m-d'),
+            ];
+        }
+        $nomVacances = static function (string $dateKey) use ($vacances): ?string {
+            foreach ($vacances as $periode) {
+                if ($dateKey >= $periode['debut'] && $dateKey <= $periode['fin']) {
+                    return $periode['nom'];
+                }
+            }
+            return null;
+        };
+
         foreach ($lieux as $lieu) {
             $partiesDuLieu = [];
+            $analysesDuLieu = [];
 
-            // 1. Regroupement
+            // 1. Regroupement des matchs par phase et par date
             foreach ($lieu->getParties() as $partie) {
                 $phaseId = $partie->getPoule()->getPhase()->getId();
                 $dateKey = $partie->getDate()->format('Y-m-d');
-
-                if (!isset($partiesDuLieu[$phaseId])) {
-                    $partiesDuLieu[$phaseId] = [];
-                }
-                if (!isset($partiesDuLieu[$phaseId][$dateKey])) {
-                    $partiesDuLieu[$phaseId][$dateKey] = [];
-                }
-
                 $partiesDuLieu[$phaseId][$dateKey][] = $partie;
             }
-            // 2. Analyse via le Service (Nettoyé)
-            foreach ($partiesDuLieu as $phaseId => $dates) {
-                foreach ($dates as $dateKey => $matchs) {
-                    $dateObjet = new \DateTime($dateKey);
 
-
-                    $analysesDuLieu[$phaseId][$dateKey] = $analyseService->analyser(
-                        $lieu,
-                        $dateObjet,
-                        count($matchs)
-                    );
+            // 1 bis. Dates de créneau sans match, pour les phases de championnat : les joueurs y voient
+            // les terrains libres pour s'entraîner, les organisateurs une vue complète de la phase.
+            // Intervalle [début, fin[ de la phase pour qu'un jour charnière n'apparaisse pas dans deux phases.
+            $joursCreneau = [];
+            foreach ($lieu->getCreneaux() as $creneau) {
+                $joursCreneau[$creneau->getJourSemaine()] = true;
+            }
+            if ($joursCreneau) {
+                foreach ($saison->getPhases() as $phase) {
+                    if ($phase->getType() !== PhaseType::CHAMPIONNAT || !$phase->getDatedebut() || !$phase->getDatefin()) {
+                        continue;
+                    }
+                    $jour = \DateTimeImmutable::createFromInterface($phase->getDatedebut())->setTime(0, 0);
+                    $finPhase = \DateTimeImmutable::createFromInterface($phase->getDatefin())->setTime(0, 0);
+                    for (; $jour < $finPhase; $jour = $jour->modify('+1 day')) {
+                        if (isset($joursCreneau[(int) $jour->format('N')])) {
+                            $partiesDuLieu[$phase->getId()][$jour->format('Y-m-d')] ??= [];
+                        }
+                    }
                 }
             }
+
+            // 2. Analyse de chaque date (capacité, priorité, créneau) et vacances scolaires
+            foreach ($partiesDuLieu as $phaseId => &$dates) {
+                ksort($dates);
+                foreach ($dates as $dateKey => $matchs) {
+                    $analyse = $analyseService->analyser($lieu, new \DateTime($dateKey), count($matchs));
+                    $analyse['vacances'] = $nomVacances($dateKey);
+                    if (count($matchs) === 0) {
+                        // Date libre : rien à signaler
+                        $analyse['alerte_capacite'] = $analyse['alerte_priorite'] = $analyse['alerte_horscrenau'] = false;
+                    }
+                    // Match placé pendant les vacances : à vérifier par le responsable du gymnase
+                    $analyse['alerte_vacances'] = count($matchs) > 0 && $analyse['vacances'] !== null;
+                    $analysesDuLieu[$phaseId][$dateKey] = $analyse;
+                }
+            }
+            unset($dates);
 
             $lieu->partiesByDate = $partiesDuLieu;
             $lieu->analysesByDate = $analysesDuLieu;
@@ -385,6 +440,11 @@ final class FrontController extends AbstractController
     public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService, MembreEquipeRepository $membreEquipeRepository): JsonResponse
     {
 
+    // Jeton CSRF envoyé par score-modal-controller.js (balise <meta name="csrf-token"> de base_front)
+    if (!$this->isCsrfTokenValid('score_update', $request->headers->get('X-CSRF-TOKEN'))) {
+        return $this->json(['error' => 'Jeton de sécurité invalide, rechargez la page.'], 403);
+    }
+
     $data = json_decode($request->getContent(), true);
     try{
         $user = $this->getUser();
@@ -399,15 +459,22 @@ final class FrontController extends AbstractController
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
 
-        if ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
+        if (trim($data['scoreReception']) === '' && trim($data['scoreDeplacement']) === ''){
+            //Les deux champs vides : on efface le score (ex. score saisi par erreur sur un match non joué)
+            $partie->setNbSetGagnantReception(null);
+            $partie->setNbSetGagnantDeplacement(null);
+            $newScore = null;
+        } elseif ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
             //Cas d'une forfait
             if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
             if ($data['scoreReception'] === 'F'){
                 $partie->setNbSetGagnantReception(-1);
                 $partie->setNbSetGagnantDeplacement(3);
+                $newScore = 'F - 3';
             } else{
                 $partie->setNbSetGagnantReception(3);
                 $partie->setNbSetGagnantDeplacement(-1);
+                $newScore = '3 - F';
             }
 
 
@@ -420,6 +487,7 @@ final class FrontController extends AbstractController
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);
+            $newScore = $scoreReception . ' - ' . $scoreDeplacement;
 
 
         }
@@ -430,7 +498,8 @@ final class FrontController extends AbstractController
         //Mise à jour du classement
         $classementService->mettreAJourClassementPoule($partie->getPoule());
         return $this->json([
-            'newScore' => $scoreReception . ' à ' . $scoreDeplacement,
+            // Même format que l'affichage du calendrier ("3 - 1"), null si le score a été effacé
+            'newScore' => $newScore,
 
             ],200);
 

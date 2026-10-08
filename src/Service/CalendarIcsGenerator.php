@@ -2,147 +2,161 @@
 
 // src/Service/CalendarIcsGenerator.php
 namespace App\Service;
-use Eluceo\iCal\Domain\Entity\Calendar;
-use Eluceo\iCal\Domain\Entity\Event;
-use Eluceo\iCal\Domain\ValueObject\DateTime;
-use Eluceo\iCal\Domain\ValueObject\TimeSpan;
-use Eluceo\iCal\Presentation\Factory\CalendarFactory;
-use Eluceo\iCal\Domain\ValueObject\Location;
-use Psr\Log\LoggerInterface;
+
 use App\Entity\Equipe;
-use App\Entity\Journee;
 use App\Entity\Partie;
 use App\Entity\Poule;
+use App\Entity\Saison;
 use App\Repository\PartieRepository;
-use DateTimeImmutable;
+use Eluceo\iCal\Domain\Entity\Calendar;
+use Eluceo\iCal\Domain\Entity\Event;
+use Eluceo\iCal\Domain\Entity\TimeZone;
+use Eluceo\iCal\Domain\ValueObject\DateTime;
+use Eluceo\iCal\Domain\ValueObject\Location;
+use Eluceo\iCal\Domain\ValueObject\TimeSpan;
+use Eluceo\iCal\Domain\ValueObject\UniqueIdentifier;
+use Eluceo\iCal\Domain\ValueObject\Uri;
+use Eluceo\iCal\Presentation\Factory\CalendarFactory;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
+/**
+ * Agenda (.ics) des matchs d'une équipe, conçu pour être un ABONNEMENT (et non une copie) :
+ *  - identifiant d'événement stable (un par match) : un match déplacé met à jour l'événement existant,
+ *    réimporter le fichier ne crée pas de doublons ;
+ *  - fuseau Europe/Paris explicite, nom d'agenda lisible, fréquence d'actualisation indiquée ;
+ *  - chaque événement renvoie vers la fiche de l'équipe (informations à jour), même si l'agenda a été importé et figé.
+ * L'empreinte de cache (ETag) ignore l'horodatage de génération : elle ne change que si le contenu change.
+ */
 class CalendarIcsGenerator
 {
-    private Event $event;
-    private Calendar $calendar;
-    private CalendarFactory $componentFactory;
-    private string $calendarComponent;
+    private const FUSEAU = 'Europe/Paris';
+    private const ACTUALISATION = 'PT6H';
+
     public function __construct(
-        private PartieRepository $partieRepository
-    ) {}
-    public function generateIcalForEquipe(Poule $poule, Equipe $equipe, ){
+        private readonly PartieRepository $partieRepository,
+        private readonly UrlGeneratorInterface $urlGenerator,
+    ) {
+    }
 
+    /**
+     * Agenda d'une équipe pour UNE saison (toutes phases confondues) : c'est l'abonnement proposé aux joueurs.
+     *
+     * @return array{ical: string, etag: string}
+     */
+    public function generateIcalForEquipeSaison(Equipe $equipe, Saison $saison): array
+    {
+        $parties = $this->partieRepository->findByEquipeSaison($equipe, $saison);
 
-        $allparties=$poule->getParties();
-        $parties=[];
-        foreach ($allparties as $partie) {
+        return $this->construire($parties, $equipe, sprintf('BLVB · %s · %s', $equipe->getNom(), $saison->getNom()));
+    }
+
+    /**
+     * Ancien agenda limité à une poule (anciens liens, conservés pour ne pas casser les abonnements existants).
+     *
+     * @return array{ical: string, etag: string}
+     */
+    public function generateIcalForEquipe(Poule $poule, Equipe $equipe): array
+    {
+        $parties = [];
+        foreach ($poule->getParties() as $partie) {
             if ($partie->getIdEquipeRecoit() === $equipe || $partie->getIdEquipeDeplace() === $equipe) {
                 $parties[] = $partie;
             }
         }
 
-                $events = [];
-        foreach ($parties as $partie) {
-            $date = $partie->getDate(); // DateTimeImmutable
-
-            $recoit = $partie->getIdEquipeRecoit()->getNom();
-            $deplace = $partie->getIdEquipeDeplace()->getNom();
-            $lieu = $partie->getLieu()->getNom();
-            $adresse = method_exists($partie->getLieu(), 'getAdresse')
-                ? $partie->getLieu()->getAdresse()
-                : '';
-
-            // Titre de l'événement
-            $summary = "$recoit vs $deplace";
-
-            // Création de l'événement ICS
-            $event = (new Event())
-                ->setSummary($summary)
-                ->setLocation(new Location($lieu . ($adresse ? " - $adresse" : "")))
-                ->setOccurrence(
-                    new TimeSpan(
-                        new DateTime($date, false),
-                        // Match ≈ 2h => ajustable
-                        new DateTime($date->modify('+2 hours'), false)
-                    )
-                );
-
-            $events[] = $event;
-        }
-        // Construction du calendrier
-        $calendar = new Calendar($events);
-        $calendarComponent = (new CalendarFactory())->createCalendar($calendar);
-
-        // Génération d'ETag (pour le cache navigateur)
-        $icalString = (string) $calendarComponent;
-        $etag = '"' . md5($icalString) . '"';
-
-        return [
-            'ical' => $icalString,
-            'etag' => $etag,
-        ];
+        return $this->construire($parties, $equipe, sprintf('BLVB · %s · %s', $equipe->getNom(), $poule->getNom()));
     }
 
+    /**
+     * @param Partie[] $parties
+     *
+     * @return array{ical: string, etag: string}
+     */
+    private function construire(array $parties, Equipe $equipe, string $nomAgenda): array
+    {
+        $fuseau = new \DateTimeZone(self::FUSEAU);
+        $urlFiche = $this->urlGenerator->generate('front_equipe_detail', ['id' => $equipe->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
 
+        $events = [];
+        $premier = $dernier = null;
+        foreach ($parties as $partie) {
+            if ($partie->getDate() === null) {
+                continue; // match pas encore planifié
+            }
+            // Les dates sont enregistrées en heure locale : on les interprète telles quelles en Europe/Paris
+            $debut = new \DateTimeImmutable($partie->getDate()->format('Y-m-d H:i:s'), $fuseau);
+            $fin = $debut->modify('+2 hours'); // durée d'un match, ajustable
+            $premier = $premier === null || $debut < $premier ? $debut : $premier;
+            $dernier = $dernier === null || $fin > $dernier ? $fin : $dernier;
 
+            $lieu = $partie->getLieu();
+            $adresse = $lieu?->getAdresse();
+            $description = array_filter([
+                sprintf('%s · %s · Journée %s', $partie->getPoule()?->getPhase()?->getNom(), $partie->getPoule()?->getNom(), $partie->getJournee()?->getNumero()),
+                $partie->getNbSetGagnantReception() !== null && $partie->getNbSetGagnantDeplacement() !== null
+                    ? sprintf('Résultat : %d - %d', $partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())
+                    : null,
+                "Les horaires peuvent changer. Informations à jour : $urlFiche",
+            ]);
 
+            $event = (new Event(new UniqueIdentifier(sprintf('match-%d@blvb', $partie->getId()))))
+                ->setSummary(sprintf('%s vs %s', $partie->getIdEquipeRecoit()?->getNom(), $partie->getIdEquipeDeplace()?->getNom()))
+                ->setDescription(implode("\n", $description))
+                ->setUrl(new Uri($urlFiche))
+                ->setOccurrence(new TimeSpan(new DateTime($debut, true), new DateTime($fin, true)));
+            if ($lieu !== null) {
+                $event->setLocation(new Location($lieu->getNom().($adresse ? " - $adresse" : '')));
+            }
+            $events[] = $event;
+        }
 
-//    private EventRepository $eventRepository;
-//    private LoggerInterface $logger;
-//
-//    public function __construct(EventRepository $eventRepository, LoggerInterface $logger)
-//    {
-//        $this->eventRepository = $eventRepository;
-//        $this->logger = $logger;
-//    }
-//
-//    /**
-//     * Retourne un tableau: ['ical' => string, 'etag' => string]
-//     */
-//    public function generateForToken(string $token): array
-//    {
-//        $events = $this->eventRepository->findForToken($token);
-//
-//        $calendar = new Calendar('my-domain.example'); // change domain/name
-//
-//        // Construit ETag basé sur updatedAt de chaque event (ou hachage global)
-//        $timestamps = [];
-//        foreach ($events as $e) {
-//            $timestamps[] = $e->getUpdatedAt()->getTimestamp();
-//        }
-//        // Si tu veux inclure le nombre d'événements, etc.
-//        $etag = '"' . md5(implode(',', $timestamps) . count($events)) . '"';
-//
-//        foreach ($events as $e) {
-//            $ve = new ICalEvent();
-//
-//            // UID: unique and stable per event
-//            $uid = sprintf('event-%d@%s', $e->getId(), 'my-domain.example');
-//            $ve->setUniqueId($uid);
-//
-//            // Summary / title
-//            $ve->setSummary($e->getTitle());
-//
-//            // Description
-//            if ($e->getDescription()) {
-//                $ve->setDescription($e->getDescription());
-//            }
-//
-//            // Start / End (Eluceo accepte DateTimeInterface)
-//            $ve->setDtStart($e->getStartAt());
-//            if ($e->getEndAt()) {
-//                $ve->setDtEnd($e->getEndAt());
-//            }
-//
-//            // DTSTAMP: when the iCal event was last generated (use updatedAt)
-//            $ve->setCreated($e->getUpdatedAt()); // created here used as DTSTAMP/CREATED depending on version
-//            // SEQUENCE: clients use this integer to detect updates
-//            $sequence = (int) $e->getUpdatedAt()->getTimestamp();
-//            $ve->setSequence($sequence);
-//
-//            $calendar->addComponent($ve);
-//        }
-//
-//        $icalString = $calendar->render();
-//
-//        return [
-//            'ical' => $icalString,
-//            'etag' => $etag,
-//        ];
-//    }
+        $calendar = new Calendar($events);
+        $calendar->setPublishedTTL(new \DateInterval(self::ACTUALISATION));
+        $maintenant = new \DateTimeImmutable('now', $fuseau);
+        $calendar->addTimeZone(TimeZone::createFromPhpDateTimeZone(
+            $fuseau,
+            ($premier ?? $maintenant)->modify('-1 month'),
+            ($dernier ?? $maintenant)->modify('+1 month'),
+        ));
+
+        $ical = (string) (new CalendarFactory())->createCalendar($calendar);
+        $ical = $this->ajouterEnTetes($ical, $nomAgenda);
+
+        // L'horodatage de génération (DTSTAMP) change à chaque appel : on l'ignore pour que l'ETag ne reflète que le contenu
+        $etag = '"'.md5(preg_replace('/^DTSTAMP:.*$/m', '', $ical)).'"';
+
+        return ['ical' => $ical, 'etag' => $etag];
+    }
+
+    /** Nom de l'agenda, fuseau et fréquence d'actualisation conseillée (lus par Google, Apple, Outlook). */
+    private function ajouterEnTetes(string $ical, string $nomAgenda): string
+    {
+        $nom = addcslashes($nomAgenda, ",;\\");
+        $lignes = [
+            "X-WR-CALNAME:$nom",
+            "NAME:$nom",
+            'X-WR-TIMEZONE:'.self::FUSEAU,
+            'REFRESH-INTERVAL;VALUE=DURATION:'.self::ACTUALISATION,
+        ];
+        $ajout = implode("\r\n", array_map($this->plier(...), $lignes))."\r\n";
+
+        return preg_replace('/^(VERSION:2\.0\r?\n)/m', '$1'.str_replace('\\', '\\\\', $ajout), $ical, 1);
+    }
+
+    /** Repli des lignes de plus de 75 octets (RFC 5545), sans couper un caractère UTF-8. */
+    private function plier(string $ligne): string
+    {
+        $morceaux = [];
+        while (strlen($ligne) > 75) {
+            $coupe = 75;
+            while ($coupe > 0 && (ord($ligne[$coupe]) & 0xC0) === 0x80) {
+                --$coupe;
+            }
+            $morceaux[] = substr($ligne, 0, $coupe);
+            $ligne = ' '.substr($ligne, $coupe);
+        }
+        $morceaux[] = $ligne;
+
+        return implode("\r\n", $morceaux);
+    }
 }

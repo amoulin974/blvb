@@ -2,6 +2,8 @@
 
 namespace App\Repository;
 
+use App\Entity\Equipe;
+use App\Entity\Saison;
 use App\Entity\Partie;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -35,6 +37,26 @@ class PartieRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Matchs planifiés d'une équipe (à domicile ou à l'extérieur) pour une saison, toutes phases confondues, par date croissante.
+     *
+     * @return Partie[]
+     */
+    public function findByEquipeSaison(Equipe $equipe, Saison $saison): array
+    {
+        return $this->createQueryBuilder('m')
+            ->innerJoin('m.poule', 'p')
+            ->innerJoin('p.phase', 'ph')
+            ->andWhere('ph.saison = :saison')
+            ->andWhere('m.id_equipe_recoit = :equipe OR m.id_equipe_deplace = :equipe')
+            ->andWhere('m.date IS NOT NULL')
+            ->setParameter('saison', $saison)
+            ->setParameter('equipe', $equipe)
+            ->orderBy('m.date', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getMatchsByEquipePhase(int $equipeId, int $pouleId): array
     {
         return $this->createQueryBuilder('m')
@@ -42,13 +64,15 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('m.date AS date_match')
             ->addSelect('m.nb_set_gagnant_reception AS score_reception_match')
             ->addSelect('m.nb_set_gagnant_deplacement AS score_deplacement_match')
+            ->addSelect('er.id AS equipe_recoit_id')
+            ->addSelect('ed.id AS equipe_deplace_id')
             ->addSelect('er.nom AS equipe_recoit')
             ->addSelect('ed.nom AS equipe_deplace')
             ->addSelect('l.nom AS lieu_nom')
             ->addSelect('l.adresse AS lieu_adresse')
             ->addSelect('j.id AS journee_id')
 
-            ->join('m.lieu', 'l')
+            ->leftJoin('m.lieu', 'l')  // un match peut ne pas avoir (encore) de gymnase
             ->join('m.journee', 'j')
             ->join('m.poule', 'poule')
 

@@ -1,0 +1,42 @@
+{# Case « score » d'un match (calendrier : tableau ordinateur et cartes mobiles). Variable : partie.
+   - match à venir                 : tiret
+   - match passé, score non saisi  : tiret, ou bouton « Saisir » à sa place pour le capitaine qui reçoit / l'admin
+   - score saisi                   : score, plus un crayon discret pour le modifier (capitaine qui reçoit / admin)
+   La saisie n'est proposée qu'une fois la date du match passée ; un score déjà saisi reste modifiable à tout moment. Après enregistrement, score-modal-controller.js
+   met à jour .score_partie-<id> et bascule l'affichage entre [data-score-action="saisir"] et [data-score-action="modifier"]. #}
+{% set joue = partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
+{% set passe = partie.date < date() %}
+{% set autorise = is_granted('ROLE_ADMIN') or (app.user is not null and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
+{% set peutSaisir = autorise and (passe or joue) %}
+<span class="inline-flex items-center justify-center gap-1.5">
+    <span class="score_partie-{{ partie.id }}{{ (peutSaisir and not joue) ? ' hidden' : '' }}">
+        {%- if joue -%}
+            <strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong>
+        {%- else -%}
+            <span class="opacity-50" title="{{ passe ? 'Score non saisi' : 'À venir' }}" aria-hidden="true">–</span><span class="sr-only">{{ passe ? 'Score non saisi' : 'À venir' }}</span>
+        {%- endif -%}
+    </span>
+    {% if peutSaisir %}
+        <a href="#"
+           class="btn btn-accent btn-sm font-sans{{ joue ? ' hidden' : '' }}"
+           data-score-action="saisir"
+           aria-label="Saisir le résultat {{ partie.idEquipeRecoit.nom }} contre {{ partie.idEquipeDeplace.nom }}"
+           data-action="click->score-modal#openModal"
+           data-partie-id="{{ partie.id }}"
+           data-match-passe="{{ passe ? 1 : 0 }}"
+           data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+           data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">Saisir</a>
+        <a href="#"
+           class="btn btn-ghost btn-sm btn-square font-sans text-(--color-base-content)/70{{ joue ? '' : ' hidden' }}"
+           data-score-action="modifier"
+           title="Modifier le résultat"
+           aria-label="Modifier le résultat {{ partie.idEquipeRecoit.nom }} contre {{ partie.idEquipeDeplace.nom }}"
+           data-action="click->score-modal#openModal"
+           data-partie-id="{{ partie.id }}"
+           data-match-passe="{{ passe ? 1 : 0 }}"
+           data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+           data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+        </a>
+    {% endif %}
+</span>

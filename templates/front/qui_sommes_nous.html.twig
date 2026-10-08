@@ -3,63 +3,50 @@
 {% block title %}Qui sommes-nous ? - BLVB{% endblock %}
 
 {% block body %}
-    <h1 class="text-3xl font-bold text-center my-8">Qui sommes-nous ?</h1>
+<div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-10">
+    <h1>Qui sommes-nous ?</h1>
 
-    <h2 class="text-center mb-4">Le championnat comprend</h2>
-    <div class="flex flex-col lg:flex-row justify-center items-center gap-6 w-full">
-        <div class="card bg-base-300 rounded-box p-6 w-full max-w-md text-center">
-            <h3 class="font-semibold mb-2">Des équipes de clubs</h3>
-            <p>Anglet Olympique</p>
-            <p>Bayonne Volley-Ball</p>
-            <p>Volley-Ball Luzien Cibourien</p>
-            <p>Ondres Volley-Ball</p>
-            <p>JSA Angresse</p>
-        </div>
-
-        {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
-
-        <div class="card bg-base-300 rounded-box p-6 w-full max-w-md text-center">
-            <h3 class="font-semibold mb-2">Des associations</h3>
-            <p>ASPTT Bayonne</p>
-            <p>Leo Lagrange Bayonne</p>
-            <p>Tosse</p>
-            <p>Capbreton</p>
-            <p>D’entreprises (autrefois Quiksilver, Turbomeca...)</p>
-        </div>
-    </div>
-
-    <section class="w-full flex flex-col justify-center items-center mt-10">
-
-      <h2 class="text-center mb-4 mt-10">Ces équipes sont réparties en 4 groupes de niveau</h2>
-
-    {% for groupe in groupes %}
-        <div class="flex flex-col lg:flex-row justify-center items-center lg:items-stretch lg:gap-6 w-full mb-4">
-
-            {#  Le textes#}
-           {% if loop.index is odd %}
-                <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center items-center text-center order-first">
-            {% else %}
-                <div class="card bg-base-300 rounded-box p-6 w-full max-w-md flex-1 flex flex-col justify-center items-center text-center order-first lg:order-last">
-            {% endif %}
-                    <h3 class="text-2xl font-bold text-primary mb-2">{{groupe.nom}}</h3>
-                    <p>
-                        {{groupe.description}}
-                    </p>
-                            <p><a href="{{ path('front_equipes')}}" class="btn btn-info mt-2">Voir les équipes</a></p>
-                    </div>
-
-            {# <div class="divider lg:divider-horizontal hidden lg:block"></div> #}
-
-           {% if loop.index is odd %}
-                <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last ">
-           {% else %}
-                <div class="card bg-base-300 rounded-box w-full max-w-md flex-1 flex justify-center items-center order-last lg:order-first">
-           {% endif %}
-
-            <img src="{{ asset('images/'~groupe.image) }}" alt="{{ groupe.nom }}" class="max-w-[600px] h-auto w-full rounded-lg shadow-lg">
+    <section>
+        <h2 class="uppercase tracking-wide mb-4">Le championnat comprend</h2>
+        <div class="grid gap-4 md:grid-cols-2">
+            <div class="bg-base-100 border border-base-300 rounded-box p-6">
+                <h3 class="text-xl uppercase tracking-wide text-(--color-primary) mb-2">Des équipes de clubs</h3>
+                <ul class="flex flex-col gap-1">
+                    <li>Anglet Olympique</li>
+                    <li>Bayonne Volley-Ball</li>
+                    <li>Volley-Ball Luzien Cibourien</li>
+                    <li>Ondres Volley-Ball</li>
+                    <li>JSA Angresse</li>
+                </ul>
+            </div>
+            <div class="bg-base-100 border border-base-300 rounded-box p-6">
+                <h3 class="text-xl uppercase tracking-wide text-(--color-primary) mb-2">Des associations</h3>
+                <ul class="flex flex-col gap-1">
+                    <li>ASPTT Bayonne</li>
+                    <li>Leo Lagrange Bayonne</li>
+                    <li>Tosse</li>
+                    <li>Capbreton</li>
+                    <li>D’entreprises (autrefois Quiksilver, Turbomeca...)</li>
+                </ul>
             </div>
         </div>
-    {% endfor %}
     </section>
 
+    <section>
+        <h2 class="uppercase tracking-wide mb-4">Ces équipes sont réparties en 4 groupes de niveau</h2>
+        <div class="flex flex-col gap-4">
+        {% for groupe in groupes %}
+            {# Texte et photo côte à côte, alternés d'un groupe à l'autre sur grand écran #}
+            <div class="grid gap-0 md:grid-cols-2 bg-base-100 border border-base-300 rounded-box overflow-hidden">
+                <div class="p-6 flex flex-col justify-center gap-3 {{ loop.index is even ? 'md:order-last' : '' }}">
+                    <h3 class="text-2xl uppercase tracking-wide text-(--color-primary)">{{ groupe.nom }}</h3>
+                    <p>{{ groupe.description }}</p>
+                    <p><a href="{{ path('front_equipes') }}" class="btn btn-sm btn-outline btn-primary">Voir les équipes</a></p>
+                </div>
+                <img src="{{ asset('images/'~groupe.image) }}" alt="{{ groupe.nom }}" class="w-full h-full max-h-80 object-cover">
+            </div>
+        {% endfor %}
+        </div>
+    </section>
+</div>
 {% endblock %}

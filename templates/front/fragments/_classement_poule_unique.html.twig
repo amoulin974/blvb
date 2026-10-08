@@ -1,111 +1,102 @@
+{# Classement d'une poule (page Classement et fiche équipe).
+   Variables : poule ; equipeid (optionnel) = équipe à mettre en évidence.
+   Zones de montée / descente : flèche + teinte légère + légende en texte (pas la couleur seule),
+   seulement une fois des matchs programmés dans la poule.
+   Matchs joués / victoires / défaites : calculés à partir des scores saisis (un forfait est enregistré à -1 set). #}
+{% if poule.classements|length > 0 %}
+    {% set nbEquipes = poule.classements|length %}
+    {% set zonesActives = poule.parties|length > 0 %}
 
-                        {# Affichage pour grand écran sous forme de table #}
-                            {% if poule.classements|length > 0 %}
+    {# Ordinateur : tableau #}
+    <div class="hidden md:block">
+        <table class="table w-full table-fixed bg-base-100">
+            <colgroup>
+                <col class="w-[9%]">
+                <col class="w-[43%]">
+                <col class="w-[10%]">
+                <col class="w-[8%]">
+                <col class="w-[8%]">
+                <col class="w-[8%]">
+                <col class="w-[14%]">
+            </colgroup>
+            <thead>
+                <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
+                    <th class="text-center">Rang</th>
+                    <th>Équipe</th>
+                    <th class="text-center">Points</th>
+                    <th class="text-center"><abbr title="Matchs joués" class="no-underline">J</abbr></th>
+                    <th class="text-center"><abbr title="Victoires" class="no-underline">V</abbr></th>
+                    <th class="text-center"><abbr title="Défaites" class="no-underline">D</abbr></th>
+                    <th class="text-center">Sets</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for classement in poule.classements %}
+                {% set montee = zonesActives and classement.position <= poule.NbMonteeDefaut %}
+                {% set descente = zonesActives and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
+                {% set courante = equipeid is defined and classement.equipe.id == equipeid %}
+                {% set matchsJoues = poule.parties|filter(p => (p.idEquipeRecoit.id == classement.equipe.id or p.idEquipeDeplace.id == classement.equipe.id) and p.nbSetGagnantReception is not null and p.nbSetGagnantDeplacement is not null) %}
+                {% set joues = matchsJoues|length %}
+                {% set victoires = matchsJoues|filter(p => p.idEquipeRecoit.id == classement.equipe.id ? p.nbSetGagnantReception > p.nbSetGagnantDeplacement : p.nbSetGagnantDeplacement > p.nbSetGagnantReception)|length %}
+                <tr data-equipe="{{ classement.equipe.id }}" class="align-top {{ courante ? 'bg-(--color-base-200)' : (montee ? 'bg-(--color-success)/10' : (descente ? 'bg-(--color-warning)/10' : '')) }}">
+                    <td class="text-center font-display text-2xl font-extrabold text-(--color-primary) tabular-nums whitespace-nowrap">
+                        {{ classement.position }}
+                        {% if montee %}<span class="text-sm text-(--color-success)" title="Zone de montée" aria-hidden="true">▲</span><span class="sr-only">(zone de montée)</span>{% endif %}
+                        {% if descente %}<span class="text-sm text-(--color-warning)" title="Zone de descente" aria-hidden="true">▼</span><span class="sr-only">(zone de descente)</span>{% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display text-[17px] tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
+                        {{ include('front/fragments/_classement_detail_matchs.html.twig') }}
+                    </td>
+                    <td class="text-center font-display text-xl font-bold tabular-nums">{{ classement.points }}</td>
+                    <td class="text-center tabular-nums">{{ joues }}</td>
+                    <td class="text-center tabular-nums">{{ victoires }}</td>
+                    <td class="text-center tabular-nums">{{ joues - victoires }}</td>
+                    <td class="text-center tabular-nums whitespace-nowrap">{{ classement.setGagnes }} - {{ classement.setPerdus }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
 
-                                <table class="border border-solid table-xs table-zebra w-full hidden md:table" >
-                                    <tr class="bg-base-100 text-center">
-                                        <th>Classement</th>
-                                        <th >Equipe</th>
-                                        <th >Points</th>
-                                        <th >Set Gagnés</th>
-                                        <th >Set Perdus</th>
+    {# Mobile : cartes compactes, rang à gauche, points à droite #}
+    <div class="md:hidden flex flex-col gap-2">
+        {% for classement in poule.classements %}
+            {% set montee = zonesActives and classement.position <= poule.NbMonteeDefaut %}
+            {% set descente = zonesActives and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
+            {% set courante = equipeid is defined and classement.equipe.id == equipeid %}
+            {% set matchsJoues = poule.parties|filter(p => (p.idEquipeRecoit.id == classement.equipe.id or p.idEquipeDeplace.id == classement.equipe.id) and p.nbSetGagnantReception is not null and p.nbSetGagnantDeplacement is not null) %}
+            {% set joues = matchsJoues|length %}
+            {% set victoires = matchsJoues|filter(p => p.idEquipeRecoit.id == classement.equipe.id ? p.nbSetGagnantReception > p.nbSetGagnantDeplacement : p.nbSetGagnantDeplacement > p.nbSetGagnantReception)|length %}
+            <div data-equipe="{{ classement.equipe.id }}" class="card card-xs border border-base-300 {{ courante ? 'bg-(--color-base-200)' : (montee ? 'bg-(--color-success)/10' : (descente ? 'bg-(--color-warning)/10' : 'bg-base-100')) }}">
+                <div class="card-body px-3 py-2 gap-1">
+                    <div class="flex items-center gap-3">
+                        <div class="shrink-0 w-10 text-center font-display text-2xl font-extrabold text-(--color-primary) tabular-nums leading-none">
+                            {{ classement.position }}
+                            {% if montee %}<div class="text-xs text-(--color-success)" aria-hidden="true">▲</div><span class="sr-only">(zone de montée)</span>{% endif %}
+                            {% if descente %}<div class="text-xs text-(--color-warning)" aria-hidden="true">▼</div><span class="sr-only">(zone de descente)</span>{% endif %}
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline block py-0.5 break-words font-display text-lg tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
+                            <p class="text-sm">{{ joues }} joué{{ joues > 1 ? 's' : '' }} · {{ victoires }} V · {{ joues - victoires }} D · sets {{ classement.setGagnes }}-{{ classement.setPerdus }}</p>
+                        </div>
+                        <div class="shrink-0 text-right">
+                            <span class="font-display text-2xl font-bold tabular-nums">{{ classement.points }}</span>
+                            <span class="text-sm">{{ classement.points > 1 ? 'pts' : 'pt' }}</span>
+                        </div>
+                    </div>
+                    {{ include('front/fragments/_classement_detail_matchs.html.twig') }}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 
-                                        <th >Détail</th>
-                                    </tr>
-                                {% for classement in poule.classements %}
-
-{#                                        <tr {% if equipeid is defined and classement.equipe.id == equipeid %} class="!bg-success font-bold" {% endif %}>#}
-                                        <tr class="text-center{% if classement.position <= poule.NbMonteeDefaut and poule.parties|length > 0%}
-                                                !bg-success font-bold
-                                            {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) and poule.parties|length > 0 %}
-                                                !bg-warning{% endif %}
-                                                ">
-                                            <td class="flex items-center justify-center"><span>{{ classement.position}} &nbsp;</span>
-                                                {% if classement.position <= poule.NbMonteeDefaut and poule.parties|length > 0%}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 18 9 11.25l4.306 4.306a11.95 11.95 0 0 1 5.814-5.518l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
-                                                    </svg>
-
-                                                {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) and poule.parties|length > 0 %}
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6 9 12.75l4.286-4.286a11.948 11.948 0 0 1 4.306 6.43l.776 2.898m0 0 3.182-5.511m-3.182 5.51-5.511-3.181" />
-                                                    </svg>
-
-                                                {% endif %}
-                                            </td>
-                                            <td><a href="{{path('front_equipe_detail', {'id': classement.equipe.id})}}" title="Voir la fiche de l'équipe" class="link flex items-center justify-start">
-                                                    {{ classement.equipe.nom }}
-
-                                                </a> </td>
-                                            <td>{{ classement.points }}</td>
-                                            <td>{{ classement.setGagnes}}</td>
-                                            <td>{{ classement.setPerdus}}</td>
-
-                                            <td>
-                                            <details class="collapse collapse-arrow ">
-                                                <summary class="btn btn-xs btn-primary">
-                                                    </svg><span> Voir le détail des matchs   </span>
-                                                </summary>
-                                                <ul class="list-disc list-inside">
-                                                    {% for partie in poule.parties %}
-                                                        {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
-                                                            <li>
-                                                                {% if partie.getNbSetGagnantReception == "" and partie.getNbSetGagnantDeplacement == ""%}
-                                                                {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} : partie non jouée
-                                                                {% else %}
-                                                                {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} :
-                                                                {{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}
-                                                                {% endif %}
-                                                            </li>
-                                                        {% endif %}
-                                                    {% endfor %}
-                                                </ul>
-                                            </details>
-                                            </td>
-
-                                        </tr>
-                                {% endfor %}
-
-                            </table>
-                            {# Affichage pour mobile sous forme de carte #}
-                                {% for classement in poule.classements %}
-                                    <div class="card w-96 bg-base-100 card-xs shadow-sm block md:hidden liste-classements-mobile mt-1 {% if classement.position <= poule.NbMonteeDefaut%}
-                                                !bg-success font-bold
-                                            {% elseif classement.position > (poule.classements|length - poule.NbDescenteDefaut) %}
-                                                !bg-warning{% endif %}">
-                                        <div class="card-body {% if equipeid is defined and classement.equipe.id == equipeid %} bg-success font-bold {% endif %}" >
-                                                <p><strong><a href="{{path('front_equipe_detail', {'id': classement.equipe.id})}}" title="Voir la fiche de l'équipe" class="link flex items-center justify-start">
-                                                            Equipe n° {{ classement.position}} : {{ classement.equipe.nom }}
-
-                                                        </a> </strong>  </p>
-                                                <p>Points : {{ classement.points }}</p>
-                                                <p>Nombre set gagnés {{ classement.setGagnes}}</p>
-                                                <p>Nombre set perdus {{ classement.setPerdus}}</p>
-                                                <p>
-                                                <details class="collapse collapse-arrow ">
-                                                    <summary class="btn btn-xs btn-info">
-                                                        <span>Voir le détail des matchs</span> </summary>
-                                                    <ul class="list-disc list-inside">
-                                                        {% for partie in poule.parties %}
-                                                            {% if partie.idEquipeRecoit.id == classement.equipe.id or partie.idEquipeDeplace.id == classement.equipe.id %}
-                                                                <li>
-                                                                    {% if partie.getNbSetGagnantReception == "" and partie.getNbSetGagnantDeplacement == ""%}
-                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} : partie non jouée
-                                                                    {% else %}
-                                                                    {{ partie.idEquipeRecoit.nom }}  vs {{ partie.idEquipeDeplace.nom }} :
-                                                                    {{ partie.getNbSetGagnantReception }} à {{ partie.getNbSetGagnantDeplacement }}
-                                                                    {% endif %}
-                                                                </li>
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    </ul>
-                                                </details>
-                                                </p>
-
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                            {% else %}
-                            <p class="alert alert-info">Aucun résultat saisi </p>
-                            {% endif %}
-
+    {% if zonesActives and (poule.NbMonteeDefaut > 0 or poule.NbDescenteDefaut > 0) %}
+        <p class="mt-3 text-sm flex flex-wrap gap-x-4 gap-y-1">
+            {% if poule.NbMonteeDefaut > 0 %}<span><span class="text-(--color-success)" aria-hidden="true">▲</span> Zone de montée</span>{% endif %}
+            {% if poule.NbDescenteDefaut > 0 %}<span><span class="text-(--color-warning)" aria-hidden="true">▼</span> Zone de descente</span>{% endif %}
+        </p>
+    {% endif %}
+{% else %}
+    <p class="alert alert-info">Aucun résultat saisi</p>
+{% endif %}

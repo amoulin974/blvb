@@ -1,22 +1,22 @@
 {% extends 'base_front.html.twig' %}
 
-{% block title %}Le classement de la saison : {{ saison.nom }} - BLVB{% endblock %}
+{% block title %}Classement — {{ saison.nom }} - BLVB{% endblock %}
 
 {% block body %}
-<div class="container mx-auto max-w-5xl px-4">
-<h1>Le classement de la saison {{ saison.nom }}</h1>
+<div class="container mx-auto max-w-5xl md:px-4">
+<h1>Classement — {{ saison.nom }}</h1>
     {% for phase in saison.phases%}
-        <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+        <div class="bg-base-100 border-base-300 collapse collapse-arrow md:border">
             <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
-            <div class="collapse-title">
+            <div class="collapse-title font-display text-xl font-semibold">
                 {{ phase.nom }}
             </div>
-            <div class="collapse-content">
+            <div class="collapse-content px-0 md:px-4">
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
-                    <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
-                    <div class="tab-content bg-base-100 border-base-300 p-6">
-                        {% include '/front/fragments/_classement_poule_unique.html.twig' with {"selected":null  } %}
+                    <input type="radio" name="tabs_{{phase.id}}" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                    <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
+                        {% include '/front/fragments/_classement_poule_unique.html.twig' %}
                     </div>
                 {% endfor %}
                 </div>

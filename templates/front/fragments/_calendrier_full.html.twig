@@ -1,150 +1,46 @@
-<div class="container mx-auto max-w-5xl px-4" data-controller="score-modal">
-    <h1>Le calendrier de la saison {{ saison.nom }}</h1>
+{# Pas de conteneur ici : les pages qui incluent ce fragment (accueil, calendrier) en fournissent déjà un. #}
+<div data-controller="score-modal{{ defilerJourneeCourante|default(false) ? ' journee-courante' : '' }}">
+    <h1>Calendrier — {{ saison.nom }}</h1>
     {% for phase in saison.phases%}
-        <div class="bg-base-100 border-base-300 collapse collapse-arrow border">
+        <div class="bg-base-100 border-base-300 collapse collapse-arrow md:border">
             <input type="checkbox" {%  if phaseouverte.id==phase.id %}checked {% endif %} class="peer" />
-            <div class="collapse-title">
+            <div class="collapse-title font-display text-xl font-semibold">
                 {{ phase.nom }}
             </div>
-            <div class="collapse-content">
+            <div class="collapse-content px-0 md:px-4">
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
-                        <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
-                        <div class="tab-content bg-base-100 border-base-300 p-6">
-                        <div>Filtrer par équipe :
-                                <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" onchange="filterMatches({{phase.id}}, {{poule.id}})">
+                        <input type="radio" name="tabs_{{phase.id}}" data-poule="{{ poule.id}}" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
+                        {# Journée en cours : la première dont la date de fin n'est pas passée #}
+                        {% set aujourdhui = 'now'|date('Y-m-d') %}
+                        {% set journeeCourante = poule.journees|filter(j => j.dateFin and j.dateFin|date('Y-m-d') >= aujourdhui)|first %}
+                        {# Barre d'outils de la poule, séparée des journées #}
+                        <div class="flex flex-wrap items-center gap-x-3 gap-y-1 pb-4 border-b border-base-300">
+                                <label for="equipeFilter_{{ phase.id }}_{{poule.id}}">Filtrer par équipe</label>
+                                <select id="equipeFilter_{{ phase.id }}_{{poule.id}}" class="select w-full text-base sm:w-72 md:select-sm md:text-sm" onchange="filterMatches({{phase.id}}, {{poule.id}})">
                                     <option value="all">Toutes les équipes</option>
                                     {% for equipe in poule.equipes %}
                                         <option value="{{equipe.id}}">{{equipe.nom}}</option>
                                     {% endfor %}
                                 </select>
+                                {% if journeeCourante %}
+                                    <a href="#journee-courante-{{ poule.id }}" class="link link-hover link-primary md:ml-auto">Aller à la journée en cours ↓</a>
+                                {% endif %}
                             </div>
                         {% for journee in poule.journees %}
 
-                            <h3 class="{{ loop.first ? 'mt-4' : 'mt-10' }} mb-2">Journée {{ journee.numero }}
+                            {% set estCourante = journeeCourante and journee.id == journeeCourante.id %}
+                            <h3 {% if estCourante %}id="journee-courante-{{ poule.id }}" data-journee-courante{% endif %} class="{{ loop.first ? 'mt-6' : 'mt-8 pt-6 border-t border-base-300' }} mb-3 scroll-mt-24 text-2xl uppercase tracking-wide text-(--color-primary)">Journée {{ journee.numero }}
+                                {% if estCourante %}
+                                    <span class="badge badge-accent align-middle font-sans font-semibold normal-case tracking-normal">{{ journee.dateDebut and journee.dateDebut|date('Y-m-d') <= aujourdhui ? 'En cours' : 'Prochaine journée' }}</span>
+                                {% endif %}
                                 {% if journee.dateDebut and journee.dateFin %}
-                                    <span class="font-normal text-sm">— du {{ journee.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ journee.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
+                                    <span class="font-sans font-normal normal-case tracking-normal text-sm text-base-content">— du {{ journee.dateDebut|format_datetime(pattern='dd/MM/yyyy', locale='fr') }} au {{ journee.dateFin|format_datetime(pattern='dd/MM/yyyy', locale='fr') }}</span>
                                 {% endif %}
                             </h3>
-                            {% if journee.parties|length >0 %}
-                                {# Affichage pour grand écran sous forme de table #}
-                                {# table-fixed + colgroup : mêmes largeurs de colonnes pour toutes les journées ;
-                                   un nom d'équipe trop long passe sur plusieurs lignes. #}
-                                <table class="border border-solid table-xs table-zebra w-full table-fixed hidden md:table" >
-                                    <colgroup>
-                                        <col class="w-[22%]">
-                                        <col class="w-[22%]">
-                                        <col class="w-[22%]">
-                                        <col class="w-[17%]">
-                                        <col class="w-[17%]">
-                                    </colgroup>
-                                    <tr >
-                                        <th>Équipe qui reçoit</th>
-                                        <th>Équipe qui se déplace</th>
-                                        <th>Date</th>
-                                        <th>Lieu</th>
-                                        <th>Résultat</th>
-                                    </tr>
-
-                                    {% for partie in journee.parties %}
-                                        <tr id="tr-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                            <td>
-                                                <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link break-words">{{ partie.idEquipeRecoit.nom }}</a>
-                               
-                                            </td>
-                                            <td class="">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link break-words">{{ partie.idEquipeDeplace.nom }}</a>
-                                   
-                                            </td>
-                                            <td>{{ partie.date|format_datetime(pattern='EEEE dd/MM/yyyy', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</td>
-                                            <td><a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer">
-                                                    {{ partie.lieu.nom }}
-                                                </a></td>
-                                            <td>
-
-                                                {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                                    <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
-                                                {% else %}
-                                                    <span class="score_partie-{{partie.id}}">À venir</span>
-                                                {% endif %}
-                                                {% if is_granted('ROLE_ADMIN')
-                                                            or (app.user is not null
-                                                                and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
-
-                                                            <a href="#"
-                                                                class="btn btn-warning btn-xs"
-                                                                data-action="click->score-modal#openModal"
-                                                                data-partie-id="{{ partie.id }}"
-                                                                data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
-                                                                data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                                {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
-                                                                    Modifier le résultat
-                                                                {% else %}
-                                                                    Saisir le résultat
-                                                                {% endif  %}
-                                                            </a>
-                                                            {% endif %}
-                                        </tr>
-
-                                    {% endfor %}
-                                </table>
-                                {# Affichage pour mobile sous forme de carte #}
-                                {% for partie in journee.parties %}
-                                <div class="card  bg-base-100 card-xs shadow-sm block md:hidden liste-equipe-mobile mt-1" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-                                    <div class="card-body p-1" >
-                                        <p class="flex items-center justify-between w-full flex-wrap">
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="flex-1 basis-0 flex justify-end min-w-0">
-                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeRecoit.nom }}
-                                                </strong>
-                                            </a> 
-                                            <span class="px-1 shrink-0">vs </span>
-                                                
-                                            <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="flex-1 basis-0 flex justify-start min-w-0">
-                                                <strong class="link flex items-center justify-center flex-wrap">{{ partie.idEquipeDeplace.nom }}</strong></a>
-                                        </p>
-                                        <p>Date : {{ partie.date|format_date('short', locale='fr') }} - {{ partie.date|format_time('short', locale='fr') }}</p>
-                                        <p>Lieu : <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ partie.lieu.adresse|url_encode }}"
-                                                target="_blank"
-                                                rel="noopener noreferrer">
-                                                    {{ partie.lieu.nom }}
-                                                </a></p>
-                                        <p>Résultat :
-                                        {% if partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
-                                            <span class="score_partie-{{partie.id}}"><strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong></span>
-                                                {% else %}
-                                                    <span class="score_partie-{{partie.id}}">À venir</span>
-
-                                                {% endif %}
-                                                    {% if is_granted('ROLE_ADMIN')
-                                                            or (app.user is not null
-                                                                and partie.idEquipeRecoit.id in (equipesCapitaineIds|default([]))) %}
-
-                                                             <a href="#"
-                                                                class="btn btn-warning btn-xs"
-                                                                data-action="click->score-modal#openModal"
-                                                                data-partie-id="{{ partie.id }}"
-                                                                data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
-                                                                data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}">
-                                                                {% if partie.getNbSetGagnantReception != 0 and partie.getNbSetGagnantDeplacement !=0 %}
-                                                                 Modifier le résultat
-                                                                 {% else %}
-                                                                 Saisir le résultat
-                                                                     {% endif  %}
-                                                            </a>
-                                                    {% endif %}
-                                        </p>
-                                    </div>
-
-                                </div>
-                                {% endfor %}
-                            {% else %}
-                                <div class="alert alert-info">
-                                    Aucun match planifié pour cette journée.
-                                </div>
-                            {% endif %}
+                            {{ include('front/fragments/_journee_matchs.html.twig') }}
                             {%else%}
                             <div class="alert alert-info">
                                 Aucun match planifié pour cette poule.
@@ -162,29 +58,7 @@
 
     {%  endfor %}
 
-     <div data-score-modal-target="modal" class="modal">
-        <div class="modal-box">
-            <h3 data-score-modal-target="title" class="font-bold text-lg mb-4">
-                Saisir le score
-            </h3>
-
-            <div class="mb-2">
-                <label data-score-modal-target="labelReception" class="block text-sm font-medium mb-1">Score Équipe 1 :</label>
-                <input type="text" data-score-modal-target="inputReception" class="input input-bordered w-full" min="0">
-            </div>
-
-            <div class="mb-4">
-                <label data-score-modal-target="labelDeplacement" class="block text-sm font-medium mb-1">Score Équipe 2 :</label>
-                <input type="text" data-score-modal-target="inputDeplacement" class="input input-bordered w-full" min="0">
-            </div>
-            <p class="italic text-sm text-gray-500">Saisir 3 et 1 si l'équipe qui reçoit gagne 3 sets à 1.</p>
-            <p class="italic text-sm text-gray-500">Si une équipe est forfait saisir un seul F dans son score et rien pour l'autre équipe.</p>
-            <div class="modal-action">
-                <button class="btn btn-primary" data-action="click->score-modal#submitForm">Valider</button>
-                <a href="#" class="btn btn-ghost" data-action="click->score-modal#closeModal">Annuler</a>
-            </div>
-        </div>
-    </div>
+    {{ include('front/fragments/_score_modal.html.twig') }}
 </div>
 
 <script>

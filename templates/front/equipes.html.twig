@@ -1,90 +1,85 @@
 {% extends 'base_front.html.twig' %}
 
-{% block title %}Les équipes de la saison {{ saison.nom }} - BLVB{% endblock %}
+{% block title %}Les équipes — {{ saison.nom }} - BLVB{% endblock %}
 
 {% block body %}
-<div class="container mx-auto max-w-5xl px-4">
-    <h1>Les équipes de la saison {{ saison.nom }}</h1>
+<div class="container mx-auto max-w-5xl md:px-4">
+    <h1>Les équipes — {{ saison.nom }}</h1>
     {% for phase in saison.phases%}
-        <div class="bg-base-100 border-base-300 collapse {%  if phaseouverte.id==phase.id %}collapse-open {% endif %}collapse-arrow border">
+        <div class="bg-base-100 border-base-300 collapse {%  if phaseouverte.id==phase.id %}collapse-open {% endif %}collapse-arrow md:border">
             <input type="checkbox" class="peer" />
-            <div class="collapse-title">
+            <div class="collapse-title font-display text-xl font-semibold">
                 {{ phase.nom }}
             </div>
-            <div class="collapse-content">
+            <div class="collapse-content px-0 md:px-4">
                 <div class="tabs tabs-lift">
                 {% for poule in phase.poules %}
 
-                        <input type="radio" name="tabs_{{phase.id}}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
-                        <div class="tab-content bg-base-100 border-base-300 p-6">
+                        <input type="radio" name="tabs_{{phase.id}}" data-equipes="{{ poule.equipes|map(e => e.id)|join(' ') }}" class="tab te" aria-label="{{poule.nom}}" {% if loop.index==1 %}checked {% endif%} />
+                        <div class="tab-content bg-[var(--color-base-200)] md:bg-[var(--color-base-100)] border-base-300 p-2 md:p-6">
                         {% if poule.equipes|length ==0 %}
                             <p class="alert alert-info">Aucune équipe dans cette poule.</p>
                         {% else %}
-                        {# Affichage pour grand écran sous forme de table #}
-                            <div class="hidden md:block overflow-x-auto">
-                                <table class="table table-zebra border border-solid w-full">
-                                    <thead> <tr class="bg-base-200 text-base-content text-center">
-                                        <th>Nom</th>
-                                        <th>Adresse</th>
-                                        <th>Horaire habituel de réception</th>
-                                        <th>Classement</th>
-                                    </tr>
+                        {# Affichage pour grand écran sous forme de table (même style que le calendrier) #}
+                            <div class="hidden md:block">
+                                <table class="table w-full table-fixed bg-base-100">
+                                    <colgroup>
+                                        <col class="w-[32%]">
+                                        <col class="w-[26%]">
+                                        <col class="w-[27%]">
+                                        <col class="w-[15%]">
+                                    </colgroup>
+                                    <thead>
+                                        <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
+                                            <th>Équipe</th>
+                                            <th>Gymnase</th>
+                                            <th>Réception habituelle</th>
+                                            <th class="text-right">Classement</th>
+                                        </tr>
                                     </thead>
                                     <tbody>
-                                    {% for equipe in poule.equipes %}
-                                        <tr class="text-center">
+                                    {% for equipe in poule.equipes|sort((a, b) => a.nom|lower <=> b.nom|lower) %}
+                                        {% set position = null %}
+                                        {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
+                                        <tr class="hover:bg-(--color-base-200)" data-equipe="{{ equipe.id }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link font-bold flex items-center justify-center">
-                                                    {{ equipe.nom }}
-
-                                                </a>
+                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ equipe.nom }}</a>
                                             </td>
                                             <td>
-                                                <a class="link" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">
-                                                    {{ equipe.lieu.nom }}
-                                                </a>
+                                                {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
                                             </td>
                                             <td>
-                                                {% for creneau in equipe.lieu.creneaux %}
-                                                    <div class="text-sm">{{creneau.jourLibelle}} - {{creneau.heureDebut|format_time('short', locale='fr')}}</div>
+                                                {% for creneau in (equipe.lieu ? equipe.lieu.creneaux : []) %}
+                                                    <div>{{ creneau.jourLibelle }} · {{ creneau.heureDebut|format_time('short', locale='fr') }}</div>
+                                                {% else %}
+                                                    <span class="text-(--color-base-content)/70">Non défini</span>
                                                 {% endfor %}
                                             </td>
-                                            <td class="text-center font-bold">{% for classement in equipe.classements %}
-                                                    {% if classement.poule == poule %}{{ classement.position }}{% endif %}{%  endfor %}</td>
+                                            <td class="text-right font-display text-xl font-extrabold text-(--color-primary) tabular-nums">
+                                                {% if position is not null %}{{ position }}{% else %}<span class="opacity-50" aria-hidden="true">–</span><span class="sr-only">Non classé</span>{% endif %}
+                                            </td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
                                 </table>
                             </div>
-                            {# Affichage pour mobile sous forme de carte #}
-                            <div class="md:hidden flex flex-col gap-4 mt-4">
-                                {% for equipe in poule.equipes %}
-                                    {# J'ai remplacé w-96 par w-full pour que ça s'adapte à l'écran du téléphone #}
-                                    <div class="card w-full bg-base-100 shadow-md border border-base-200">
-                                        <div class="card-body p-4"> <div class="flex justify-between items-start">
-                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link font-bold">
-                                                <h3 class="card-title text-lg">{{equipe.nom}}</h3>
-                                                </a>
+                            {# Affichage pour mobile : cartes compactes, nom et classement en haut, gymnase et créneau dessous #}
+                            <div class="md:hidden flex flex-col gap-2">
+                                {% for equipe in poule.equipes|sort((a, b) => a.nom|lower <=> b.nom|lower) %}
+                                    {% set position = null %}
+                                    {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
+                                    <div class="card card-xs bg-base-100 border border-base-300" data-equipe="{{ equipe.id }}">
+                                        <div class="card-body px-3 py-2 gap-1">
+                                            <div class="flex items-center gap-3">
+                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="flex-1 min-w-0 link link-hover link-primary focus-visible:underline font-display font-medium text-lg tracking-wide py-0.5 break-words">{{ equipe.nom }}</a>
+                                                {% if position is not null %}
+                                                    <span class="shrink-0 font-display text-2xl font-extrabold text-(--color-primary) tabular-nums"><span class="sr-only">Classement : </span>{{ position }}<sup class="text-sm">{{ position == 1 ? 'er' : 'e' }}</sup></span>
+                                                {% endif %}
                                             </div>
-
-                                            <div class="text-sm mt-2">
-                                                <p class="font-semibold">📍 Lieu :</p>
-                                                <a class="link block truncate" href="https://www.google.com/maps/search/?api=1&query={{ equipe.lieu.adresse|url_encode }}" target="_blank" rel="noopener noreferrer">
-                                                    {{ equipe.lieu.nom }}
-                                                </a>
-                                            </div>
-
-                                            <div class="text-sm mt-2">
-                                                <p class="font-semibold">🕒 Créneaux :</p>
-                                                {% for creneau in equipe.lieu.creneaux %}
-                                                    <p>{{creneau.jourLibelle}} à {{creneau.heureDebut|format_time('short', locale='fr')}}</p>
-                                                {% else %}
-                                                    <p class="italic text-gray-500">Aucun créneau défini</p>
-                                                {% endfor %}
-                                            </div>
-                                            <div class="text-sm mt-2">
-{#                                            <p class="badge badge-primary">Classement : {{equipe.position}}</p>#}
-                                            </div>
+                                            <p class="text-sm">
+                                                {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
+                                                {% for creneau in (equipe.lieu ? equipe.lieu.creneaux : []) %} · {{ creneau.jourLibelle }} {{ creneau.heureDebut|format_time('short', locale='fr') }}{% endfor %}
+                                            </p>
                                         </div>
                                     </div>
                                 {% endfor %}

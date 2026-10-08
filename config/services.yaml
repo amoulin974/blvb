@@ -40,6 +40,11 @@ services:
         resource: '../src/Security/'
 
     # --------------------------------------------------------
+    # Extensions Twig
+    App\Twig\:
+        resource: '../src/Twig/'
+
+    # --------------------------------------------------------
     # Subscriber Doctrine pour créer automatiquement les phases/poules
     App\EventListener\SaisonListener:
         autowire: true
