@@ -162,6 +162,16 @@ final class UserController extends AbstractController
                     $prenom = strtolower(trim($row[2] ?? ''));
                     $telephone = strtolower(trim($row[3] ?? ''));
 
+                    // 2 bis. Format de l'adresse (l'entité User ne le vérifie pas)
+                    if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                        $rapportErreurs[] = [
+                            'ligne' => $numLigne,
+                            'email' => $email,
+                            'raison' => 'Adresse e-mail invalide'
+                        ];
+                        continue;
+                    }
+
                     // 3. Check doublon
                     if ($userRepository->findOneBy(['email' => $email])) {
                         $rapportErreurs[] = [
