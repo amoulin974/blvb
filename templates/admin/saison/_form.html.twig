@@ -56,8 +56,9 @@
     </div>
 
     <div class="form-control w-full">
-        {{ form_label(form.points_forfait, 'Point en cas de forfait', {'label_attr': {'class': 'label'}}) }}
-        {{ form_widget(form.points_forfait, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '0'}}) }}
+        {{ form_label(form.points_forfait, "Points de l'équipe déclarée forfait", {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(form.points_forfait, {'attr': {'class': 'input input-bordered w-full', 'placeholder': '-1'}}) }}
+        <p class="text-sm text-(--color-base-content)/80">Règlement : -1. L'équipe qui gagne par forfait reçoit les points d'une victoire bonifiée.</p>
 
         {{ form_errors(form.points_forfait) }}
     </div>

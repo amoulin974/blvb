@@ -47,8 +47,10 @@ class Saison
     #[ORM\Column(options: ['default' => 0])]
     private ?int $points_nul = 0;
 
-    #[ORM\Column(options: ['default' => -3])]
-    private ?int $points_forfait = -3;
+    // Points de l'équipe déclarée forfait (règlement : « -1 point pour le perdant ») ;
+    // le gagnant reçoit les points d'une victoire forte (ClassementService::pointsPourMatch)
+    #[ORM\Column(options: ['default' => -1])]
+    private ?int $points_forfait = -1;
 
     //Victoire non bonifiée
     #[ORM\Column(options: ['default' => 2])]

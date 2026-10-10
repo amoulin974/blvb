@@ -40,7 +40,7 @@ class SaisonType extends AbstractType
                 'required' => true
             ])
             ->add('points_forfait', TextType::class, [
-                'label' => 'Nombre de point gagné en cas de forfait',
+                'label' => "Points de l'équipe déclarée forfait (le gagnant reçoit les points d'une victoire 3-0)",
                 'required' => true
             ])
             ->add('points_nul', TextType::class, [
