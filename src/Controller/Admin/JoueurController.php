@@ -17,11 +17,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/joueur', name: 'admin_joueur_')]
 final class JoueurController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route(name: 'index', methods: ['GET'])]
     public function index(JoueurRepository $joueurRepository): Response
     {
         return $this->render('admin/joueur/index.html.twig', [
-            'joueurs' => $joueurRepository->findAll(),
+            'joueurs' => $joueurRepository->findBy([], ['nom' => 'ASC', 'prenom' => 'ASC']),
         ]);
     }
 
@@ -96,10 +98,12 @@ final class JoueurController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Joueur $joueur, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$joueur->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($joueur);
-            $entityManager->flush();
-        }
+        $this->supprimerEntite($request, $entityManager, $joueur, 'delete'.$joueur->getId(), 'la fiche de '.trim($joueur->getPrenom().' '.$joueur->getNom()), true, function () use ($joueur, $entityManager): void {
+            // Retire d'abord le joueur des compositions d'équipe (annoncé dans la fenêtre de confirmation)
+            foreach ($joueur->getMembres() as $membre) {
+                $entityManager->remove($membre);
+            }
+        });
 
         return $this->redirectToRoute('admin_joueur_index', [], Response::HTTP_SEE_OTHER);
     }

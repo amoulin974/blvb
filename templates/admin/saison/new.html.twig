@@ -1,23 +1,10 @@
-{# templates/task/new.html.twig #}
+{% extends 'base_admin.html.twig' %}
 
-{% extends 'base.html.twig' %}
+{% block title %}Créer une saison{% endblock %}
 
-
-
-{% block title %}
-Créer une nouvelle saison
-{% endblock %}
 {% block body %}
-
-    <h1>Créer une nouvelle saison</h1>
-    <div class="mt-2 w-4/5">
-
-        {{ include('admin/saison/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
-        <div class="mt-4 text-center">
-            <a class="btn btn-outline btn-secondary w-full" href="{{ path('admin_saison_index') }}">
-                Voir toutes les saisons
-            </a>
-        </div>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer une saison', retour: {url: path('admin_saison_index'), label: 'Saisons'}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/saison/_form.html.twig', {'button_label': 'Créer la saison'}) }}
     </div>
-
 {% endblock %}

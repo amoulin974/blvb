@@ -1,43 +1,39 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
 
-{% block title %}Partie index{% endblock %}
+{% block title %}Matchs{% endblock %}
 
 {% block body %}
-    <h1>Partie index</h1>
-    <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_partie_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        Créer un nouveau match</a>
-<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
-    <table class="border border-solid table table-xs table-zebra">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Date</th>
-                <th>Nb_set_gagnant_reception</th>
-                <th>Nb_set_gagnant_deplacement</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for partie in parties %}
-            <tr>
-                <td>{{ partie.id }}</td>
-                <td>{{ partie.date ? partie.date|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ partie.nbSetGagnantReception }}</td>
-                <td>{{ partie.nbSetGagnantDeplacement }}</td>
-                <td class="flex items-center gap-2">
-                    <a href="{{ path('admin_partie_show', {'id': partie.id}) }}">show</a>
-                    <a href="{{ path('admin_partie_edit', {'id': partie.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Matchs',
+        sous_titre: 'Outil technique : les matchs se génèrent et se déplacent depuis la page de chaque saison.',
+        actions: [{url: path('admin_partie_new'), label: 'Créer un match', icone: 'plus', principal: true}],
+    }) }}
+    <div class="admin-carte" data-controller="datatable" data-datatable-per-page-value="25">
+        <label class="input input-sm w-full max-w-xs mb-3">
+            <span class="sr-only">Rechercher un match</span>
+            <input type="search" placeholder="Rechercher…" data-datatable-target="search" data-action="input->datatable#filter">
+        </label>
+        <div class="overflow-x-auto">
+            <table class="table table-admin">
+                <thead>
+                <tr><th>Date</th><th>Match</th><th>Score</th><th>Poule</th><th data-datatable-no-sort><span class="sr-only">Actions</span></th></tr>
+                </thead>
+                <tbody data-datatable-target="body">
+                {% for partie in parties %}
+                    <tr>
+                        <td class="whitespace-nowrap">{{ partie.date ? partie.date|date('d/m/Y H:i') }}</td>
+                        <td><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_partie_edit', {id: partie.id}) }}">{{ partie.nomReception }} <span class="font-normal text-(--color-base-content)/70">contre</span> {{ partie.nomDeplacement }}</a></td>
+                        <td class="tabular-nums whitespace-nowrap">{{ partie.nbSetGagnantReception is not null ? partie.nbSetGagnantReception ~ '–' ~ partie.nbSetGagnantDeplacement : '–' }}</td>
+                        <td>{{ partie.poule ? partie.poule.phase.nom ~ ' · ' ~ partie.poule.nom }}</td>
+                        <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_partie_edit', {id: partie.id}) }}" aria-label="Modifier le match">{{ icone.i('crayon') }} Modifier</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">Aucun match.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="flex items-center justify-between mt-3" data-datatable-target="pagination"></div>
+    </div>
 {% endblock %}

@@ -1,34 +1,12 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Journee{% endblock %}
+{% block title %}Journée {{ journee.numero }}{% endblock %}
 
 {% block body %}
-    <h1>Journee</h1>
-
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ journee.id }}</td>
-            </tr>
-            <tr>
-                <th>Numero</th>
-                <td>{{ journee.numero }}</td>
-            </tr>
-            <tr>
-                <th>Date_debut</th>
-                <td>{{ journee.dateDebut ? journee.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Date_fin</th>
-                <td>{{ journee.dateFin ? journee.dateFin|date('Y-m-d H:i:s') : '' }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ path('admin_journee_index') }}">back to list</a>
-
-    <a href="{{ path('admin_journee_edit', {'id': journee.id}) }}">edit</a>
-
-    {{ include('admin/journee/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Journée ' ~ journee.numero,
+        sous_titre: (journee.dateDebut ? 'Du ' ~ journee.dateDebut|date('d/m/Y') : '') ~ (journee.dateFin ? ' au ' ~ journee.dateFin|date('d/m/Y') : ''),
+        retour: {url: path('admin_journee_index'), label: 'Journées'},
+        actions: [{url: path('admin_journee_edit', {id: journee.id}), label: 'Modifier', icone: 'crayon', principal: true}],
+    }) }}
 {% endblock %}

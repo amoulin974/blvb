@@ -1,52 +1,48 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
 
-{% block title %}Liste des utilisateurs{% endblock %}
+{% block title %}Utilisateurs{% endblock %}
 
 {% block body %}
-    <h1>Liste des utilisateurs</h1>
-<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100 p-4" data-controller="datatable" data-datatable-per-page-value="10">
-<a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_user_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-         Créer un nouvel utilisateur</a>
-    <a href="{{ path('admin_user_excel_explication') }}" class="btn btn-secondary">
-        Télécharger le modèle Excel pour importer en masse
-    </a>
-    <input type="text" placeholder="Rechercher..." class="input input-bordered input-sm w-full max-w-xs mb-3 mt-3 block"
-           data-datatable-target="search" data-action="input->datatable#filter">
-    <table class="border border-solid table table-xs table-zebra">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Email</th>
-                <th>Roles</th>
-                <th>IsVerified</th>
-                <th data-datatable-no-sort>actions</th>
-            </tr>
-        </thead>
-        <tbody data-datatable-target="body">
-        {% for user in users %}
-            <tr>
-                <td>{{ user.id }}</td>
-                <td>{{ user.email }}</td>
-                <td>{{ user.roles ? user.roles|json_encode : '' }}</td>
-                <td>{{ user.isVerified ? 'Yes' : 'No' }}</td>
-                <td class="flex items-center gap-2">
-{#                    <a href="{{ path('admin_user_show', {'id': user.id}) }}">show</a>#}
-                    <a class="btn btn-sm btn-neutral" href="{{ path('admin_user_edit', {'id': user.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                        </svg>Modifier</a>
-                    {{ include('admin/user/_delete_form.html.twig') }}
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="6">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-    <div class="flex items-center justify-between mt-3" data-datatable-target="pagination"></div>
-</div>
-
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Utilisateurs',
+        sous_titre: users|length ~ ' comptes de connexion. L\'import Excel crée aussi les fiches joueurs.',
+        actions: [
+            {url: path('admin_user_excel_explication'), label: 'Importer un fichier Excel', icone: 'fichier'},
+            {url: path('admin_user_new'), label: 'Créer un utilisateur', icone: 'plus', principal: true},
+        ],
+    }) }}
+    <div class="admin-carte" data-controller="datatable" data-datatable-per-page-value="25">
+        <label class="input input-sm w-full max-w-xs mb-3">
+            <span class="sr-only">Rechercher un utilisateur</span>
+            <input type="search" placeholder="Rechercher…" data-datatable-target="search" data-action="input->datatable#filter">
+        </label>
+        <div class="overflow-x-auto">
+            <table class="table table-admin">
+                <thead>
+                <tr>
+                    <th>E-mail</th>
+                    <th>Nom</th>
+                    <th>Rôle</th>
+                    <th>Compte vérifié</th>
+                    <th data-datatable-no-sort><span class="sr-only">Actions</span></th>
+                </tr>
+                </thead>
+                <tbody data-datatable-target="body">
+                {% for user in users %}
+                    <tr>
+                        <td class="break-all"><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_user_edit', {id: user.id}) }}">{{ user.email }}</a></td>
+                        <td>{{ user.prenom }} {{ user.nom }}</td>
+                        <td>{% if 'ROLE_ADMIN' in user.roles %}<span class="badge badge-sm badge-primary">Administrateur</span>{% else %}Utilisateur{% endif %}</td>
+                        <td>{{ user.isVerified ? 'Oui' : 'Non' }}</td>
+                        <td class="text-right"><a href="{{ path('admin_user_edit', {id: user.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier le compte {{ user.email }}">{{ icone.i('crayon') }} Modifier</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">Aucun utilisateur.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="flex items-center justify-between mt-3" data-datatable-target="pagination"></div>
+    </div>
 {% endblock %}

@@ -1,35 +1,17 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Utilisateur{% endblock %}
+{% block title %}{{ user.email }}{% endblock %}
 
 {% block body %}
-    <h1>Utilisateur {{user.email}}</h1>
-
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ user.id }}</td>
-            </tr>
-            <tr>
-                <th>Email</th>
-                <td>{{ user.email }}</td>
-            </tr>
-            <tr>
-                <th>Roles</th>
-                <td>{{ user.roles ? user.roles|json_encode : '' }}</td>
-            </tr>
-        
-            <tr>
-                <th>IsVerified</th>
-                <td>{{ user.isVerified ? 'Yes' : 'No' }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ path('admin_user_index') }}" class="btn btn-sm btn-info">Retourner à la liste des utilisateurs</a>
-
-    <a href="{{ path('admin_user_edit', {'id': user.id}) }} " class="btn btn-sm btn-neutral">Modifier l'utilisateur</a>
-
-    {{ include('admin/user/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {
+        titre: user.email,
+        retour: {url: path('admin_user_index'), label: 'Utilisateurs'},
+        actions: [{url: path('admin_user_edit', {id: user.id}), label: 'Modifier', icone: 'crayon', principal: true}],
+    }) }}
+    <div class="admin-carte max-w-2xl">
+        <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1">
+            <dt class="text-(--color-base-content)/80">Rôle</dt><dd>{{ 'ROLE_ADMIN' in user.roles ? 'Administrateur' : 'Utilisateur' }}</dd>
+            <dt class="text-(--color-base-content)/80">Compte vérifié</dt><dd>{{ user.isVerified ? 'Oui' : 'Non' }}</dd>
+        </dl>
+    </div>
 {% endblock %}

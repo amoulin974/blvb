@@ -1,30 +1,27 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 {% block title %}Optimiser les matchs de la phase {{ phase.nom }}{% endblock %}
 {% block container_width %}max-w-[107rem]{% endblock %}
 {% block body %}
-        <h1 class="mb-2">Optimiser les matchs de la phase {{ phase.nom }}</h1>
-
+        {{ include('admin/_entete.html.twig', {
+            titre: 'Optimiser les matchs · ' ~ phase.nom,
+            sous_titre: phase.saison.nom ~ '. Alternance domicile / extérieur par poule et charge des gymnases.',
+            retour: {url: path('admin_saison_show', {id: phase.saison.id}), label: phase.saison.nom},
+        }) }}
         <div class="flex items-center gap-3 mb-6">
-            <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': phase.saison.id}) }}">Revenir à la saison</a>
-            <button type="button" class="btn btn-sm btn-warning" onclick="document.getElementById('modalOptimiserTout').classList.add('modal-open')">Optimiser toutes les poules</button>
-        </div>
-
-        <div id="modalOptimiserTout" class="modal">
-            <div class="modal-box">
-                <h3 class="font-bold text-lg">Optimisation de toutes les poules</h3>
-                <p class="py-4">
-                    Cette action supprime et recrée tous les matchs de toutes les poules de cette phase.
-                    Le calcul peut prendre <strong>plusieurs secondes, jusqu'à une dizaine</strong> selon le
-                    nombre d'équipes et de poules : merci de patienter sans recharger la page une fois lancé.
-                </p>
-                <div class="modal-action">
-                    <button type="button" class="btn btn-ghost" onclick="document.getElementById('modalOptimiserTout').classList.remove('modal-open')">Annuler</button>
-                    <form action="{{ path('admin_phase_optimisertout', {'id': phase.id}) }}" method="POST">
-                        <input type="hidden" name="_token" value="{{ csrf_token('optimisertout' ~ phase.id) }}">
-                        <button type="submit" class="btn btn-warning">Lancer l'optimisation</button>
-                    </form>
-                </div>
-            </div>
+            {{ include('admin/_confirmation.html.twig', {
+                declencheur: 'Optimiser toutes les poules',
+                declencheur_icone: 'eclair',
+                declencheur_classe: 'btn btn-sm btn-outline btn-warning',
+                titre: 'Recalculer les matchs de toutes les poules de ' ~ phase.nom ~ ' ?',
+                consequences: [
+                    'Tous les matchs de toutes les poules de cette phase sont supprimés puis recréés : scores, dates et gymnases modifiés à la main seront perdus.',
+                    'Le calcul peut prendre jusqu\'à une dizaine de secondes : patientez sans recharger la page.',
+                ],
+                bouton: 'Lancer l\'optimisation',
+                ton: 'warning',
+                action: path('admin_phase_optimisertout', {id: phase.id}),
+                token: csrf_token('optimisertout' ~ phase.id),
+            }) }}
         </div>
 
         <div class="flex flex-col lg:flex-row gap-8">
@@ -36,10 +33,17 @@
                     <div>
                         <div class="flex items-center gap-3 mb-2">
                             <h2 class="font-bold text-lg">{{ data.poule.nom }}</h2>
-                            <form action="{{ path('admin_partie_optimiser', {'id': data.poule.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer et recréer les matchs de la poule {{ data.poule.nom }} ? Cette action est irréversible.');">
-                                <input type="hidden" name="_token" value="{{ csrf_token('optimiser' ~ data.poule.id) }}">
-                                <button type="submit" class="btn btn-xs btn-warning">Optimiser</button>
-                            </form>
+                            {{ include('admin/_confirmation.html.twig', {
+                                declencheur: 'Optimiser cette poule',
+                                declencheur_icone: 'eclair',
+                                declencheur_classe: 'btn btn-xs btn-outline btn-warning',
+                                titre: 'Recalculer les matchs de la poule ' ~ data.poule.nom ~ ' ?',
+                                consequences: ['Les matchs de la poule sont supprimés puis recréés : scores, dates et gymnases modifiés à la main seront perdus.'],
+                                bouton: 'Lancer l\'optimisation',
+                                ton: 'warning',
+                                action: path('admin_partie_optimiser', {id: data.poule.id}),
+                                token: csrf_token('optimiser' ~ data.poule.id),
+                            }) }}
                         </div>
                         <div class="overflow-x-auto w-full">
                             <table class="table table-xs w-full" style="border-collapse: collapse;">

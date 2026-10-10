@@ -1,0 +1,9 @@
+{# Zone de suppression en bas d'une page de modification : la suppression n'est plus proposée dans les listes.
+   Variables : resume (phrase sous le titre) + celles de admin/_confirmation.html.twig (action, token, titre, consequences, blocage). #}
+<section class="mt-10 rounded-box border border-(--color-error)/30 bg-base-100 p-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+        <h2 class="text-lg">Supprimer</h2>
+        <p class="text-sm text-(--color-base-content)/80">{{ resume }}</p>
+    </div>
+    {{ include('admin/_confirmation.html.twig', {declencheur_classe: 'btn btn-outline btn-error btn-sm'}) }}
+</section>

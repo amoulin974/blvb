@@ -24,6 +24,8 @@ use function PHPUnit\Framework\throwException;
 #[Route('/admin/partie', name: 'admin_partie_')]
 final class PartieController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route("/", name: 'index', methods: ['GET'])]
     public function index(PartieRepository $partieRepository): Response
     {
@@ -85,13 +87,7 @@ final class PartieController extends AbstractController
         $poule = $partie->getPoule();
         $saisonId = $poule->getPhase()->getSaison()->getId();
 
-        // Vérification du jeton CSRF pour la sécurité
-        if ($this->isCsrfTokenValid('delete'.$partie->getId(), $request->request->get('_token'))) {
-            $entityManager->remove($partie);
-            $entityManager->flush();
-
-            $this->addFlash('success', 'Le match a été supprimé avec succès.');
-        }
+        $this->supprimerEntite($request, $entityManager, $partie, 'delete'.$partie->getId(), sprintf('le match %s contre %s', $partie->getNomReception(), $partie->getNomDeplacement()));
 
         // On redirige vers la vue "show" de la saison en ajoutant l'ancre vers la poule
         return $this->redirectToRoute('admin_saison_show', [

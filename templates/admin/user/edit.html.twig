@@ -1,15 +1,11 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Modification de l'utilisateur {{user.email}}{% endblock %}
+{% block title %}Modifier le compte {{ user.email }}{% endblock %}
 
 {% block body %}
-    <h1>Modification de l'utilisateur {{user.email}}</h1>
-
-    {{ include('admin/user/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <div class="flex">
-        <a href="{{ path('admin_user_index') }}" class="btn btn-info btn-sm">Revenir à la liste des utilisateurst</a>
-
-        {{ include('admin/user/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {titre: 'Modifier le compte', sous_titre: user.email, retour: {url: path('admin_user_index'), label: 'Utilisateurs'}}) }}
+    <div class="admin-carte max-w-2xl">
+        {{ include('admin/user/_form.html.twig', {'button_label': 'Enregistrer'}) }}
     </div>
+    <div class="max-w-2xl">{{ include('admin/user/_delete_form.html.twig') }}</div>
 {% endblock %}

@@ -1,0 +1,20 @@
+{# En-tête de page du back-office : lien de retour, titre, sous-titre, actions (la première marquée « principal » en bouton plein).
+   Variables : titre, sous_titre (facultatif), retour {url, label} (facultatif),
+               actions : liste de {url, label, icone (facultatif), principal (booléen)} (facultatif). #}
+{% import 'admin/_icones.html.twig' as icone %}
+<div class="mb-6 flex flex-wrap items-end justify-between gap-3">
+    <div class="min-w-0">
+        {% if retour is defined and retour %}
+            <a href="{{ retour.url }}" class="inline-flex items-center gap-1 text-sm text-(--color-base-content)/80 hover:text-(--color-primary) hover:underline mb-1">{{ icone.i('retour') }} {{ retour.label }}</a>
+        {% endif %}
+        <h1 class="leading-tight">{{ titre }}</h1>
+        {% if sous_titre is defined and sous_titre %}<p class="mt-1 text-(--color-base-content)/80">{{ sous_titre }}</p>{% endif %}
+    </div>
+    {% if actions is defined and actions|length > 0 %}
+        <div class="flex flex-wrap items-center gap-2">
+            {% for action in actions %}
+                <a href="{{ action.url }}" class="btn btn-sm {{ action.principal|default(false) ? 'btn-primary' : 'btn-ghost' }}">{% if action.icone|default(false) %}{{ icone.i(action.icone) }}{% endif %} {{ action.label }}</a>
+            {% endfor %}
+        </div>
+    {% endif %}
+</div>

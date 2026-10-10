@@ -1,15 +1,11 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Modifier la fiche joueur{% endblock %}
+{% block title %}Modifier la fiche de {{ joueur.prenom }} {{ joueur.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Modifier la fiche de {{ joueur.prenom }} {{ joueur.nom }}</h1>
-
-    {{ include('admin/joueur/_form.html.twig', {'button_label': 'Update'}) }}
-
-    <div class="flex gap-2 mt-4">
-        <a class="btn btn-neutral btn-sm" href="{{ path('admin_joueur_index') }}">Revenir à la liste des joueurs</a>
-
-        {{ include('admin/joueur/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {titre: 'Modifier la fiche de ' ~ joueur.prenom ~ ' ' ~ joueur.nom, retour: {url: path('admin_joueur_show', {id: joueur.id}), label: 'Fiche du joueur'}}) }}
+    <div class="admin-carte max-w-2xl">
+        {{ include('admin/joueur/_form.html.twig', {'button_label': 'Enregistrer'}) }}
     </div>
+    <div class="max-w-2xl">{{ include('admin/joueur/_delete_form.html.twig') }}</div>
 {% endblock %}

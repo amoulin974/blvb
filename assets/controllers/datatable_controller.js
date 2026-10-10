@@ -102,6 +102,8 @@ export default class extends Controller {
 
     updateHeaderIndicators() {
         this.headers.forEach((th, index) => {
+            // Colonne non triable : contenu laissé tel quel (ex. libellé réservé aux lecteurs d'écran)
+            if (th.dataset.datatableNoSort !== undefined) return;
             if (index === this.sortColumn) {
                 th.textContent = `${th.dataset.label} ${this.sortDir === 'asc' ? '▲' : '▼'}`;
             } else {

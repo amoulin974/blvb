@@ -1,11 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}New Journee{% endblock %}
+{% block title %}Créer une journée{% endblock %}
 
 {% block body %}
-    <h1>Create new Journee</h1>
-
-    {{ include('admin/journee/_form.html.twig') }}
-
-    <a href="{{ path('admin_journee_index') }}">back to list</a>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer une journée', retour: {url: path('admin_journee_index'), label: 'Journées'}}) }}
+    <div class="admin-carte max-w-2xl">
+        {{ include('admin/journee/_form.html.twig', {'button_label': 'Créer la journée'}) }}
+    </div>
 {% endblock %}
