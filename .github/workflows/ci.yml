@@ -1,0 +1,145 @@
+# Intégration continue BLVB — voir tests/SPECIFICATIONS.md §6.
+# Mêmes versions que la production : PHP 8.4 (image dunglas/frankenphp:1-php8.4) et MySQL 8.4.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+  schedule:
+    # Chaque nuit (3 h UTC) : tous les tests, y compris les tests lents
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PHP_VERSION: '8.4'
+  PHP_EXTENSIONS: intl, pdo_mysql, zip, gd, mbstring
+
+jobs:
+  qualite:
+    name: Qualité
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Dépendances
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Vérifications statiques (Twig, YAML, conteneur, composer.json)
+        run: composer qualite
+
+  tests:
+    name: Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -proot"
+          --health-interval=5s --health-timeout=5s --health-retries=30
+    env:
+      # La base de test est dérivée de ce nom : blvb_test (suffixe _test, config/packages/doctrine.yaml)
+      DATABASE_URL: mysql://root:root@127.0.0.1:3306/blvb?serverVersion=8.4.7&charset=utf8mb4
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: pcov
+          tools: composer:v2
+
+      - name: Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: composer-${{ runner.os }}-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-${{ runner.os }}-
+
+      - name: Dépendances
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Base de test reconstruite par les migrations
+        run: |
+          php bin/console doctrine:database:create --env=test --if-not-exists
+          php bin/console doctrine:migrations:migrate --env=test --no-interaction
+          php bin/console doctrine:schema:validate --env=test
+
+      - name: CSS (les gabarits référencent la feuille compilée)
+        run: php bin/console tailwind:build
+
+      - name: Tests (hors tests lents)
+        if: github.event_name != 'schedule'
+        run: php bin/phpunit --testdox --log-junit var/junit.xml --coverage-clover var/coverage.xml
+
+      - name: Tous les tests, y compris les lents (nuit)
+        if: github.event_name == 'schedule'
+        run: php bin/phpunit --testdox --exclude-group anomalie --log-junit var/junit.xml --coverage-clover var/coverage.xml
+
+      - name: Rapports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: rapports-tests
+          path: |
+            var/junit.xml
+            var/coverage.xml
+            var/log/test.log
+          if-no-files-found: ignore
+          retention-days: 14
+
+  securite:
+    # Informatif tant que les dépendances n'ont pas été mises à jour (vulnérabilités connues au 10/10/2026) :
+    # le job affiche les failles sans bloquer. À rendre bloquant après la mise à jour (retirer continue-on-error).
+    name: Sécurité des dépendances (informatif)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: ${{ env.PHP_EXTENSIONS }}
+          coverage: none
+          tools: composer:v2
+
+      - name: Dépendances
+        run: composer install --no-progress --prefer-dist --no-interaction
+
+      - name: Vulnérabilités PHP (composer audit)
+        run: composer audit
+
+      - name: Vulnérabilités JavaScript (importmap:audit)
+        if: always()
+        run: php bin/console importmap:audit

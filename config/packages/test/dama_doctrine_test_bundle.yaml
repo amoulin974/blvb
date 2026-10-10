@@ -1,0 +1,5 @@
+# Isolation des tests : chaque test s'exécute dans une transaction annulée à la fin (tests/SPECIFICATIONS.md §3.2)
+dama_doctrine_test:
+    enable_static_connection: true
+    enable_static_meta_data_cache: true
+    enable_static_query_cache: true

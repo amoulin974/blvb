@@ -36,8 +36,9 @@ final class PouleFactory extends PersistentObjectFactory
         return [
             'nb_descente_defaut' => 2,
             'nb_montee_defaut' => 2,
-            'nom' => self::faker()->text(255),
+            'nom' => 'Poule '.self::faker()->unique()->randomLetter(),
             'niveau' => 1,
+            'phase' => PhaseFactory::new(),
         ];
     }
 

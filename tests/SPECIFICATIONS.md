@@ -75,8 +75,8 @@ tests/
 │   └── Fumee/                        toutes les pages s'affichent
 ├── Support/
 │   ├── Story/ChampionnatDeTest.php   ← jeu de données de référence (§3.3)
-│   ├── Trait/ConnexionTrait.php      ← se connecter en tant que <profil>
-│   └── Assertion/…                   ← assertions métier réutilisables
+│   ├── TestIntegration.php           ← base KernelTestCase (Factories, ResetDatabase)
+│   └── TestFonctionnel.php           ← base WebTestCase : client, connecter('<compte>'), assertions d'accès
 └── recette/README.md              ← (existant) base de recette manuelle, sans rapport avec la CI
 ```
 
@@ -99,7 +99,7 @@ tests/
 
 ### 3.3 Données de test : factories et « championnat de référence »
 
-**Factories à ajouter** (absentes aujourd'hui) : `JoueurFactory`, `MembreEquipeFactory`, `IndisponibiliteFactory`. Les factories existantes sont revues pour suivre le modèle actuel (ex. `MembreEquipe` a remplacé l'ancien champ capitaine).
+**Factories** (`src/Factory`, partagées avec les données de démonstration) : `JoueurFactory`, `MembreEquipeFactory` et `IndisponibiliteFactory` ajoutées au lot 0 ; les factories existantes ont reçu des valeurs par défaut valides et réalistes (e-mails `@blvb.test`, créneau mercredi 20:30, phase non close…).
 
 **Story `ChampionnatDeTest`** — le plus petit jeu de données qui permet de tout tester. Construit en mémoire à chaque test (rapide grâce aux transactions), jamais copié d'une vraie base :
 
@@ -111,7 +111,7 @@ tests/
 | Phase 2 | vide, ordre 2 (pour la clôture) |
 | Gymnases | G1 (1 créneau mercredi 20:30, 1 terrain, priorité 1), G2 (2 créneaux, 2 terrains), G3 (aucun créneau) |
 | Équipes | A1–A4, B1–B3 ; A4 sans gymnase |
-| Journées / matchs | générés par les services réels ; certains matchs **dans le passé** (J−7), d'autres **dans le futur** (J+7) |
+| Journées / matchs | créés explicitement (indépendants du générateur, testé à part au lot 4) : journée 1 la semaine passée (A1–A2 hier **sans score** = match de référence, A3–A4 3–1, B1–B2 3–2), journée 2 la semaine prochaine |
 | Comptes | `admin` (ROLE_ADMIN) · `cap.a1` capitaine de A1 (qui reçoit le match de référence) · `cap.a2` capitaine de A2 (qui se déplace) · `cap.b1` capitaine de B1 (autre poule) · `joueur.a1` simple joueur de A1 · `joueur.a2` simple joueur de A2 · `cap.a1.precedente` capitaine de A1 la saison précédente seulement · `sans.equipe` compte sans fiche joueur |
 | Match de référence | `A1 reçoit A2`, joué hier, sans score |
 
@@ -354,17 +354,19 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 | `bin/console lint:yaml config translations` | bloquant | — | |
 | `bin/console lint:container` | bloquant | — | Injection de dépendances |
 | `doctrine:schema:validate` | bloquant | — | Mapping et migrations concordent |
-| `composer validate --strict`, `composer audit` | bloquant | — | Dépendances vulnérables |
-| `bin/console importmap:audit` | avertissement | bloquant | Paquets JS vulnérables |
+| `composer validate --no-check-publish` | bloquant | — | `--strict` exigerait `name`/`description`, inutiles pour une application |
+| `composer audit`, `bin/console importmap:audit` | **informatif** (job `securite`, `continue-on-error`) | bloquant après la mise à jour des dépendances | Au 10/10/2026 : ~40 vulnérabilités connues côté PHP (PhpSpreadsheet, Twig, composants Symfony) et 3 côté JavaScript |
 | Couverture (pcov) | publiée, non bloquante | seuils par fichier critique (§6.3) | |
 | Infection (tests de mutation) | — | sur `ClassementService` et l'API de score | Vérifie que les tests détectent vraiment les changements de règle |
 
 Raccourcis Composer (exécutables à l'identique en local et en CI) :
 
 ```
-composer qualite   → lint:twig, lint:yaml, lint:container, phpstan, php-cs-fixer --dry-run
-composer tests     → bin/phpunit (hors groupe lent)
-composer tests:tout→ bin/phpunit (avec groupe lent)
+composer qualite   → lint:twig, lint:yaml, lint:container, composer validate (phpstan et php-cs-fixer au lot 5)
+composer tests     → bin/phpunit (hors groupes lent et anomalie)
+composer tests:tout→ bin/phpunit (avec le groupe lent)
+composer securite  → composer audit + importmap:audit
+En local, dans Docker : docker compose exec php composer tests
 ```
 
 ---
@@ -413,7 +415,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 
 | Lot | Contenu | Livrable vérifiable | Charge estimée |
 |---|---|---|---|
-| **0 — Socle** | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, traits de connexion, workflow GitHub Actions (jobs `qualite` minimal + `tests`), raccourcis Composer | CI verte sur un premier test trivial ; `composer tests` fonctionne en local dans Docker | 0,5 j |
+| **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
 | **1 — Accès** | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la CI | 0,5 j |
 | **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |

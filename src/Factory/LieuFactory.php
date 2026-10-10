@@ -34,8 +34,8 @@ final class LieuFactory extends PersistentObjectFactory
     protected function defaults(): array|callable
     {
         return [
-            'adresse' => self::faker()->text(),
-            'nom' => self::faker()->text(255),
+            'adresse' => self::faker()->streetAddress().', '.self::faker()->city(),
+            'nom' => 'Gymnase '.self::faker()->unique()->lastName(),
         ];
     }
 
