@@ -34,7 +34,7 @@ final class EquipeFactory extends PersistentObjectFactory
     protected function defaults(): array|callable
     {
         return [
-            'nom' => self::faker()->text(255),
+            'nom' => mb_strtoupper(self::faker()->unique()->city()).' VB',
         ];
     }
 

@@ -34,14 +34,19 @@ final class UserFactory extends PersistentObjectFactory
     #[\Override]
     protected function defaults(): array|callable
     {
+        // Adresses en @blvb.test uniquement (jamais de données réelles) ; mot de passe non utilisable pour se connecter
+        // par formulaire : les tests utilisent KernelBrowser::loginUser()
+        $prenom = self::faker()->firstName();
+        $nom = self::faker()->lastName();
+
         return [
-            'email' => self::faker()->text(180),
-            'isVerified' => self::faker()->boolean(),
-            'nom' => self::faker()->text(255),
-            'password' => self::faker()->text(),
-            'prenom' => self::faker()->text(255),
+            'email' => self::faker()->unique()->userName().'@blvb.test',
+            'isVerified' => true,
+            'nom' => $nom,
+            'password' => 'non-utilisable',
+            'prenom' => $prenom,
             'roles' => [],
-            'telephone' => self::faker()->text(255),
+            'telephone' => null,
         ];
     }
 

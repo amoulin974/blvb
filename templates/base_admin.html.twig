@@ -1,0 +1,147 @@
+{# Gabarit du back-office : bandeau marine (monogramme + « Administration »), menu latéral propre à l'admin
+   rangé dans l'ordre du travail, messages flash. Charte : voir assets/styles/app.css (thème lofi). #}
+{% import 'admin/_icones.html.twig' as icone %}
+<!DOCTYPE html>
+<html lang="fr" data-theme="lofi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Administration{% endblock %} · Administration BLVB</title>
+    <link rel="icon" href="{{ asset('images/favicon.svg') }}" type="image/svg+xml">
+    {% block stylesheets %}
+        <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
+    {% endblock %}
+    {% block javascripts %}
+        {{ importmap('app') }}
+    {% endblock %}
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.20/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/daygrid@6.1.20/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/interaction@6.1.20/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/multimonth@6.1.20/index.global.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@fullcalendar/core@6.1.20/locales/fr.global.min.js"></script>
+</head>
+<body class="bg-base-200 text-base-content min-h-screen" data-controller="confirmation">
+{% set route = app.request.attributes.get('_route') ?? '' %}
+{% set saisonCourante = admin_saison_courante() %}
+{% set surSaisonCourante = route starts with 'admin_saison_' and saisonCourante and app.request.attributes.get('id') == saisonCourante.id %}
+{% set outilsActifs = route starts with 'admin_phase_' or route starts with 'admin_poule_' or route starts with 'admin_journee_' or route starts with 'admin_partie_' %}
+
+<header class="navbar bg-primary text-white min-h-14 px-2 lg:px-4 gap-2">
+    <label for="admin-tiroir" aria-label="Ouvrir le menu" class="btn btn-square btn-ghost text-white lg:hidden">{{ icone.i('menu', 'size-6') }}</label>
+    <a href="{{ path('app_admin_dashboard') }}" class="flex items-center gap-3 no-underline">
+        {{ include('front/fragments/_logo.html.twig', {class: 'h-7 w-auto'}) }}
+        <span class="font-display text-lg font-semibold uppercase tracking-wider text-white/90 border-l border-white/30 pl-3">Administration</span>
+    </a>
+    <div class="flex-1"></div>
+    <a href="{{ path('front_index') }}" class="btn btn-ghost btn-sm text-white hidden sm:inline-flex">{{ icone.i('externe') }} Voir le site</a>
+</header>
+
+<div class="drawer lg:drawer-open">
+    <input id="admin-tiroir" type="checkbox" class="drawer-toggle">
+
+    <div class="drawer-content min-w-0">
+        <main class="p-4 lg:p-8">
+            <div class="mx-auto {% block container_width %}max-w-6xl{% endblock %}">
+                {% for label, messages in app.flashes %}
+                    {% set type = {success: 'success', error: 'error', danger: 'error', warning: 'warning'}[label] ?? 'info' %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ type }} alert-soft mb-4" role="{{ type == 'error' ? 'alert' : 'status' }}">
+                            {% if type == 'error' or type == 'warning' %}{{ icone.i('alerte', 'size-5') }}{% endif %}
+                            <span>{{ message }}</span>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+                {% block body %}{% endblock %}
+            </div>
+        </main>
+    </div>
+
+    <div class="drawer-side z-40">
+        <label for="admin-tiroir" aria-label="Fermer le menu" class="drawer-overlay"></label>
+        <nav class="admin-nav bg-base-100 border-r border-base-300 min-h-full w-64 p-3 flex flex-col gap-1" aria-label="Menu de l'administration">
+            {% set lien = 'flex items-center gap-3' %}
+            <ul class="menu w-full p-0 gap-0.5">
+                <li><a href="{{ path('app_admin_dashboard') }}" class="{{ lien }} {{ route == 'app_admin_dashboard' ? 'menu-active' }}" {% if route == 'app_admin_dashboard' %}aria-current="page"{% endif %}>{{ icone.i('accueil', 'size-5') }} Tableau de bord</a></li>
+            </ul>
+
+            <p class="admin-menu-titre">Saison</p>
+            <ul class="menu w-full p-0 gap-0.5">
+                {% if saisonCourante %}
+                    <li><a href="{{ path('admin_saison_show', {id: saisonCourante.id}) }}" class="{{ lien }} {{ surSaisonCourante ? 'menu-active' }}" {% if surSaisonCourante %}aria-current="page"{% endif %}>
+                        {{ icone.i('etoile', 'size-5') }}
+                        <span class="flex flex-col leading-tight"><span>Saison en cours</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
+                    </a></li>
+                {% endif %}
+                {% set actif = route starts with 'admin_saison_' and not surSaisonCourante %}
+                <li><a href="{{ path('admin_saison_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('saison', 'size-5') }} Toutes les saisons</a></li>
+            </ul>
+
+            <p class="admin-menu-titre">Championnat</p>
+            <ul class="menu w-full p-0 gap-0.5">
+                {% for entree in [
+                    {prefixe: 'admin_equipe_', route: 'admin_equipe_index', label: 'Équipes', icone: 'equipes'},
+                    {prefixe: 'admin_joueur_', route: 'admin_joueur_index', label: 'Joueurs', icone: 'joueur'},
+                    {prefixe: 'admin_user_', route: 'admin_user_index', label: 'Utilisateurs', icone: 'compte'},
+                    {prefixe: 'admin_lieu_', route: 'admin_lieu_index', label: 'Gymnases', icone: 'gymnase'},
+                ] %}
+                    {% set actif = route starts with entree.prefixe %}
+                    <li><a href="{{ path(entree.route) }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i(entree.icone, 'size-5') }} {{ entree.label }}</a></li>
+                {% endfor %}
+            </ul>
+
+            <ul class="menu w-full p-0 mt-3">
+                <li>
+                    <details {{ outilsActifs ? 'open' }}>
+                        <summary class="{{ lien }}">{{ icone.i('outils', 'size-5') }} Outils techniques</summary>
+                        <ul>
+                            {% for entree in [
+                                {prefixe: 'admin_phase_', route: 'admin_phase_index', label: 'Phases'},
+                                {prefixe: 'admin_poule_', route: 'admin_poule_index', label: 'Poules'},
+                                {prefixe: 'admin_journee_', route: 'admin_journee_index', label: 'Journées'},
+                                {prefixe: 'admin_partie_', route: 'admin_partie_index', label: 'Matchs'},
+                            ] %}
+                                {% set actif = route starts with entree.prefixe %}
+                                <li><a href="{{ path(entree.route) }}" class="{{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ entree.label }}</a></li>
+                            {% endfor %}
+                        </ul>
+                    </details>
+                </li>
+            </ul>
+
+            <ul class="menu w-full p-0 mt-auto pt-4 border-t border-base-300 gap-0.5">
+                <li><a href="{{ path('front_index') }}" class="{{ lien }}">{{ icone.i('externe', 'size-5') }} Voir le site</a></li>
+                <li>
+                    <form method="post" action="{{ path('app_logout') }}" class="p-0">
+                        <button type="submit" class="{{ lien }} w-full px-3 py-1.5 text-left">{{ icone.i('sortie', 'size-5') }} Se déconnecter</button>
+                    </form>
+                </li>
+            </ul>
+            {% if app.user %}<p class="px-3 pt-2 text-xs opacity-70 break-all">Connecté : {{ app.user.userIdentifier }}</p>{% endif %}
+        </nav>
+    </div>
+</div>
+{# Fenêtre de confirmation partagée : remplie par confirmation_controller.js depuis les boutons admin/_confirmation.html.twig #}
+<dialog class="modal" data-confirmation-target="dialogue" aria-labelledby="confirmation-titre">
+    <div class="modal-box max-w-lg">
+        <h3 id="confirmation-titre" class="flex items-start gap-2 text-xl">
+            <span class="mt-0.5 text-error"><span data-confirmation-target="iconeAlerte">{{ icone.i('alerte', 'size-6') }}</span><span data-confirmation-target="iconeBlocage" class="hidden">{{ icone.i('cadenas', 'size-6') }}</span></span>
+            <span data-confirmation-target="titre"></span>
+        </h3>
+        <ul class="mt-4 list-disc pl-5 space-y-1" data-confirmation-target="consequences"></ul>
+        <p class="mt-4 hidden" data-confirmation-target="blocage"></p>
+        <p class="mt-4 font-semibold" data-confirmation-target="definitive">Cette action est définitive.</p>
+        <div class="modal-action">
+            <form method="dialog"><button class="btn btn-ghost" data-confirmation-target="annuler">Annuler</button></form>
+            <form method="post" data-confirmation-target="formulaire">
+                <input type="hidden" name="_token" data-confirmation-target="token">
+                <span data-confirmation-target="champs"></span>
+                <button type="submit" class="btn btn-error" data-confirmation-target="bouton">Supprimer définitivement</button>
+            </form>
+        </div>
+    </div>
+    <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+</dialog>
+{% block extra_scripts %}{% endblock %}
+{% block extra_styles %}{% endblock %}
+</body>
+</html>

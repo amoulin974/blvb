@@ -9,7 +9,7 @@
                     {% if partie.getNbSetGagnantReception is null and partie.getNbSetGagnantDeplacement is null %}
                         <span class="opacity-60">–</span>
                     {% else %}
-                        <strong class="tabular-nums">{{ partie.getNbSetGagnantReception }}–{{ partie.getNbSetGagnantDeplacement }}</strong>
+                        <strong class="tabular-nums">{{ partie.getNbSetGagnantReception|sets }}–{{ partie.getNbSetGagnantDeplacement|sets }}</strong>{% if forfait_de(partie) %}<span class="sr-only"> (forfait de {{ forfait_de(partie).nom }})</span>{% endif %}
                     {% endif %}
                     {{ partie.idEquipeDeplace.nom }}
                     {% if partie.getNbSetGagnantReception is null and partie.getNbSetGagnantDeplacement is null %}<span class="opacity-70">(à venir)</span>{% endif %}

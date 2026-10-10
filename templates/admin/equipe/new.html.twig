@@ -1,16 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Créer une nouvelle équipe{% endblock %}
+{% block title %}Créer une équipe{% endblock %}
 
 {% block body %}
-<div class="container mx-auto max-w-md p-4">
-    <h1>Créer une nouvelle équipe</h1>
-    {{ include('admin/equipe/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
-    <p>L'ajout d'une équipe dans une poule se fait depuis cette poule</p>
-    <div class="mt-4 text-center">
-        <a class="btn btn-outline btn-secondary w-full" href="{{ path('admin_equipe_index') }}">
-            Voir toutes les équipes
-        </a>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer une équipe', sous_titre: "L'ajout d'une équipe dans une poule se fait ensuite depuis la poule.", retour: {url: path('admin_equipe_index'), label: 'Équipes'}}) }}
+    <div class="admin-carte max-w-2xl">
+        {{ include('admin/equipe/_form.html.twig', {'button_label': 'Créer l\'équipe'}) }}
     </div>
-</div>
 {% endblock %}

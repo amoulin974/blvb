@@ -21,11 +21,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/saison', name: 'admin_saison_')]
 final class SaisonController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route('/saison', name: 'index', methods: ['GET'])]
     public function index(SaisonRepository $saisonRepository): Response
     {
         return $this->render('admin/saison/index.html.twig', [
-            'saisons' => $saisonRepository->findAll(),
+            'saisons' => $saisonRepository->findBy([], ['date_debut' => 'DESC']),
         ]);
     }
 
@@ -67,9 +69,7 @@ final class SaisonController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$saison->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($saison);
-            $entityManager->flush();
+        if ($this->supprimerEntite($request, $entityManager, $saison, 'delete'.$saison->getId(), 'la saison '.$saison->getNom(), true)) {
             $cache->delete('saisons_all');
         }
 
@@ -96,11 +96,19 @@ final class SaisonController extends AbstractController
     }
 
     //défini une saison comme favorite
-    #[Route('/{id}/favorite/', name: 'favorite', methods: ['GET', 'POST'])]
+    #[Route('/{id}/favorite/', name: 'favorite', methods: ['POST'])]
     public function favorite(Request $request, EntityManagerInterface $em, $id, CacheInterface $cache): Response
     {
+        if (!$this->isCsrfTokenValid('favorite'.$id, $request->getPayload()->getString('_token'))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez.');
+
+            return $this->redirectToRoute('admin_saison_index');
+        }
         $saisons=$em->getRepository(Saison::class)->findAll();
         foreach ($saisons as $saison) {
+            if ($saison->getId() == $id) {
+                $this->addFlash('success', sprintf('La saison %s est maintenant affichée sur le site.', $saison->getNom()));
+            }
             if ($saison->getId()==$id){
                 $saison->setFavori(1);
                 }else{

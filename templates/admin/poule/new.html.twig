@@ -1,11 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Nouvelle Poule{% endblock %}
+{% block title %}Créer une poule{% endblock %}
 
 {% block body %}
-    <h1>Créer une nouvelle poule</h1>
-
-    {{ include('poule/_form.html.twig') }}
-
-    <a href="{{ path('app_poule_index') }}">Revenir à la liste des poules</a>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer une poule', retour: {url: path('admin_poule_index'), label: 'Poules'}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/poule/_form.html.twig', {'button_label': 'Créer la poule'}) }}
+    </div>
 {% endblock %}

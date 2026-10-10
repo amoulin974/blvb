@@ -93,6 +93,18 @@
         ],
         "post-update-cmd": [
             "@auto-scripts"
+        ],
+        "qualite": [
+            "@php bin/console lint:twig templates",
+            "@php bin/console lint:yaml config translations --parse-tags",
+            "@php bin/console lint:container",
+            "@composer validate --no-check-publish"
+        ],
+        "tests": "@php bin/phpunit",
+        "tests:tout": "@php bin/phpunit --exclude-group anomalie",
+        "securite": [
+            "@composer audit",
+            "@php bin/console importmap:audit"
         ]
     },
     "conflict": {
@@ -105,6 +117,7 @@
         }
     },
     "require-dev": {
+        "dama/doctrine-test-bundle": "^8.7",
         "doctrine/doctrine-fixtures-bundle": "^4.3",
         "phpunit/phpunit": "^12.4",
         "symfony/browser-kit": "7.3.*",
@@ -114,5 +127,11 @@
         "symfony/stopwatch": "7.3.*",
         "symfony/web-profiler-bundle": "7.3.*",
         "zenstruck/foundry": "^2.8"
+    },
+    "scripts-descriptions": {
+        "qualite": "Vérifications statiques : gabarits Twig, YAML, conteneur, composer.json",
+        "tests": "Tests automatisés (hors tests lents) — voir tests/SPECIFICATIONS.md",
+        "tests:tout": "Tous les tests, y compris les tests lents (#[Group('lent')])",
+        "securite": "Vulnérabilités connues des dépendances PHP et JavaScript"
     }
 }

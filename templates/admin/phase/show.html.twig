@@ -1,34 +1,12 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Phase{% endblock %}
+{% block title %}{{ phase.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Phase</h1>
-
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ phase.id }}</td>
-            </tr>
-            <tr>
-                <th>Nom</th>
-                <td>{{ phase.nom }}</td>
-            </tr>
-            <tr>
-                <th>Datedebut</th>
-                <td>{{ phase.datedebut ? phase.datedebut|date('Y-m-d') : '' }}</td>
-            </tr>
-            <tr>
-                <th>Datefin</th>
-                <td>{{ phase.datefin ? phase.datefin|date('Y-m-d') : '' }}</td>
-            </tr>
-        </tbody>
-    </table>
-
-    <a href="{{ path('app_phase_index') }}">back to list</a>
-
-    <a href="{{ path('app_phase_edit', {'id': phase.id}) }}">edit</a>
-
-    {{ include('phase/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {
+        titre: phase.nom,
+        sous_titre: (phase.datedebut ? 'Du ' ~ phase.datedebut|date('d/m/Y') : '') ~ (phase.datefin ? ' au ' ~ phase.datefin|date('d/m/Y') : ''),
+        retour: {url: path('admin_phase_index'), label: 'Phases'},
+        actions: [{url: path('admin_phase_edit', {id: phase.id}), label: 'Modifier', icone: 'crayon', principal: true}],
+    }) }}
 {% endblock %}

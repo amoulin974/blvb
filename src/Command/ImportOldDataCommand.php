@@ -93,7 +93,7 @@ class ImportOldDataCommand extends Command
         $saison->setPointsDefaiteForte(1);
         $saison->setPointsVictoireFaible(2);
         $saison->setPointsVictoireForte(3);
-        $saison->setPointsForfait(3);
+        $saison->setPointsForfait(-1); // règlement : -1 point pour l'équipe forfait
         $saison->setPointsNul(1);
 
         //Création des indisponibilités

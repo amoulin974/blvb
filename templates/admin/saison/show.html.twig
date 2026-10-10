@@ -1,190 +1,184 @@
-{% extends 'base.html.twig' %}
-{% block title %}
-    {{ saison.nom }}
-{% endblock %}
-{% block body %}
-    <div class="container mx-auto max-w-5xl px-4">
-        <h1 class="mb-6">Détails de la saison {{ saison.nom }}</h1>
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
 
-        <div class="space-y-4">
-            {% for phase in saison.phases %}
-                {# Système de collapse pour chaque Phase [cite: 1] #}
-                <div class="bg-base-100 border-base-300 collapse collapse-arrow border shadow-sm">
-                    <input type="checkbox" class="peer" {% if phase.id == phaseOuverteId %}checked{% endif %} />
-                    <div class="collapse-title flex items-center">
-                        <span class="font-bold text-lg">{{ phase.nom }}</span>
-                        {% if phase.close %}
-                            <span class="badge badge-neutral ml-3">Clôturée</span>
+{% block title %}{{ saison.nom }}{% endblock %}
+
+{# Poste de pilotage d'une saison : phases (repliables) > poules (onglets) > journées > matchs.
+   À chaque niveau : actions courantes en boutons discrets ; la prochaine étape à faire (créer les journées,
+   générer les matchs, clôturer la phase) en jaune ; suppressions en rouge discret, confirmées dans une fenêtre. #}
+{% block body %}
+    {{ include('admin/_entete.html.twig', {
+        titre: saison.nom,
+        sous_titre: saison.favori ? 'Saison affichée sur le site' : 'Saison non affichée sur le site',
+        retour: {url: path('admin_saison_index'), label: 'Saisons'},
+        actions: [{url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'}],
+    }) }}
+
+    <div class="space-y-4">
+        {% for phase in saison.phases %}
+            {% set nbMatchsPhase = 0 %}{% for poule in phase.poules %}{% set nbMatchsPhase = nbMatchsPhase + poule.parties|length %}{% endfor %}
+            <div id="phase_{{ phase.id }}" class="collapse collapse-arrow bg-base-100 border border-base-300">
+                <input type="checkbox" aria-label="Afficher ou masquer {{ phase.nom }}" {% if phase.id == phaseOuverteId %}checked{% endif %}>
+                <div class="collapse-title flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <span class="font-display text-xl font-semibold">{{ phase.nom }}</span>
+                    {% if phase.close %}<span class="badge badge-neutral badge-sm">Clôturée</span>{% endif %}
+                    <span class="text-sm text-(--color-base-content)/80">
+                        {{ phase.datedebut ? 'Du ' ~ phase.datedebut|date('d/m/Y') }}{{ phase.datefin ? ' au ' ~ phase.datefin|date('d/m/Y') }}
+                        · {{ phase.poules|length }} poule{{ phase.poules|length > 1 ? 's' : '' }} · {{ nbMatchsPhase }} match{{ nbMatchsPhase > 1 ? 's' : '' }}
+                    </span>
+                </div>
+                <div class="collapse-content">
+                    {# Actions de la phase #}
+                    <div class="flex flex-wrap items-center gap-2 mb-4">
+                        {% if not loop.last and phase.cloturable == true and not phase.close %}
+                            {{ include('admin/_confirmation.html.twig', {
+                                declencheur: 'Clôturer la phase',
+                                declencheur_icone: false,
+                                declencheur_classe: 'btn btn-accent btn-sm',
+                                titre: 'Clôturer ' ~ phase.nom ~ ' ?',
+                                consequences: [
+                                    'Le classement final de chaque poule est figé et la phase est marquée « Clôturée ».',
+                                    'Les équipes sont réparties dans les poules de la phase suivante selon leur classement (montées et descentes).',
+                                    'Les journées et les matchs de la phase suivante sont générés automatiquement.',
+                                ],
+                                bouton: 'Clôturer la phase',
+                                ton: 'warning',
+                                action: path('admin_phase_cloturer', {id: phase.id}),
+                                token: csrf_token('cloturer' ~ phase.id),
+                            }) }}
                         {% endif %}
-                        <span class="ml-4 text-sm opacity-60">Début : {{ phase.datedebut|date("d/m/Y") }}</span>
+                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_phase_edit', {id: phase.id}) }}">{{ icone.i('crayon') }} Modifier la phase</a>
+                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_phase_optimiser', {id: phase.id}) }}">{{ icone.i('eclair') }} Optimiser les matchs</a>
+                        <span class="ml-auto">{{ include('admin/phase/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm text-error'}) }}</span>
                     </div>
 
-                    <div class="collapse-content">
-                        {# Actions d'administration de la Phase [cite: 76, 77, 78] #}
-                        <div class="flex join items-center no-underline mb-4">
-                            <a class="btn btn-xs btn-neutral join-item" href="{{ path("admin_phase_edit", {'id': phase.id}) }}">
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                </svg> Modifier la phase
-                            </a>
-                            <a class="btn btn-xs btn-neutral join-item" href="{{ path("admin_phase_optimiser", {'id': phase.id}) }}">Optimiser les matchs</a>
-                            {{ include('admin/phase/_delete_form.html.twig', { size: 'btn-xs', join:'join-item', label: 'Supprimer la phase' }) }}
-                            {% if not loop.last and phase.cloturable==true and not phase.close %}
-                                <form action="{{ path('admin_phase_cloturer', {'id': phase.id}) }}" method="POST" class="flex items-center">
-                                    <button type="submit" class="btn btn-warning btn-xs join-item" onclick="return confirm('Êtes-vous sûr de vouloir clôturer cette phase ? Cette action est irréversible.')">
-                                        Clôturer la phase
-                                    </button>
-                                </form>
-                            {% endif %}
-                        </div>
+                    {# Poules de la phase, en onglets #}
+                    <div class="tabs tabs-lift">
+                        {% for poule in phase.poules %}
+                            <input type="radio" name="tabs_admin_{{ phase.id }}" class="tab font-display text-base" aria-label="{{ poule.nom }}"
+                                   {% if (pouleOuverteId and poule.id == pouleOuverteId) or (not pouleOuverteId and loop.first) %}checked{% endif %}>
+                            <div id="poule_{{ poule.id }}" class="tab-content bg-base-100 border-base-300 p-4 lg:p-6">
+                                {% set aDesEquipes = poule.equipes|length > 0 %}
+                                {% set aDesJournees = poule.journees|length > 0 %}
+                                {% set aDesMatchs = poule.parties|length > 0 %}
 
-                        {# Système d'onglets pour les Poules de la Phase  #}
-                        <div class="tabs tabs-lift mt-4">
-                            {% for poule in phase.poules %}
-                            <input type="radio"
-                                   name="tabs_admin_{{phase.id}}"
-                                   class="tab"
-                                   aria-label="{{ poule.nom }}"
-                                   {% if (pouleOuverteId and poule.id == pouleOuverteId) or (not pouleOuverteId and loop.first) %}checked{% endif %} />
-                                <div id="poule_{{ poule.id }}" class="tab-content bg-base-100 border-base-300 p-6 rounded-b-box">
-
-                                    {# Actions d'administration de la Poule [cite: 83, 86, 88, 90] #}
-                                    <div class="flex flex-wrap gap-2 mb-6 p-2 bg-base-200 rounded-lg">
-                                        <a class="btn btn-xs btn-neutral" href="{{ path("admin_poule_edit", {'id': poule.id, origin: 'saison_show'}) }}">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-4 h-4 mr-1">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                                            </svg> Modifier la poule
-                                        </a>
-                                        {{ include('admin/poule/_delete_form.html.twig', { size: 'btn-xs', label: 'Supprimer la poule' }) }}
-
-                                        {% if poule.equipes|length > 0 and poule.journees|length == 0 %}
-                                            <form action="{{ path('admin_journee_createjournee', {'id': poule.id}) }}" method="POST">
-                                                <button type="submit" class="btn btn-xs btn-success text-white">Créer les journées</button>
-                                            </form>
+                                {# Actions de la poule : la prochaine étape en jaune #}
+                                <div class="flex flex-wrap items-center gap-2 mb-5">
+                                    {% if aDesEquipes and not aDesJournees %}
+                                        <form action="{{ path('admin_journee_createjournee', {id: poule.id}) }}" method="post">
+                                            <button type="submit" class="btn btn-accent btn-sm">Créer les journées</button>
+                                        </form>
+                                    {% elseif aDesEquipes and aDesJournees and not aDesMatchs %}
+                                        <form action="{{ path('admin_partie_optimiser', {id: poule.id}) }}" method="post">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('optimiser' ~ poule.id) }}">
+                                            <button type="submit" class="btn btn-accent btn-sm">Générer les matchs</button>
+                                        </form>
+                                    {% endif %}
+                                    <a class="btn btn-ghost btn-sm" href="{{ path('admin_poule_edit', {id: poule.id, origin: 'saison_show'}) }}">{{ icone.i('crayon') }} Modifier la poule</a>
+                                    {% if aDesEquipes and aDesJournees %}
+                                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_journee_getjourneecalendar', {id: poule.id}) }}">{{ icone.i('calendrier') }} Calendrier des journées</a>
+                                    {% endif %}
+                                    {% if aDesMatchs %}
+                                        {% set premiereJournee = poule.journees|sort((a, b) => a.numero <=> b.numero)|first %}
+                                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: premiereJournee.id}) }}">{{ icone.i('calendrier') }} Calendrier des matchs</a>
+                                    {% endif %}
+                                    <span class="ml-auto flex flex-wrap gap-1">
+                                        {% if aDesMatchs %}
+                                            {{ include('admin/_confirmation.html.twig', {
+                                                declencheur: 'Supprimer les matchs',
+                                                titre: 'Supprimer tous les matchs de la poule ' ~ poule.nom ~ ' ?',
+                                                consequences: [poule.parties|length ~ ' match(s) et leurs scores seront supprimés.', 'Les journées et les équipes sont conservées.'],
+                                                action: path('admin_partie_deleteall', {id: poule.id}),
+                                                token: csrf_token('deleteallparties' ~ poule.id),
+                                            }) }}
                                         {% endif %}
-
-                                        {% if poule.equipes|length > 0 and poule.journees|length > 0 and poule.parties|length == 0 %}
-                                            <form action="{{ path('admin_partie_optimiser', {'id': poule.id}) }}" method="POST">
-                                                <input type="hidden" name="_token" value="{{ csrf_token('optimiser' ~ poule.id) }}">
-                                                <button type="submit" class="btn btn-xs btn-success text-white">Optimiser les matchs</button>
-                                            </form>
+                                        {% if aDesJournees %}
+                                            {{ include('admin/_confirmation.html.twig', {
+                                                declencheur: 'Supprimer les journées',
+                                                titre: 'Supprimer toutes les journées de la poule ' ~ poule.nom ~ ' ?',
+                                                consequences: [poule.journees|length ~ ' journée(s) seront supprimées' ~ (aDesMatchs ? ', avec leurs ' ~ poule.parties|length ~ ' match(s) et leurs scores.' : '.'), 'Les équipes sont conservées.'],
+                                                action: path('admin_journee_deleteall', {id: poule.id}),
+                                                token: csrf_token('deleteall' ~ poule.id),
+                                            }) }}
                                         {% endif %}
-                                    </div>
-
-                                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {# Liste des équipes [cite: 92] #}
-                                        <div class="col-span-1">
-                                            <p class="font-bold mb-2 text-sm border-b">Équipes :</p>
-                                            <div class="flex flex-wrap gap-1">
-                                                {% for equipe in poule.equipes %}
-                                                    <span class="badge badge-outline badge-sm">{{ equipe.nom }}</span>
-                                                {% else %}
-                                                    <em class="text-xs">Pas d'équipe</em>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-
-                                        {# Liste des journées et matchs [cite: 94, 99] #}
-                                        <div class="col-span-2">
-                                            <div class="flex justify-between items-center mb-2 border-b pb-1">
-                                                <p class="font-bold text-sm">Aperçu des journées :</p>
-                                                <div class="flex gap-2">
-                                                    {% if poule.equipes|length > 0 and poule.journees|length > 0 %}
-                                                        <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_journee_getjourneecalendar", {'id': poule.id}) }}">Voir les journées</a>
-                                                    {% endif %}
-
-                                                    {% if poule.journees|length > 0 %}
-                                                        <form action="{{ path('admin_journee_deleteall', {'id': poule.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer toutes les journées de cette poule ? Cette action est irréversible.');">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('deleteall' ~ poule.id) }}">
-                                                            <button type="submit" class="btn btn-ghost btn-xs text-error">Supprimer les journées</button>
-                                                        </form>
-                                                    {% endif %}
-
-                                                    {% if poule.parties|length > 0 %}
-                                                        {% set premiereJournee = poule.journees|sort((a, b) => a.numero <=> b.numero)|first %}
-                                                        <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee': premiereJournee.id}) }}">Voir les matchs</a>
-
-                                                        <form action="{{ path('admin_partie_deleteall', {'id': poule.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer tous les matchs de cette poule ? Cette action est irréversible.');">
-                                                            <input type="hidden" name="_token" value="{{ csrf_token('deleteallparties' ~ poule.id) }}">
-                                                            <button type="submit" class="btn btn-ghost btn-xs text-error">Supprimer les matchs</button>
-                                                        </form>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                            <div class="space-y-4">
-                                                {% for journee in poule.journees %}
-                                                    <div class="bg-base-200 p-2 rounded">
-                                                        <div class="flex justify-between items-center mb-1">
-                                                            <span class="text-xs font-bold">
-                                                                Journée {{ journee.numero }} : {{ journee.nom }}
-                                                                <span class="font-normal opacity-60">({{ journee.datedebut|date("d/m/Y") }} - {{ journee.datefin|date("d/m/Y") }})</span>
-                                                            </span>
-                                                            <div class="flex items-center gap-1">
-                                                                {% if journee.parties|length > 0 %}
-                                                                    <a class="btn btn-ghost btn-xs text-info" href="{{ path("admin_partie_getpartiecalendar", {'id': poule.id, 'journee':journee.id}) }}">Voir la journée</a>
-                                                                    <form action="{{ path('admin_partie_deleteallbyjournee', {'id': poule.id, 'journee': journee.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer tous les matchs de cette journée ? Cette action est irréversible.');">
-                                                                        <input type="hidden" name="_token" value="{{ csrf_token('deleteallbyjournee' ~ journee.id) }}">
-                                                                        <button type="submit" class="btn btn-ghost btn-xs text-error">Supprimer les matchs</button>
-                                                                    </form>
-                                                                {% endif %}
-                                                            </div>
-                                                        </div>
-                                                        <ul class="space-y-1">
-                                                            <ul class="space-y-2">
-                                                                {% for partie in journee.parties %}
-                                                                    <li class="text-[11px] flex items-center justify-between bg-base-100 p-2 rounded shadow-sm hover:bg-base-200 transition-colors group">
-                                                                        <div class="flex items-center gap-2 flex-1">
-                                                                            <span class="font-semibold">{{ partie.nomReception }}</span>
-                                                                            <span class="opacity-40 text-[9px]">VS</span>
-                                                                            <span class="font-semibold">{{ partie.nomDeplacement }}</span>
-                                                                            <span class="badge badge-xs font-mono">{{ partie.NbSetGagnantReception }} - {{ partie.NbSetGagnantDeplacement }}</span>
-                                                                        </div>
-
-                                                                        <div class="flex items-center gap-1">
-                                                                            {# BOUTON MODIFIER : Redirige vers le calendrier spécifique de cette journée #}
-                                                                            <a href="{{ path('admin_partie_getpartiecalendar', {'id': poule.id, 'journee': journee.id, 'editPartie': partie.id}) }}"
-                                                                               class="btn btn-ghost btn-xs text-info p-1"
-                                                                               title="Modifier l'horaire ou le lieu sur le calendrier">
-                                                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
-                                                                                </svg>
-                                                                            </a>
-
-                                                                            {# BOUTON SUPPRIMER : Formulaire avec protection CSRF et confirmation #}
-                                                                            <form action="{{ path('admin_partie_delete', {'id': partie.id}) }}" method="POST" onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer ce match ? Cette action est irréversible.');" class="flex items-center">
-                                                                                <input type="hidden" name="_method" value="DELETE">
-                                                                                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ partie.id) }}">
-                                                                                <button type="submit" class="btn btn-ghost btn-xs text-error p-1" title="Supprimer le match">
-                                                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                                                                                        <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.244 2.244 0 0 1-2.244 2.077H8.084a2.244 2.244 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                                                                                    </svg>
-                                                                                </button>
-                                                                            </form>
-                                                                        </div>
-                                                                    </li>
-                                                                {% else %}
-                                                                    <li class="text-xs italic opacity-50">Aucun match planifié.</li>
-                                                                {% endfor %}
-                                                            </ul>
-                                                        </ul>
-                                                    </div>
-                                                {% else %}
-                                                    <em class="text-xs">Aucune journée créée</em>
-                                                {% endfor %}
-                                            </div>
-                                        </div>
-                                    </div>
+                                        {{ include('admin/poule/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm text-error'}) }}
+                                    </span>
                                 </div>
-                            {% endfor %}
-                        </div>
+
+                                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                    <section>
+                                        <h3 class="text-base uppercase tracking-wider text-(--color-base-content)/80 border-b-2 border-(--color-primary) pb-1 mb-2">Équipes ({{ poule.equipes|length }})</h3>
+                                        <ul class="space-y-1">
+                                            {% for equipe in poule.equipes %}
+                                                <li><a class="font-display font-medium tracking-wide hover:underline" href="{{ path('admin_equipe_show', {id: equipe.id}) }}">{{ equipe.nom }}</a></li>
+                                            {% else %}
+                                                <li class="text-(--color-base-content)/80">Aucune équipe : ajoutez-en depuis « Modifier la poule ».</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </section>
+
+                                    <section class="lg:col-span-2">
+                                        <h3 class="text-base uppercase tracking-wider text-(--color-base-content)/80 border-b-2 border-(--color-primary) pb-1 mb-2">Journées ({{ poule.journees|length }})</h3>
+                                        <div class="space-y-4">
+                                            {% for journee in poule.journees %}
+                                                <div>
+                                                    <div class="flex flex-wrap items-center justify-between gap-2">
+                                                        <p class="font-display text-lg font-semibold">
+                                                            Journée {{ journee.numero }}{{ journee.nom ? ' · ' ~ journee.nom }}
+                                                            <span class="font-sans text-sm font-normal text-(--color-base-content)/80">du {{ journee.datedebut|date('d/m/Y') }} au {{ journee.datefin|date('d/m/Y') }}</span>
+                                                        </p>
+                                                        {% if journee.parties|length > 0 %}
+                                                            <span class="flex items-center gap-1">
+                                                                <a class="btn btn-ghost btn-xs" href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: journee.id}) }}">{{ icone.i('calendrier') }} Calendrier</a>
+                                                                {{ include('admin/_confirmation.html.twig', {
+                                                                    declencheur: 'Supprimer les matchs',
+                                                                    declencheur_classe: 'btn btn-ghost btn-xs text-error',
+                                                                    titre: 'Supprimer les matchs de la journée ' ~ journee.numero ~ ' (poule ' ~ poule.nom ~ ') ?',
+                                                                    consequences: [journee.parties|length ~ ' match(s) et leurs scores seront supprimés.', 'La journée est conservée.'],
+                                                                    action: path('admin_partie_deleteallbyjournee', {id: poule.id, journee: journee.id}),
+                                                                    token: csrf_token('deleteallbyjournee' ~ journee.id),
+                                                                }) }}
+                                                            </span>
+                                                        {% endif %}
+                                                    </div>
+                                                    <ul class="mt-1 divide-y divide-base-200">
+                                                        {% for partie in journee.parties %}
+                                                            <li class="flex items-center gap-3 py-1.5">
+                                                                <span class="flex-1 min-w-0">
+                                                                    <span class="font-display font-medium tracking-wide">{{ partie.nomReception }}</span>
+                                                                    <span class="text-(--color-base-content)/70">contre</span>
+                                                                    <span class="font-display font-medium tracking-wide">{{ partie.nomDeplacement }}</span>
+                                                                    <span class="block text-xs text-(--color-base-content)/80">{{ partie.date ? partie.date|format_datetime(pattern='EEE d MMM · HH:mm', locale='fr') : 'Date à définir' }}{{ partie.lieu ? ' · ' ~ partie.lieu.nom }}</span>
+                                                                </span>
+                                                                <span class="font-display text-lg font-bold tabular-nums w-12 text-center">
+                                                                    {%- if partie.nbSetGagnantReception is not null -%}
+                                                                        {{ partie.nbSetGagnantReception|sets }}–{{ partie.nbSetGagnantDeplacement|sets }}{% if forfait_de(partie) %}<span class="sr-only"> (forfait de {{ forfait_de(partie).nom }})</span>{% endif %}
+                                                                    {%- else -%}
+                                                                        <span class="opacity-50" aria-label="Pas de score">–</span>
+                                                                    {%- endif -%}
+                                                                </span>
+                                                                <a href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: journee.id, editPartie: partie.id}) }}"
+                                                                   class="btn btn-ghost btn-sm btn-square" title="Changer la date ou le gymnase" aria-label="Changer la date ou le gymnase de {{ partie.nomReception }} contre {{ partie.nomDeplacement }}">{{ icone.i('calendrier') }}</a>
+                                                                {{ include('admin/partie/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm btn-square text-error', icone_seule: true}) }}
+                                                            </li>
+                                                        {% else %}
+                                                            <li class="py-1.5 text-(--color-base-content)/80">Aucun match planifié.</li>
+                                                        {% endfor %}
+                                                    </ul>
+                                                </div>
+                                            {% else %}
+                                                <p class="text-(--color-base-content)/80">Aucune journée créée.</p>
+                                            {% endfor %}
+                                        </div>
+                                    </section>
+                                </div>
+                            </div>
+                        {% endfor %}
                     </div>
                 </div>
-            {% endfor %}
-        </div>
-
-        <div class="mt-8 flex gap-2">
-            <a class="btn btn-sm btn-outline" href="{{ path('admin_saison_index') }}">Retour aux saisons</a>
-            <a class="btn btn-sm btn-success text-white" href="{{ path('admin_saison_new') }}">Nouvelle saison</a>
-        </div>
+            </div>
+        {% else %}
+            <p class="admin-carte">Cette saison n'a pas encore de phase.</p>
+        {% endfor %}
     </div>
 {% endblock %}

@@ -1,11 +1,10 @@
-{% extends '../../base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}New Phase{% endblock %}
+{% block title %}Créer une phase{% endblock %}
 
 {% block body %}
-    <h1>Create new Phase</h1>
-
-    {{ include('phase/_form.html.twig') }}
-
-    <a href="{{ path('app_phase_index') }}">back to list</a>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer une phase', retour: {url: path('admin_phase_index'), label: 'Phases'}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/phase/_form.html.twig', {'button_label': 'Créer la phase'}) }}
+    </div>
 {% endblock %}

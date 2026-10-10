@@ -19,6 +19,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/journee', name: 'admin_journee_')]
 final class JourneeController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route(name: 'index', methods: ['GET'])]
     public function index(JourneeRepository $journeeRepository): Response
     {
@@ -76,10 +78,7 @@ final class JourneeController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Journee $journee, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$journee->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($journee);
-            $entityManager->flush();
-        }
+        $this->supprimerEntite($request, $entityManager, $journee, 'delete'.$journee->getId(), 'la journée '.$journee->getNumero(), true);
 
         return $this->redirectToRoute('admin_journee_index', [], Response::HTTP_SEE_OTHER);
     }

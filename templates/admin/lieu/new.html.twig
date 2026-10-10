@@ -1,13 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Créer un nouveau lieu{% endblock %}
+{% block title %}Créer un gymnase{% endblock %}
 
 {% block body %}
-    <h1>Créer un nouveau lieu</h1>
-    <div class="mt-2 w-4/5">
-        {{ include('admin/lieu/_form.html.twig', {'button_label': 'Sauvegarder'}) }}
+    {{ include('admin/_entete.html.twig', {titre: 'Créer un gymnase', retour: {url: path('admin_lieu_index'), label: 'Gymnases'}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/lieu/_form.html.twig', {'button_label': 'Créer le gymnase'}) }}
     </div>
-
-
-    <a href="{{ path('admin_lieu_index') }}" class="btn btn-info btn-sm">Revenir à la liste des lieux</a>
 {% endblock %}

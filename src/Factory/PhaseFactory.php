@@ -35,12 +35,13 @@ final class PhaseFactory extends PersistentObjectFactory
     protected function defaults(): array|callable
     {
         return [
-            'datedebut' => \DateTimeImmutable::createFromMutable(self::faker()->dateTime()),
-            'datefin' => \DateTimeImmutable::createFromMutable(self::faker()->dateTime()),
-            'nom' => self::faker()->text(255),
-            'ordre' => self::faker()->randomNumber(),
-            'saison' => null, // TODO add App\Entity\Saison type manually
-            'type' => self::faker()->randomElement(PhaseType::cases()),
+            'datedebut' => new \DateTimeImmutable('-1 month'),
+            'datefin' => new \DateTimeImmutable('+4 months'),
+            'nom' => 'Phase 1',
+            'ordre' => 1,
+            'saison' => SaisonFactory::new(),
+            'type' => PhaseType::CHAMPIONNAT,
+            'close' => 0,
         ];
     }
 

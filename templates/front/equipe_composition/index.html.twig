@@ -2,6 +2,7 @@
 
 {% block title %}Composition {{ equipe.nom }} - {{ saison.nom }} - Site du BLVB{% endblock %}
 
+{# Composition côté site (capitaine). Le contenu est partagé avec le back-office : _composition.html.twig #}
 {% block body %}
     <div class="container mx-auto max-w-3xl md:px-4">
         {% for label, messages in app.flashes %}
@@ -13,93 +14,7 @@
         <h1 class="mb-1">Composition de {{ equipe.nom }}</h1>
         <p class="mb-6">{{ saison.nom }}</p>
 
-        <div class="overflow-x-auto rounded-box border border-base-300 bg-base-100 mb-8">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th>Joueur</th>
-                        <th>Rôle</th>
-                        <th class="text-right">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for membre in membres %}
-                        <tr class="hover:bg-(--color-base-200)">
-                            <td class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</td>
-                            <td>
-                                {% if membre.capitaine %}
-                                    <span class="badge badge-primary">Capitaine</span>
-                                {% else %}
-                                    <span>Membre</span>
-                                {% endif %}
-                            </td>
-                            <td class="text-right">
-                                <div class="flex justify-end gap-2">
-                                    {% if not membre.capitaine %}
-                                        <form method="post" action="{{ path('front_equipe_composition_capitaine', {'equipe': equipe.id, 'saison': saison.id, 'membre': membre.id}) }}">
-                                            <input type="hidden" name="_token" value="{{ csrf_token('capitaine' ~ membre.id) }}">
-                                            <button class="btn btn-sm btn-outline btn-primary">Désigner capitaine</button>
-                                        </form>
-                                    {% endif %}
-                                    <form method="post" action="{{ path('front_equipe_composition_retirer', {'equipe': equipe.id, 'saison': saison.id, 'membre': membre.id}) }}" onsubmit="return confirm('Retirer ce joueur de la composition ?');">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('retirer' ~ membre.id) }}">
-                                        <button class="btn btn-sm btn-outline btn-error">Retirer</button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                    {% else %}
-                        <tr>
-                            <td colspan="3" class="text-center">Aucun joueur dans la composition pour l'instant.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div class="card bg-base-100 border border-base-300">
-                <div class="card-body">
-                    <h2 class="text-lg uppercase tracking-wide">Ajouter un joueur existant</h2>
-                    {{ form_start(ajouterForm) }}
-                        <div class="form-control w-full mb-3">
-                            {{ form_widget(ajouterForm.joueur, {'attr': {'class': 'w-full'}}) }}
-                            {{ form_errors(ajouterForm.joueur) }}
-                        </div>
-                        <button class="btn btn-accent btn-sm">Ajouter</button>
-                    {{ form_end(ajouterForm) }}
-                </div>
-            </div>
-
-            <div class="card bg-base-100 border border-base-300">
-                <div class="card-body">
-                    <h2 class="text-lg uppercase tracking-wide">Créer une nouvelle fiche joueur</h2>
-                    {{ form_start(creerForm) }}
-                        <div class="form-control w-full mb-2">
-                            {{ form_label(creerForm.nom, 'Nom', {'label_attr': {'class': 'font-medium mb-1 block'}}) }}
-                            {{ form_widget(creerForm.nom, {'attr': {'class': 'input w-full text-base'}}) }}
-                            {{ form_errors(creerForm.nom) }}
-                        </div>
-                        <div class="form-control w-full mb-2">
-                            {{ form_label(creerForm.prenom, 'Prénom', {'label_attr': {'class': 'font-medium mb-1 block'}}) }}
-                            {{ form_widget(creerForm.prenom, {'attr': {'class': 'input w-full text-base'}}) }}
-                            {{ form_errors(creerForm.prenom) }}
-                        </div>
-                        <div class="form-control w-full mb-2">
-                            {{ form_label(creerForm.email, 'Email', {'label_attr': {'class': 'font-medium mb-1 block'}}) }}
-                            {{ form_widget(creerForm.email, {'attr': {'class': 'input w-full text-base'}}) }}
-                            {{ form_errors(creerForm.email) }}
-                        </div>
-                        <div class="form-control w-full mb-3">
-                            {{ form_label(creerForm.telephone, 'Téléphone', {'label_attr': {'class': 'font-medium mb-1 block'}}) }}
-                            {{ form_widget(creerForm.telephone, {'attr': {'class': 'input w-full text-base'}}) }}
-                            {{ form_errors(creerForm.telephone) }}
-                        </div>
-                        <button class="btn btn-accent btn-sm">Créer et ajouter</button>
-                    {{ form_end(creerForm) }}
-                </div>
-            </div>
-        </div>
+        {{ include('front/equipe_composition/_composition.html.twig') }}
 
         <div class="mt-6 text-center">
             <a class="link link-hover link-primary" href="{{ path('front_equipe_detail', {'id': equipe.id}) }}">← Revenir à la page de l'équipe</a>

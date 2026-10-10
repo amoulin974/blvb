@@ -23,6 +23,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/phase', name: 'admin_phase_')]
 final class PhaseController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route(name: 'index', methods: ['GET'])]
     public function index(PhaseRepository $phaseRepository): Response
     {
@@ -80,12 +82,11 @@ final class PhaseController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Phase $phase, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$phase->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($phase);
-            $entityManager->flush();
-        }
+        $saisonId = $phase->getSaison()->getId();
+        $this->supprimerEntite($request, $entityManager, $phase, 'delete'.$phase->getId(), 'la phase '.$phase->getNom(), true);
 
-        return $this->redirectToRoute('admin_phase_index', [], Response::HTTP_SEE_OTHER);
+        // Retour à la saison : c'est de là que les phases se gèrent
+        return $this->redirectToRoute('admin_saison_show', ['id' => $saisonId], Response::HTTP_SEE_OTHER);
     }
 
     #[Route('/{id}/optimiser', name: 'optimiser', methods: ['GET'])]
@@ -160,9 +161,15 @@ final class PhaseController extends AbstractController
         EntityManagerInterface $entityManager,
         PhaseService $phaseService,
         JourneeService $journeeService,
-        PartieService $partieService
+        PartieService $partieService,
+        Request $request
     ): Response {
         $saison = $phase->getSaison();
+        if (!$this->isCsrfTokenValid('cloturer'.$phase->getId(), $request->getPayload()->getString('_token'))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. La phase n\'a pas été clôturée.');
+
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+        }
         $phases = $saison->getPhases();
 
         // 1. Trouver la phase suivante

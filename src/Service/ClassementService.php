@@ -83,7 +83,7 @@ class ClassementService
     /**
      * Calcule les points pour une équipe (domicile + extérieur).
      */
-    public function calculerPointsEquipe(Equipe $equipe, Saison $saison, Poule $pouleContext = null): int
+    public function calculerPointsEquipe(Equipe $equipe, Saison $saison, ?Poule $pouleContext = null): int
     {
         $points = 0;
 
@@ -113,12 +113,23 @@ class ClassementService
     }
 
     /**
-     * Retourne les points du match selon le score.
+     * Retourne les points du match selon le score, du point de vue de l'équipe qui a gagné $setsGagnes sets.
+     * Règlement (règle 1D) : 3-0 / 3-1 → victoire forte, 3-2 → victoire faible, 2-3 → défaite forte,
+     * 1-3 / 0-3 → défaite faible ; « Partie forfait = 3 points pour le gagnant, -1 point pour le perdant ».
+     * Un forfait est enregistré à -1 set pour l'équipe forfait (api_score_update) : le gagnant reçoit
+     * les points d'une victoire forte, l'équipe forfait les points de forfait de la saison.
      */
     private function pointsPourMatch(?int $setsGagnes, ?int $setsPerdus, Saison $saison): int
     {
         if ($setsGagnes === null || $setsPerdus === null) {
             return 0; // match non joué
+        }
+
+        if ($setsGagnes === -1) {
+            return $saison->getPointsForfait(); // équipe déclarée forfait
+        }
+        if ($setsPerdus === -1) {
+            return $saison->getPointsVictoireForte(); // victoire par forfait de l'adversaire
         }
 
         return match([$setsGagnes, $setsPerdus]) {
@@ -132,7 +143,7 @@ class ClassementService
     /**
      * Total sets gagnés.
      */
-    private function calculerTotalSetsGagnes(Equipe $equipe, Poule $pouleContext = null): int
+    private function calculerTotalSetsGagnes(Equipe $equipe, ?Poule $pouleContext = null): int
     {
         $total = 0;
 
@@ -159,7 +170,7 @@ class ClassementService
     /**
      * Total sets perdus.
      */
-    private function calculerTotalSetsPerdus(Equipe $equipe, Poule $pouleContext = null): int
+    private function calculerTotalSetsPerdus(Equipe $equipe, ?Poule $pouleContext = null): int
     {
         $total = 0;
 

@@ -1,37 +1,37 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Equipe{% endblock %}
+{% block title %}{{ equipe.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Detail de l'équipe {{ equipe.nom }}</h1>
-
-    <ul>
-        <li>id : {{ equipe.id }}</li>
-        <li>nom : {{ equipe.nom }}</li>
-        <li>Lieu d'entrainement : {{ equipe.lieu.nom }}</li>
-
-        <li>Liste des poules :</li>
-            <ul>
-        {% for poule in equipe.Poules %}
-            {# {{dump(poule)}} #}
-                <li>Poule : {{ poule.nom }} de {{ poule.phase.saison.nom }} - {{ poule.phase.nom }}</li>
-            {% endfor %}
+    {{ include('admin/_entete.html.twig', {
+        titre: equipe.nom,
+        sous_titre: equipe.lieu ? 'Gymnase : ' ~ equipe.lieu.nom : 'Aucun gymnase renseigné',
+        retour: {url: path('admin_equipe_index'), label: 'Équipes'},
+        actions: [{url: path('admin_equipe_edit', {id: equipe.id}), label: 'Modifier', icone: 'crayon', principal: true}],
+    }) }}
+    <div class="grid gap-4 md:grid-cols-2">
+        <section class="admin-carte">
+            <h2 class="text-lg mb-3">Composition par saison</h2>
+            <ul class="space-y-2">
+                {% for saison in saisons %}
+                    <li class="flex flex-wrap items-center justify-between gap-2">
+                        <span>{{ saison.nom }}</span>
+                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+                    </li>
+                {% else %}
+                    <li class="text-(--color-base-content)/80">Cette équipe n'est encore rattachée à aucune saison : ajoutez-la à une poule.</li>
+                {% endfor %}
             </ul>
-    </ul>
-
-    <h2 class="mt-4">Composition par saison</h2>
-    <ul>
-        {% for saison in saisons %}
-            <li>
-                {{ saison.nom }} —
-                <a class="link" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
-            </li>
-        {% else %}
-            <li class="opacity-60">Cette équipe n'est encore rattachée à aucune saison (ajoutez-la à une poule).</li>
-        {% endfor %}
-    </ul>
-
-
-    <a class="btn btn-sm" href="{{ path('admin_equipe_index') }}">Voir toutes les équipes</a>
-    <a class="btn btn-sm" href="{{ path('admin_equipe_new') }}">Créer une nouvelle équipe</a>
+        </section>
+        <section class="admin-carte">
+            <h2 class="text-lg mb-3">Poules</h2>
+            <ul class="space-y-1">
+                {% for poule in equipe.poules %}
+                    <li><a class="hover:underline" href="{{ path('admin_saison_show', {id: poule.phase.saison.id, openPoule: poule.id}) }}">{{ poule.phase.saison.nom }} · {{ poule.phase.nom }} · {{ poule.nom }}</a></li>
+                {% else %}
+                    <li class="text-(--color-base-content)/80">Dans aucune poule.</li>
+                {% endfor %}
+            </ul>
+        </section>
+    </div>
 {% endblock %}

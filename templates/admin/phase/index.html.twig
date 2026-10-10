@@ -1,60 +1,41 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
 
+{% block title %}Phases{% endblock %}
 
-{% block title %}Phase index{% endblock %}
-{% block stylesheets %}
-    {{ parent() }}
-    <link rel="stylesheet" href="//cdn.datatables.net/2.3.5/css/dataTables.dataTables.min.css">
-{% endblock %}
- {% block javascripts %}
-     {{ parent() }}
-     <script
-         src="//code.jquery.com/jquery-3.7.1.min.js"
-         integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
-         crossorigin="anonymous"></script>
-     <script src="//cdn.datatables.net/2.3.5/js/dataTables.min.js"></script>
- {% endblock %}
 {% block body %}
-    <h1>Toutes les phases</h1>
-    <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_phase_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        Créer une nouvelle phase</a>
-<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
-    <table class="border border-solid table table-xs table-zebra" id="myTable">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Nom</th>
-                <th>Datedebut</th>
-                <th>Datefin</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for phase in phases %}
-            <tr>
-                <td>{{ phase.id }}</td>
-                <td>{{ phase.nom }}</td>
-                <td>{{ phase.datedebut ? phase.datedebut|date('Y-m-d') : '' }}</td>
-                <td>{{ phase.datefin ? phase.datefin|date('Y-m-d') : '' }}</td>
-                <td class="flex items-center gap-2">
-                    <a class="btn btn-sm btn-neutral" href="{{ path('admin_phase_edit', {'id': phase.id}) }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0 1 15.75 21H5.25A2.25 2.25 0 0 1 3 18.75V8.25A2.25 2.25 0 0 1 5.25 6H10" />
-                        </svg>Modifier</a>
-                    {{ include('admin/phase/_delete_form.html.twig') }}
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-
-{% endblock %}
-{% block extra_scripts %}
-    <script>let table = new DataTable('#myTable');</script>
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Phases',
+        sous_titre: 'Outil technique : les phases se gèrent normalement depuis la page de chaque saison.',
+        actions: [{url: path('admin_phase_new'), label: 'Créer une phase', icone: 'plus', principal: true}],
+    }) }}
+    <div class="admin-carte" data-controller="datatable" data-datatable-per-page-value="0" data-datatable-singulier-value="phase" data-datatable-pluriel-value="phases">
+        <div class="mb-3 flex flex-wrap items-center gap-3">
+            <label class="input input-sm w-full max-w-xs">
+                <span class="sr-only">Rechercher une phase</span>
+                <input type="search" placeholder="Rechercher…" data-datatable-target="search" data-action="input->datatable#filter">
+            </label>
+            <p class="text-sm text-(--color-base-content)/80" data-datatable-target="compteur" aria-live="polite"></p>
+        </div>
+        <div class="max-lg:overflow-x-auto">
+            <table class="table table-admin">
+                <thead>
+                <tr><th>Phase</th><th>Saison</th><th>Début</th><th>Fin</th><th data-datatable-no-sort><span class="sr-only">Actions</span></th></tr>
+                </thead>
+                <tbody data-datatable-target="body">
+                {% for phase in phases %}
+                    <tr>
+                        <td><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_phase_edit', {id: phase.id}) }}">{{ phase.nom }}</a></td>
+                        <td><a class="hover:underline" href="{{ path('admin_saison_show', {id: phase.saison.id}) }}">{{ phase.saison.nom }}</a></td>
+                        <td>{{ phase.datedebut ? phase.datedebut|date('d/m/Y') }}</td>
+                        <td>{{ phase.datefin ? phase.datefin|date('d/m/Y') }}</td>
+                        <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_phase_edit', {id: phase.id}) }}" aria-label="Modifier {{ phase.nom }}">{{ icone.i('crayon') }} Modifier</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">Aucune phase.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}
