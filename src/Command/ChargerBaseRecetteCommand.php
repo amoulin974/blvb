@@ -119,6 +119,8 @@ class ChargerBaseRecetteCommand extends Command
     private const SCORES = [[3, 0], [3, 1], [3, 2], [2, 3], [1, 3], [0, 3]];
 
     private int $compteurJoueurs = 0;
+    /** @var array<string, true> couples prénom.nom déjà générés par ficheAleatoire() */
+    private array $nomsUtilises = [];
     private AsciiSlugger $slugger;
     /** @var string[] lignes du récapitulatif des cas préparés */
     private array $cas = [];
@@ -460,10 +462,15 @@ class ChargerBaseRecetteCommand extends Command
     /** Joueur sans compte, nom et prénom tirés de listes ; la moitié ont un e-mail, la moitié un téléphone. */
     private function ficheAleatoire(bool $capitaine): Joueur
     {
-        $i = $this->compteurJoueurs++;
-        $prenom = self::PRENOMS[$i % count(self::PRENOMS)];
-        $nom = self::NOMS[($i * 7 + 3) % count(self::NOMS)];
-        $slug = (string) $this->slugger->slug("$prenom.$nom", '.')->lower();
+        // Le décalage par tour de la liste des prénoms évite de retomber sur les mêmes couples prénom/nom
+        // (sinon des fiches identiques, même e-mail compris) ; la boucle écarte les rares collisions restantes.
+        do {
+            $i = $this->compteurJoueurs++;
+            $prenom = self::PRENOMS[$i % count(self::PRENOMS)];
+            $nom = self::NOMS[($i * 7 + 3 + intdiv($i, count(self::PRENOMS))) % count(self::NOMS)];
+            $slug = (string) $this->slugger->slug("$prenom.$nom", '.')->lower();
+        } while (isset($this->nomsUtilises[$slug]));
+        $this->nomsUtilises[$slug] = true;
         $email = ($capitaine || $i % 2 === 0) ? "$slug@".self::DOMAINE : null;
         $tel = ($capitaine || $i % 2 === 1) ? sprintf('06 %02d %02d %02d %02d', 50 + $i % 40, 10 + $i % 80, 20 + $i % 70, 30 + $i % 60) : null;
 

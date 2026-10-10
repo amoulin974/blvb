@@ -3,9 +3,16 @@ import { Controller } from '@hotwired/stimulus';
 // Équivalent léger de DataTables (tri par colonne, recherche texte, pagination) appliqué
 // à un tableau HTML déjà rendu côté serveur, sans dépendance externe : aucun appel
 // réseau, tout se passe sur les lignes déjà présentes dans le DOM.
+//  - perPage = 0 : pas de pagination, toutes les lignes restent affichées (et trouvables par Ctrl+F) ;
+//  - cible "compteur" (facultative) : « 177 joueurs » ou, pendant une recherche, « 3 joueurs sur 177 »,
+//    avec les valeurs singulier / pluriel ; à placer dans un élément aria-live pour les lecteurs d'écran.
 export default class extends Controller {
-    static targets = ['body', 'pagination', 'search'];
-    static values = { perPage: { type: Number, default: 10 } };
+    static targets = ['body', 'pagination', 'search', 'compteur'];
+    static values = {
+        perPage: { type: Number, default: 10 },
+        singulier: { type: String, default: 'ligne' },
+        pluriel: { type: String, default: 'lignes' },
+    };
 
     connect() {
         this.rows = Array.from(this.bodyTarget.querySelectorAll('tr'));
@@ -15,6 +22,15 @@ export default class extends Controller {
             if (th.dataset.datatableNoSort === undefined) {
                 th.classList.add('cursor-pointer', 'select-none', 'hover:underline');
                 th.addEventListener('click', () => this.sortBy(th));
+                // Tri accessible au clavier
+                th.tabIndex = 0;
+                th.setAttribute('aria-sort', 'none');
+                th.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        this.sortBy(th);
+                    }
+                });
             }
         });
 
@@ -68,7 +84,7 @@ export default class extends Controller {
             });
         }
 
-        const perPage = this.perPageValue;
+        const perPage = this.perPageValue > 0 ? this.perPageValue : Math.max(1, visible.length);
         const totalPages = Math.max(1, Math.ceil(visible.length / perPage));
         if (this.page > totalPages) {
             this.page = totalPages;
@@ -85,7 +101,21 @@ export default class extends Controller {
         });
 
         this.updateHeaderIndicators();
-        this.renderPagination(visible.length, totalPages, start);
+        this.renderCompteur(visible.length, query !== '');
+        if (this.perPageValue > 0) {
+            this.renderPagination(visible.length, totalPages, start);
+        }
+    }
+
+    renderCompteur(nombre, filtre) {
+        if (!this.hasCompteurTarget) {
+            return;
+        }
+        const total = this.rows.length;
+        const mot = (n) => (n > 1 ? this.plurielValue : this.singulierValue);
+        this.compteurTarget.textContent = filtre
+            ? (nombre === 0 ? `Aucun résultat sur ${total} ${mot(total)}` : `${nombre} ${mot(nombre)} sur ${total}`)
+            : `${total} ${mot(total)}`;
     }
 
     cellValue(row, index) {
@@ -106,8 +136,10 @@ export default class extends Controller {
             if (th.dataset.datatableNoSort !== undefined) return;
             if (index === this.sortColumn) {
                 th.textContent = `${th.dataset.label} ${this.sortDir === 'asc' ? '▲' : '▼'}`;
+                th.setAttribute('aria-sort', this.sortDir === 'asc' ? 'ascending' : 'descending');
             } else {
                 th.textContent = th.dataset.label;
+                th.setAttribute('aria-sort', 'none');
             }
         });
     }

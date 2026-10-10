@@ -6,15 +6,18 @@
 {% block body %}
     {{ include('admin/_entete.html.twig', {
         titre: 'Joueurs',
-        sous_titre: joueurs|length ~ ' fiches. La composition des équipes se gère depuis la fiche de chaque équipe.',
+        sous_titre: 'La composition des équipes se gère depuis la fiche de chaque équipe.',
         actions: [{url: path('admin_joueur_new'), label: 'Créer une fiche joueur', icone: 'plus', principal: true}],
     }) }}
-    <div class="admin-carte" data-controller="datatable" data-datatable-per-page-value="25">
-        <label class="input input-sm w-full max-w-xs mb-3">
-            <span class="sr-only">Rechercher un joueur</span>
-            <input type="search" placeholder="Rechercher…" data-datatable-target="search" data-action="input->datatable#filter">
-        </label>
-        <div class="overflow-x-auto">
+    <div class="admin-carte" data-controller="datatable" data-datatable-per-page-value="0" data-datatable-singulier-value="joueur" data-datatable-pluriel-value="joueurs">
+        <div class="mb-3 flex flex-wrap items-center gap-3">
+            <label class="input input-sm w-full max-w-xs">
+                <span class="sr-only">Rechercher un joueur</span>
+                <input type="search" placeholder="Rechercher…" data-datatable-target="search" data-action="input->datatable#filter">
+            </label>
+            <p class="text-sm text-(--color-base-content)/80" data-datatable-target="compteur" aria-live="polite"></p>
+        </div>
+        <div class="max-lg:overflow-x-auto">
             <table class="table table-admin">
                 <thead>
                 <tr>
@@ -38,6 +41,5 @@
                 </tbody>
             </table>
         </div>
-        <div class="flex items-center justify-between mt-3" data-datatable-target="pagination"></div>
     </div>
 {% endblock %}
