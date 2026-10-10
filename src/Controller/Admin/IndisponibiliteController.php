@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use Symfony\Component\Security\Http\Attribute\IsGranted;
 use App\Entity\Indisponibilite;
 use App\Form\IndisponibiliteType;
 use App\Repository\IndisponibiliteRepository;
@@ -11,6 +12,7 @@ use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
 
+#[IsGranted('ROLE_ADMIN')]
 #[Route('/indisponibilite')]
 final class IndisponibiliteController extends AbstractController
 {
