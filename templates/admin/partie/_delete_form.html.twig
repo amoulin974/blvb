@@ -3,7 +3,7 @@
     titre: 'Supprimer le match ' ~ partie.nomReception ~ ' contre ' ~ partie.nomDeplacement ~ ' ?',
     action: path('admin_partie_delete', {id: partie.id}),
     token: csrf_token('delete' ~ partie.id),
-    consequences: [partie.nbSetGagnantReception is not null ? 'Son score (' ~ partie.nbSetGagnantReception ~ '–' ~ partie.nbSetGagnantDeplacement ~ ') sera perdu.' : "Aucun score n'a été saisi pour ce match."],
+    consequences: [partie.nbSetGagnantReception is not null ? 'Son score (' ~ partie.nbSetGagnantReception|sets ~ '–' ~ partie.nbSetGagnantDeplacement|sets ~ ') sera perdu.' : "Aucun score n'a été saisi pour ce match."],
 } %}
 {% if declencheur_classe is defined %}
     {{ include('admin/_confirmation.html.twig', confirmation|merge({declencheur: icone_seule|default(false) ? 'Supprimer le match ' ~ partie.nomReception ~ ' contre ' ~ partie.nomDeplacement : 'Supprimer le match'})) }}

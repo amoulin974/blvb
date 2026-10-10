@@ -1,25 +1,55 @@
-{# Fenêtre de saisie du score (score-modal-controller.js) : à placer dans un élément data-controller="score-modal". #}
-<div data-score-modal-target="modal" class="modal">
-    <div class="modal-box">
-        <h3 data-score-modal-target="title" class="font-bold text-lg mb-4">
-            Saisir le score
-        </h3>
+{# Fenêtre de saisie du résultat d'un match (score-modal-controller.js) : à placer dans un élément data-controller="score-modal".
+   Validée par l'ergonome (octobre 2026) :
+   - le forfait se choisit dans des options qui nomment les équipes (plus de « F » à taper) ;
+   - sets en champs numériques 0 à 3, score impossible signalé dans la fenêtre avant l'envoi ;
+   - résumé en direct des points attribués, selon le barème de la saison du match ;
+   - « Effacer le score » explicite ; erreurs affichées dans la fenêtre (pas d'alerte du navigateur) ;
+   - options et champs d'au moins 44 px de haut (mobile). #}
+<div data-score-modal-target="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="score-modal-titre">
+    <div class="modal-box max-w-lg">
+        <h3 id="score-modal-titre" class="text-xl">Saisir le résultat</h3>
+        <p data-score-modal-target="title" class="mt-1 font-display text-lg font-semibold tracking-wide"></p>
 
-        <div class="mb-2">
-            <label data-score-modal-target="labelReception" class="block text-sm font-medium mb-1">Score Équipe 1 :</label>
-            <input type="text" data-score-modal-target="inputReception" class="input w-full text-base">
-        </div>
+        <fieldset class="mt-4">
+            <legend class="text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80 mb-1">Résultat</legend>
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
+                <input type="radio" name="score-modal-type" value="joue" class="radio radio-primary" data-score-modal-target="typeJoue" data-action="score-modal#changerType">
+                <span>Match joué</span>
+            </label>
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
+                <input type="radio" name="score-modal-type" value="forfait-reception" class="radio radio-primary" data-score-modal-target="typeForfaitReception" data-action="score-modal#changerType">
+                <span>Forfait de <span data-score-modal-target="nomForfaitReception" class="font-semibold"></span></span>
+            </label>
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
+                <input type="radio" name="score-modal-type" value="forfait-deplacement" class="radio radio-primary" data-score-modal-target="typeForfaitDeplacement" data-action="score-modal#changerType">
+                <span>Forfait de <span data-score-modal-target="nomForfaitDeplacement" class="font-semibold"></span></span>
+            </label>
+        </fieldset>
 
-        <div class="mb-4">
-            <label data-score-modal-target="labelDeplacement" class="block text-sm font-medium mb-1">Score Équipe 2 :</label>
-            <input type="text" data-score-modal-target="inputDeplacement" class="input w-full text-base">
-        </div>
-        <p class="text-sm">Saisir 3 et 1 si l'équipe qui reçoit gagne 3 sets à 1.</p>
-        <p class="text-sm">Si une équipe est forfait saisir un seul F dans son score et rien pour l'autre équipe.</p>
-        <p class="text-sm">Pour effacer un score saisi par erreur, laisser les deux champs vides.</p>
-        <div class="modal-action">
-            <button class="btn btn-accent" data-action="click->score-modal#submitForm">Valider</button>
-            <a href="#" class="btn btn-ghost" data-action="click->score-modal#closeModal">Annuler</a>
+        <fieldset class="mt-4 disabled:opacity-50" data-score-modal-target="sets">
+            <legend class="text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80 mb-1">Sets gagnés</legend>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="flex flex-col gap-1">
+                    <span data-score-modal-target="labelReception" class="text-sm font-medium"></span>
+                    <input type="number" min="0" max="3" step="1" inputmode="numeric" class="input w-full min-h-[44px] text-lg text-center"
+                           data-score-modal-target="inputReception" data-action="input->score-modal#actualiser keydown.enter->score-modal#submitForm">
+                </label>
+                <label class="flex flex-col gap-1">
+                    <span data-score-modal-target="labelDeplacement" class="text-sm font-medium"></span>
+                    <input type="number" min="0" max="3" step="1" inputmode="numeric" class="input w-full min-h-[44px] text-lg text-center"
+                           data-score-modal-target="inputDeplacement" data-action="input->score-modal#actualiser keydown.enter->score-modal#submitForm">
+                </label>
+            </div>
+        </fieldset>
+
+        <p class="mt-4 min-h-6 text-sm" data-score-modal-target="resume" aria-live="polite"></p>
+        <p class="mt-2 text-sm font-semibold text-(--color-error) hidden" data-score-modal-target="erreur" role="alert"></p>
+
+        <div class="modal-action flex-wrap">
+            <button type="button" class="btn btn-ghost text-(--color-error) mr-auto hidden" data-score-modal-target="effacer" data-action="score-modal#effacer">Effacer le score</button>
+            <button type="button" class="btn btn-ghost" data-action="score-modal#closeModal">Annuler</button>
+            <button type="button" class="btn btn-accent" data-score-modal-target="enregistrer" data-action="score-modal#submitForm">Enregistrer</button>
         </div>
     </div>
+    <div class="modal-backdrop" data-action="click->score-modal#closeModal"></div>
 </div>

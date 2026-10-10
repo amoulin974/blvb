@@ -152,7 +152,7 @@
                                                                 </span>
                                                                 <span class="font-display text-lg font-bold tabular-nums w-12 text-center">
                                                                     {%- if partie.nbSetGagnantReception is not null -%}
-                                                                        {{ partie.nbSetGagnantReception }}–{{ partie.nbSetGagnantDeplacement }}
+                                                                        {{ partie.nbSetGagnantReception|sets }}–{{ partie.nbSetGagnantDeplacement|sets }}{% if forfait_de(partie) %}<span class="sr-only"> (forfait de {{ forfait_de(partie).nom }})</span>{% endif %}
                                                                     {%- else -%}
                                                                         <span class="opacity-50" aria-label="Pas de score">–</span>
                                                                     {%- endif -%}

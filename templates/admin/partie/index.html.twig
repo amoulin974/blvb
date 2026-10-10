@@ -27,7 +27,7 @@
                     <tr>
                         <td class="whitespace-nowrap">{{ partie.date ? partie.date|date('d/m/Y H:i') }}</td>
                         <td><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_partie_edit', {id: partie.id}) }}">{{ partie.nomReception }} <span class="font-normal text-(--color-base-content)/70">contre</span> {{ partie.nomDeplacement }}</a></td>
-                        <td class="tabular-nums whitespace-nowrap">{{ partie.nbSetGagnantReception is not null ? partie.nbSetGagnantReception ~ '–' ~ partie.nbSetGagnantDeplacement : '–' }}</td>
+                        <td class="tabular-nums whitespace-nowrap">{{ partie.nbSetGagnantReception is not null ? partie.nbSetGagnantReception|sets ~ '–' ~ partie.nbSetGagnantDeplacement|sets : '–' }}</td>
                         <td>{{ partie.poule ? partie.poule.phase.nom ~ ' · ' ~ partie.poule.nom }}</td>
                         <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_partie_edit', {id: partie.id}) }}" aria-label="Modifier le match">{{ icone.i('crayon') }} Modifier</a></td>
                     </tr>
