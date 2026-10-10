@@ -4,7 +4,7 @@
     <span class="font-display text-xl font-extrabold opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span>
 {% else %}
     <span class="inline-flex items-center gap-2">
-        <span class="font-display text-xl font-extrabold text-(--color-primary) tabular-nums">{{ match.score_reception_match }} - {{ match.score_deplacement_match }}</span>
+        <span class="font-display text-xl font-extrabold text-(--color-primary) tabular-nums">{{ match.score_reception_match }}–{{ match.score_deplacement_match }}</span>
         {% if match.resultat == '1' %}
             <span class="badge badge-success badge-sm font-bold" title="Victoire">V<span class="sr-only">ictoire</span></span>
         {% elseif match.resultat == '0' %}

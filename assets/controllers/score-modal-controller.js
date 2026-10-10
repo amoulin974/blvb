@@ -19,9 +19,9 @@ export default class extends Controller {
         this.labelReceptionTarget.textContent = `Nombre sets gagnants ${btn.dataset.equipeRecoit} :`;
         this.labelDeplacementTarget.textContent = `Nombre sets gagnants ${btn.dataset.equipeDeplace} :`;
 
-        // En modification, on pré-remplit avec le score affiché ("3 - 1") ; en saisie, champs vides.
+        // En modification, on pré-remplit avec le score affiché ("3–1", tiret demi-cadratin) ; en saisie, champs vides.
         const zone = document.querySelector('.score_partie-' + this.currentPartieId);
-        const scores = btn.dataset.scoreAction === 'modifier' && zone ? zone.textContent.trim().split(/\s*-\s*/) : [];
+        const scores = btn.dataset.scoreAction === 'modifier' && zone ? zone.textContent.trim().split(/\s*–\s*/) : [];
         this.inputReceptionTarget.value = scores.length === 2 ? scores[0] : '';
         this.inputDeplacementTarget.value = scores.length === 2 ? scores[1] : '';
 
@@ -66,7 +66,7 @@ export default class extends Controller {
                 if (efface) {
                     zone.innerHTML = '<span class="opacity-50" aria-hidden="true">–</span><span class="sr-only">Score non saisi</span>';
                 } else if (scores.length === 2) {
-                    zone.innerHTML = `<strong>${scores[0]}</strong> - <strong>${scores[1]}</strong>`;
+                    zone.innerHTML = `<strong>${scores[0]}</strong>–<strong>${scores[1]}</strong>`;
                 } else {
                     zone.textContent = json.newScore;
                 }

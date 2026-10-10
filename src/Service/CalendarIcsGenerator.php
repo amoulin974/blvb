@@ -94,7 +94,7 @@ class CalendarIcsGenerator
             $description = array_filter([
                 sprintf('%s · %s · Journée %s', $partie->getPoule()?->getPhase()?->getNom(), $partie->getPoule()?->getNom(), $partie->getJournee()?->getNumero()),
                 $partie->getNbSetGagnantReception() !== null && $partie->getNbSetGagnantDeplacement() !== null
-                    ? sprintf('Résultat : %d - %d', $partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())
+                    ? sprintf('Résultat : %d–%d', $partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())
                     : null,
                 "Les horaires peuvent changer. Informations à jour : $urlFiche",
             ]);

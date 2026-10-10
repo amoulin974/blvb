@@ -52,7 +52,7 @@
                     <td class="text-center tabular-nums">{{ joues }}</td>
                     <td class="text-center tabular-nums">{{ victoires }}</td>
                     <td class="text-center tabular-nums">{{ joues - victoires }}</td>
-                    <td class="text-center tabular-nums whitespace-nowrap">{{ classement.setGagnes }} - {{ classement.setPerdus }}</td>
+                    <td class="text-center tabular-nums whitespace-nowrap">{{ classement.setGagnes }}–{{ classement.setPerdus }}</td>
                 </tr>
             {% endfor %}
             </tbody>
@@ -78,7 +78,7 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline block py-0.5 break-words font-display text-lg tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
-                            <p class="text-sm">{{ joues }} joué{{ joues > 1 ? 's' : '' }} · {{ victoires }} V · {{ joues - victoires }} D · sets {{ classement.setGagnes }}-{{ classement.setPerdus }}</p>
+                            <p class="text-sm">{{ joues }} joué{{ joues > 1 ? 's' : '' }} · {{ victoires }} V · {{ joues - victoires }} D · sets {{ classement.setGagnes }}–{{ classement.setPerdus }}</p>
                         </div>
                         <div class="shrink-0 text-right">
                             <span class="font-display text-2xl font-bold tabular-nums">{{ classement.points }}</span>

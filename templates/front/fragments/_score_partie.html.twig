@@ -11,7 +11,7 @@
 <span class="inline-flex items-center justify-center gap-1.5">
     <span class="score_partie-{{ partie.id }}{{ (peutSaisir and not joue) ? ' hidden' : '' }}">
         {%- if joue -%}
-            <strong>{{ partie.getNbSetGagnantReception }}</strong> - <strong>{{ partie.getNbSetGagnantDeplacement }}</strong>
+            <strong>{{ partie.getNbSetGagnantReception }}</strong>–<strong>{{ partie.getNbSetGagnantDeplacement }}</strong>
         {%- else -%}
             <span class="opacity-50" title="{{ passe ? 'Score non saisi' : 'À venir' }}" aria-hidden="true">–</span><span class="sr-only">{{ passe ? 'Score non saisi' : 'À venir' }}</span>
         {%- endif -%}
