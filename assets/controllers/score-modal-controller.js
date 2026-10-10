@@ -4,17 +4,10 @@ export default class extends Controller {
     static targets = [ "modal", "title", "labelReception", "labelDeplacement", "inputReception", "inputDeplacement" ];
 
     connect() {
-<<<<<<< HEAD
-        // this.csrfTokenValue = document.querySelector('meta[name="csrf-token"]').content;
-		const csrfMeta = document.querySelector('meta[name="csrf-token"]');
-		this.csrfTokenValue = csrfMeta ? csrfMeta.content : '';
-		this.currentPartieId = null;
-=======
         // Jeton CSRF facultatif : la balise <meta name="csrf-token"> n'est pas présente dans les pages,
         // on ne doit pas planter au démarrage (les visiteurs n'ont de toute façon pas accès à la saisie).
         this.csrfTokenValue = document.querySelector('meta[name="csrf-token"]')?.content ?? null;
         this.currentPartieId = null;
->>>>>>> refs/remotes/origin/main
     }
 
     openModal(event) {
