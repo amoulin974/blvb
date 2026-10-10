@@ -1,0 +1,24 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Composition de {{ equipe.nom }} · {{ saison.nom }}{% endblock %}
+
+{# Composition côté back-office. Le contenu est partagé avec le site : front/equipe_composition/_composition.html.twig #}
+{% block body %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Composition de ' ~ equipe.nom,
+        sous_titre: saison.nom ~ ' · ' ~ membres|length ~ ' joueur' ~ (membres|length > 1 ? 's' : ''),
+        retour: {url: path('admin_equipe_show', {id: equipe.id}), label: 'Fiche de l\'équipe'},
+        actions: [{url: path('front_equipe_composition_index', {equipe: equipe.id, saison: saison.id}), label: 'Voir côté capitaine', icone: 'externe'}],
+    }) }}
+
+    {% if saisonsEquipe|length > 1 %}
+        <nav class="flex flex-wrap items-center gap-1 mb-4" aria-label="Choisir la saison">
+            <span class="text-sm text-(--color-base-content)/80 mr-1">Saison :</span>
+            {% for s in saisonsEquipe %}
+                <a class="btn btn-sm {{ s.id == saison.id ? 'btn-primary' : 'btn-ghost' }}" href="{{ path('admin_equipe_composition_index', {equipe: equipe.id, saison: s.id}) }}" {% if s.id == saison.id %}aria-current="page"{% endif %}>{{ s.nom }}</a>
+            {% endfor %}
+        </nav>
+    {% endif %}
+
+    {{ include('front/equipe_composition/_composition.html.twig') }}
+{% endblock %}

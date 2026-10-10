@@ -16,7 +16,7 @@
                 {% for saison in saisons %}
                     <li class="flex flex-wrap items-center justify-between gap-2">
                         <span>{{ saison.nom }}</span>
-                        <a class="btn btn-ghost btn-sm" href="{{ path('front_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
+                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_equipe_composition_index', {'equipe': equipe.id, 'saison': saison.id}) }}">Gérer la composition</a>
                     </li>
                 {% else %}
                     <li class="text-(--color-base-content)/80">Cette équipe n'est encore rattachée à aucune saison : ajoutez-la à une poule.</li>
