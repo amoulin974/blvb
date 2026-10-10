@@ -80,7 +80,7 @@ final class PartieController extends AbstractController
         ]);
     }
 
-    #[Route('/admin/partie/{id}/delete', name: 'delete', methods: ['POST'])]
+    #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Partie $partie, EntityManagerInterface $entityManager): Response
     {
         // On récupère les infos pour la redirection avant la suppression
@@ -276,36 +276,6 @@ final class PartieController extends AbstractController
     }
 
 
-
-    //Ajoute une journée Méthode appelé par l'API lors du click sur une date vide dans le calendrier
-    #[Route('/{poule}/api', name: 'api_add', methods: ['POST'])]
-    public function apiPartiesAdd(Request $request, Poule $poule, EntityManagerInterface $em): JsonResponse
-    {
-        $data = json_decode($request->getContent(), true);
-        $partie = new Partie();
-        if (isset($data['datedebut'])) {
-            $partie->setDateDebut(new \DateTimeImmutable($data['datedebut']));
-        }
-        if (isset($data['datefin'])) {
-            $partie->setDateFin(new \DateTimeImmutable($data['datefin']));
-        }
-        //On calcule le numéro de la journée en ajoutant 1 au nombre de journées existantes
-        //(la méthode regulariseNumeroJournee sera appelée après pour tout remettre en ordre si besoin)
-        $nbJournees = count($poule->getJournees());
-        $journee->setPoule($poule);
-        $poule->addJournee($journee);
-        $em->persist($journee);
-        $em->flush();
-
-        $this->regulariseNumeroJournee($poule, $em);
-
-        return $this->json([
-            'id' => $journee->getId(),
-            'title' => 'Journée ' . $journee->getNumero(),
-            'start' => $journee->getDateDebut()->format('Y-m-d'),
-            'end' => $journee->getDateFin()->format('Y-m-d'),
-        ]);
-    }
 
     //Met à jour une journée Méthode appelé par l'API lors du déplacement d'une journée dans le calendrier
     #[Route('/{poule}/api/{partie}', name: 'api_update', methods: ['PUT'])]
