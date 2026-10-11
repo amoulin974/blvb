@@ -74,9 +74,16 @@
         </p>
         <h3 class="text-lg font-semibold">Saisie des résultats</h3>
         <p>
-            Les capitaines saisissent le résultat des matchs que leur équipe reçoit, et les administrateurs peuvent les corriger.
+            Les capitaines saisissent le résultat des matchs que leur équipe reçoit, les responsables de club celui des matchs
+            des équipes de leur club, et les administrateurs peuvent les corriger.
             Les résultats doivent être exacts et conformes au <a class="link link-primary" href="{{ path('front_reglement') }}">règlement</a>.
             Les organisateurs peuvent corriger un résultat erroné et suspendre un compte en cas d'abus.
+        </p>
+        <h3 class="text-lg font-semibold">Fiches des clubs</h3>
+        <p>
+            La présentation, le lien et le logo d'un club sont publiés par ses responsables, sous leur responsabilité :
+            en ajoutant un logo, ils garantissent que le club en a les droits. Les organisateurs peuvent retirer un contenu
+            inexact ou inapproprié.
         </p>
         <h3 class="text-lg font-semibold">Coordonnées des joueurs</h3>
         <p>
@@ -109,6 +116,7 @@
         <ul class="list-disc pl-5 space-y-1">
             <li><strong>Compte</strong> : adresse e-mail, prénom, nom, téléphone (facultatif), mot de passe (enregistré sous une forme chiffrée qui ne permet pas de le retrouver).</li>
             <li><strong>Fiche joueur</strong> : prénom, nom, adresse e-mail et téléphone, équipe(s) et rôle de capitaine pour chaque saison.</li>
+            <li><strong>Clubs</strong> : comptes désignés comme responsables d'un club.</li>
             <li><strong>Vie du championnat</strong> : équipes, matchs, résultats et classements, conservés comme archives des saisons.</li>
             <li><strong>Données techniques</strong> : adresse IP et pages consultées, enregistrées par le serveur dans ses journaux pour sa sécurité et son bon fonctionnement.</li>
         </ul>
@@ -124,7 +132,7 @@
 
         <h3 class="text-lg font-semibold">Qui y a accès</h3>
         <ul class="list-disc pl-5 space-y-1">
-            <li>Les noms des équipes, les calendriers, les résultats et les classements sont publics.</li>
+            <li>Les noms des équipes, les calendriers, les résultats, les classements et les fiches des clubs sont publics. Les noms des responsables de club ne sont pas publiés.</li>
             <li>Les coordonnées du capitaine d'une équipe sont visibles par les capitaines de la même poule, les membres de l'équipe et les administrateurs.</li>
             <li>La composition d'une équipe, avec les coordonnées de ses joueurs, est visible par les membres de l'équipe et les administrateurs.</li>
             <li>Les administrateurs bénévoles du championnat accèdent à l'ensemble des données pour l'organiser.</li>
