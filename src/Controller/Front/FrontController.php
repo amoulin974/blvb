@@ -16,7 +16,9 @@ use App\Repository\PartieRepository;
 use App\Repository\EquipeRepository;
 use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
+use App\Security\ScoreVoter;
 use App\Service\ClassementService;
+use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,7 +42,7 @@ final class FrontController extends AbstractController
 
     #[Route('', name: 'index')]
     public function index(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, EquipeRepository $equipeRepository, MembreEquipeRepository $membreEquipeRepository): Response
+    $saisonRepository, EquipeRepository $equipeRepository, MembreEquipeRepository $membreEquipeRepository, SaisieScoreService $saisieScore): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -56,7 +58,6 @@ final class FrontController extends AbstractController
             $equipesCapitaine = $membreEquipeRepository->findEquipesOuCapitaine($user, $saison);
         }
         $equipe = $equipesCapitaine[0] ?? null;
-        $equipesCapitaineIds = array_map(static fn(Equipe $e) => $e->getId(), $equipesCapitaine);
 
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
@@ -65,7 +66,8 @@ final class FrontController extends AbstractController
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'equipe'=>$equipe,
-            'equipesCapitaineIds'=>$equipesCapitaineIds,
+            // Équipes dont l'utilisateur peut saisir les matchs reçus (capitaine, responsable de club)
+            'equipesSaisieIds'=>$saisieScore->equipesAutoriseesIds($user, $saison),
             'saison' => $saison,
             'phaseouverte' => $phaseouverte,
         ]);
@@ -256,7 +258,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le calendrier des matchs de la saison sélectionnée
     #[Route('/calendrier', name: 'calendrier', methods: ['GET'])]
     public function calendrier(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, MembreEquipeRepository $membreEquipeRepository): Response
+    $saisonRepository, SaisieScoreService $saisieScore): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -267,21 +269,13 @@ final class FrontController extends AbstractController
         //Déterminer la phase à ouvrir
         $phaseouverte=$this->getPhaseActuelle($saison);
 
-        $user = $this->getUser();
-        $equipesCapitaineIds = [];
-        if ($user) {
-            $equipesCapitaineIds = array_map(
-                static fn(Equipe $e) => $e->getId(),
-                $membreEquipeRepository->findEquipesOuCapitaine($user, $saison)
-            );
-        }
-
         return $this->render('front/calendrier.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
-            'equipesCapitaineIds'=>$equipesCapitaineIds,
+            // Équipes dont l'utilisateur peut saisir les matchs reçus (capitaine, responsable de club)
+            'equipesSaisieIds'=>$saisieScore->equipesAutoriseesIds($this->getUser(), $saison),
         ]);
     }
     //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux
@@ -437,7 +431,7 @@ final class FrontController extends AbstractController
 
     //Route appelé quand un admin ou un capitaine change le score d'une partie
     #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
-    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService, MembreEquipeRepository $membreEquipeRepository): JsonResponse
+    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
     {
 
     // Jeton CSRF envoyé par score-modal-controller.js (balise <meta name="csrf-token"> de base_front)
@@ -447,13 +441,9 @@ final class FrontController extends AbstractController
 
     $data = json_decode($request->getContent(), true);
     try{
-        $user = $this->getUser();
-        //Vérifier si user à le role admin ou s'il est capitaine de l'équipe qui reçoit (pour la saison du match)
-        if (!$this->isGranted('ROLE_ADMIN')) {
-            $saisonPartie = $partie->getPoule()->getPhase()->getSaison();
-            if (!$user || !$membreEquipeRepository->estCapitaine($user, $partie->getIdEquipeRecoit(), $saisonPartie)) {
-                throw new Exception("Modification interdite");
-            }
+        // Admin, capitaine de l'équipe qui reçoit ou responsable de son club (App\Security\ScoreVoter)
+        if (!$this->isGranted(ScoreVoter::SAISIR, $partie)) {
+            throw new Exception("Modification interdite");
         }
 
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");

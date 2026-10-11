@@ -1,0 +1,10 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Créer un club{% endblock %}
+
+{% block body %}
+    {{ include('admin/_entete.html.twig', {titre: 'Créer un club', retour: {url: path('admin_club_index'), label: 'Clubs'}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/club/_form.html.twig', {'button_label': 'Créer le club'}) }}
+    </div>
+{% endblock %}

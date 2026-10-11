@@ -1,0 +1,20 @@
+{# Formulaire d'un club (ClubType). Les listes multiples utilisent tom-select (recherche, retrait d'un élément). #}
+{{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+
+<div class="form-control w-full">
+    {{ form_label(form.nom, null, {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': 'Nom du club'}}) }}
+    {{ form_errors(form.nom) }}
+</div>
+
+{% for champ in [form.equipes, form.lieux, form.responsables] %}
+    <div class="form-control w-full">
+        {{ form_label(champ, null, {'label_attr': {'class': 'label'}}) }}
+        {{ form_widget(champ) }}
+        <p class="mt-1 text-sm text-(--color-base-content)/70">{{ champ.vars.help }}</p>
+        {{ form_errors(champ) }}
+    </div>
+{% endfor %}
+
+<button class="btn btn-primary">{{ button_label|default('Enregistrer') }}</button>
+{{ form_end(form) }}

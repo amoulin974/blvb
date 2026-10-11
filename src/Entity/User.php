@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -45,6 +47,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $telephone = null;
 
+    /** @var Collection<int, Club> clubs dont l'utilisateur est responsable (donne ROLE_RESPONSABLE_CLUB) */
+    #[ORM\ManyToMany(targetEntity: Club::class, mappedBy: 'responsables')]
+    private Collection $clubsResponsable;
+
+    public function __construct()
+    {
+        $this->clubsResponsable = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -80,6 +91,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
+        // Rôle déduit : responsable d'au moins un club (désigné dans l'admin, fiche du club)
+        if (isset($this->clubsResponsable) && !$this->clubsResponsable->isEmpty()) {
+            $roles[] = 'ROLE_RESPONSABLE_CLUB';
+        }
 
         return array_unique($roles);
     }
@@ -116,6 +131,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $data = (array) $this;
         $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+        // Les clubs ne vont pas en session : le rôle déduit est recalculé à partir de l'utilisateur relu en base
+        unset($data["\0".self::class."\0clubsResponsable"]);
 
         return $data;
     }
@@ -170,6 +187,30 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTelephone(?string $telephone): static
     {
         $this->telephone = $telephone;
+
+        return $this;
+    }
+
+    /** @return Collection<int, Club> */
+    public function getClubsResponsable(): Collection
+    {
+        return $this->clubsResponsable;
+    }
+
+    /** Appelé par Club::addResponsable (côté propriétaire de la relation). */
+    public function addClubResponsable(Club $club): static
+    {
+        if (!$this->clubsResponsable->contains($club)) {
+            $this->clubsResponsable->add($club);
+        }
+
+        return $this;
+    }
+
+    /** Appelé par Club::removeResponsable (côté propriétaire de la relation). */
+    public function removeClubResponsable(Club $club): static
+    {
+        $this->clubsResponsable->removeElement($club);
 
         return $this;
     }

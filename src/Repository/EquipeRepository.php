@@ -4,6 +4,7 @@ namespace App\Repository;
 
 use App\Entity\Equipe;
 use App\Entity\Saison;
+use App\Entity\User;
 use App\Entity\Poule;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
@@ -22,6 +23,23 @@ class EquipeRepository extends ServiceEntityRepository
      * Récupère les poules d'une équipe pour une saison donnée.
      * @return Poule[]
      */
+    /**
+     * Identifiants des équipes des clubs dont l'utilisateur est responsable.
+     *
+     * @return int[]
+     */
+    public function findIdsDesClubsDe(User $user): array
+    {
+        return array_map('intval', $this->createQueryBuilder('e')
+            ->select('e.id')
+            ->innerJoin('e.club', 'c')
+            ->innerJoin('c.responsables', 'r')
+            ->andWhere('r = :user')
+            ->setParameter('user', $user)
+            ->getQuery()
+            ->getSingleColumnResult());
+    }
+
     public function findPoulesBySaison(Equipe $equipe, Saison $saison): array
     {
         return $this->getEntityManager()->createQueryBuilder()

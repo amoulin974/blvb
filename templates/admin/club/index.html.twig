@@ -1,0 +1,44 @@
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block title %}Clubs{% endblock %}
+
+{% block body %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Clubs',
+        sous_titre: 'Équipes, gymnases et responsables de chaque club. Les responsables saisissent le score des matchs reçus par leurs équipes.',
+        actions: [{url: path('admin_club_new'), label: 'Créer un club', icone: 'plus', principal: true}],
+    }) }}
+    <div class="admin-carte max-lg:overflow-x-auto">
+        <table class="table table-admin">
+            <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Équipes</th>
+                <th>Gymnases</th>
+                <th>Responsables</th>
+                <th><span class="sr-only">Actions</span></th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for club in clubs %}
+                <tr class="align-top">
+                    <td><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_club_edit', {id: club.id}) }}">{{ club.nom }}</a></td>
+                    <td>{{ club.equipes|map(e => e.nom)|join(', ') ?: '–' }}</td>
+                    <td>{{ club.lieux|map(l => l.nom)|join(', ') ?: '–' }}</td>
+                    <td>
+                        {% for user in club.responsables %}
+                            <div>{{ user.prenom }} {{ user.nom }}</div>
+                        {% else %}
+                            <span class="text-(--color-base-content)/70">Aucun</span>
+                        {% endfor %}
+                    </td>
+                    <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_club_edit', {id: club.id}) }}" aria-label="Modifier {{ club.nom }}">{{ icone.i('crayon') }} Modifier</a></td>
+                </tr>
+            {% else %}
+                <tr><td colspan="5">Aucun club.</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

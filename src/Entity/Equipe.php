@@ -23,6 +23,11 @@ class Equipe
     #[ORM\ManyToOne(inversedBy: 'equipes')]
     private ?Lieu $lieu = null;
 
+    /** Club de l'équipe : ses responsables peuvent saisir les scores des matchs qu'elle reçoit (ScoreVoter). */
+    #[ORM\ManyToOne(inversedBy: 'equipes')]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?Club $club = null;
+
     /**
      * @var Collection<int, Partie>
      */
@@ -94,6 +99,18 @@ class Equipe
     public function setLieu(?Lieu $lieu): static
     {
         $this->lieu = $lieu;
+
+        return $this;
+    }
+
+    public function getClub(): ?Club
+    {
+        return $this->club;
+    }
+
+    public function setClub(?Club $club): static
+    {
+        $this->club = $club;
 
         return $this;
     }

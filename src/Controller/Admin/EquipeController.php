@@ -32,7 +32,8 @@ final class EquipeController extends AbstractController
     public function index(EquipeRepository $equipeRepository): Response
     {
         return $this->render('admin/equipe/index.html.twig', [
-            'equipes' => $equipeRepository->findBy([], ['nom' => 'ASC']),
+            // Club et gymnase chargés avec les équipes (une seule requête pour la liste)
+            'equipes' => $equipeRepository->createQueryBuilder('e')->leftJoin('e.club', 'c')->addSelect('c')->leftJoin('e.lieu', 'l')->addSelect('l')->orderBy('e.nom', 'ASC')->getQuery()->getResult(),
         ]);
     }
 
