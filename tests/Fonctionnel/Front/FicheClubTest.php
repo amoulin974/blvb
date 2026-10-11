@@ -233,4 +233,48 @@ final class FicheClubTest extends TestFonctionnel
         self::assertSelectorTextContains('body', 'L\'abréviation est passée de CTA à ABC');
         self::assertSelectorTextContains('body', '« EQUIPE A1 (ABC) »');
     }
+
+    #[TestDox('Une image de plus de 2 Mo est refusée, sans fichier enregistré')]
+    public function test_image_trop_lourde(): void
+    {
+        // PNG de bruit aléatoire (incompressible) : plus de 2 Mo, mais une vraie image
+        $image = imagecreatetruecolor(1000, 1000);
+        for ($x = 0; $x < 1000; ++$x) {
+            for ($y = 0; $y < 1000; ++$y) {
+                imagesetpixel($image, $x, $y, random_int(0, 0xFFFFFF));
+            }
+        }
+        $chemin = sys_get_temp_dir().'/logo-lourd-'.bin2hex(random_bytes(3)).'.png';
+        imagepng($image, $chemin, 0);
+        self::assertGreaterThan(2 * 1024 * 1024, filesize($chemin));
+        $avant = glob($this->dossierImages().'/*') ?: [];
+
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[imageFichier]']->upload($chemin);
+        $this->client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'L\'image est trop lourde');
+        self::assertNull($this->club()->getImage());
+        self::assertSame($avant, glob($this->dossierImages().'/*') ?: []);
+    }
+
+    #[TestDox('Le nom du fichier envoyé est ignoré : un nom avec « ../ » ne sort pas du dossier des images')]
+    public function test_nom_de_fichier_ignore(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $fichier = new \Symfony\Component\HttpFoundation\File\UploadedFile($this->imagePng()->getPathname(), '../../../public/piege.php.png', 'image/png', null, true);
+        $this->client->request('POST', $form->getUri(), $form->getPhpValues(), ['club_fiche' => ['imageFichier' => $fichier]]);
+
+        self::assertResponseRedirects();
+        $image = $this->club()->getImage();
+        self::assertMatchesRegularExpression('/^cta-[0-9a-f]{8}\.png$/', $image, 'nom généré par l\'application');
+        self::assertFileExists($this->dossierImages().'/'.$image);
+        self::assertFileDoesNotExist(self::getContainer()->getParameter('kernel.project_dir').'/public/piege.php.png');
+        self::assertFileDoesNotExist(\dirname($this->dossierImages(), 3).'/public/piege.php.png');
+    }
 }

@@ -186,7 +186,7 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 
 Le responsable ne gère ni les équipes, ni les gymnases, ni les responsables : `/admin/club/*` → 403 pour lui (couvert par SEC-01 ; ✅ *`ClubAdminTest`*).
 
-**SEC-12 — Envoi d'image (logo d'un club)** ✅ *(type et nom)* : fichier non image → 422, rien d'enregistré ; nom du fichier généré par l'application (`<abréviation>-<aléa>.<ext>`), jamais celui envoyé ; types acceptés JPEG, PNG, WebP, GIF (pas de SVG) ; 2 Mo au plus ; remplacer ou retirer l'image supprime l'ancien fichier. À ajouter : fichier de plus de 2 Mo → 422 ; nom de fichier envoyé avec `../` sans effet.
+**SEC-12 — Envoi d'image (logo d'un club)** ✅ *`FicheClubTest`* : fichier non image → 422, rien d'enregistré ; image de plus de 2 Mo → 422, aucun fichier écrit ; nom du fichier généré par l'application (`<abréviation>-<aléa>.<ext>`), jamais celui envoyé : un nom avec `../` ne sort pas du dossier des images ; types acceptés JPEG, PNG, WebP, GIF (pas de SVG) ; remplacer ou retirer l'image supprime l'ancien fichier.
 
 ### 4.2 Saisie des scores — `Fonctionnel/Front/SaisieScoreTest` (P0)
 
@@ -385,7 +385,7 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **REP-01** ✅ — Séparation nom / sigle (« EROAK (AOVB) », espaces, chiffres, parenthèses ordinaires laissées dans le nom).
 **REP-02** ✅ — Clubs du référentiel créés (nom long, gymnases, description et lien) ; club existant réutilisé, son nom long et sa fiche **jamais écrasés** ; anciens sigles traduits (SJDL → VBLC) ; équipes sans sigle rattachées d'après le référentiel ; écriture des noms corrigée (table `NOMS_EQUIPES`).
 **REP-03** ✅ — Sans `--force` : rien n'est enregistré ; relancée après application : aucun changement, aucun avertissement.
-**REP-04** — Import Excel des équipes : « NOM (SIGLE) » rattaché au club, sigle retiré du nom. *À écrire.*
+**REP-04** ✅ *`ImportEquipesTest`* — Import Excel des équipes : « NOM (SIGLE) » rattaché au club du sigle (club existant réutilisé, club inconnu créé), sigle retiré du nom ; équipe sans sigle et parenthèses ordinaires : pas de club.
 
 ---
 
@@ -461,7 +461,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | Lot | Contenu | Livrable vérifiable | Charge estimée |
 |---|---|---|---|
 | **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
-| **Clubs** ✅ | SEC-11, SEC-12 (en partie), SCO-13, NOM-*, CLU-*, ADC-*, REP-01 à 03 ; story enrichie (clubs, `resp.club`) | 61 tests verts (branche `clubs`) | fait le 11/10/2026 |
+| **Clubs** ✅ | SEC-11, SEC-12, SCO-13, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club`) | 64 tests verts (branche `clubs`) | fait le 11/10/2026 |
 | **1 — Accès** | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la CI | 0,5 j |
 | **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |
