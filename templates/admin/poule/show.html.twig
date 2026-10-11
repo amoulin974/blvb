@@ -1,27 +1,12 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Poule{% endblock %}
+{% block title %}Poule {{ poule.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Poule</h1>
-
-    <table class="table">
-        <tbody>
-            <tr>
-                <th>Id</th>
-                <td>{{ poule.id }}</td>
-            </tr>
-            <tr>
-                <th>Nom</th>
-                <td>{{ poule.nom }}</td>
-            </tr>
-
-        </tbody>
-    </table>
-
-    <a href="{{ path('admin_poule_index') }}">back to list</a>
-
-    <a href="{{ path('admin_poule_edit', {'id': poule.id}) }}">edit</a>
-
-    {{ include('admin/poule/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Poule ' ~ poule.nom,
+        sous_titre: poule.phase.saison.nom ~ ' · ' ~ poule.phase.nom,
+        retour: {url: path('admin_saison_show', {id: poule.phase.saison.id, openPoule: poule.id}), label: poule.phase.saison.nom},
+        actions: [{url: path('admin_poule_edit', {id: poule.id}), label: 'Modifier', icone: 'crayon', principal: true}],
+    }) }}
 {% endblock %}

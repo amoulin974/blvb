@@ -1,16 +1,16 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Modifier la poule : {{ poule.nom }}{% endblock %}
+{% block title %}Modifier la poule {{ poule.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Modifier la poule :  {{ poule.nom }} - {{ poule.phase.saison.nom }} - {{ poule.phase.nom }}</h1>
-
-    {{ include('admin/poule/_form.html.twig', {'button_label': 'Enregistrer'}) }}
-
-    <div class="flex gap-2">
-        <a href="{{ path('admin_poule_index') }}" class="btn btn-sm btn-info">Revenir à la liste des poules</a>
-        <a class="btn btn-neutral btn-sm" href="{{ path('admin_journee_getjourneecalendar', {'id':poule.id}) }}">Calendrier des journées</a>
-        {{ include('/admin/poule/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Modifier la poule ' ~ poule.nom,
+        sous_titre: poule.phase.saison.nom ~ ' · ' ~ poule.phase.nom,
+        retour: {url: path('admin_saison_show', {id: poule.phase.saison.id, openPoule: poule.id}), label: poule.phase.saison.nom},
+        actions: [{url: path('admin_journee_getjourneecalendar', {id: poule.id}), label: 'Calendrier des journées', icone: 'calendrier'}],
+    }) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/poule/_form.html.twig', {'button_label': 'Enregistrer'}) }}
     </div>
-
+    <div class="max-w-3xl">{{ include('admin/poule/_delete_form.html.twig') }}</div>
 {% endblock %}

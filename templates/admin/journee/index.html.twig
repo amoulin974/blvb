@@ -1,43 +1,41 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
 
-{% block title %}Liste des journées{% endblock %}
+{% block title %}Journées{% endblock %}
 
 {% block body %}
-    <h1>Liste des journées</h1>
-    <a class="btn btn-success btn-sm mt-3 mb-3" href="{{ path('admin_journee_new') }}"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-6">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-        </svg>
-        Créer une nouvelle journée</a>
-<div class="overflow-x-auto rounded-box border border-base-content/5 w-4/5 bg-base-100">
-    <table class="border border-solid table table-xs table-zebra">
-        <thead>
-            <tr>
-                <th>Id</th>
-                <th>Numero</th>
-                <th>Date_debut</th>
-                <th>Date_fin</th>
-                <th>actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        {% for journee in journees %}
-            <tr>
-                <td>{{ journee.id }}</td>
-                <td>{{ journee.numero }}</td>
-                <td>{{ journee.dateDebut ? journee.dateDebut|date('Y-m-d H:i:s') : '' }}</td>
-                <td>{{ journee.dateFin ? journee.dateFin|date('Y-m-d H:i:s') : '' }}</td>
-                <td class="flex items-center gap-2">
-                    <a href="{{ path('admin_journee_show', {'id': journee.id}) }}">show</a>
-                    <a href="{{ path('admin_journee_edit', {'id': journee.id}) }}">edit</a>
-                </td>
-            </tr>
-        {% else %}
-            <tr>
-                <td colspan="5">no records found</td>
-            </tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
-
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Journées',
+        sous_titre: 'Outil technique : les journées se créent et se placent depuis la page de chaque saison.',
+        actions: [{url: path('admin_journee_new'), label: 'Créer une journée', icone: 'plus', principal: true}],
+    }) }}
+    <div class="admin-carte" data-controller="datatable" data-datatable-per-page-value="0" data-datatable-singulier-value="journée" data-datatable-pluriel-value="journées">
+        <div class="mb-3 flex flex-wrap items-center gap-3">
+            <label class="input input-sm w-full max-w-xs">
+                <span class="sr-only">Rechercher une journée</span>
+                <input type="search" placeholder="Rechercher…" data-datatable-target="search" data-action="input->datatable#filter">
+            </label>
+            <p class="text-sm text-(--color-base-content)/80" data-datatable-target="compteur" aria-live="polite"></p>
+        </div>
+        <div class="max-lg:overflow-x-auto">
+            <table class="table table-admin">
+                <thead>
+                <tr><th>Journée</th><th>Poule</th><th>Du</th><th>Au</th><th data-datatable-no-sort><span class="sr-only">Actions</span></th></tr>
+                </thead>
+                <tbody data-datatable-target="body">
+                {% for journee in journees %}
+                    <tr>
+                        <td><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_journee_edit', {id: journee.id}) }}">Journée {{ journee.numero }}</a></td>
+                        <td>{{ journee.poule ? journee.poule.phase.saison.nom ~ ' · ' ~ journee.poule.phase.nom ~ ' · ' ~ journee.poule.nom }}</td>
+                        <td>{{ journee.dateDebut ? journee.dateDebut|date('d/m/Y') }}</td>
+                        <td>{{ journee.dateFin ? journee.dateFin|date('d/m/Y') }}</td>
+                        <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_journee_edit', {id: journee.id}) }}" aria-label="Modifier la journée {{ journee.numero }}">{{ icone.i('crayon') }} Modifier</a></td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5">Aucune journée.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 {% endblock %}

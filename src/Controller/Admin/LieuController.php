@@ -17,11 +17,13 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/lieu', name: 'admin_lieu_')]
 final class LieuController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route("/", name: 'index', methods: ['GET'])]
     public function index(LieuRepository $lieuRepository): Response
     {
         return $this->render('admin/lieu/index.html.twig', [
-            'lieux' => $lieuRepository->findAll(),
+            'lieux' => $lieuRepository->findBy([], ['nom' => 'ASC']),
         ]);
     }
 
@@ -81,10 +83,7 @@ final class LieuController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Lieu $lieu, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$lieu->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($lieu);
-            $entityManager->flush();
-        }
+        $this->supprimerEntite($request, $entityManager, $lieu, 'delete'.$lieu->getId(), 'le gymnase '.$lieu->getNom(), false);
 
         return $this->redirectToRoute('admin_lieu_index', [], Response::HTTP_SEE_OTHER);
     }

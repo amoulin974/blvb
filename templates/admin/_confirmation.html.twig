@@ -1,0 +1,36 @@
+{# Bouton qui ouvre la fenêtre de confirmation partagée (base_admin.html.twig, confirmation_controller.js) :
+   la fenêtre nomme l'objet et dit ce qui sera perdu. Remplace les confirm() du navigateur.
+   Variables :
+     action           URL du formulaire POST                       (obligatoire)
+     token            jeton CSRF                                    (obligatoire)
+     titre            question de la fenêtre, ex. « Supprimer l'équipe ARRATS ? »
+     consequences     liste de phrases : ce qui sera supprimé ou changé (facultatif)
+     blocage          si renseigné : l'action est impossible, la fenêtre explique pourquoi sans bouton de confirmation
+     bouton           libellé du bouton de confirmation             (défaut : « Supprimer définitivement »)
+     ton              'error' (défaut) ou 'warning'
+     irreversible     ajoute « Cette action est définitive. »       (défaut : vrai)
+     champs           champs cachés supplémentaires {nom: valeur}
+     declencheur      libellé du bouton                             (défaut : « Supprimer »)
+     declencheur_classe  classes du bouton                          (défaut : bouton discret rouge)
+     declencheur_icone   icône du bouton, ou false                  (défaut : poubelle)
+     icone_seule      n'affiche que l'icône (le libellé devient l'étiquette accessible) #}
+{% import 'admin/_icones.html.twig' as icone %}
+{% set declencheur = declencheur|default('Supprimer') %}
+{% set declencheur_icone = declencheur_icone ?? 'poubelle' %}
+<button type="button"
+        class="{{ declencheur_classe|default('btn btn-ghost btn-sm text-error') }}"
+        {% if icone_seule|default(false) %}aria-label="{{ declencheur }}" title="{{ declencheur }}"{% endif %}
+        aria-haspopup="dialog"
+        data-action="confirmation#ouvrir"
+        data-confirmation-action-param="{{ action }}"
+        data-confirmation-token-param="{{ token }}"
+        data-confirmation-titre-param="{{ titre }}"
+        data-confirmation-consequences-param="{{ consequences|default([])|json_encode }}"
+        data-confirmation-blocage-param="{{ blocage|default('') }}"
+        data-confirmation-bouton-param="{{ bouton|default('Supprimer définitivement') }}"
+        data-confirmation-ton-param="{{ ton|default('error') }}"
+        data-confirmation-irreversible-param="{{ (irreversible ?? true) ? 'true' : 'false' }}"
+        data-confirmation-champs-param="{{ champs|default({})|json_encode }}">
+    {%- if declencheur_icone %}{{ icone.i(declencheur_icone) }}{% endif -%}
+    {%- if not icone_seule|default(false) %} {{ declencheur }}{% endif -%}
+</button>

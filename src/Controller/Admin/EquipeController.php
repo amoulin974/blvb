@@ -26,11 +26,13 @@ use function PHPUnit\Framework\isArray;
 #[Route('/admin/equipe', name: 'admin_equipe_')]
 final class EquipeController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route(name: 'index', methods: ['GET'])]
     public function index(EquipeRepository $equipeRepository): Response
     {
         return $this->render('admin/equipe/index.html.twig', [
-            'equipes' => $equipeRepository->findAll(),
+            'equipes' => $equipeRepository->findBy([], ['nom' => 'ASC']),
         ]);
     }
 
@@ -92,10 +94,7 @@ final class EquipeController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Equipe $equipe, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$equipe->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($equipe);
-            $entityManager->flush();
-        }
+        $this->supprimerEntite($request, $entityManager, $equipe, 'delete'.$equipe->getId(), "l'équipe ".$equipe->getNom(), true);
 
         return $this->redirectToRoute('admin_equipe_index', [], Response::HTTP_SEE_OTHER);
     }

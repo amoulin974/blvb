@@ -22,6 +22,8 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/poule', name: 'admin_poule_')]
 final class PouleController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route(name: 'index', methods: ['GET'])]
     public function index(PouleRepository $pouleRepository): Response
     {
@@ -89,12 +91,11 @@ final class PouleController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$poule->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($poule);
-            $entityManager->flush();
-        }
+        $saisonId = $poule->getPhase()->getSaison()->getId();
+        $this->supprimerEntite($request, $entityManager, $poule, 'delete'.$poule->getId(), 'la poule '.$poule->getNom(), true);
 
-        return $this->redirectToRoute('admin_poule_index', [], Response::HTTP_SEE_OTHER);
+        // Retour à la saison : c'est de là que les poules se gèrent
+        return $this->redirectToRoute('admin_saison_show', ['id' => $saisonId], Response::HTTP_SEE_OTHER);
     }
 
 

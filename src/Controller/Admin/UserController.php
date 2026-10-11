@@ -30,11 +30,13 @@ use function PHPUnit\Framework\isArray;
 #[Route('/admin/user', name: 'admin_user_')]
 final class UserController extends AbstractController
 {
+    use SuppressionTrait;
+
     #[Route(name: 'index', methods: ['GET'])]
     public function index(UserRepository $userRepository): Response
     {
         return $this->render('admin/user/index.html.twig', [
-            'users' => $userRepository->findAll(),
+            'users' => $userRepository->findBy([], ['email' => 'ASC']),
         ]);
     }
 
@@ -98,12 +100,23 @@ final class UserController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, User $user, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, User $user, EntityManagerInterface $entityManager, JoueurRepository $joueurRepository): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$user->getId(), $request->getPayload()->getString('_token'))) {
-            $entityManager->remove($user);
-            $entityManager->flush();
+        if ($user === $this->getUser()) {
+            $this->addFlash('error', 'Vous ne pouvez pas supprimer votre propre compte.');
+
+            return $this->redirectToRoute('admin_user_edit', ['id' => $user->getId()], Response::HTTP_SEE_OTHER);
         }
+
+        $this->supprimerEntite($request, $entityManager, $user, 'delete'.$user->getId(), 'le compte '.$user->getEmail(), false, function () use ($user, $entityManager, $joueurRepository): void {
+            // La fiche joueur liée est conservée, sans compte ; les demandes de mot de passe en cours sont effacées
+            foreach ($joueurRepository->findBy(['user' => $user]) as $joueur) {
+                $joueur->setUser(null);
+            }
+            $entityManager->createQuery('DELETE FROM App\Entity\ResetPasswordRequest r WHERE r.user = :user')
+                ->setParameter('user', $user)
+                ->execute();
+        });
 
         return $this->redirectToRoute('admin_user_index', [], Response::HTTP_SEE_OTHER);
     }

@@ -15,13 +15,30 @@
         <ini name="error_reporting" value="-1" />
         <server name="APP_ENV" value="test" force="true" />
         <server name="SHELL_VERBOSITY" value="-1" />
+        <!-- Aucun e-mail réel n'est envoyé pendant les tests -->
+        <server name="MAILER_DSN" value="null://null" force="true" />
     </php>
 
+    <!-- Voir tests/SPECIFICATIONS.md §3.1 : bin/phpunit avec l’option testsuite : unitaire (rapide), integration, fonctionnel.
+         Les tests lents sont marqués #[Group('lent')] et exclus par défaut (composer tests:tout pour les inclure). -->
     <testsuites>
-        <testsuite name="Project Test Suite">
-            <directory>tests</directory>
+        <testsuite name="unitaire">
+            <directory>tests/Unitaire</directory>
+        </testsuite>
+        <testsuite name="integration">
+            <directory>tests/Integration</directory>
+        </testsuite>
+        <testsuite name="fonctionnel">
+            <directory>tests/Fonctionnel</directory>
         </testsuite>
     </testsuites>
+
+    <groups>
+        <exclude>
+            <group>lent</group>
+            <group>anomalie</group>
+        </exclude>
+    </groups>
 
     <source ignoreSuppressionOfDeprecations="true"
             ignoreIndirectDeprecations="true"
@@ -41,5 +58,7 @@
 
     <extensions>
         <bootstrap class="Zenstruck\Foundry\PHPUnit\FoundryExtension" />
+        <!-- Chaque test s'exécute dans une transaction annulée à la fin : base propre, tests indépendants -->
+        <bootstrap class="DAMA\DoctrineTestBundle\PHPUnit\PHPUnitExtension" />
     </extensions>
 </phpunit>

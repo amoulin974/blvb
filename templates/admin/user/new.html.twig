@@ -1,11 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Créer un nouvel utilisateur{% endblock %}
+{% block title %}Créer un utilisateur{% endblock %}
 
 {% block body %}
-    <h1>Créer un nouvel utilisateur</h1>
-
-    {{ include('admin/user/_form.html.twig') }}
-
-    <a href="{{ path('admin_user_index') }}">back to list</a>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer un utilisateur', retour: {url: path('admin_user_index'), label: 'Utilisateurs'}}) }}
+    <div class="admin-carte max-w-2xl">
+        {{ include('admin/user/_form.html.twig') }}
+    </div>
 {% endblock %}

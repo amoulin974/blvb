@@ -34,9 +34,9 @@ final class JourneeFactory extends PersistentObjectFactory
     protected function defaults(): array|callable
     {
         return [
-            'date_debut' => \DateTimeImmutable::createFromMutable(self::faker()->dateTime()),
-            'date_fin' => \DateTimeImmutable::createFromMutable(self::faker()->dateTime()),
-            'numero' => self::faker()->randomNumber(),
+            'date_debut' => new \DateTimeImmutable('monday this week'),
+            'date_fin' => new \DateTimeImmutable('sunday this week'),
+            'numero' => 1,
         ];
     }
 

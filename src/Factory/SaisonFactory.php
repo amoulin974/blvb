@@ -42,7 +42,7 @@ final class SaisonFactory extends PersistentObjectFactory
             'nom' => self::faker()->text(255),
             'points_defaite_faible' => 0,
             'points_defaite_forte' => 1,
-            'points_forfait' => 3,
+            'points_forfait' => -1,
             'points_nul' => 1,
             'points_victoire_faible' => 2,
             'points_victoire_forte' => 3,

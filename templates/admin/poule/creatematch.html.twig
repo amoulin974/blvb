@@ -1,30 +1,27 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 {% block title %}
     {% if journee %}Ajouter les parties à la journee {{ journee.numero }} de la poule {{ poule.nom }}{% else %}Tous les matchs de la poule {{ poule.nom }}{% endif %}
 {% endblock %}
 {% block body %}
 
     {% if error %}
-        <p class="alert alert-error">{{ error }}</p>
+        <p class="alert alert-error alert-soft" role="alert">{{ error }}</p>
     {% else %}
-        <h1>
-            {% if journee %}Placer les matchs de la journée {{ journee.numero }} de la poule {{ poule.nom }}{% else %}Tous les matchs de la poule {{ poule.nom }}{% endif %}
-        </h1>
-        <div class="mb-4">
-            <a class="btn btn-sm btn-primary" href="{{ path('admin_saison_show', {'id': poule.phase.saison.id, "openPoule": poule.id}) }}">Voir la saison</a>
-            <a class="btn btn-sm btn-primary" href="{{ path('admin_poule_edit', {'id': poule.id}) }}">Modifier la poule</a>
-        </div>
+        {{ include('admin/_entete.html.twig', {
+            titre: (journee ? 'Matchs de la journée ' ~ journee.numero : 'Tous les matchs') ~ ' · poule ' ~ poule.nom,
+            sous_titre: poule.phase.saison.nom ~ ' · ' ~ poule.phase.nom ~ '. Faites glisser un match pour changer sa date, cliquez dessus pour le modifier.',
+            retour: {url: path('admin_saison_show', {id: poule.phase.saison.id, openPoule: poule.id}), label: poule.phase.saison.nom},
+            actions: [{url: path('admin_poule_edit', {id: poule.id}), label: 'Modifier la poule', icone: 'crayon'}],
+        }) }}
 
-        {#  Sélecteur de journée#}
-        <div>
-            <span class="p-2 badge {% if not journee %} badge-info {% else %} badge-outline {% endif %}"><a class="link" href="{{ path('admin_partie_getpartiecalendarall', {'id': poule.id}) }}">Toutes les journées</a></span>
+        {# Sélecteur de journée #}
+        <nav class="flex flex-wrap gap-1 mb-4" aria-label="Choisir la journée">
+            <a class="btn btn-sm {{ not journee ? 'btn-primary' : 'btn-ghost' }}" href="{{ path('admin_partie_getpartiecalendarall', {'id': poule.id}) }}" {% if not journee %}aria-current="page"{% endif %}>Toutes les journées</a>
             {% for majournee in poule.journees %}
-                <span class="p-2 badge
-{% if journee and majournee.id == journee.id %} badge-info  {% else %} badge-outline {% endif %}"><a class="link" href="/admin/partie/{{ poule.id }}/getpartiecalendar/{{ majournee.id }}">Journée {{ majournee.numero }}</a></span>
-{#                - {{ journee.dateDebut|format_date('short', locale='fr') }} - {{ journee.dateFin|format_date('short', locale='fr') }}#}
+                {% set active = journee and majournee.id == journee.id %}
+                <a class="btn btn-sm {{ active ? 'btn-primary' : 'btn-ghost' }}" href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: majournee.id}) }}" {% if active %}aria-current="page"{% endif %}>Journée {{ majournee.numero }}</a>
             {% endfor %}
-
-        </div>
+        </nav>
 
         {% if journee %}
             <div
@@ -73,7 +70,7 @@
             </div>
             <hr>
             <div class="modal-action flex flex-row justify-end">
-                <button class="btn btn-info" id="closeModal" onclick="document.querySelector('#partieModal').classList.remove('modal-open')" >Fermer cette fenêtre</button>
+                <button class="btn btn-ghost" id="closeModal" onclick="document.querySelector('#partieModal').classList.remove('modal-open')" >Fermer cette fenêtre</button>
             </div>
         </div>
         </div>

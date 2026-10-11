@@ -33,13 +33,14 @@ final class CreneauFactory extends PersistentObjectFactory
     #[\Override]
     protected function defaults(): array|callable
     {
+        // Mercredi 20:30-22:30, 1 terrain, priorité 1 (jourSemaine : 1 = lundi … 7 = dimanche)
         return [
-            'capacite' => self::faker()->randomNumber(),
-            'heureDebut' => \DateTimeImmutable::createFromMutable(self::faker()->datetime()),
-            'heureFin' => \DateTimeImmutable::createFromMutable(self::faker()->datetime()),
-            'jourSemaine' => self::faker()->randomNumber(),
+            'capacite' => 1,
+            'heureDebut' => new \DateTimeImmutable('20:30'),
+            'heureFin' => new \DateTimeImmutable('22:30'),
+            'jourSemaine' => 3,
             'lieu' => LieuFactory::new(),
-            'prioritaire' => self::faker()->randomNumber(),
+            'prioritaire' => 1,
         ];
     }
 

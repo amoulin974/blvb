@@ -1,15 +1,11 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}Modifier la saison : {{ saison.nom }}{% endblock %}
+{% block title %}Modifier la saison {{ saison.nom }}{% endblock %}
 
 {% block body %}
-    <h1>Modifier la saison :  {{ saison.nom }} </h1>
-
-    {{ include('admin/saison/_form.html.twig', {'button_label': 'Enregistrer'}) }}
-
-    <div class="flex gap-2">
-        <a href="{{ path('admin_saison_index') }}" class="btn btn-sm btn-info">Revenir à la liste des saisons</a>
-        {{ include('/admin/saison/_delete_form.html.twig') }}
+    {{ include('admin/_entete.html.twig', {titre: 'Modifier la saison ' ~ saison.nom, retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/saison/_form.html.twig', {'button_label': 'Enregistrer'}) }}
     </div>
-
+    <div class="max-w-3xl">{{ include('admin/saison/_delete_form.html.twig') }}</div>
 {% endblock %}

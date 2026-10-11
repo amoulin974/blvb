@@ -117,7 +117,7 @@
 
 <div class="flex justify-end gap-3 mt-10">
     <a href="{{ is_granted('ROLE_ADMIN') ? path('admin_user_index') : path('front_index') }}" class="btn btn-ghost btn-sm">Annuler</a>
-    <button type="submit" class="btn btn-success btn-sm" data-password-rules-target="submit">Enregistrer les modifications</button>
+    <button type="submit" class="btn btn-primary" data-password-rules-target="submit">{{ button_label|default('Enregistrer') }}</button>
 </div>
 {# RENDU DU JETON CSRF : Indispensable quand render_rest est à false #}
 {{ form_row(form._token) }}

@@ -1,11 +1,10 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_admin.html.twig' %}
 
-{% block title %}New Partie{% endblock %}
+{% block title %}Créer un match{% endblock %}
 
 {% block body %}
-    <h1>Create new Partie</h1>
-
-    {{ include('admin/partie/_form.html.twig') }}
-
-    <a href="{{ path('admin_partie_index') }}">back to list</a>
+    {{ include('admin/_entete.html.twig', {titre: 'Créer un match', retour: {url: path('admin_partie_index'), label: 'Matchs'}}) }}
+    <div class="admin-carte max-w-3xl">
+        {{ include('admin/partie/_form.html.twig') }}
+    </div>
 {% endblock %}

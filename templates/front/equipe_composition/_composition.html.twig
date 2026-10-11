@@ -1,0 +1,118 @@
+{# Contenu commun de la page de composition (EquipeCompositionController) : liste des joueurs, retrait,
+   désignation du capitaine, ajout d'un joueur existant, création d'une fiche.
+   Variables : equipe, saison, membres, ajouterForm, creerForm, prefixe ('front_equipe_composition_' ou 'admin_equipe_composition_').
+   Côté back-office : noms liés aux fiches joueurs, confirmations dans la fenêtre partagée de l'admin. #}
+{% set admin = prefixe starts with 'admin_' %}
+{% set capitaineActuel = (membres|filter(m => m.capitaine)|first) ?: null %}
+{% set boutonAction = admin ? 'btn btn-primary btn-sm' : 'btn btn-accent btn-sm' %}
+
+<div class="overflow-x-auto rounded-box border border-base-300 bg-base-100 mb-8">
+    <table class="table {{ admin ? 'table-admin' }}">
+        <thead>
+            <tr>
+                <th>Joueur</th>
+                <th>Rôle</th>
+                <th class="text-right"><span class="{{ admin ? 'sr-only' }}">Actions</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for membre in membres %}
+                {% set nomJoueur = membre.joueur.prenom ~ ' ' ~ membre.joueur.nom %}
+                <tr class="hover:bg-(--color-base-200)">
+                    <td class="font-medium">
+                        {% if admin %}
+                            <a class="text-(--color-primary) hover:underline" href="{{ path('admin_joueur_show', {id: membre.joueur.id}) }}">{{ nomJoueur }}</a>
+                            {% if membre.joueur.email or membre.joueur.telephone %}<span class="block text-sm font-normal text-(--color-base-content)/80 break-all">{{ [membre.joueur.email, membre.joueur.telephone]|filter(v => v)|join(' · ') }}</span>{% endif %}
+                        {% else %}
+                            {{ nomJoueur }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if membre.capitaine %}
+                            <span class="badge badge-primary">Capitaine</span>
+                        {% else %}
+                            <span>Membre</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-right">
+                        <div class="flex flex-wrap justify-end gap-2">
+                            {% if admin %}
+                                {% if not membre.capitaine %}
+                                    {{ include('admin/_confirmation.html.twig', {
+                                        declencheur: 'Désigner capitaine',
+                                        declencheur_icone: false,
+                                        declencheur_classe: 'btn btn-ghost btn-sm',
+                                        titre: 'Désigner ' ~ nomJoueur ~ ' capitaine ?',
+                                        consequences: [nomJoueur ~ ' devient capitaine de ' ~ equipe.nom ~ ' pour la ' ~ saison.nom ~ ' : ses coordonnées seront visibles des capitaines adverses et il ou elle pourra saisir les scores.']
+                                            |merge(capitaineActuel ? [capitaineActuel.joueur.prenom ~ ' ' ~ capitaineActuel.joueur.nom ~ " n'est plus capitaine."] : []),
+                                        bouton: 'Désigner capitaine',
+                                        ton: 'warning',
+                                        irreversible: false,
+                                        action: path(prefixe ~ 'capitaine', {equipe: equipe.id, saison: saison.id, membre: membre.id}),
+                                        token: csrf_token('capitaine' ~ membre.id),
+                                    }) }}
+                                {% endif %}
+                                {{ include('admin/_confirmation.html.twig', {
+                                    declencheur: 'Retirer',
+                                    titre: 'Retirer ' ~ nomJoueur ~ ' de la composition ?',
+                                    consequences: ['Sa fiche joueur est conservée ; vous pourrez le ou la rajouter plus tard.']
+                                        |merge(membre.capitaine ? [equipe.nom ~ " n'aura plus de capitaine pour la " ~ saison.nom ~ '.'] : []),
+                                    bouton: 'Retirer de la composition',
+                                    irreversible: false,
+                                    action: path(prefixe ~ 'retirer', {equipe: equipe.id, saison: saison.id, membre: membre.id}),
+                                    token: csrf_token('retirer' ~ membre.id),
+                                }) }}
+                            {% else %}
+                                {% if not membre.capitaine %}
+                                    <form method="post" action="{{ path(prefixe ~ 'capitaine', {'equipe': equipe.id, 'saison': saison.id, 'membre': membre.id}) }}">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('capitaine' ~ membre.id) }}">
+                                        <button class="btn btn-sm btn-outline btn-primary">Désigner capitaine</button>
+                                    </form>
+                                {% endif %}
+                                <form method="post" action="{{ path(prefixe ~ 'retirer', {'equipe': equipe.id, 'saison': saison.id, 'membre': membre.id}) }}" onsubmit="return confirm('Retirer ce joueur de la composition ?');">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('retirer' ~ membre.id) }}">
+                                    <button class="btn btn-sm btn-outline btn-error">Retirer</button>
+                                </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+            {% else %}
+                <tr>
+                    <td colspan="3" class="text-center">Aucun joueur dans la composition pour l'instant.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+            <h2 class="text-lg uppercase tracking-wide">Ajouter un joueur existant</h2>
+            {{ form_start(ajouterForm) }}
+                <div class="form-control w-full mb-3">
+                    {{ form_widget(ajouterForm.joueur, {'attr': {'class': 'w-full'}}) }}
+                    {{ form_errors(ajouterForm.joueur) }}
+                </div>
+                <button class="{{ boutonAction }}">Ajouter</button>
+            {{ form_end(ajouterForm) }}
+        </div>
+    </div>
+
+    <div class="card bg-base-100 border border-base-300">
+        <div class="card-body">
+            <h2 class="text-lg uppercase tracking-wide">Créer une nouvelle fiche joueur</h2>
+            {{ form_start(creerForm) }}
+                {% for champ, libelle in {nom: 'Nom', prenom: 'Prénom', email: 'Email', telephone: 'Téléphone'} %}
+                    <div class="form-control w-full {{ loop.last ? 'mb-3' : 'mb-2' }}">
+                        {{ form_label(creerForm[champ], libelle, {'label_attr': {'class': 'font-medium mb-1 block'}}) }}
+                        {{ form_widget(creerForm[champ], {'attr': {'class': 'input w-full text-base'}}) }}
+                        {{ form_errors(creerForm[champ]) }}
+                    </div>
+                {% endfor %}
+                <button class="{{ boutonAction }}">Créer et ajouter</button>
+            {{ form_end(creerForm) }}
+        </div>
+    </div>
+</div>
