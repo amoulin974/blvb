@@ -32,13 +32,13 @@ class CalendarIcsGenerator
 {
     private const FUSEAU = 'Europe/Paris';
     private const ACTUALISATION = 'PT6H';
-    
+
     public function __construct(
         private readonly PartieRepository $partieRepository,
         private readonly UrlGeneratorInterface $urlGenerator,
-        ) {
+    ) {
     }
-    
+
     /**
      * Agenda d'une équipe pour UNE saison (toutes phases confondues) : c'est l'abonnement proposé aux joueurs.
      *
@@ -47,10 +47,10 @@ class CalendarIcsGenerator
     public function generateIcalForEquipeSaison(Equipe $equipe, Saison $saison): array
     {
         $parties = $this->partieRepository->findByEquipeSaison($equipe, $saison);
-        
+
         return $this->construire($parties, $equipe, sprintf('BLVB · %s · %s', $equipe->getNom(), $saison->getNom()));
     }
-    
+
     /**
      * Ancien agenda limité à une poule (anciens liens, conservés pour ne pas casser les abonnements existants).
      *
@@ -64,10 +64,10 @@ class CalendarIcsGenerator
                 $parties[] = $partie;
             }
         }
-        
+
         return $this->construire($parties, $equipe, sprintf('BLVB · %s · %s', $equipe->getNom(), $poule->getNom()));
     }
-    
+
     /**
      * @param Partie[] $parties
      *
@@ -77,7 +77,7 @@ class CalendarIcsGenerator
     {
         $fuseau = new \DateTimeZone(self::FUSEAU);
         $urlFiche = $this->urlGenerator->generate('front_equipe_detail', ['id' => $equipe->getId()], UrlGeneratorInterface::ABSOLUTE_URL);
-        
+
         $events = [];
         $premier = $dernier = null;
         foreach ($parties as $partie) {
@@ -89,30 +89,30 @@ class CalendarIcsGenerator
             $fin = $debut->modify('+2 hours'); // durée d'un match, ajustable
             $premier = $premier === null || $debut < $premier ? $debut : $premier;
             $dernier = $dernier === null || $fin > $dernier ? $fin : $dernier;
-            
+
             $lieu = $partie->getLieu();
             $adresse = $lieu?->getAdresse();
             $description = array_filter([
                 sprintf('%s · %s · Journée %s', $partie->getPoule()?->getPhase()?->getNom(), $partie->getPoule()?->getNom(), $partie->getJournee()?->getNumero()),
                 $partie->getNbSetGagnantReception() !== null && $partie->getNbSetGagnantDeplacement() !== null
-                ? (ScoreExtension::forfaitDe($partie)
-                    ? sprintf('Résultat : forfait de %s', ScoreExtension::forfaitDe($partie)->getNom())
-                    : sprintf('Résultat : %d–%d', $partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement()))
-                : null,
+                    ? (ScoreExtension::forfaitDe($partie)
+                        ? sprintf('Résultat : forfait de %s', ScoreExtension::forfaitDe($partie)->getNom())
+                        : sprintf('Résultat : %d–%d', $partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement()))
+                    : null,
                 "Les horaires peuvent changer. Informations à jour : $urlFiche",
             ]);
-            
+
             $event = (new Event(new UniqueIdentifier(sprintf('match-%d@blvb', $partie->getId()))))
-            ->setSummary(sprintf('%s vs %s', $partie->getIdEquipeRecoit()?->getNom(), $partie->getIdEquipeDeplace()?->getNom()))
-            ->setDescription(implode("\n", $description))
-            ->setUrl(new Uri($urlFiche))
-            ->setOccurrence(new TimeSpan(new DateTime($debut, true), new DateTime($fin, true)));
+                ->setSummary(sprintf('%s vs %s', $partie->getIdEquipeRecoit()?->getNom(), $partie->getIdEquipeDeplace()?->getNom()))
+                ->setDescription(implode("\n", $description))
+                ->setUrl(new Uri($urlFiche))
+                ->setOccurrence(new TimeSpan(new DateTime($debut, true), new DateTime($fin, true)));
             if ($lieu !== null) {
                 $event->setLocation(new Location($lieu->getNom().($adresse ? " - $adresse" : '')));
             }
             $events[] = $event;
         }
-        
+
         $calendar = new Calendar($events);
         $calendar->setPublishedTTL(new \DateInterval(self::ACTUALISATION));
         $maintenant = new \DateTimeImmutable('now', $fuseau);
@@ -120,17 +120,17 @@ class CalendarIcsGenerator
             $fuseau,
             ($premier ?? $maintenant)->modify('-1 month'),
             ($dernier ?? $maintenant)->modify('+1 month'),
-            ));
-        
+        ));
+
         $ical = (string) (new CalendarFactory())->createCalendar($calendar);
         $ical = $this->ajouterEnTetes($ical, $nomAgenda);
-        
+
         // L'horodatage de génération (DTSTAMP) change à chaque appel : on l'ignore pour que l'ETag ne reflète que le contenu
         $etag = '"'.md5(preg_replace('/^DTSTAMP:.*$/m', '', $ical)).'"';
-        
+
         return ['ical' => $ical, 'etag' => $etag];
     }
-    
+
     /** Nom de l'agenda, fuseau et fréquence d'actualisation conseillée (lus par Google, Apple, Outlook). */
     private function ajouterEnTetes(string $ical, string $nomAgenda): string
     {
@@ -142,10 +142,10 @@ class CalendarIcsGenerator
             'REFRESH-INTERVAL;VALUE=DURATION:'.self::ACTUALISATION,
         ];
         $ajout = implode("\r\n", array_map($this->plier(...), $lignes))."\r\n";
-        
+
         return preg_replace('/^(VERSION:2\.0\r?\n)/m', '$1'.str_replace('\\', '\\\\', $ajout), $ical, 1);
     }
-    
+
     /** Repli des lignes de plus de 75 octets (RFC 5545), sans couper un caractère UTF-8. */
     private function plier(string $ligne): string
     {
@@ -159,7 +159,7 @@ class CalendarIcsGenerator
             $ligne = ' '.substr($ligne, $coupe);
         }
         $morceaux[] = $ligne;
-        
+
         return implode("\r\n", $morceaux);
     }
 }

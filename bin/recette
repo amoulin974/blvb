@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+# Base de recette : copie de la base locale (blvb_new) + une « Saison 2026-2027 test » aux données de test.
+#
+#   bin/recette reinitialiser [options]   recrée blvb_recette depuis blvb_new puis charge les données de test
+#                                         options : voir `php bin/console app:recette:charger --help`
+#                                         (ex. --scenario=phase1-terminee)
+#   bin/recette utiliser                  fait pointer l'application (conteneur php) sur blvb_recette
+#   bin/recette dev                       fait revenir l'application sur la base de développement blvb_new
+#
+# La base de développement n'est jamais modifiée.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+SOURCE=blvb_new
+RECETTE=blvb_recette
+URL_RECETTE="mysql://symfony:symfonypassword@database:3306/${RECETTE}?serverVersion=8.4.7&charset=utf8mb4"
+
+vider_cache() {
+    # La liste des saisons est mise en cache par l'application : elle doit suivre le changement de base
+    docker compose exec -T php php bin/console cache:clear >/dev/null 2>&1
+}
+
+case "${1:-}" in
+    reinitialiser)
+        shift
+        echo "→ Copie de ${SOURCE} vers ${RECETTE}…"
+        docker compose exec -T database sh -c "mysql -uroot -prootpassword -e \"DROP DATABASE IF EXISTS ${RECETTE}; CREATE DATABASE ${RECETTE} CHARACTER SET utf8mb4; GRANT ALL ON ${RECETTE}.* TO 'symfony'@'%';\"" 2>&1 | grep -v "Using a password" || true
+        docker compose exec -T database sh -c "mysqldump -uroot -prootpassword --single-transaction ${SOURCE} | mysql -uroot -prootpassword ${RECETTE}" 2>&1 | grep -v "Using a password" || true
+        echo "→ Chargement des données de test…"
+        docker compose exec -T -e DATABASE_URL="${URL_RECETTE}" php php -d memory_limit=1G bin/console app:recette:charger "$@"
+        echo
+        echo "Terminé. Pour naviguer sur cette base : bin/recette utiliser   (retour : bin/recette dev)"
+        ;;
+    utiliser)
+        BLVB_DB="${RECETTE}" docker compose up -d php
+        vider_cache
+        echo "L'application utilise maintenant ${RECETTE}."
+        ;;
+    dev)
+        docker compose up -d php
+        vider_cache
+        echo "L'application utilise de nouveau ${SOURCE}."
+        ;;
+    *)
+        sed -n '2,11p' "$0" | sed 's/^# \{0,1\}//'
+        exit 1
+        ;;
+esac
