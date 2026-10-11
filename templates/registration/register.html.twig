@@ -48,7 +48,14 @@
         {{ form_widget(registrationForm.telephone, {'attr': {'class': 'input w-full text-base', 'placeholder': 'Téléphone', 'type':'tel'}}) }}
         {{ form_errors(registrationForm.telephone) }}
     </div>
-        {{ form_row(registrationForm.agreeTerms) }}
+        {# Acceptation des conditions d'utilisation, avec lien vers la page (ouverte dans un nouvel onglet pour ne pas perdre la saisie) #}
+        <div class="form-control">
+            <label class="label cursor-pointer justify-start gap-3">
+                {{ form_widget(registrationForm.agreeTerms, {'attr': {'class': 'checkbox checkbox-sm'}}) }}
+                <span>{{ registrationForm.agreeTerms.vars.label }} (<a class="link link-primary" href="{{ path('front_conditions') }}" target="_blank" rel="noopener">lire les conditions</a>)</span>
+            </label>
+            {{ form_errors(registrationForm.agreeTerms) }}
+        </div>
 
         <button type="submit" class="btn btn-accent w-full">Créer le compte</button>
     {{ form_end(registrationForm) }}
