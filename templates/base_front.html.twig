@@ -16,7 +16,7 @@
         {{ importmap('app') }}
     {% endblock %}
 </head>
-<body class="bg-base-100 text-base-content" data-controller="mon-equipe" data-mon-equipe-defaut-value="{{ (mon_equipe_defaut() ?? {'id': null})|json_encode }}">
+<body class="bg-base-100 text-base-content" data-controller="mon-equipe" data-mon-equipe-url-equipe-value="{{ path('front_equipe_detail', {id: '__ID__'}) }}" data-mon-equipe-defaut-value="{{ (mon_equipe_defaut() ?? {'id': null})|json_encode }}">
 
 <div class="drawer drawer-mobile">
     <input id="my-drawer-2" type="checkbox" class="drawer-toggle" />

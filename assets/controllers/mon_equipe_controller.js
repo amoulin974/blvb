@@ -26,7 +26,8 @@ const AUCUNE = { aucune: true };
 
 export default class extends Controller {
     static targets = ['menu', 'menuChoisir', 'bouton', 'invitation', 'dialogue', 'confirmation', 'confirmationTexte'];
-    static values = { defaut: Object };
+    // urlEquipe : URL de la fiche équipe générée par path() avec __ID__ à la place de l'identifiant (préfixe /blvb en prod)
+    static values = { defaut: Object, urlEquipe: String };
 
     connect() {
         this.appliquer();
@@ -145,7 +146,7 @@ export default class extends Controller {
             li.classList.toggle('hidden', !id);
             const lien = li.querySelector('a');
             if (lien && id) {
-                lien.href = `/equipe/${id}`;
+                lien.href = this.urlEquipeValue.replace('__ID__', encodeURIComponent(id));
                 lien.textContent = `★ ${equipe.nom}`;
                 lien.title = 'Mon équipe';
             }

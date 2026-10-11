@@ -16,7 +16,10 @@ export default class extends Controller {
         duration: String,
         csrfToken: String,
         journeeid:String,
-        initialDate:String
+        initialDate:String,
+        // Bases des API (générées par path() dans les gabarits, préfixe /blvb compris en prod)
+        journeeApiUrl: String,
+        partieApiUrl: String,
     }
 
     connect() {
@@ -213,7 +216,7 @@ export default class extends Controller {
         const newStart = info.event.startStr;
         const newEnd = info.event.endStr  ?? info.event.endStr ;
 
-        fetch('/admin/journee/' + this.pouleidValue + '/api/'+eventId, {
+        fetch(this.journeeApiUrlValue + '/' + eventId, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -250,7 +253,7 @@ export default class extends Controller {
         // Bouton de suppression
         document.getElementById('supprimer').onclick = () => {
 
-            fetch('/admin/journee/' + this.pouleidValue + '/api/' + info.event.id, {
+            fetch(this.journeeApiUrlValue + '/' + info.event.id, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
@@ -285,7 +288,7 @@ export default class extends Controller {
     }
 
     onDateClickJournee(info){
-        fetch('/admin/journee/' + this.pouleidValue + '/api', {
+        fetch(this.journeeApiUrlValue, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -324,7 +327,7 @@ export default class extends Controller {
         // changer le titre
         modalTitle.textContent = info.event.title;
         console.log(info.event.id);
-        let url="/admin/partie/"+this.pouleidValue+"/api/"+info.event.id+"/getmodal"
+        let url = this.partieApiUrlValue + "/" + info.event.id + "/getmodal"
         // charger le formulaire via fetch
         fetch(url)
             .then(response => response.text())
@@ -352,7 +355,7 @@ export default class extends Controller {
                 const suprrimer = modal.querySelector('#supprimer')
                 if (suprrimer){
                     suprrimer.addEventListener('click', (e)=>{
-                        fetch('/admin/partie/'+ this.pouleidValue + '/api/'+info.event.id,{
+                        fetch(this.partieApiUrlValue + '/' + info.event.id,{
                             method: "DELETE"
                         })
                             .then(resp => resp.json())
@@ -376,7 +379,7 @@ export default class extends Controller {
         const modalTitle=modal.querySelector('#eventTitle')
         const modalBody=modal.querySelector('#modalBody');
         console.log(this.journeeidValue)
-        let url="/admin/partie/"+this.pouleidValue+"/api/getmodal/new/"+this.journeeidValue
+        let url = this.partieApiUrlValue + "/getmodal/new/" + this.journeeidValue
         // charger le formulaire via fetch
         fetch(url)
             .then(response => response.text())
@@ -420,7 +423,7 @@ export default class extends Controller {
 
 
         console.log(info.event)
-        fetch('/admin/partie/'  +this.pouleidValue+  '/api/'+info.event.id, {
+        fetch(this.partieApiUrlValue + '/' + info.event.id, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
