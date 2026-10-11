@@ -28,15 +28,17 @@
 
         <fieldset class="mt-4 disabled:opacity-50" data-score-modal-target="sets">
             <legend class="text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80 mb-1">Sets gagnés</legend>
+            {# Les deux colonnes ont la même hauteur (grille) : mt-auto garde les champs alignés en bas,
+               même quand le nom d'une équipe passe sur plusieurs lignes #}
             <div class="grid grid-cols-2 gap-3">
                 <label class="flex flex-col gap-1">
-                    <span data-score-modal-target="labelReception" class="text-sm font-medium"></span>
-                    <input type="number" min="0" max="3" step="1" inputmode="numeric" class="input w-full min-h-[44px] text-lg text-center"
+                    <span data-score-modal-target="labelReception" class="text-sm font-medium break-words"></span>
+                    <input type="number" min="0" max="3" step="1" inputmode="numeric" class="input w-full min-h-[44px] text-lg text-center mt-auto"
                            data-score-modal-target="inputReception" data-action="input->score-modal#actualiser keydown.enter->score-modal#submitForm">
                 </label>
                 <label class="flex flex-col gap-1">
-                    <span data-score-modal-target="labelDeplacement" class="text-sm font-medium"></span>
-                    <input type="number" min="0" max="3" step="1" inputmode="numeric" class="input w-full min-h-[44px] text-lg text-center"
+                    <span data-score-modal-target="labelDeplacement" class="text-sm font-medium break-words"></span>
+                    <input type="number" min="0" max="3" step="1" inputmode="numeric" class="input w-full min-h-[44px] text-lg text-center mt-auto"
                            data-score-modal-target="inputDeplacement" data-action="input->score-modal#actualiser keydown.enter->score-modal#submitForm">
                 </label>
             </div>
