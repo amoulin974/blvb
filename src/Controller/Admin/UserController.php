@@ -36,8 +36,12 @@ final class UserController extends AbstractController
     public function index(UserRepository $userRepository): Response
     {
         return $this->render('admin/user/index.html.twig', [
-            // Clubs chargés avec les comptes : le rôle « Responsable de club » en dépend (User::getRoles)
-            'users' => $userRepository->createQueryBuilder('u')->leftJoin('u.clubsResponsable', 'c')->addSelect('c')->orderBy('u.email', 'ASC')->getQuery()->getResult(),
+            // Désignations chargées avec les comptes : le rôle « Responsable de club » en dépend (User::getRoles)
+            'users' => $userRepository->createQueryBuilder('u')
+                ->leftJoin('u.responsabilitesClub', 'r')->addSelect('r')
+                ->leftJoin('r.saison', 's')->addSelect('s')
+                ->leftJoin('r.club', 'c')->addSelect('c')
+                ->orderBy('u.email', 'ASC')->getQuery()->getResult(),
         ]);
     }
 

@@ -56,24 +56,33 @@ class ClubType extends AbstractType
                 'by_reference' => false,
                 'attr' => $multiple('Choisissez les gymnases…'),
             ])
-            ->add('responsables', EntityType::class, [
+        ;
+
+        // Responsables : désignés pour la saison en cours (option « saison »), comme les capitaines.
+        // Champ non lié à l'entité : le contrôleur applique la liste avec Club::setResponsables().
+        $saison = $options['saison'];
+        if ($saison !== null) {
+            $builder->add('responsables', EntityType::class, [
                 'class' => User::class,
-                'label' => 'Responsables du club',
-                'help' => 'Ils peuvent saisir le score des matchs reçus par les équipes du club. Un responsable nouvellement désigné doit se reconnecter.',
+                'mapped' => false,
+                'data' => $builder->getData()?->getResponsables($saison) ?? [],
+                'label' => 'Responsables du club pour la '.mb_strtolower((string) $saison->getNom()),
+                'help' => 'Pendant cette saison, ils saisissent le score de tous les matchs des équipes du club et modifient la fiche du club. Les responsables des saisons précédentes sont conservés. Un responsable nouvellement désigné doit se reconnecter.',
                 'choice_label' => static fn (User $u) => trim($u->getPrenom().' '.$u->getNom()).' ('.$u->getEmail().')',
                 'query_builder' => static fn (UserRepository $r) => $r->createQueryBuilder('u')->orderBy('u.nom', 'ASC')->addOrderBy('u.prenom', 'ASC'),
                 'multiple' => true,
                 'required' => false,
-                'by_reference' => false,
                 'attr' => $multiple('Choisissez les comptes…'),
-            ])
-        ;
+            ]);
+        }
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
         $resolver->setDefaults([
             'data_class' => Club::class,
+            'saison' => null,
         ]);
+        $resolver->setAllowedTypes('saison', ['null', \App\Entity\Saison::class]);
     }
 }

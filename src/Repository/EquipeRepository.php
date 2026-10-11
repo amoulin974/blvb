@@ -24,18 +24,20 @@ class EquipeRepository extends ServiceEntityRepository
      * @return Poule[]
      */
     /**
-     * Identifiants des équipes des clubs dont l'utilisateur est responsable.
+     * Identifiants des équipes des clubs dont l'utilisateur est responsable pour cette saison.
      *
      * @return int[]
      */
-    public function findIdsDesClubsDe(User $user): array
+    public function findIdsDesClubsDe(User $user, Saison $saison): array
     {
         return array_map('intval', $this->createQueryBuilder('e')
             ->select('e.id')
             ->innerJoin('e.club', 'c')
-            ->innerJoin('c.responsables', 'r')
-            ->andWhere('r = :user')
+            ->innerJoin('c.responsabilites', 'r')
+            ->andWhere('r.user = :user')
+            ->andWhere('r.saison = :saison')
             ->setParameter('user', $user)
+            ->setParameter('saison', $saison)
             ->getQuery()
             ->getSingleColumnResult());
     }

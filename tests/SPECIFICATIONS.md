@@ -113,7 +113,7 @@ tests/
 | Équipes | A1–A4, B1–B3 ; A4 sans gymnase. Noms enregistrés sans club (« EQUIPE A1 »), affichés avec l'abréviation du club (« EQUIPE A1 (CTA) ») |
 | Clubs | « Club test A1-B1 » (CTA) : A1 et B1 (deux poules), gymnases G1 et G2, responsable `resp.club` · « Club test voisin » (CTV) : A3, gymnase G1 (partagé) · A2, A4, B2, B3 sans club |
 | Journées / matchs | créés explicitement (indépendants du générateur, testé à part au lot 4) : journée 1 la semaine passée (A1–A2 hier **sans score** = match de référence, A3–A4 3–1, B1–B2 3–2), journée 2 la semaine prochaine |
-| Comptes | `admin` (ROLE_ADMIN) · `cap.a1` capitaine de A1 (qui reçoit le match de référence) · `cap.a2` capitaine de A2 (qui se déplace) · `cap.b1` capitaine de B1 (autre poule) · `joueur.a1` simple joueur de A1 · `joueur.a2` simple joueur de A2 · `cap.a1.precedente` capitaine de A1 la saison précédente seulement · `sans.equipe` compte sans fiche joueur · `resp.club` responsable du club CTA, sans fiche joueur (rôle déduit ROLE_RESPONSABLE_CLUB) |
+| Comptes | `admin` (ROLE_ADMIN) · `cap.a1` capitaine de A1 (qui reçoit le match de référence) · `cap.a2` capitaine de A2 (qui se déplace) · `cap.b1` capitaine de B1 (autre poule) · `joueur.a1` simple joueur de A1 · `joueur.a2` simple joueur de A2 · `cap.a1.precedente` capitaine de A1 la saison précédente seulement · `sans.equipe` compte sans fiche joueur · `resp.club` responsable du club CTA **pour la saison courante**, sans fiche joueur (rôle déduit ROLE_RESPONSABLE_CLUB) |
 | Match de référence | `A1 reçoit A2`, joué hier, sans score |
 
 Chaque test qui a besoin d'autre chose le crée lui-même avec les factories (pas de story « fourre-tout »).
@@ -184,7 +184,16 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 | `resp.club` sur un autre club | 403 |
 | `admin` | 200 |
 
-Le responsable ne gère ni les équipes, ni les gymnases, ni les responsables : `/admin/club/*` → 403 pour lui (couvert par SEC-01 ; ✅ *`ClubAdminTest`*).
+Le responsable ne gère ni les équipes, ni les gymnases, ni les responsables : `/admin/club/*` (liste, création, modification, suppression, en GET et en POST) → 403 pour lui, club intact ✅ *`ClubAdminTest::test_routes_admin_refusees_au_responsable`* (en attendant le garde-fou général SEC-01).
+Il ne peut pas non plus s'attribuer d'équipes ni de responsables en ajoutant des champs à la requête de la fiche (`club_fiche[equipes]`, `club_fiche[responsables]`) → 422, rien d'enregistré ✅.
+
+**SEC-13 — Saisies de la fiche du club** ✅ *`FicheClubTest`* :
+- abréviation ou nom long avec retour à la ligne ou caractère de contrôle → 422 (l'abréviation est reprise dans le nom des agendas `.ics`) ; abréviation limitée aux lettres, chiffres, espace et `. & ' -` ;
+- lien `javascript:`, `data:` → 422 (seuls http et https sont acceptés) ;
+- HTML saisi (nom, description) affiché comme du texte sur la fiche, la liste des clubs, le calendrier et les équipes ;
+- modification sans jeton de sécurité, ou envoyée depuis un autre site (en-tête `Origin` étranger) → 422, rien d'enregistré.
+
+**SEC-14 — Agenda `.ics`** ✅ *`Integration/Service/CalendarIcsGeneratorTest`* : un retour à la ligne dans le nom de l'équipe ou du club n'ajoute aucune ligne au fichier (une seule fin d'agenda, aucune propriété injectée).
 
 **SEC-12 — Envoi d'image (logo d'un club)** ✅ *`FicheClubTest`* : fichier non image → 422, rien d'enregistré ; image de plus de 2 Mo → 422, aucun fichier écrit ; nom du fichier généré par l'application (`<abréviation>-<aléa>.<ext>`), jamais celui envoyé : un nom avec `../` ne sort pas du dossier des images ; types acceptés JPEG, PNG, WebP, GIF (pas de SVG) ; remplacer ou retirer l'image supprime l'ancien fichier.
 
@@ -207,6 +216,8 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 | `admin` | 200 |
 
 **SCO-13 — Responsable de club** ✅ *`SaisieScoreResponsableClubTest`* : il saisit **tous** les matchs des équipes de son club, à domicile et à l'extérieur, quelle que soit la poule (A1 reçoit A2, B1 reçoit B2, A4 reçoit A1 → 200) ; refus pour un match sans équipe de son club (A3 reçoit A4 → refus, score inchangé). Le capitaine reste limité aux matchs que son équipe **reçoit**.
+**SCO-14 — Droits rattachés à une saison** ✅ : le responsable est désigné pour une saison (`ResponsableClub`), comme le capitaine. Désigné pour la saison courante : refus sur un match de la saison précédente. Désigné pour la saison précédente seulement : saisie des matchs de cette saison-là, mais refus pour la saison courante, pas de fiche du club, pas de rôle.
+**SCO-15 — Retrait immédiat** ✅ : un responsable retiré par l'admin perd ses droits à la requête suivante, sans se reconnecter (une saisie préparée avant le retrait est refusée, score inchangé).
 
 **SCO-04 — Scores valides** (data provider) : 3–0, 3–1, 3–2, 2–3, 1–3, 0–3 → 200, valeurs enregistrées, réponse `newScore` = « 3 - 1 ».
 **SCO-05 — Scores invalides** → 400, score inchangé : 4–0, −1–3 (en chiffres), « a »–3, 2.5–3, champ absent.
@@ -374,10 +385,10 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **CLU-03** ✅ — Abréviation : avertissement sous le champ (nombre d'équipes, nom actuel) ; après changement, message avec le nouveau nom des équipes.
 **CLU-04** ✅ — Liste `/clubs` triée par nom long, cartes vers les fiches, nombre d'équipes engagées dans la saison ; lien dans le menu « Le championnat ».
 **CLU-05** ✅ — « Qui sommes-nous ? » : clubs tirés de la base, en lien vers leurs fiches.
-**CLU-06** ✅ — Rôle `ROLE_RESPONSABLE_CLUB` déduit de la désignation (présent pour `resp.club`, absent pour `cap.a1`) ; retiré quand le club est supprimé.
+**CLU-06** ✅ — Rôle `ROLE_RESPONSABLE_CLUB` déduit d'une désignation **pour la saison en cours** (présent pour `resp.club`, absent pour `cap.a1` et pour un responsable d'une saison précédente) ; retiré quand le club est supprimé.
 
 **Administration**
-**ADC-01** ✅ — Création d'un club (équipes, gymnases, responsables) ; rattacher une équipe à un club la retire de son club précédent.
+**ADC-01** ✅ — Création d'un club (équipes, gymnases, responsables de la saison en cours) ; rattacher une équipe à un club la retire de son club précédent. Les responsables des saisons précédentes sont conservés.
 **ADC-02** ✅ — Suppression d'un club : ses équipes restent, sans club ; les comptes ne sont pas supprimés.
 **ADC-03** ✅ — Listes des équipes (colonne club) et des utilisateurs (badge « Responsable de club »).
 
@@ -461,7 +472,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | Lot | Contenu | Livrable vérifiable | Charge estimée |
 |---|---|---|---|
 | **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
-| **Clubs** ✅ | SEC-11, SEC-12, SCO-13, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club`) | 64 tests verts (branche `clubs`) | fait le 11/10/2026 |
+| **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 74 tests verts (branche `clubs`) | fait le 11/10/2026 |
 | **1 — Accès** | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la CI | 0,5 j |
 | **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |

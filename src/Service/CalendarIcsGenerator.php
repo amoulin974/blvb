@@ -134,7 +134,9 @@ class CalendarIcsGenerator
     /** Nom de l'agenda, fuseau et fréquence d'actualisation conseillée (lus par Google, Apple, Outlook). */
     private function ajouterEnTetes(string $ical, string $nomAgenda): string
     {
-        $nom = addcslashes($nomAgenda, ",;\\");
+        // Texte iCalendar (RFC 5545, 3.3.11) : virgule, point-virgule et barre oblique échappés ; tout caractère de
+        // contrôle (retour à la ligne, tabulation…) remplacé par une espace, pour qu'un nom ne puisse pas ajouter de ligne
+        $nom = addcslashes((string) preg_replace('/\p{C}+/u', ' ', $nomAgenda), ",;\\");
         $lignes = [
             "X-WR-CALNAME:$nom",
             "NAME:$nom",

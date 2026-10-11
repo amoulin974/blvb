@@ -233,7 +233,7 @@ class ChargerBaseRecetteCommand extends Command
         $this->em->flush();
 
         $io->section('Clubs et responsables de club');
-        $this->creerClubs($equipes, $lieux);
+        $this->creerClubs($equipes, $lieux, $saison);
         $this->em->flush();
         $this->em->clear();
 
@@ -533,8 +533,8 @@ class ChargerBaseRecetteCommand extends Command
     // Clubs
     // ---------------------------------------------------------------------------------------------------------
 
-    /** @param array<string, Equipe> $equipes @param array<string, Lieu> $lieux */
-    private function creerClubs(array $equipes, array $lieux): void
+    /** Responsables désignés pour la saison de test (en cours). @param array<string, Equipe> $equipes @param array<string, Lieu> $lieux */
+    private function creerClubs(array $equipes, array $lieux, Saison $saison): void
     {
         foreach (self::CLUBS as $nomCourt => $def) {
             $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription($def['description'])->setUrl($def['url']);
@@ -544,9 +544,7 @@ class ChargerBaseRecetteCommand extends Command
             foreach ($def['equipes'] as $code) {
                 $club->addEquipe($equipes[$code]);
             }
-            foreach ($def['responsables'] as $compte) {
-                $club->addResponsable($this->utilisateurs[$compte]);
-            }
+            $club->setResponsables($saison, array_map(fn (string $compte) => $this->utilisateurs[$compte], $def['responsables']));
             if ($def['logo']) {
                 $this->clubImages->remplacer($club, $this->logoDeTest());
             }

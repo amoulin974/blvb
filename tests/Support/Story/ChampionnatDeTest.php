@@ -21,6 +21,8 @@ use App\Factory\SaisonFactory;
 use App\Factory\UserFactory;
 use Zenstruck\Foundry\Story;
 
+use function Zenstruck\Foundry\Persistence\save;
+
 /**
  * Championnat de référence des tests (tests/SPECIFICATIONS.md §3.3) : le plus petit jeu de données
  * qui permet de tester accès, scores, classement et coordonnées. Construit par les tests, jamais copié
@@ -46,7 +48,7 @@ use Zenstruck\Foundry\Story;
  *    joueur.a1           simple joueur de A1          joueur.a2   simple joueur de A2
  *    cap.a1.precedente   capitaine de A1 la saison précédente seulement, simple joueur cette saison
  *    sans.equipe         compte sans fiche joueur
- *    resp.club           responsable du club A1-B1, sans fiche joueur
+ *    resp.club           responsable du club A1-B1 pour la saison courante, sans fiche joueur
  *
  *  Clubs                       « Club test A1-B1 » (CTA) : A1 et B1, gymnases G1 et G2, responsable resp.club
  *                              « Club test voisin » (CTV) : A3, gymnase G1 (partagé)
@@ -139,7 +141,9 @@ final class ChampionnatDeTest extends Story
         $responsable = UserFactory::createOne(['email' => 'resp.club@blvb.test', 'prenom' => 'Rene', 'nom' => 'Responsable']);
         $this->addState('compte.resp.club', $responsable);
         $club = ClubFactory::createOne(['nom' => 'Club test A1-B1', 'nomCourt' => 'CTA', 'lieux' => [$g1, $g2],
-            'equipes' => [$equipes['A1'], $equipes['B1']], 'responsables' => [$responsable]]);
+            'equipes' => [$equipes['A1'], $equipes['B1']]]);
+        // Responsable désigné pour la saison courante seulement (les droits sont rattachés à une saison)
+        save($club->setResponsables($saison, [$responsable]));
         $voisin = ClubFactory::createOne(['nom' => 'Club test voisin', 'nomCourt' => 'CTV', 'lieux' => [$g1], 'equipes' => [$equipes['A3']]]);
         $this->addState('club', $club);
         $this->addState('club.voisin', $voisin);

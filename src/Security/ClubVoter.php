@@ -4,13 +4,15 @@ namespace App\Security;
 
 use App\Entity\Club;
 use App\Entity\User;
+use App\Repository\SaisonRepository;
 use Symfony\Bundle\SecurityBundle\Security;
 use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
- * is_granted('CLUB_MODIFIER', club) : l'administrateur et les responsables du club peuvent modifier sa fiche
+ * is_granted('CLUB_MODIFIER', club) : l'administrateur et les responsables du club désignés pour la saison en cours
+ * (SaisonRepository::findCourante) peuvent modifier sa fiche
  * (nom long, nom court, description, lien). Équipes, gymnases et responsables restent gérés dans l'admin.
  *
  * @extends Voter<string, Club>
@@ -19,8 +21,10 @@ final class ClubVoter extends Voter
 {
     public const MODIFIER = 'CLUB_MODIFIER';
 
-    public function __construct(private readonly Security $security)
-    {
+    public function __construct(
+        private readonly Security $security,
+        private readonly SaisonRepository $saisonRepository,
+    ) {
     }
 
     protected function supports(string $attribute, mixed $subject): bool
@@ -32,6 +36,7 @@ final class ClubVoter extends Voter
     {
         $user = $token->getUser();
 
-        return $this->security->isGranted('ROLE_ADMIN') || ($user instanceof User && $subject->estResponsable($user));
+        return $this->security->isGranted('ROLE_ADMIN')
+            || ($user instanceof User && $subject->estResponsable($user, $this->saisonRepository->findCourante()));
     }
 }

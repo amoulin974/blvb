@@ -110,4 +110,23 @@ final class ClubAdminTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
         self::assertSelectorExists('select[name="equipe[club]"] option[selected]');
     }
+
+    #[TestDox('Le responsable de club n\'a accès à aucune page de gestion des clubs de l\'admin (création, modification, suppression)')]
+    public function test_routes_admin_refusees_au_responsable(): void
+    {
+        $id = $this->club('Club test A1-B1')->getId();
+        $this->connecter('resp.club');
+
+        foreach (['/admin/club/', '/admin/club/new', '/admin/club/'.$id.'/edit'] as $url) {
+            $this->client->request('GET', $url);
+            $this->assertAccesRefuse($url);
+        }
+        $this->client->request('POST', '/admin/club/'.$id.'/edit', ['club' => ['nom' => 'Piraté']]);
+        $this->assertAccesRefuse('modification');
+        $this->client->request('POST', '/admin/club/'.$id, ['_token' => 'quelconque']);
+        $this->assertAccesRefuse('suppression');
+
+        self::getContainer()->get('doctrine')->getManager()->clear();
+        self::assertSame('Club test A1-B1', $this->club('Club test A1-B1')?->getNom(), 'club intact');
+    }
 }

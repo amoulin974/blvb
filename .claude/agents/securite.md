@@ -12,7 +12,7 @@ Tu lis le code et tu rends des constats. Tu ne modifies aucun fichier. Tu ne lan
 - **Visiteur** : pages publiques (calendrier, équipes, classement, clubs).
 - **Joueur connecté (ROLE_USER)** : son profil. Il voit certaines coordonnées selon `ContactCapitaineService`.
 - **Capitaine** (`MembreEquipe::capitaine`, par saison) : composition de son équipe, saisie du score des matchs que son équipe **reçoit**.
-- **Responsable de club** (`Club::responsables`, d'où le rôle déduit ROLE_RESPONSABLE_CLUB) : saisie du score de **tous** les matchs des équipes de son club, modification de la fiche du club (`ClubVoter`). Il ne gère ni les équipes, ni les gymnases, ni les responsables du club.
+- **Responsable de club** (`ResponsableClub` : désignation **par saison**, comme le capitaine) : saisie du score de **tous** les matchs des équipes de son club pour la saison de sa désignation ; pendant la saison en cours, modification de la fiche du club (`ClubVoter`) et rôle déduit ROLE_RESPONSABLE_CLUB. Il ne gère ni les équipes, ni les gymnases, ni les responsables du club. L'abréviation du club est reprise dans les agendas `.ics` : caractères de contrôle interdits.
 - **Administrateur (ROLE_ADMIN)** : tout `/admin`.
 - Mécanismes en place :
   - `access_control` dans `config/packages/security.yaml` (en prod : `^/(blvb/)?admin`, à cause du préfixe /blvb) ;

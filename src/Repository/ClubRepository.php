@@ -81,7 +81,8 @@ class ClubRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('c')
             ->leftJoin('c.equipes', 'e')->addSelect('e')
             ->leftJoin('c.lieux', 'l')->addSelect('l')
-            ->leftJoin('c.responsables', 'r')->addSelect('r')
+            ->leftJoin('c.responsabilites', 'r')->addSelect('r')
+            ->leftJoin('r.user', 'u')->addSelect('u')
             ->orderBy('c.nom', 'ASC')
             ->getQuery()
             ->getResult();

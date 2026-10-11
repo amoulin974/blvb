@@ -15,9 +15,9 @@ use Symfony\Component\Validator\Constraints as Assert;
  * Le gymnase ne suffit pas à le déduire : plusieurs clubs partagent
  * parfois un gymnase, et un club peut jouer dans plusieurs gymnases.
  *
- * Les responsables du club peuvent saisir le score des matchs reçus par ses équipes, comme le
- * capitaine de l'équipe qui reçoit (règle unique : App\Security\ScoreVoter). Un utilisateur responsable
- * d'au moins un club reçoit le rôle ROLE_RESPONSABLE_CLUB (User::getRoles).
+ * Les responsables du club sont désignés pour une saison (ResponsableClub). Pendant cette saison, ils saisissent
+ * le score de tous les matchs des équipes du club (SaisieScoreService) ; pendant la saison en cours, ils modifient
+ * la fiche du club (ClubVoter) et portent le rôle ROLE_RESPONSABLE_CLUB (User::getRoles).
  */
 #[ORM\Entity(repositoryClass: ClubRepository::class)]
 #[UniqueEntity(fields: ['nom'], message: 'Un club porte déjà ce nom.')]
@@ -32,12 +32,16 @@ class Club
     #[ORM\Column(length: 255, unique: true)]
     #[Assert\NotBlank(message: 'Indiquez le nom du club.')]
     #[Assert\Length(max: 255)]
+    // Pas de caractère de contrôle (retour à la ligne, tabulation…) : le nom est repris dans d'autres formats
+    #[Assert\Regex(pattern: '/^[^\p{C}]*$/u', message: 'Le nom ne doit pas contenir de retour à la ligne ni de caractère spécial invisible.')]
     private ?string $nom = null;
 
     /** Sigle affiché après le nom des équipes du club, ex. AOVB */
     #[ORM\Column(length: 20, unique: true)]
     #[Assert\NotBlank(message: 'Indiquez le nom court du club.')]
     #[Assert\Length(max: 20)]
+    // Repris dans le nom des équipes, donc dans les agendas (.ics) : lettres, chiffres, espace, point, &, apostrophe, tiret
+    #[Assert\Regex(pattern: "/^[\\p{L}\\p{N}][\\p{L}\\p{N} .&'-]*$/u", message: 'L\'abréviation ne peut contenir que des lettres, des chiffres, des espaces et les signes . & \' -')]
     private ?string $nomCourt = null;
 
     /** Présentation du club (fiche publique), modifiable par ses responsables */
@@ -66,16 +70,15 @@ class Club
     #[ORM\OrderBy(['nom' => 'ASC'])]
     private Collection $lieux;
 
-    /** @var Collection<int, User> */
-    #[ORM\ManyToMany(targetEntity: User::class, inversedBy: 'clubsResponsable')]
-    #[ORM\JoinTable(name: 'club_responsable')]
-    private Collection $responsables;
+    /** @var Collection<int, ResponsableClub> désignations des responsables, par saison */
+    #[ORM\OneToMany(targetEntity: ResponsableClub::class, mappedBy: 'club', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private Collection $responsabilites;
 
     public function __construct()
     {
         $this->equipes = new ArrayCollection();
         $this->lieux = new ArrayCollection();
-        $this->responsables = new ArrayCollection();
+        $this->responsabilites = new ArrayCollection();
     }
 
     public function __toString(): string
@@ -150,10 +153,19 @@ class Club
         return $this;
     }
 
-    /** Un responsable (ou l'admin, voir ClubVoter) peut modifier la fiche du club. */
-    public function estResponsable(?User $user): bool
+    /** Le compte est-il responsable du club pour cette saison ? (droits : voir ClubVoter et SaisieScoreService) */
+    public function estResponsable(?User $user, ?Saison $saison): bool
     {
-        return $user !== null && $this->responsables->contains($user);
+        if ($user === null || $saison === null) {
+            return false;
+        }
+        foreach ($this->responsabilites as $responsabilite) {
+            if ($responsabilite->getUser() === $user && $responsabilite->getSaison() === $saison) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return Collection<int, Equipe> */
@@ -219,26 +231,53 @@ class Club
         return $this;
     }
 
-    /** @return Collection<int, User> */
-    public function getResponsables(): Collection
+    /** @return Collection<int, ResponsableClub> */
+    public function getResponsabilites(): Collection
     {
-        return $this->responsables;
+        return $this->responsabilites;
     }
 
-    public function addResponsable(User $user): static
+    /**
+     * Responsables du club pour une saison.
+     *
+     * @return list<User>
+     */
+    public function getResponsables(?Saison $saison): array
     {
-        if (!$this->responsables->contains($user)) {
-            $this->responsables->add($user);
-            $user->addClubResponsable($this);
+        $users = [];
+        foreach ($this->responsabilites as $responsabilite) {
+            if ($saison !== null && $responsabilite->getSaison() === $saison) {
+                $users[] = $responsabilite->getUser();
+            }
         }
 
-        return $this;
+        return $users;
     }
 
-    public function removeResponsable(User $user): static
+    /**
+     * Fixe les responsables du club pour une saison : désigne les nouveaux, retire ceux qui ne sont plus dans la liste.
+     * Les désignations des autres saisons ne changent pas.
+     *
+     * @param iterable<User> $users
+     */
+    public function setResponsables(Saison $saison, iterable $users): static
     {
-        if ($this->responsables->removeElement($user)) {
-            $user->removeClubResponsable($this);
+        $voulus = [];
+        foreach ($users as $user) {
+            $voulus[spl_object_id($user)] = $user;
+        }
+        foreach ($this->responsabilites->toArray() as $responsabilite) {
+            if ($responsabilite->getSaison() === $saison) {
+                if (isset($voulus[spl_object_id($responsabilite->getUser())])) {
+                    unset($voulus[spl_object_id($responsabilite->getUser())]);
+                } else {
+                    $this->responsabilites->removeElement($responsabilite);
+                    $responsabilite->getUser()->retirerResponsabilite($responsabilite);
+                }
+            }
+        }
+        foreach ($voulus as $user) {
+            $this->responsabilites->add(new ResponsableClub($this, $user, $saison));
         }
 
         return $this;

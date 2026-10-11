@@ -3,7 +3,8 @@
 
 {{ include('front/club/_champs_fiche.html.twig') }}
 
-{% for champ in [form.equipes, form.lieux, form.responsables] %}
+{# Responsables : seulement s'il existe une saison en cours (désignation par saison) #}
+{% for champ in [form.equipes, form.lieux]|merge(form.responsables is defined ? [form.responsables] : []) %}
     <div class="form-control w-full">
         {{ form_label(champ, null, {'label_attr': {'class': 'label font-semibold'}}) }}
         {{ form_widget(champ) }}

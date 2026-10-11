@@ -53,7 +53,9 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 - **7 gymnases** « Test … » avec créneaux, capacités et priorités variés ; un gymnase sans créneau (C5), une équipe sans gymnase (D4).
 - Équipes particulières : A3 (capitaine sans compte, fiche seule), A8 (aucun capitaine), B6 (aucun joueur).
 - **Noms d'équipes** enregistrés sans abréviation de club ; le site l'ajoute à l'affichage : « Arrats (ARR) ».
-- **Clubs de test** (en plus des clubs réels copiés de la base de développement) :
+- **Clubs de test** (en plus des clubs réels copiés de la base de développement). Les responsables sont désignés
+  **pour la saison 2026-2027 test** : leurs droits (saisie, fiche du club, rôle) valent pour cette saison seulement.
+  Pour tester une autre saison, désignez des responsables dans l'admin (fiche du club, saison en cours) :
 
   | Abréviation | Club | Équipes | Responsables | Particularité |
   |---|---|---|---|---|

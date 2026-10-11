@@ -2,7 +2,15 @@
 
 namespace App\Tests\Fonctionnel\Front;
 
+use App\Entity\Club;
 use App\Entity\Partie;
+use App\Entity\User;
+use App\Enum\PhaseType;
+use App\Factory\JourneeFactory;
+use App\Factory\PartieFactory;
+use App\Factory\PhaseFactory;
+use App\Factory\PouleFactory;
+use App\Factory\UserFactory;
 use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -121,5 +129,88 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
     {
         self::assertContains('ROLE_RESPONSABLE_CLUB', ChampionnatDeTest::compte('resp.club')->getRoles());
         self::assertNotContains('ROLE_RESPONSABLE_CLUB', ChampionnatDeTest::compte('cap.a1')->getRoles());
+    }
+
+    /** Match de la saison précédente : A1 (club CTA) reçoit A2, il y a un an, sans score. */
+    private function matchSaisonPrecedente(): Partie
+    {
+        $precedente = ChampionnatDeTest::get('saison.precedente');
+        $phase = PhaseFactory::createOne(['saison' => $precedente, 'nom' => 'Phase 1', 'ordre' => 1, 'type' => PhaseType::CHAMPIONNAT,
+            'datedebut' => new \DateTimeImmutable('-13 months'), 'datefin' => new \DateTimeImmutable('-10 months')]);
+        $poule = PouleFactory::createOne(['phase' => $phase, 'nom' => 'Poule A', 'niveau' => 1,
+            'equipes' => [ChampionnatDeTest::get('equipe.A1'), ChampionnatDeTest::get('equipe.A2')]]);
+        $journee = JourneeFactory::createOne(['poule' => $poule, 'numero' => 1,
+            'date_debut' => new \DateTimeImmutable('-12 months -3 days'), 'date_fin' => new \DateTimeImmutable('-12 months +3 days')]);
+
+        return PartieFactory::createOne(['journee' => $journee, 'poule' => $poule, 'idEquipeRecoit' => ChampionnatDeTest::get('equipe.A1'),
+            'idEquipeDeplace' => ChampionnatDeTest::get('equipe.A2'), 'date' => new \DateTimeImmutable('-12 months')]);
+    }
+
+    private function club(): Club
+    {
+        return self::getContainer()->get('doctrine')->getManager()->find(Club::class, ChampionnatDeTest::get('club')->getId());
+    }
+
+    #[TestDox('Les droits du responsable valent pour la saison de sa désignation : pas de saisie d\'un match d\'une saison précédente')]
+    public function test_responsable_saison_courante_pas_de_saisie_ancienne_saison(): void
+    {
+        $ancien = $this->matchSaisonPrecedente();
+        $this->connecter('resp.club');
+
+        $this->saisir($ancien);
+
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame('Modification interdite', json_decode($this->client->getResponse()->getContent(), true)['error']);
+    }
+
+    #[TestDox('Un responsable désigné pour la saison précédente seulement : saisie de cette saison-là, mais ni saisie ni fiche du club ni rôle pour la saison en cours')]
+    public function test_responsable_saison_precedente(): void
+    {
+        $ancien = $this->matchSaisonPrecedente();
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $ancienResponsable = UserFactory::createOne(['email' => 'resp.ancien@blvb.test', 'prenom' => 'Ancien', 'nom' => 'Responsable']);
+        $club = $this->club();
+        $club->setResponsables($em->find(\App\Entity\Saison::class, ChampionnatDeTest::get('saison.precedente')->getId()), [$em->find(User::class, $ancienResponsable->getId())]);
+        $em->flush();
+
+        $user = $em->find(User::class, $ancienResponsable->getId());
+        self::assertNotContains('ROLE_RESPONSABLE_CLUB', $user->getRoles(), 'pas de rôle hors de la saison en cours');
+        $this->client->loginUser($user);
+
+        $this->saisir(ChampionnatDeTest::get('match.reference'));
+        self::assertResponseStatusCodeSame(400, 'match de la saison en cours refusé');
+
+        $this->saisir($ancien);
+        self::assertResponseIsSuccessful('match de la saison de sa désignation accepté');
+
+        $this->client->request('GET', '/club/'.$club->getId().'/modifier');
+        self::assertResponseStatusCodeSame(403, 'fiche du club refusée');
+    }
+
+    #[TestDox('Un responsable retiré perd ses droits immédiatement, sans se reconnecter')]
+    public function test_retrait_immediat(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', '/calendrier');
+        $jeton = $crawler->filter('meta[name="csrf-token"]')->attr('content');
+        $match = ChampionnatDeTest::get('match.B1-B2');
+        $avant = [$match->getNbSetGagnantReception(), $match->getNbSetGagnantDeplacement()];
+
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $club = $this->club();
+        $club->setResponsables($em->find(\App\Entity\Saison::class, ChampionnatDeTest::get('saison')->getId()), []);
+        $em->flush();
+
+        // Requête préparée avant le retrait (même jeton) : refusée, score inchangé
+        $this->client->request('PUT', '/front/partie/'.$match->getId().'/api/update', server: [
+            'CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $jeton, 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
+        ], content: json_encode(['scoreReception' => '0', 'scoreDeplacement' => '3']));
+        self::assertContains($this->client->getResponse()->getStatusCode(), [400, 403], 'après retrait : saisie refusée');
+        $em->clear();
+        $match = $em->find(Partie::class, $match->getId());
+        self::assertSame($avant, [$match->getNbSetGagnantReception(), $match->getNbSetGagnantDeplacement()]);
+
+        $this->client->request('GET', '/club/'.$club->getId().'/modifier');
+        self::assertNotSame(200, $this->client->getResponse()->getStatusCode(), 'après retrait : fiche du club refusée');
     }
 }

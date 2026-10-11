@@ -277,4 +277,97 @@ final class FicheClubTest extends TestFonctionnel
         self::assertFileDoesNotExist(self::getContainer()->getParameter('kernel.project_dir').'/public/piege.php.png');
         self::assertFileDoesNotExist(\dirname($this->dossierImages(), 3).'/public/piege.php.png');
     }
+
+    /** Valeurs du formulaire de la fiche (jeton compris), pour fabriquer des requêtes que le navigateur n'enverrait pas. */
+    private function valeursFiche(): array
+    {
+        $crawler = $this->client->request('GET', $this->urlModifier());
+
+        return $crawler->selectButton('Enregistrer')->form()->getPhpValues();
+    }
+
+    #[TestDox('Une abréviation ou un nom avec retour à la ligne est refusé (injection dans les agendas .ics)')]
+    public function test_retour_a_la_ligne_refuse(): void
+    {
+        $this->connecter('resp.club');
+        foreach (['nomCourt' => "A\r\nEND:VCALENDAR", 'nom' => "Club\r\nX-INJECTE:oui"] as $champ => $valeur) {
+            $valeurs = $this->valeursFiche();
+            $valeurs['club_fiche'][$champ] = $valeur;
+            $this->client->request('POST', $this->urlModifier(), $valeurs);
+
+            self::assertResponseStatusCodeSame(422, $champ);
+        }
+        self::assertSame('CTA', $this->club()->getNomCourt());
+        self::assertSame('Club test A1-B1', $this->club()->getNom());
+    }
+
+    #[TestDox('Un responsable ne peut pas s\'attribuer d\'équipes ni de responsables en ajoutant des champs à la requête')]
+    public function test_champs_supplementaires_refuses(): void
+    {
+        $this->connecter('resp.club');
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['equipes'] = [(string) ChampionnatDeTest::get('equipe.A3')->getId()];
+        $valeurs['club_fiche']['responsables'] = [(string) ChampionnatDeTest::compte('joueur.a1')->getId()];
+        $valeurs['club_fiche']['nom'] = 'Club test modifié';
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+
+        self::assertResponseStatusCodeSame(422);
+        $club = $this->club();
+        self::assertSame('Club test A1-B1', $club->getNom(), 'rien n\'est enregistré');
+        self::assertSame('CTV', self::getContainer()->get(\App\Repository\EquipeRepository::class)->find(ChampionnatDeTest::get('equipe.A3')->getId())->getClub()?->getNomCourt());
+        self::assertCount(1, $club->getResponsabilites());
+    }
+
+    #[TestDox('Un lien « javascript: » ou « data: » est refusé')]
+    public function test_lien_dangereux_refuse(): void
+    {
+        $this->connecter('resp.club');
+        foreach (['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>', 'JavaScript://exemple.fr/%0Aalert(1)'] as $lien) {
+            $valeurs = $this->valeursFiche();
+            $valeurs['club_fiche']['url'] = $lien;
+            $this->client->request('POST', $this->urlModifier(), $valeurs);
+
+            self::assertResponseStatusCodeSame(422, $lien);
+        }
+        self::assertNull($this->club()->getUrl());
+    }
+
+    #[TestDox('Du HTML saisi dans la fiche s\'affiche comme du texte (fiche, liste des clubs, calendrier)')]
+    public function test_html_echappe(): void
+    {
+        $this->connecter('resp.club');
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['nom'] = 'Club <b>gras</b>';
+        $valeurs['club_fiche']['description'] = "<script>alert('piege')</script>\nDeuxième ligne";
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+        self::assertResponseRedirects();
+
+        foreach (['/club/'.ChampionnatDeTest::get('club')->getId(), '/clubs', '/calendrier', '/equipes'] as $page) {
+            $this->client->request('GET', $page);
+            $html = (string) $this->client->getResponse()->getContent();
+            self::assertStringNotContainsString("<script>alert('piege')", $html, $page);
+            self::assertStringNotContainsString('<b>gras</b>', $html, $page);
+        }
+        $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+        self::assertStringContainsString('&lt;script&gt;', (string) $this->client->getResponse()->getContent());
+    }
+
+    #[TestDox('La fiche ne peut pas être modifiée sans jeton de sécurité, ni depuis un autre site')]
+    public function test_protection_csrf(): void
+    {
+        $this->connecter('resp.club');
+
+        $valeurs = $this->valeursFiche();
+        unset($valeurs['club_fiche']['_token']);
+        $valeurs['club_fiche']['nom'] = 'Sans jeton';
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+        self::assertResponseStatusCodeSame(422, 'sans jeton');
+
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['nom'] = 'Autre site';
+        $this->client->request('POST', $this->urlModifier(), $valeurs, server: ['HTTP_ORIGIN' => 'https://site-pirate.example', 'HTTP_REFERER' => 'https://site-pirate.example/page']);
+        self::assertResponseStatusCodeSame(422, 'autre site');
+
+        self::assertSame('Club test A1-B1', $this->club()->getNom());
+    }
 }

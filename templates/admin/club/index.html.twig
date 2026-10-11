@@ -17,7 +17,7 @@
                 <th>Nom court</th>
                 <th>Équipes</th>
                 <th>Gymnases</th>
-                <th>Responsables</th>
+                <th>Responsables{% if saison %} <span class="font-normal normal-case">({{ saison.nom }})</span>{% endif %}</th>
                 <th><span class="sr-only">Actions</span></th>
             </tr>
             </thead>
@@ -29,7 +29,7 @@
                     <td>{{ club.equipes|map(e => e.nomSansClub)|join(', ') ?: '–' }}</td>
                     <td>{{ club.lieux|map(l => l.nom)|join(', ') ?: '–' }}</td>
                     <td>
-                        {% for user in club.responsables %}
+                        {% for user in club.responsables(saison) %}
                             <div>{{ user.prenom }} {{ user.nom }}</div>
                         {% else %}
                             <span class="text-(--color-base-content)/70">Aucun</span>

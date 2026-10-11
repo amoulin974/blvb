@@ -12,7 +12,7 @@ use App\Repository\MembreEquipeRepository;
 /**
  * Qui peut saisir le score d'un match, hors administrateur :
  *  - le capitaine de l'équipe qui reçoit, pour la saison du match ;
- *  - les responsables du club de l'une ou l'autre équipe (tous les résultats de leur club).
+ *  - les responsables du club de l'une ou l'autre équipe, désignés pour la saison du match (tous les résultats de leur club).
  *
  * Source unique de la règle : utilisée par ScoreVoter (API de saisie) et par les pages du calendrier, qui
  * reçoivent les droits de l'utilisateur (droits()) pour afficher les boutons « Saisir » sans requête par match.
@@ -31,7 +31,7 @@ final class SaisieScoreService
     /**
      * Droits de saisie d'un utilisateur pour une saison :
      *  recoit : équipes dont il est capitaine (matchs qu'elles reçoivent) ;
-     *  club   : équipes des clubs dont il est responsable (tous leurs matchs).
+     *  club   : équipes des clubs dont il est responsable pour cette saison (tous leurs matchs).
      *
      * @return array{recoit: int[], club: int[]}
      */
@@ -45,7 +45,7 @@ final class SaisieScoreService
 
         return $this->cache[$cle] ??= [
             'recoit' => array_map(static fn (Equipe $e) => $e->getId(), $this->membreEquipeRepository->findEquipesOuCapitaine($user, $saison)),
-            'club' => $this->equipeRepository->findIdsDesClubsDe($user),
+            'club' => $saison === null ? [] : $this->equipeRepository->findIdsDesClubsDe($user, $saison),
         ];
     }
 
