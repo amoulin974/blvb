@@ -1,6 +1,9 @@
 # This file configures your own services
 
 parameters:
+    # Images des clubs (logos) envoyées depuis la fiche du club : servies par asset('uploads/clubs/…').
+    # En prod, le dossier de l'application est monté depuis le serveur : les images survivent aux reconstructions.
+    app.dossier_images_clubs: '%kernel.project_dir%/public/uploads/clubs'
 # Ici tu peux importer ton fichier de config YAML
 # ou définir directement les paramètres
 # Exemple pour la config des phases/poules
@@ -61,3 +64,8 @@ services:
     App\Repository\:
         resource: '../src/Repository/'
         tags: ['doctrine.repository_service']
+
+# Tests : images écrites hors de public/, dans var/
+when@test:
+    parameters:
+        app.dossier_images_clubs: '%kernel.project_dir%/var/test/uploads/clubs'

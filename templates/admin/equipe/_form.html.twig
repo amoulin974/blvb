@@ -2,15 +2,23 @@
 
         {# Champ Nom de l'équioe #}
 <div class="form-control w-full">
-    {{ form_label(form.nom, "Nom de l'équipe", {'label_attr': {'class': 'label'}}) }}
-    {{ form_widget(form.nom, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Nom de l'équipe"}}) }}
-    {{ form_errors(form.nom) }}
+    {{ form_label(form.nomSansClub, "Nom de l'équipe", {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nomSansClub, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Nom de l'équipe"}}) }}
+    <p class="mt-1 text-sm text-(--color-base-content)/70">Sans le club : son nom court est ajouté entre parenthèses à l'affichage.</p>
+    {{ form_errors(form.nomSansClub) }}
 </div>
 
 <div class="form-control w-full">
     {{ form_label(form.lieu, "Lieu d'entrainement habituel de l'équipe", {'label_attr': {'class': 'label'}}) }}
     {{ form_widget(form.lieu, {'attr': {'class': 'input input-bordered w-full', 'placeholder': "Lieu d'entrainement"}}) }}
     {{ form_errors(form.lieu) }}
+</div>
+
+<div class="form-control w-full">
+    {{ form_label(form.club, "Club de l'équipe", {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.club, {'attr': {'class': 'select select-bordered w-full'}}) }}
+    <p class="mt-1 text-sm text-(--color-base-content)/70">Les responsables du club peuvent saisir le score des matchs reçus par l'équipe.</p>
+    {{ form_errors(form.club) }}
 </div>
 
 

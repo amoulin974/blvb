@@ -3,6 +3,8 @@
 namespace App\Entity;
 
 use App\Repository\UserRepository;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
@@ -45,6 +47,15 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $telephone = null;
 
+    /** @var Collection<int, ResponsableClub> désignations comme responsable de club, par saison */
+    #[ORM\OneToMany(targetEntity: ResponsableClub::class, mappedBy: 'user')]
+    private Collection $responsabilitesClub;
+
+    public function __construct()
+    {
+        $this->responsabilitesClub = new ArrayCollection();
+    }
+
     public function getId(): ?int
     {
         return $this->id;
@@ -80,6 +91,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $roles = $this->roles;
         // guarantee every user at least has ROLE_USER
         $roles[] = 'ROLE_USER';
+        // Rôle déduit : responsable d'au moins un club pour la saison en cours (favorite), désigné dans l'admin
+        if ($this->getClubsResponsable() !== []) {
+            $roles[] = 'ROLE_RESPONSABLE_CLUB';
+        }
 
         return array_unique($roles);
     }
@@ -116,6 +131,8 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     {
         $data = (array) $this;
         $data["\0".self::class."\0password"] = hash('crc32c', $this->password);
+        // Les clubs ne vont pas en session : le rôle déduit est recalculé à partir de l'utilisateur relu en base
+        unset($data["\0".self::class."\0responsabilitesClub"]);
 
         return $data;
     }
@@ -172,5 +189,45 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         $this->telephone = $telephone;
 
         return $this;
+    }
+
+    /** @return Collection<int, ResponsableClub> */
+    public function getResponsabilitesClub(): Collection
+    {
+        return $this->responsabilitesClub;
+    }
+
+    /**
+     * Clubs dont l'utilisateur est responsable pour la saison en cours (saison favorite).
+     *
+     * @return list<Club>
+     */
+    public function getClubsResponsable(): array
+    {
+        if (!isset($this->responsabilitesClub)) {
+            return []; // utilisateur relu depuis la session, sans ses désignations
+        }
+        $clubs = [];
+        foreach ($this->responsabilitesClub as $responsabilite) {
+            if ($responsabilite->getSaison()->getFavori()) {
+                $clubs[] = $responsabilite->getClub();
+            }
+        }
+
+        return $clubs;
+    }
+
+    /** Appelé par le constructeur de ResponsableClub. */
+    public function ajouterResponsabilite(ResponsableClub $responsabilite): void
+    {
+        if (!$this->responsabilitesClub->contains($responsabilite)) {
+            $this->responsabilitesClub->add($responsabilite);
+        }
+    }
+
+    /** Appelé par Club::setResponsables quand une désignation est retirée. */
+    public function retirerResponsabilite(ResponsableClub $responsabilite): void
+    {
+        $this->responsabilitesClub->removeElement($responsabilite);
     }
 }

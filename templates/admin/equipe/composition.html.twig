@@ -5,7 +5,7 @@
 {# Composition côté back-office. Le contenu est partagé avec le site : front/equipe_composition/_composition.html.twig #}
 {% block body %}
     {{ include('admin/_entete.html.twig', {
-        titre: 'Composition de ' ~ equipe.nom,
+        titre: 'Composition de ' ~ equipe.nom|upper,
         sous_titre: saison.nom ~ ' · ' ~ membres|length ~ ' joueur' ~ (membres|length > 1 ? 's' : ''),
         retour: {url: path('admin_equipe_show', {id: equipe.id}), label: 'Fiche de l\'équipe'},
         actions: [{url: path('front_equipe_composition_index', {equipe: equipe.id, saison: saison.id}), label: 'Voir côté capitaine', icone: 'externe'}],

@@ -672,7 +672,7 @@ class PartieService
                 $equipeAway = $equipeArray[$awayIdx];
 
                 // 3. Exclusion du match si c'est un BYE
-                if ($equipeHome->getNom() === "BYE" || $equipeAway->getNom() === "BYE") {
+                if ($equipeHome->getNomSansClub() === "BYE" || $equipeAway->getNomSansClub() === "BYE") {
                     continue;
                 }
 

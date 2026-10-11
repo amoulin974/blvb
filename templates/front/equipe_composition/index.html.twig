@@ -11,7 +11,7 @@
             {% endfor %}
         {% endfor %}
 
-        <h1 class="mb-1">Composition de {{ equipe.nom }}</h1>
+        <h1 class="mb-1">Composition de {{ equipe.nom|upper }}</h1>
         <p class="mb-6">{{ saison.nom }}</p>
 
         {{ include('front/equipe_composition/_composition.html.twig') }}

@@ -7,6 +7,7 @@ use App\Entity\Partie;
 use App\Entity\Saison;
 use App\Entity\User;
 use App\Enum\PhaseType;
+use App\Factory\ClubFactory;
 use App\Factory\CreneauFactory;
 use App\Factory\EquipeFactory;
 use App\Factory\JoueurFactory;
@@ -19,6 +20,8 @@ use App\Factory\PouleFactory;
 use App\Factory\SaisonFactory;
 use App\Factory\UserFactory;
 use Zenstruck\Foundry\Story;
+
+use function Zenstruck\Foundry\Persistence\save;
 
 /**
  * Championnat de référence des tests (tests/SPECIFICATIONS.md §3.3) : le plus petit jeu de données
@@ -45,6 +48,11 @@ use Zenstruck\Foundry\Story;
  *    joueur.a1           simple joueur de A1          joueur.a2   simple joueur de A2
  *    cap.a1.precedente   capitaine de A1 la saison précédente seulement, simple joueur cette saison
  *    sans.equipe         compte sans fiche joueur
+ *    resp.club           responsable du club A1-B1 pour la saison courante, sans fiche joueur
+ *
+ *  Clubs                       « Club test A1-B1 » (CTA) : A1 et B1, gymnases G1 et G2, responsable resp.club
+ *                              « Club test voisin » (CTV) : A3, gymnase G1 (partagé)
+ *                              Noms affichés : « EQUIPE A1 (CTA) » ; en base : « EQUIPE A1 »
  */
 final class ChampionnatDeTest extends Story
 {
@@ -116,7 +124,7 @@ final class ChampionnatDeTest extends Story
         $this->addState('match.A3-A4', $this->match($j1A, $equipes['A3'], $equipes['A4'], $hier, [3, 1]));
         $this->addState('match.B1-B2', $this->match($j1B, $equipes['B1'], $equipes['B2'], $hier, [3, 2]));
         $this->addState('match.futur', $this->match($j2A, $equipes['A2'], $equipes['A3'], $dansUneSemaine));
-        $this->match($j2A, $equipes['A4'], $equipes['A1'], $dansUneSemaine);
+        $this->addState('match.A4-A1', $this->match($j2A, $equipes['A4'], $equipes['A1'], $dansUneSemaine));
 
         // Comptes et compositions
         $this->addState('compte.admin', UserFactory::createOne(['email' => 'admin@blvb.test', 'roles' => ['ROLE_ADMIN'], 'prenom' => 'Ada', 'nom' => 'Admin']));
@@ -128,6 +136,17 @@ final class ChampionnatDeTest extends Story
         $precedent = $this->membre('cap.a1.precedente', 'Pat', 'Ancien', $equipes['A1'], $precedente, true);
         MembreEquipeFactory::createOne(['equipe' => $equipes['A1'], 'saison' => $saison, 'joueur' => $precedent, 'capitaine' => false]);
         $this->addState('compte.sans.equipe', UserFactory::createOne(['email' => 'sans.equipe@blvb.test', 'prenom' => 'Sam', 'nom' => 'Seul']));
+
+        // Clubs : le club A1-B1 a deux gymnases et partage G1 avec le club voisin
+        $responsable = UserFactory::createOne(['email' => 'resp.club@blvb.test', 'prenom' => 'Rene', 'nom' => 'Responsable']);
+        $this->addState('compte.resp.club', $responsable);
+        $club = ClubFactory::createOne(['nom' => 'Club test A1-B1', 'nomCourt' => 'CTA', 'lieux' => [$g1, $g2],
+            'equipes' => [$equipes['A1'], $equipes['B1']]]);
+        // Responsable désigné pour la saison courante seulement (les droits sont rattachés à une saison)
+        save($club->setResponsables($saison, [$responsable]));
+        $voisin = ClubFactory::createOne(['nom' => 'Club test voisin', 'nomCourt' => 'CTV', 'lieux' => [$g1], 'equipes' => [$equipes['A3']]]);
+        $this->addState('club', $club);
+        $this->addState('club.voisin', $voisin);
     }
 
     /** @param array{int, int}|null $score sets de l'équipe qui reçoit, sets de l'équipe qui se déplace */

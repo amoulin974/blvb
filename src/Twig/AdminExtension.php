@@ -31,8 +31,7 @@ class AdminExtension extends AbstractExtension
     {
         if (!$this->saisonChargee) {
             $this->saisonChargee = true;
-            $this->saison = $this->saisonRepository->findOneBy(['favori' => 1])
-                ?? $this->saisonRepository->findOneBy([], ['date_debut' => 'DESC']);
+            $this->saison = $this->saisonRepository->findCourante();
         }
 
         return $this->saison;

@@ -1,0 +1,14 @@
+{# Suppression d'un club (page de modification). Les équipes restent, sans club ; gymnases et comptes ne sont pas touchés. #}
+{% set nbEquipes = club.equipes|length %}
+{% set nbResponsables = club.responsables(admin_saison_courante())|length %}
+{{ include('admin/_zone_suppression.html.twig', {
+    resume: 'Supprime le club. Ses équipes, ses gymnases et les comptes de ses responsables sont conservés.',
+    titre: 'Supprimer le club ' ~ club.nom ~ ' ?',
+    action: path('admin_club_delete', {id: club.id}),
+    token: csrf_token('delete' ~ club.id),
+    consequences: [
+        nbEquipes > 1 ? nbEquipes ~ ' équipes n\'auront plus de club.' : (nbEquipes == 1 ? '1 équipe n\'aura plus de club.' : 'Aucune équipe n\'est rattachée à ce club.'),
+        nbResponsables > 1 ? nbResponsables ~ ' responsables ne pourront plus saisir les scores de ces équipes, sauf comme capitaine.' : (nbResponsables == 1 ? 'Son responsable ne pourra plus saisir les scores de ces équipes, sauf comme capitaine.' : 'Aucun responsable n\'est désigné.'),
+    ],
+    blocage: null,
+}) }}

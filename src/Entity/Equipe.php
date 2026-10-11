@@ -23,6 +23,11 @@ class Equipe
     #[ORM\ManyToOne(inversedBy: 'equipes')]
     private ?Lieu $lieu = null;
 
+    /** Club de l'équipe : ses responsables peuvent saisir les scores des matchs qu'elle reçoit (ScoreVoter). */
+    #[ORM\ManyToOne(inversedBy: 'equipes')]
+    #[ORM\JoinColumn(onDelete: 'SET NULL')]
+    private ?Club $club = null;
+
     /**
      * @var Collection<int, Partie>
      */
@@ -74,16 +79,56 @@ class Equipe
         return $this;
     }
 
+    /**
+     * Nom affiché : nom de l'équipe tel qu'enregistré (majuscule initiale et majuscules utiles, ex. « La D3 d'Ormuz »),
+     * suivi du nom court de son club en majuscules entre parenthèses : « Eroak (AOVB) ». Utilisé par tous les
+     * affichages (pages, iCal, listes de choix) ; dans les titres, les gabarits le passent en majuscules (classe CSS
+     * uppercase ou filtre upper). Le nom enregistré, sans le club, s'obtient par getNomSansClub() ; c'est lui que
+     * modifie le formulaire.
+     */
     public function getNom(): ?string
+    {
+        return $this->nom === null ? null : self::formaterNom($this->nom, $this->club?->getNomCourt());
+    }
+
+    /** Nom affiché sans le club (la page des équipes affiche le club à part, en lien). */
+    public function getNomSimple(): ?string
+    {
+        return $this->nom === null ? null : self::formaterNom($this->nom);
+    }
+
+    /**
+     * Nom affiché : nom enregistré, suivi du nom court du club en majuscules entre parenthèses.
+     * Partagée avec les requêtes qui renvoient des tableaux (PartieRepository).
+     */
+    public static function formaterNom(string $nom, ?string $nomCourtClub = null): string
+    {
+        $nom = trim($nom);
+
+        return $nomCourtClub === null ? $nom : $nom.' ('.mb_strtoupper($nomCourtClub).')';
+    }
+
+    /** Nom enregistré en base, sans le nom court du club. */
+    public function setNom(string $nom): static
+    {
+        $this->nom = trim($nom);
+
+        return $this;
+    }
+
+    public function getNomSansClub(): ?string
     {
         return $this->nom;
     }
 
-    public function setNom(string $nom): static
+    public function setNomSansClub(string $nom): static
     {
-        $this->nom = $nom;
+        return $this->setNom($nom);
+    }
 
-        return $this;
+    public function __toString(): string
+    {
+        return (string) $this->getNom();
     }
 
     public function getLieu(): ?Lieu
@@ -94,6 +139,18 @@ class Equipe
     public function setLieu(?Lieu $lieu): static
     {
         $this->lieu = $lieu;
+
+        return $this;
+    }
+
+    public function getClub(): ?Club
+    {
+        return $this->club;
+    }
+
+    public function setClub(?Club $club): static
+    {
+        $this->club = $club;
 
         return $this;
     }
