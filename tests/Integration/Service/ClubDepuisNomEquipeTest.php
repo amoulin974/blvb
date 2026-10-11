@@ -2,9 +2,10 @@
 
 namespace App\Tests\Integration\Service;
 
-use App\Entity\Club;
+use App\Entity\Equipe;
 use App\Factory\ClubFactory;
 use App\Factory\EquipeFactory;
+use App\Factory\LieuFactory;
 use App\Repository\ClubRepository;
 use App\Repository\EquipeRepository;
 use App\Service\ClubDepuisNomEquipeService;
@@ -22,19 +23,38 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
 {
     public static function noms(): iterable
     {
-        yield 'nom court en fin de nom' => ['EROAK (AOVB)', 'EROAK', 'AOVB'];
+        yield 'sigle en fin de nom' => ['EROAK (AOVB)', 'EROAK', 'AOVB'];
         yield 'espaces autour' => ['  Hariboules (BAY) ', 'Hariboules', 'BAY'];
         yield 'chiffres dans le nom' => ['LA D3 D\'ORMUZ (ASPTT)', 'LA D3 D\'ORMUZ', 'ASPTT'];
-        yield 'sans nom court' => ['LEO LAGRANGE', 'LEO LAGRANGE', null];
-        yield 'parenthèses qui ne sont pas un sigle' => ['LES COPAINS (du lundi)', 'LES COPAINS (du lundi)', null];
+        yield 'sans parenthèses' => ['LEO LAGRANGE', 'LEO LAGRANGE', null];
         yield 'parenthèses au milieu' => ['A (B) C', 'A (B) C', null];
     }
 
     #[DataProvider('noms')]
-    #[TestDox('Séparer le nom de l\'équipe et le nom court du club : $_dataName')]
+    #[TestDox('Séparer le nom de l\'équipe et le sigle : $_dataName')]
     public function test_separer(string $nom, string $attendu, ?string $court): void
     {
         self::assertSame(['nom' => $attendu, 'court' => $court], self::service(ClubDepuisNomEquipeService::class)->separer($nom));
+    }
+
+    #[TestDox('Des parenthèses ordinaires ne créent pas de club ; un sigle inconnu crée un club ; un ancien sigle est traduit')]
+    public function test_rattacher(): void
+    {
+        $service = self::service(ClubDepuisNomEquipeService::class);
+
+        $copains = EquipeFactory::createOne(['nom' => 'LES COPAINS (du lundi)']);
+        self::assertSame('sans_club', $service->rattacher($copains)['statut']);
+        self::assertSame('LES COPAINS (du lundi)', $copains->getNomSansClub());
+
+        $inconnue = EquipeFactory::createOne(['nom' => 'NOUVELLE (XYZ)']);
+        $resultat = $service->rattacher($inconnue);
+        self::assertTrue($resultat['cree']);
+        self::assertSame('NOUVELLE (XYZ)', $inconnue->getNom());
+
+        $ancienne = EquipeFactory::createOne(['nom' => 'ADISKIDEAK (SJDL)']);
+        $service->rattacher($ancienne, ['SJDL' => 'VBLC']);
+        self::assertSame('ADISKIDEAK', $ancienne->getNomSansClub());
+        self::assertSame('ADISKIDEAK (VBLC)', $ancienne->getNom());
     }
 
     private function lancer(bool $force): string
@@ -46,29 +66,43 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
         return $tester->getDisplay();
     }
 
-    #[TestDox('La commande crée les clubs, rattache les équipes et retire le nom court du nom enregistré')]
+    private function equipe(string $nom): ?Equipe
+    {
+        return self::service(EquipeRepository::class)->findOneBy(['nom' => $nom]);
+    }
+
+    #[TestDox('La commande crée les clubs du référentiel, rattache les équipes et retire le sigle du nom enregistré')]
     public function test_commande(): void
     {
-        $existant = ClubFactory::createOne(['nom' => 'Anglet Olympique Volley-Ball', 'nomCourt' => 'AOVB']);
+        LieuFactory::createOne(['nom' => 'Anglet']);
+        LieuFactory::createOne(['nom' => 'Tosse']);
+        $existant = ClubFactory::createOne(['nom' => 'Nom long saisi dans l\'admin', 'nomCourt' => 'ASPTT']);
         EquipeFactory::createOne(['nom' => 'EROAK (AOVB)']);
-        EquipeFactory::createOne(['nom' => 'KAYOU (AOVB)']);
-        EquipeFactory::createOne(['nom' => 'CAPOUT (CAP)']);
-        EquipeFactory::createOne(['nom' => 'LA CAPSULE (CAP)']);
-        EquipeFactory::createOne(['nom' => 'SAMOUSSAS']);
+        EquipeFactory::createOne(['nom' => 'ADISKIDEAK (SJDL)']);
+        EquipeFactory::createOne(['nom' => 'PERLEMPACK (ASPTT)']);
+        EquipeFactory::createOne(['nom' => 'LEO LAGRANGE']);
+        EquipeFactory::createOne(['nom' => ' les Tamalous']);
+        EquipeFactory::createOne(['nom' => 'SANS CLUB']);
 
-        $this->lancer(true);
+        $affichage = $this->lancer(true);
 
-        $equipes = self::service(EquipeRepository::class);
-        $eroak = $equipes->findOneBy(['nom' => 'EROAK']);
-        self::assertNotNull($eroak, 'nom enregistré sans le club');
-        self::assertSame('EROAK (AOVB)', $eroak->getNom(), 'nom affiché avec le club');
-        self::assertSame($existant->getId(), $eroak->getClub()->getId(), 'club existant réutilisé');
+        $clubs = self::service(ClubRepository::class);
+        $aovb = $clubs->findOneBy(['nomCourt' => 'AOVB']);
+        self::assertSame('Anglet Olympique Volley Ball', $aovb->getNom());
+        self::assertSame(['Anglet'], $aovb->getLieux()->map(fn ($l) => $l->getNom())->getValues());
+        self::assertSame('EROAK (AOVB)', $this->equipe('EROAK')->getNom(), 'nom enregistré sans sigle, affiché avec');
 
-        $cap = self::service(ClubRepository::class)->findOneBy(['nomCourt' => 'CAP']);
-        self::assertInstanceOf(Club::class, $cap, 'club créé');
-        self::assertSame('CAP', $cap->getNom(), 'nom long provisoire = nom court');
-        self::assertSame(['CAPOUT', 'LA CAPSULE'], array_map(fn ($e) => $e->getNomSansClub(), $cap->getEquipes()->toArray()));
-        self::assertNull($equipes->findOneBy(['nom' => 'SAMOUSSAS'])->getClub());
+        self::assertSame('ADISKIDEAK (VBLC)', $this->equipe('ADISKIDEAK')->getNom(), 'ancien sigle SJDL traduit en VBLC');
+        self::assertSame('Volley Ball Luzien et Cibourien', $clubs->findOneBy(['nomCourt' => 'VBLC'])->getNom());
+
+        self::assertSame($existant->getId(), $this->equipe('PERLEMPACK')->getClub()->getId(), 'club existant réutilisé');
+        self::assertSame('Nom long saisi dans l\'admin', $clubs->findOneBy(['nomCourt' => 'ASPTT'])->getNom(), 'nom long existant conservé');
+
+        self::assertSame('LEO LAGRANGE (Léo)', $this->equipe('LEO LAGRANGE')->getNom(), 'équipe sans sigle du référentiel');
+        self::assertSame('les Tamalous (Tosse)', $this->equipe('les Tamalous')->getNom(), 'espaces retirés, club Tosse');
+        self::assertNull($this->equipe('SANS CLUB')->getClub());
+        self::assertCount(9, $clubs->findAll());
+        self::assertStringContainsString('Gymnase « Biarritz » introuvable', $affichage);
     }
 
     #[TestDox('Sans --force, la commande ne modifie rien ; relancée après application, elle ne change plus rien')]
@@ -78,12 +112,12 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
 
         $affichage = $this->lancer(false);
         self::assertStringContainsString('Simulation', $affichage);
-        self::assertNotNull(self::service(EquipeRepository::class)->findOneBy(['nom' => 'EROAK (AOVB)']));
-        self::assertNull(self::service(ClubRepository::class)->findOneBy(['nomCourt' => 'AOVB']));
+        self::assertNotNull($this->equipe('EROAK (AOVB)'));
+        self::assertCount(0, self::service(ClubRepository::class)->findAll());
 
         $this->lancer(true);
         $this->lancer(true);
         self::assertCount(1, self::service(ClubRepository::class)->findBy(['nomCourt' => 'AOVB']));
-        self::assertSame('EROAK (AOVB)', self::service(EquipeRepository::class)->findOneBy(['nom' => 'EROAK'])->getNom());
+        self::assertSame('EROAK (AOVB)', $this->equipe('EROAK')->getNom());
     }
 }

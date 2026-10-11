@@ -9,18 +9,21 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Historiquement, le club d'une équipe était écrit à la fin de son nom : « EROAK (AOVB) ».
- * Ce service sépare le nom de l'équipe et ce nom court, rattache l'équipe au club correspondant
- * (créé au besoin) et enregistre le nom sans le club ; l'affichage le rajoute (Equipe::getNom).
+ * Ce service sépare le nom de l'équipe et ce sigle, rattache l'équipe au club correspondant
+ * (créé au besoin) et enregistre le nom sans le sigle ; l'affichage ajoute le nom court du club (Equipe::getNom).
  *
- * Utilisé par la commande app:clubs:depuis-noms-equipes (reprise des équipes existantes) et par
- * l'import Excel des équipes.
+ * Le sigle désigne le club par son nom court (« (VBLC) ») ou par un ancien sigle traduit par la table
+ * d'alias (« (SJDL) » → VBLC). Utilisé par la commande app:clubs:depuis-noms-equipes et par l'import Excel.
  */
 final class ClubDepuisNomEquipeService
 {
-    /** Nom court reconnu : lettres majuscules et chiffres, 2 à 10 caractères, entre parenthèses en fin de nom. */
-    private const MOTIF = '/^(?<nom>.*\S)\s*\((?<court>[A-Z0-9]{2,10})\)$/u';
+    /** Ce qui est entre parenthèses en fin de nom. */
+    private const MOTIF = '/^(?<nom>.*\S)\s*\((?<court>[^()]{1,20})\)$/u';
 
-    /** @var array<string, Club> clubs créés pendant ce traitement, pas encore en base */
+    /** Sigle inconnu accepté pour créer un club : majuscules et chiffres, 2 à 10 caractères. */
+    private const SIGLE_NOUVEAU_CLUB = '/^[A-Z0-9]{2,10}$/';
+
+    /** @var array<string, Club> clubs créés pendant ce traitement, pas encore en base (clé : nom court) */
     private array $nouveaux = [];
 
     public function __construct(
@@ -31,7 +34,7 @@ final class ClubDepuisNomEquipeService
 
     /**
      * Sépare « EROAK (AOVB) » en ['nom' => 'EROAK', 'court' => 'AOVB'].
-     * Sans nom court reconnu : ['nom' => nom nettoyé des espaces, 'court' => null].
+     * Sans parenthèses en fin de nom : ['nom' => nom nettoyé des espaces, 'court' => null].
      *
      * @return array{nom: string, court: ?string}
      */
@@ -39,42 +42,64 @@ final class ClubDepuisNomEquipeService
     {
         $nom = trim($nom);
         if (preg_match(self::MOTIF, $nom, $m)) {
-            return ['nom' => $m['nom'], 'court' => $m['court']];
+            return ['nom' => $m['nom'], 'court' => trim($m['court'])];
         }
 
         return ['nom' => $nom, 'court' => null];
     }
 
     /**
-     * Rattache l'équipe au club dont le nom court termine son nom et retire ce nom court du nom enregistré.
-     * Le club est créé s'il n'existe pas (nom long = nom court, à compléter dans l'admin) ; à enregistrer par flush.
+     * Club de ce nom court : en base, créé pendant ce traitement, ou créé maintenant (nom long fourni,
+     * sinon le nom court, à compléter dans l'admin). Un nouveau club est enregistré au prochain flush.
+     *
+     * @return array{club: Club, cree: bool}
+     */
+    public function club(string $nomCourt, ?string $nomLong = null): array
+    {
+        $club = $this->nouveaux[$nomCourt] ?? $this->clubRepository->findOneBy(['nomCourt' => $nomCourt]);
+        if ($club !== null) {
+            return ['club' => $club, 'cree' => false];
+        }
+
+        $club = (new Club())->setNomCourt($nomCourt)->setNom($nomLong ?? $nomCourt);
+        $this->em->persist($club);
+
+        return ['club' => $this->nouveaux[$nomCourt] = $club, 'cree' => true];
+    }
+
+    /**
+     * Rattache l'équipe au club désigné par le sigle qui termine son nom et retire ce sigle du nom enregistré.
+     *
+     * @param array<string, string> $alias anciens sigles => nom court du club, ex. ['SJDL' => 'VBLC']
      *
      * @return array{statut: 'rattachee'|'sans_club'|'conflit', club: ?Club, cree: bool, nom: string}
-     *   conflit : l'équipe a déjà un autre club ; rien n'est modifié
+     *   sans_club : pas de sigle reconnu (nom seulement nettoyé des espaces) ;
+     *   conflit : l'équipe a déjà un autre club, rien n'est modifié
      */
-    public function rattacher(Equipe $equipe): array
+    public function rattacher(Equipe $equipe, array $alias = []): array
     {
-        ['nom' => $nom, 'court' => $court] = $this->separer((string) $equipe->getNomSansClub());
+        ['nom' => $nom, 'court' => $sigle] = $this->separer((string) $equipe->getNomSansClub());
+        $nomCourt = $sigle === null ? null : ($alias[$sigle] ?? $sigle);
 
-        if ($court === null) {
+        // Sigle qui ne désigne aucun club connu et n'a pas la forme d'un sigle : parenthèses ordinaires du nom
+        if ($nomCourt !== null && !isset($alias[$sigle]) && !isset($this->nouveaux[$nomCourt])
+            && $this->clubRepository->findOneBy(['nomCourt' => $nomCourt]) === null
+            && !preg_match(self::SIGLE_NOUVEAU_CLUB, $nomCourt)) {
+            $nomCourt = null;
+            $nom = trim((string) $equipe->getNomSansClub());
+        }
+
+        if ($nomCourt === null) {
             $equipe->setNom($nom);
 
             return ['statut' => 'sans_club', 'club' => null, 'cree' => false, 'nom' => $nom];
         }
 
-        if ($equipe->getClub() !== null && $equipe->getClub()->getNomCourt() !== $court) {
+        if ($equipe->getClub() !== null && $equipe->getClub()->getNomCourt() !== $nomCourt) {
             return ['statut' => 'conflit', 'club' => $equipe->getClub(), 'cree' => false, 'nom' => (string) $equipe->getNomSansClub()];
         }
 
-        $cree = false;
-        $club = $this->nouveaux[$court] ?? $this->clubRepository->findOneBy(['nomCourt' => $court]);
-        if ($club === null) {
-            $club = (new Club())->setNom($court)->setNomCourt($court);
-            $this->em->persist($club);
-            $this->nouveaux[$court] = $club;
-            $cree = true;
-        }
-
+        ['club' => $club, 'cree' => $cree] = $this->club($nomCourt);
         $club->addEquipe($equipe);
         $equipe->setNom($nom);
 
