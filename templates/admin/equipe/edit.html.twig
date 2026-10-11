@@ -3,7 +3,7 @@
 {% block title %}Modifier l'équipe {{ equipe.nom }}{% endblock %}
 
 {% block body %}
-    {{ include('admin/_entete.html.twig', {titre: "Modifier l'équipe " ~ equipe.nom, retour: {url: path('admin_equipe_show', {id: equipe.id}), label: 'Fiche de l\'équipe'}}) }}
+    {{ include('admin/_entete.html.twig', {titre: "Modifier l'équipe " ~ equipe.nom|upper, retour: {url: path('admin_equipe_show', {id: equipe.id}), label: 'Fiche de l\'équipe'}}) }}
     <div class="admin-carte max-w-2xl">
         {{ include('admin/equipe/_form.html.twig', {'button_label': 'Enregistrer'}) }}
     </div>

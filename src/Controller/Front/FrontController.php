@@ -13,6 +13,7 @@ use App\Form\Front\UserProfileType;
 use App\Repository\LieuRepository;
 use App\Repository\MembreEquipeRepository;
 use App\Repository\PartieRepository;
+use App\Repository\ClubRepository;
 use App\Repository\EquipeRepository;
 use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
@@ -126,7 +127,7 @@ final class FrontController extends AbstractController
     //Route pour une page de qui-sommes-nous
     #[Route('/qui-sommes-nous', name: 'qui_sommes_nous', methods: ['GET'])]
     public function quiSommesNous(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository): Response
+    $saisonRepository, ClubRepository $clubRepository): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -158,6 +159,8 @@ final class FrontController extends AbstractController
         ];
 
         return $this->render('front/qui_sommes_nous.html.twig', [
+            // Clubs du championnat (référentiel en base, plutôt qu'une liste écrite dans la page)
+            'clubs' => $clubRepository->findBy([], ['nom' => 'ASC']),
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'groupes' => $groupes

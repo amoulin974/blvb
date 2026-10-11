@@ -65,7 +65,7 @@
                         <p class="text-sm text-(--color-base-content)/80">Vous pouvez saisir les résultats de toutes les équipes de ces clubs et modifier leur fiche.</p>
                         <div class="mt-2 flex flex-wrap gap-2">
                             {% for club in user.clubsResponsable %}
-                                <a href="{{ path('front_club_show', {id: club.id}) }}" class="badge badge-outline badge-md hover:badge-primary">{{ club.nom }} ({{ club.nomCourt }})</a>
+                                <a href="{{ path('front_club_show', {id: club.id}) }}" class="badge badge-outline badge-md hover:badge-primary">{{ club.nom }} ({{ club.nomCourt|upper }})</a>
                             {% endfor %}
                         </div>
                     </div>

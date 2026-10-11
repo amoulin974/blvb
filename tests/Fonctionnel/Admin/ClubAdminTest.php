@@ -57,7 +57,7 @@ final class ClubAdminTest extends TestFonctionnel
         $club = $this->club('Club créé');
         self::assertNotNull($club);
         self::assertSame('Club créé', $this->equipe('EQUIPE A2')->getClub()?->getNom());
-        self::assertSame('EQUIPE A2 (CC)', $this->equipe('EQUIPE A2')->getNom());
+        self::assertSame('Equipe a2 (CC)', $this->equipe('EQUIPE A2')->getNom());
         self::assertCount(1, $club->getLieux());
         self::assertContains('ROLE_RESPONSABLE_CLUB', ChampionnatDeTest::compte('cap.a2')->getRoles());
     }
@@ -100,7 +100,7 @@ final class ClubAdminTest extends TestFonctionnel
 
         $crawler = $this->client->request('GET', '/admin/equipe');
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Club test A1-B1', $crawler->filter('tr:contains("EQUIPE A1")')->text());
+        self::assertStringContainsString('Club test A1-B1', $crawler->filter('tr:contains("Equipe a1")')->text());
 
         $crawler = $this->client->request('GET', '/admin/user');
         self::assertResponseIsSuccessful();

@@ -1,6 +1,6 @@
 {# Suppression d'un match. Variables facultatives : declencheur_classe (bouton), icone_seule ; sinon zone de suppression. #}
 {% set confirmation = {
-    titre: 'Supprimer le match ' ~ partie.nomReception ~ ' contre ' ~ partie.nomDeplacement ~ ' ?',
+    titre: 'Supprimer le match ' ~ partie.nomReception|upper ~ ' contre ' ~ partie.nomDeplacement|upper ~ ' ?',
     action: path('admin_partie_delete', {id: partie.id}),
     token: csrf_token('delete' ~ partie.id),
     consequences: [partie.nbSetGagnantReception is not null ? 'Son score (' ~ partie.nbSetGagnantReception|sets ~ '–' ~ partie.nbSetGagnantDeplacement|sets ~ ') sera perdu.' : "Aucun score n'a été saisi pour ce match."],

@@ -46,15 +46,15 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
         self::assertSame('sans_club', $service->rattacher($copains)['statut']);
         self::assertSame('LES COPAINS (du lundi)', $copains->getNomSansClub());
 
-        $inconnue = EquipeFactory::createOne(['nom' => 'NOUVELLE (XYZ)']);
+        $inconnue = EquipeFactory::createOne(['nom' => 'Nouvelle (XYZ)']);
         $resultat = $service->rattacher($inconnue);
         self::assertTrue($resultat['cree']);
-        self::assertSame('NOUVELLE (XYZ)', $inconnue->getNom());
+        self::assertSame('Nouvelle (XYZ)', $inconnue->getNom());
 
         $ancienne = EquipeFactory::createOne(['nom' => 'ADISKIDEAK (SJDL)']);
         $service->rattacher($ancienne, ['SJDL' => 'VBLC']);
         self::assertSame('ADISKIDEAK', $ancienne->getNomSansClub());
-        self::assertSame('ADISKIDEAK (VBLC)', $ancienne->getNom());
+        self::assertSame('Adiskideak (VBLC)', $ancienne->getNom());
     }
 
     private function lancer(bool $force): string
@@ -90,16 +90,16 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
         $aovb = $clubs->findOneBy(['nomCourt' => 'AOVB']);
         self::assertSame('Anglet Olympique Volley Ball', $aovb->getNom());
         self::assertSame(['Anglet'], $aovb->getLieux()->map(fn ($l) => $l->getNom())->getValues());
-        self::assertSame('EROAK (AOVB)', $this->equipe('EROAK')->getNom(), 'nom enregistré sans sigle, affiché avec');
+        self::assertSame('Eroak (AOVB)', $this->equipe('EROAK')->getNom(), 'nom enregistré sans sigle, affiché avec');
 
-        self::assertSame('ADISKIDEAK (VBLC)', $this->equipe('ADISKIDEAK')->getNom(), 'ancien sigle SJDL traduit en VBLC');
+        self::assertSame('Adiskideak (VBLC)', $this->equipe('ADISKIDEAK')->getNom(), 'ancien sigle SJDL traduit en VBLC');
         self::assertSame('Volley Ball Luzien et Cibourien', $clubs->findOneBy(['nomCourt' => 'VBLC'])->getNom());
 
         self::assertSame($existant->getId(), $this->equipe('PERLEMPACK')->getClub()->getId(), 'club existant réutilisé');
         self::assertSame('Nom long saisi dans l\'admin', $clubs->findOneBy(['nomCourt' => 'ASPTT'])->getNom(), 'nom long existant conservé');
 
-        self::assertSame('LEO LAGRANGE (Léo)', $this->equipe('LEO LAGRANGE')->getNom(), 'équipe sans sigle du référentiel');
-        self::assertSame('les Tamalous (Tosse)', $this->equipe('les Tamalous')->getNom(), 'espaces retirés, club Tosse');
+        self::assertSame('Leo lagrange (LÉO)', $this->equipe('LEO LAGRANGE')->getNom(), 'équipe sans sigle du référentiel');
+        self::assertSame('Les tamalous (TOSSE)', $this->equipe('les Tamalous')->getNom(), 'espaces retirés, club Tosse');
         self::assertNull($this->equipe('SANS CLUB')->getClub());
         self::assertCount(9, $clubs->findAll());
         self::assertStringContainsString('Gymnase « Biarritz » introuvable', $affichage);
@@ -118,6 +118,6 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
         $this->lancer(true);
         $this->lancer(true);
         self::assertCount(1, self::service(ClubRepository::class)->findBy(['nomCourt' => 'AOVB']));
-        self::assertSame('EROAK (AOVB)', $this->equipe('EROAK')->getNom());
+        self::assertSame('Eroak (AOVB)', $this->equipe('EROAK')->getNom());
     }
 }

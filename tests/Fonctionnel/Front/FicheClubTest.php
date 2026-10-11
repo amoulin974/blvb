@@ -35,7 +35,7 @@ final class FicheClubTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Club test A1-B1');
         self::assertSelectorTextContains('body', 'CTA');
-        self::assertSelectorTextContains('body', 'EQUIPE B1 (CTA)');
+        self::assertSelectorTextContains('body', 'Equipe b1 (CTA)');
         self::assertSelectorTextContains('body', 'Gymnase G2');
         self::assertSelectorNotExists('a[href$="/modifier"]', 'pas de bouton de modification pour un visiteur');
 
@@ -65,7 +65,7 @@ final class FicheClubTest extends TestFonctionnel
         self::assertSame('CTR', $club->getNomCourt());
         self::assertSame("Entraînements le mardi.\nTous niveaux.", $club->getDescription());
         self::assertSame('https://club.example.org', $club->getUrl());
-        self::assertSame('EQUIPE A1 (CTR)', $club->getEquipes()->first()->getNom());
+        self::assertSame('Equipe a1 (CTR)', $club->getEquipes()->first()->getNom());
     }
 
     #[TestDox('La description et le lien peuvent rester vides')]
@@ -189,5 +189,30 @@ final class FicheClubTest extends TestFonctionnel
 
         $crawler = $this->client->request('GET', '/');
         self::assertGreaterThanOrEqual(1, $crawler->filter('a[href="/clubs"]')->count());
+    }
+
+    #[TestDox('La fiche du club ne liste que les équipes engagées dans la saison en cours, avec leur poule')]
+    public function test_equipes_de_la_saison(): void
+    {
+        \App\Factory\EquipeFactory::createOne(['nom' => 'EQUIPE NON ENGAGEE', 'club' => ChampionnatDeTest::get('club')]);
+
+        $crawler = $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+
+        $equipes = $crawler->filter('#titre-equipes + ul li')->each(fn ($li) => preg_replace('/\s+/', ' ', trim($li->text())));
+        self::assertCount(2, $equipes);
+        self::assertStringStartsWith('Equipe a1 (CTA)', $equipes[0]);
+        self::assertStringContainsString('Poule', $equipes[0]);
+        self::assertStringStartsWith('Equipe b1 (CTA)', $equipes[1]);
+        self::assertStringNotContainsString('Equipe non engagee', $crawler->filter('body')->text());
+    }
+
+    #[TestDox('La page « Qui sommes-nous ? » liste les clubs en lien vers leur fiche')]
+    public function test_qui_sommes_nous(): void
+    {
+        $crawler = $this->client->request('GET', '/qui-sommes-nous');
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('main a[href="/club/'.ChampionnatDeTest::get('club.voisin')->getId().'"]'));
+        self::assertGreaterThanOrEqual(1, $crawler->filter('main a[href="/clubs"]')->count());
     }
 }

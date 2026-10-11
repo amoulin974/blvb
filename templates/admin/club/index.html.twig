@@ -25,7 +25,7 @@
             {% for club in clubs %}
                 <tr class="align-top">
                     <td><a class="flex items-center gap-3 font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_club_edit', {id: club.id}) }}">{{ include('front/club/_logo.html.twig', {club: club, taille: 'size-10'}) }} {{ club.nom }}</a></td>
-                    <td>{{ club.nomCourt }}</td>
+                    <td>{{ club.nomCourt|upper }}</td>
                     <td>{{ club.equipes|map(e => e.nomSansClub)|join(', ') ?: '–' }}</td>
                     <td>{{ club.lieux|map(l => l.nom)|join(', ') ?: '–' }}</td>
                     <td>

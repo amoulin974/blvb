@@ -18,7 +18,7 @@
                         {{ include('front/club/_logo.html.twig', {club: club, taille: 'size-16'}) }}
                         <span class="min-w-0 flex flex-col gap-1">
                             <span class="font-display text-lg font-semibold leading-tight">{{ club.nom }}</span>
-                            <span><span class="badge badge-outline badge-sm">{{ club.nomCourt }}</span></span>
+                            <span><span class="badge badge-outline badge-sm">{{ club.nomCourt|upper }}</span></span>
                             {% if club.lieux is not empty %}
                                 <span class="text-sm text-(--color-base-content)/80">{{ club.lieux|map(l => l.nom)|join(', ') }}</span>
                             {% endif %}

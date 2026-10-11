@@ -563,7 +563,7 @@ class ChargerBaseRecetteCommand extends Command
         $sansScore = null;
         if ($scenario === 'en-cours') {
             foreach (array_reverse($termines) as $p) {
-                if ($lettre($p) === 'A' && in_array($p->getIdEquipeRecoit()->getNom(), $equipesAvecCapitaineConnectable, true)) {
+                if ($lettre($p) === 'A' && in_array($p->getIdEquipeRecoit()->getNomSansClub(), $equipesAvecCapitaineConnectable, true)) {
                     $sansScore = $p;
                     break;
                 }

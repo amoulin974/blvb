@@ -59,16 +59,18 @@ class PartieRepository extends ServiceEntityRepository
 
     public function getMatchsByEquipePhase(int $equipeId, int $pouleId): array
     {
-        return $this->createQueryBuilder('m')
+        $matchs = $this->createQueryBuilder('m')
             ->select('m.id AS match_id')
             ->addSelect('m.date AS date_match')
             ->addSelect('m.nb_set_gagnant_reception AS score_reception_match')
             ->addSelect('m.nb_set_gagnant_deplacement AS score_deplacement_match')
             ->addSelect('er.id AS equipe_recoit_id')
             ->addSelect('ed.id AS equipe_deplace_id')
-            // Noms affichés : nom de l'équipe suivi du nom court de son club (comme Equipe::getNom)
-            ->addSelect("CONCAT(er.nom, CASE WHEN cr.id IS NULL THEN '' ELSE CONCAT(' (', cr.nomCourt, ')') END) AS equipe_recoit")
-            ->addSelect("CONCAT(ed.nom, CASE WHEN cd.id IS NULL THEN '' ELSE CONCAT(' (', cd.nomCourt, ')') END) AS equipe_deplace")
+            // Noms bruts et nom court du club : mis en forme ci-dessous comme Equipe::getNom
+            ->addSelect('er.nom AS equipe_recoit')
+            ->addSelect('ed.nom AS equipe_deplace')
+            ->addSelect('cr.nomCourt AS club_recoit')
+            ->addSelect('cd.nomCourt AS club_deplace')
             ->addSelect('l.nom AS lieu_nom')
             ->addSelect('l.adresse AS lieu_adresse')
             ->addSelect('j.id AS journee_id')
@@ -92,6 +94,14 @@ class PartieRepository extends ServiceEntityRepository
             ->orderBy('m.date', 'ASC')
             ->getQuery()
             ->getResult();
+
+        // Noms affichés, comme Equipe::getNom : « Eroak (AOVB) »
+        return array_map(static function (array $match): array {
+            $match['equipe_recoit'] = Equipe::formaterNom($match['equipe_recoit'], $match['club_recoit']);
+            $match['equipe_deplace'] = Equipe::formaterNom($match['equipe_deplace'], $match['club_deplace']);
+
+            return $match;
+        }, $matchs);
     }
     //    /**
     //     * @return Partie[] Returns an array of Partie objects

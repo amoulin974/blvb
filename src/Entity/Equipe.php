@@ -80,17 +80,32 @@ class Equipe
     }
 
     /**
-     * Nom affiché : nom de l'équipe suivi du nom court de son club entre parenthèses, ex. « EROAK (AOVB) ».
-     * Utilisé par tous les affichages (pages, iCal, listes de choix). Le nom enregistré en base, sans le club,
-     * s'obtient par getNomSansClub() ; c'est lui que modifie le formulaire de l'équipe.
+     * Nom affiché : nom de l'équipe avec seulement la première lettre en majuscule, suivi du nom court de son
+     * club en majuscules entre parenthèses, ex. « Eroak (AOVB) ». Utilisé par tous les affichages (pages, iCal,
+     * listes de choix) ; dans les titres, les gabarits le passent en majuscules (classe CSS uppercase ou filtre upper).
+     * Le nom enregistré en base, sans le club, s'obtient par getNomSansClub() ; c'est lui que modifie le formulaire.
      */
     public function getNom(): ?string
     {
-        if ($this->nom === null || $this->club?->getNomCourt() === null) {
-            return $this->nom;
-        }
+        return $this->nom === null ? null : self::formaterNom($this->nom, $this->club?->getNomCourt());
+    }
 
-        return $this->nom.' ('.$this->club->getNomCourt().')';
+    /** Nom affiché sans le club, ex. « Eroak » (la page des équipes affiche le club à part, en lien). */
+    public function getNomSimple(): ?string
+    {
+        return $this->nom === null ? null : self::formaterNom($this->nom);
+    }
+
+    /**
+     * Mise en forme d'un nom d'équipe : première lettre en majuscule, le reste en minuscules ; nom court du club
+     * en majuscules entre parenthèses. Partagée avec les requêtes qui renvoient des tableaux (PartieRepository).
+     */
+    public static function formaterNom(string $nom, ?string $nomCourtClub = null): string
+    {
+        $nom = mb_strtolower(trim($nom));
+        $nom = mb_strtoupper(mb_substr($nom, 0, 1)).mb_substr($nom, 1);
+
+        return $nomCourtClub === null ? $nom : $nom.' ('.mb_strtoupper($nomCourtClub).')';
     }
 
     /** Nom enregistré en base, sans le nom court du club. */

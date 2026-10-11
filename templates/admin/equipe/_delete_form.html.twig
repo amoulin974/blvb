@@ -4,7 +4,7 @@
 {% set nbPoules = equipe.poules|length %}
 {{ include('admin/_zone_suppression.html.twig', {
     resume: "Supprime l'équipe et sa composition. Les fiches joueurs sont conservées.",
-    titre: "Supprimer l'équipe " ~ equipe.nom ~ " ?",
+    titre: "Supprimer l'équipe " ~ equipe.nom|upper ~ " ?",
     action: path('admin_equipe_delete', {id: equipe.id}),
     token: csrf_token('delete' ~ equipe.id),
     consequences: [

@@ -3,5 +3,5 @@
 {% if club.image %}
     <img src="{{ asset('uploads/clubs/' ~ club.image) }}" alt="Logo {{ club.nom }}" class="{{ taille }} shrink-0 rounded-box object-contain bg-base-100 border border-base-300" loading="lazy">
 {% else %}
-    <span class="{{ taille }} shrink-0 rounded-box bg-(--color-primary)/10 text-(--color-primary) font-display font-bold flex items-center justify-center text-center text-sm leading-tight p-1 break-all" aria-hidden="true">{{ club.nomCourt }}</span>
+    <span class="{{ taille }} shrink-0 rounded-box bg-(--color-primary)/10 text-(--color-primary) font-display font-bold flex items-center justify-center text-center text-sm leading-tight p-1 break-all" aria-hidden="true">{{ club.nomCourt|upper }}</span>
 {% endif %}

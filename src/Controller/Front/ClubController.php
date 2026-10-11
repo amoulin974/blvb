@@ -36,10 +36,15 @@ final class ClubController extends AbstractController
     }
 
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET'])]
-    public function show(Club $club): Response
+    public function show(Club $club, ClubRepository $clubRepository, SaisonRepository $saisonRepository): Response
     {
+        // Seules les équipes engagées dans la saison en cours sont listées, avec leur poule
+        $saison = $saisonRepository->findOneBy(['favori' => 1]);
+
         return $this->render('front/club/show.html.twig', [
             'club' => $club,
+            'saison' => $saison,
+            'equipesEngagees' => $saison ? $clubRepository->equipesEngagees($club, $saison) : [],
         ]);
     }
 

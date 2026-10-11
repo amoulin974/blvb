@@ -19,7 +19,7 @@
                     <a class="btn btn-outline btn-primary md:btn-sm" href="{{ path('front_club_edit', {id: club.id}) }}">Modifier la fiche du club</a>
                 {% endif %}
             </div>
-            <p class="mt-1"><span class="badge badge-outline" title="Abréviation, affichée après le nom des équipes">{{ club.nomCourt }}</span></p>
+            <p class="mt-1"><span class="badge badge-outline" title="Abréviation, affichée après le nom des équipes">{{ club.nomCourt|upper }}</span></p>
             {% if club.url %}
                 <p class="mt-2"><a class="link link-primary break-all" href="{{ club.url }}" target="_blank" rel="noopener noreferrer">{{ club.url }}</a></p>
             {% endif %}
@@ -34,12 +34,16 @@
 
         <div class="grid gap-6 md:grid-cols-2">
             <section aria-labelledby="titre-equipes" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
-                <h2 id="titre-equipes" class="text-xl uppercase tracking-wide">Équipes</h2>
-                <ul class="mt-2 space-y-1">
-                    {% for equipe in club.equipes %}
-                        <li><a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: equipe.id}) }}">{{ equipe.nom }}</a></li>
+                <h2 id="titre-equipes" class="text-xl uppercase tracking-wide">Équipes{% if saison %} <span class="text-base normal-case tracking-normal text-(--color-base-content)/70">· {{ saison.nom }}</span>{% endif %}</h2>
+                {# Équipes engagées dans la saison en cours, avec leur poule #}
+                <ul class="mt-2 space-y-2">
+                    {% for ligne in equipesEngagees %}
+                        <li class="flex flex-wrap items-baseline justify-between gap-x-3">
+                            <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: ligne.equipe.id}) }}">{{ ligne.equipe.nom }}</a>
+                            <span class="text-sm text-(--color-base-content)/80">{{ ligne.poules|join(' · ') }}</span>
+                        </li>
                     {% else %}
-                        <li class="text-(--color-base-content)/70">Aucune équipe.</li>
+                        <li class="text-(--color-base-content)/70">Aucune équipe engagée cette saison.</li>
                     {% endfor %}
                 </ul>
             </section>

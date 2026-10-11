@@ -38,6 +38,43 @@ class ClubRepository extends ServiceEntityRepository
         return array_column(array_map(static fn (array $l) => ['club' => (int) $l['club'], 'nombre' => (int) $l['nombre']], $lignes), 'nombre', 'club');
     }
 
+    /**
+     * Équipes du club engagées dans une saison, avec leurs poules (dans l'ordre des phases), triées par nom.
+     *
+     * @return list<array{equipe: \App\Entity\Equipe, poules: list<string>}>
+     */
+    public function equipesEngagees(Club $club, Saison $saison): array
+    {
+        $lignes = $this->getEntityManager()->createQueryBuilder()
+            ->select('e.id AS equipe, p.nom AS poule')
+            ->from(\App\Entity\Poule::class, 'p')
+            ->innerJoin('p.phase', 'ph')
+            ->innerJoin('p.equipes', 'e')
+            ->andWhere('ph.saison = :saison')
+            ->andWhere('e.club = :club')
+            ->setParameter('saison', $saison)
+            ->setParameter('club', $club)
+            ->orderBy('ph.ordre', 'ASC')
+            ->addOrderBy('p.nom', 'ASC')
+            ->getQuery()
+            ->getArrayResult();
+
+        $poules = [];
+        foreach ($lignes as $ligne) {
+            $poules[(int) $ligne['equipe']][] = $ligne['poule'];
+        }
+
+        $engagees = [];
+        foreach ($club->getEquipes() as $equipe) {
+            if (isset($poules[$equipe->getId()])) {
+                $engagees[] = ['equipe' => $equipe, 'poules' => array_values(array_unique($poules[$equipe->getId()]))];
+            }
+        }
+        usort($engagees, static fn (array $a, array $b) => strcasecmp((string) $a['equipe']->getNomSansClub(), (string) $b['equipe']->getNomSansClub()));
+
+        return $engagees;
+    }
+
     /** Clubs avec leurs équipes, gymnases et responsables, chargés en une requête (liste de l'admin). */
     public function findTousAvecRelations(): array
     {

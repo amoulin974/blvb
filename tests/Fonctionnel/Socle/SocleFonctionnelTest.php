@@ -17,7 +17,7 @@ final class SocleFonctionnelTest extends TestFonctionnel
         $this->client->request('GET', '/');
 
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'EQUIPE A1');
+        self::assertSelectorTextContains('body', 'Equipe a1');
     }
 
     #[TestDox('L\'administration renvoie un visiteur vers la connexion')]
