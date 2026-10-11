@@ -35,6 +35,8 @@
                 data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"
                 data-calendar-duration-value="1"
                 data-calendar-pouleid-value="{{ poule.id }}"
+                data-calendar-journee-api-url-value="{{ path('admin_journee_api_add', {poule: poule.id}) }}"
+                data-calendar-partie-api-url-value="{{ path('admin_partie_apiall', {id: poule.id}) }}"
                 data-calendar-datefin-value="{{ journee.poule.phase.datefin|date('Y-m-d') }}"
                 data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
             </div>
@@ -49,6 +51,8 @@
                 data-calendar-buttons-value="multiMonthFourMonth, dayGridFourWeek"
                 data-calendar-duration-value="6"
                 data-calendar-pouleid-value="{{ poule.id }}"
+                data-calendar-journee-api-url-value="{{ path('admin_journee_api_add', {poule: poule.id}) }}"
+                data-calendar-partie-api-url-value="{{ path('admin_partie_apiall', {id: poule.id}) }}"
                 data-calendar-datefin-value="{{ poule.phase.datefin|date('Y-m-d') }}"
                 data-calendar-csrf-token-value="{{ csrf_token('update_journee') }}">
             </div>

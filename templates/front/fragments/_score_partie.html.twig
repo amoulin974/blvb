@@ -25,6 +25,7 @@
         {% set donnees %}
             data-action="click->score-modal#openModal"
             data-partie-id="{{ partie.id }}"
+            data-url-score="{{ path('front_api_score_update', {id: partie.id}) }}"
             data-match-passe="{{ passe ? 1 : 0 }}"
             data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
             data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}"

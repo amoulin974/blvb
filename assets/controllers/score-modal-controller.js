@@ -3,7 +3,8 @@ import { Controller } from '@hotwired/stimulus';
 /*
  * Saisie du résultat d'un match (fenêtre _score_modal.html.twig, boutons _score_partie.html.twig).
  *
- * Les boutons « Saisir » / crayon portent : data-partie-id, data-equipe-recoit, data-equipe-deplace,
+ * Les boutons « Saisir » / crayon portent : data-partie-id, data-url-score (URL de l'API générée par path(),
+ * préfixe /blvb compris en prod), data-equipe-recoit, data-equipe-deplace,
  * data-score-reception / data-score-deplacement (score actuel, -1 = forfait, vide = non joué), data-match-passe,
  * data-bareme (points de la saison du match, pour le résumé).
  *
@@ -38,6 +39,7 @@ export default class extends Controller {
         const btn = event.currentTarget;
         this.declencheur = btn;
         this.partieId = btn.dataset.partieId;
+        this.urlScore = btn.dataset.urlScore;
         this.recoit = btn.dataset.equipeRecoit;
         this.deplace = btn.dataset.equipeDeplace;
         try {
@@ -155,7 +157,7 @@ export default class extends Controller {
 
     envoyer(scoreReception, scoreDeplacement) {
         this.enregistrerTarget.disabled = true;
-        fetch('/front/partie/' + this.partieId + '/api/update', {
+        fetch(this.urlScore, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
