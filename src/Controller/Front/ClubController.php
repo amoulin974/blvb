@@ -52,6 +52,7 @@ final class ClubController extends AbstractController
     #[IsGranted(ClubVoter::MODIFIER, subject: 'club')]
     public function edit(Request $request, Club $club, EntityManagerInterface $entityManager, ClubImageService $images): Response
     {
+        $abreviationAvant = $club->getNomCourt();
         $form = $this->createForm(ClubFicheType::class, $club);
         $form->handleRequest($request);
 
@@ -59,6 +60,13 @@ final class ClubController extends AbstractController
             $images->appliquerFormulaire($form, $club);
             $entityManager->flush();
             $this->addFlash('success', 'La fiche du club a été enregistrée.');
+            // Abréviation modifiée : rappeler l'effet sur le nom affiché des équipes
+            if ($club->getNomCourt() !== $abreviationAvant && !$club->getEquipes()->isEmpty()) {
+                $this->addFlash('success', sprintf(
+                    'L\'abréviation est passée de %s à %s : les équipes du club s\'affichent désormais ainsi, par exemple « %s ».',
+                    mb_strtoupper((string) $abreviationAvant), mb_strtoupper((string) $club->getNomCourt()), $club->getEquipes()->first()->getNom()
+                ));
+            }
 
             return $this->redirectToRoute('front_club_show', ['id' => $club->getId()], Response::HTTP_SEE_OTHER);
         }

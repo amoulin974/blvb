@@ -36,18 +36,28 @@ final class ClubsDepuisNomsEquipesCommand extends Command
 {
     /**
      * Référentiel des clubs (validé par le bureau du championnat le 11/10/2026).
-     * sigles : anciens sigles écrits dans le nom des équipes ; equipes : équipes sans sigle (nom exact, casse ignorée).
+     * sigles : anciens sigles écrits dans le nom des équipes ; equipes : équipes sans sigle (nom exact, casse ignorée) ;
+     * url et description : fiche du club, d'après les sites des clubs (octobre 2026), appliquées seulement si la fiche est vide.
      */
     public const CLUBS = [
-        ['court' => 'AOVB', 'nom' => 'Anglet Olympique Volley Ball', 'gymnases' => ['Anglet'], 'sigles' => ['AOVB']],
-        ['court' => 'ASPTT', 'nom' => "Section Volley de l'ASPTT", 'gymnases' => ['Biarritz'], 'sigles' => ['ASPTT']],
-        ['court' => 'VBLC', 'nom' => 'Volley Ball Luzien et Cibourien', 'gymnases' => ['St-Jean-de-Luz'], 'sigles' => ['SJDL']],
-        ['court' => 'JSAVB', 'nom' => 'Jeanne & Serge Angresse Volley Ball', 'gymnases' => ['Angresse'], 'sigles' => ['ANGR']],
-        ['court' => 'USCVL', 'nom' => 'UNION SPORTIVE CAPBRETONNAISE VOLLEY LOISIR', 'gymnases' => ['Capbreton'], 'sigles' => ['CAP']],
-        ['court' => 'Ondres', 'nom' => 'Ondres Volley Ball', 'gymnases' => ['Ondres'], 'sigles' => ['OND']],
-        ['court' => 'BVB', 'nom' => 'Bayonne Volley Ball', 'gymnases' => ['Bayonne'], 'sigles' => ['BAY']],
-        ['court' => 'Léo', 'nom' => 'Léo Lagrange Bayonne', 'gymnases' => ['Bayonne'], 'equipes' => ['LEO LAGRANGE']],
-        ['court' => 'Tosse', 'nom' => 'Tosse Volley Club', 'gymnases' => ['Tosse'], 'equipes' => ['les Tamalous', 'TOSSE 2', 'SAMOUSSAS']],
+        ['court' => 'AOVB', 'nom' => 'Anglet Olympique Volley Ball', 'gymnases' => ['Anglet'], 'sigles' => ['AOVB'], 'url' => 'https://anglet-omnisports.fr/sections/anglet-olympique-volleyball.html',
+            'description' => 'Section volley-ball de l\'Anglet Olympique, club omnisports d\'Anglet. Le club réunit des équipes jeunes et seniors, de la compétition régionale au loisir.'."\n".'Siège au centre sportif El Hogar, à Anglet.'],
+        ['court' => 'ASPTT', 'nom' => "Section Volley de l'ASPTT", 'gymnases' => ['Biarritz'], 'sigles' => ['ASPTT'], 'url' => 'https://bayonnecotebasque.asptt.com/activity/volley-ball/',
+            'description' => 'Section volley-ball de l\'ASPTT Bayonne Côte Basque.'."\n".'Le groupe loisir, réservé aux adultes, s\'entraîne au gymnase Larochefoucauld de Biarritz. Des tournois et des rencontres entre équipes sont organisés tout au long de l\'année.'],
+        ['court' => 'VBLC', 'nom' => 'Volley Ball Luzien et Cibourien', 'gymnases' => ['St-Jean-de-Luz'], 'sigles' => ['SJDL'], 'url' => 'https://www.vblc.fr/',
+            'description' => 'Club de volley-ball et de beach-volley de Saint-Jean-de-Luz et Ciboure, affilié à la FFVB, fondé en 1992.'."\n".'Il propose la compétition, le loisir, le volley en entreprise et le beach-volley. Entraînements au gymnase du collège Chantaco.'],
+        ['court' => 'JSAVB', 'nom' => 'Jeanne & Serge Angresse Volley Ball', 'gymnases' => ['Angresse'], 'sigles' => ['ANGR'], 'url' => 'https://www.volley-academie.com/',
+            'description' => 'Association landaise qui pratique et enseigne le volley-ball et le beach-volley, déclarée en 2022.'."\n".'Elle propose une équipe loisir mixte, tous niveaux, avec des créneaux le mercredi et le vendredi.'],
+        ['court' => 'USCVL', 'nom' => 'UNION SPORTIVE CAPBRETONNAISE VOLLEY LOISIR', 'gymnases' => ['Capbreton'], 'sigles' => ['CAP'], 'url' => 'https://www.helloasso.com/associations/union-sportive-capbretonnaise-volley-loisir',
+            'description' => 'Club de volley-ball loisir de Capbreton depuis 1990, connu pour sa convivialité et sa bonne humeur.'],
+        ['court' => 'Ondres', 'nom' => 'Ondres Volley Ball', 'gymnases' => ['Ondres'], 'sigles' => ['OND'], 'url' => 'https://www.helloasso.com/associations/ondres-volley-ball',
+            'description' => 'Association de volley-ball loisir mixte : entraînements, championnat loisir, et pratique du beach-volley.'],
+        ['court' => 'BVB', 'nom' => 'Bayonne Volley Ball', 'gymnases' => ['Bayonne'], 'sigles' => ['BAY'], 'url' => 'https://www.helloasso.com/associations/bayonne-volley-ball',
+            'description' => 'Club de volley-ball de Bayonne créé en 2019 pour proposer du volley de compétition, à côté du loisir et du beach-volley.'."\n".'Il compte des équipes jeunes, féminines, masculines et loisir.'],
+        ['court' => 'Léo', 'nom' => 'Léo Lagrange Bayonne', 'gymnases' => ['Bayonne'], 'equipes' => ['LEO LAGRANGE'], 'url' => 'https://www.leolagrangebayonne.fr/',
+            'description' => 'Association loi 1901 fondée en 1962, qui propose des activités sportives, culturelles et de bien-être.'."\n".'Sa section volley-ball loisir réunit des équipes mixtes d\'adultes de tout âge, dans un esprit convivial.'],
+        ['court' => 'Tosse', 'nom' => 'Tosse Volley Club', 'gymnases' => ['Tosse'], 'equipes' => ['les Tamalous', 'TOSSE 2', 'SAMOUSSAS'], 'url' => 'https://www.tosse.fr/Culture-Loisirs-et-Vie-Associative/Vie-Associative/Les-Associations-de-Tosse/Tosse-Volley-Club',
+            'description' => 'Association de Tosse créée en 2022 pour faire découvrir et pratiquer le volley-ball.'."\n".'Sa section loisir, ouverte à tous les adultes, privilégie le volley mixte. Son équipe loisir compétition joue dans le championnat Basco-Landais.'],
     ];
 
     /**
@@ -134,6 +144,13 @@ final class ClubsDepuisNomsEquipesCommand extends Command
                 }
                 $club->addLieu($lieu);
                 $gymnases[] = $nomGymnase;
+            }
+            // Fiche du club : seulement si elle est vide, pour ne jamais écraser ce qu'un responsable a saisi
+            if ($club->getUrl() === null && isset($def['url'])) {
+                $club->setUrl($def['url']);
+            }
+            if ($club->getDescription() === null && isset($def['description'])) {
+                $club->setDescription($def['description']);
             }
             foreach ($def['sigles'] ?? [] as $sigle) {
                 $alias[$sigle] = $def['court'];

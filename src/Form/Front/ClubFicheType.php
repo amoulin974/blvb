@@ -26,7 +26,7 @@ class ClubFicheType extends AbstractType
             ->add('nom', TextType::class, ['label' => 'Nom du club'])
             ->add('nomCourt', TextType::class, [
                 'label' => 'Abréviation',
-                'help' => 'Affichée entre parenthèses après le nom des équipes du club, ex. EROAK (AOVB).',
+                'help' => 'En majuscules, entre parenthèses après le nom des équipes du club, ex. Eroak (AOVB). 20 caractères au plus.',
             ])
             ->add('description', TextareaType::class, [
                 'label' => 'Description',

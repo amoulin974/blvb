@@ -215,4 +215,22 @@ final class FicheClubTest extends TestFonctionnel
         self::assertCount(1, $crawler->filter('main a[href="/club/'.ChampionnatDeTest::get('club.voisin')->getId().'"]'));
         self::assertGreaterThanOrEqual(1, $crawler->filter('main a[href="/clubs"]')->count());
     }
+
+    #[TestDox('Le responsable est prévenu des conséquences d\'un changement d\'abréviation, puis informé du nouveau nom des équipes')]
+    public function test_avertissement_abreviation(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+
+        self::assertSelectorTextContains('[role="note"]', 'Modifier l\'abréviation change le nom affiché des 2 équipes du club');
+        self::assertSelectorTextContains('[role="note"]', 'EQUIPE A1 (CTA)');
+
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[nomCourt]'] = 'Abc';
+        $this->client->submit($form);
+        $this->client->followRedirect();
+
+        self::assertSelectorTextContains('body', 'L\'abréviation est passée de CTA à ABC');
+        self::assertSelectorTextContains('body', '« EQUIPE A1 (ABC) »');
+    }
 }

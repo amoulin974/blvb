@@ -7,6 +7,17 @@
         {{ form_widget(champ, {'attr': {'class': classe}}) }}
         {% if champ.vars.help %}<p class="mt-1 text-sm text-(--color-base-content)/70">{{ champ.vars.help }}</p>{% endif %}
         {{ form_errors(champ) }}
+        {# Abréviation : conséquences d'une modification, avec le nom actuel des équipes du club #}
+        {% if champ.vars.name == 'nomCourt' and club.id|default(null) and club.equipes is not empty %}
+            {% set exemples = club.equipes|slice(0, 3)|map(e => e.nom)|join(', ') %}
+            <div role="note" class="alert alert-warning alert-soft mt-2 text-sm items-start">
+                <div>
+                    <p class="font-semibold">Modifier l'abréviation change le nom affiché des {{ club.equipes|length }} équipe{{ club.equipes|length > 1 ? 's' : '' }} du club, partout sur le site.</p>
+                    <p class="mt-1">Aujourd'hui : {{ exemples }}{{ club.equipes|length > 3 ? '…' : '' }}</p>
+                    <p class="mt-1">Le nouveau nom apparaîtra dans le calendrier, les classements, les fiches des équipes, la liste des clubs et les agendas des joueurs abonnés au calendrier de leur équipe. Choisissez une abréviation courte et connue des joueurs.</p>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endfor %}
 
