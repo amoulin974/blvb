@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 use App\Entity\Club;
 use App\Form\ClubType;
 use App\Repository\ClubRepository;
+use App\Service\ClubImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -31,13 +32,14 @@ final class ClubController extends AbstractController
     }
 
     #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $entityManager): Response
+    public function new(Request $request, EntityManagerInterface $entityManager, ClubImageService $images): Response
     {
         $club = new Club();
         $form = $this->createForm(ClubType::class, $club);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $images->appliquerFormulaire($form, $club);
             $entityManager->persist($club);
             $entityManager->flush();
             $this->addFlash('success', sprintf('Le club %s a été créé.', $club->getNom()));
@@ -52,12 +54,13 @@ final class ClubController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Club $club, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Club $club, EntityManagerInterface $entityManager, ClubImageService $images): Response
     {
         $form = $this->createForm(ClubType::class, $club);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $images->appliquerFormulaire($form, $club);
             $entityManager->flush();
             $this->addFlash('success', sprintf('Le club %s a été enregistré.', $club->getNom()));
 
@@ -71,10 +74,11 @@ final class ClubController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Club $club, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Club $club, EntityManagerInterface $entityManager, ClubImageService $images): Response
     {
         // Les équipes restent, sans club ; les gymnases et les comptes ne sont pas touchés
-        $this->supprimerEntite($request, $entityManager, $club, 'delete'.$club->getId(), 'le club '.$club->getNom(), false, static function () use ($club): void {
+        $image = $club->getImage();
+        $supprime = $this->supprimerEntite($request, $entityManager, $club, 'delete'.$club->getId(), 'le club '.$club->getNom(), false, static function () use ($club): void {
             foreach ($club->getEquipes()->toArray() as $equipe) {
                 $club->removeEquipe($equipe);
             }
@@ -82,6 +86,9 @@ final class ClubController extends AbstractController
                 $club->removeResponsable($user);
             }
         });
+        if ($supprime && $image !== null) {
+            $images->retirer($club); // supprime aussi le fichier de l'image
+        }
 
         return $this->redirectToRoute('admin_club_index', [], Response::HTTP_SEE_OTHER);
     }

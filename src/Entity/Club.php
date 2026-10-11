@@ -51,6 +51,10 @@ class Club
     #[Assert\Length(max: 255)]
     private ?string $url = null;
 
+    /** Nom du fichier de l'image du club (logo), dans public/uploads/clubs (ClubImageService) */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $image = null;
+
     /** @var Collection<int, Equipe> */
     #[ORM\OneToMany(targetEntity: Equipe::class, mappedBy: 'club')]
     #[ORM\OrderBy(['nom' => 'ASC'])]
@@ -130,6 +134,18 @@ class Club
     {
         $url = $url === null ? null : trim($url);
         $this->url = $url === '' ? null : $url;
+
+        return $this;
+    }
+
+    public function getImage(): ?string
+    {
+        return $this->image;
+    }
+
+    public function setImage(?string $image): static
+    {
+        $this->image = $image;
 
         return $this;
     }

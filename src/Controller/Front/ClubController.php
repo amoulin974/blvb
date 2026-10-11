@@ -4,7 +4,10 @@ namespace App\Controller\Front;
 
 use App\Entity\Club;
 use App\Form\Front\ClubFicheType;
+use App\Repository\ClubRepository;
+use App\Repository\SaisonRepository;
 use App\Security\ClubVoter;
+use App\Service\ClubImageService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -19,6 +22,19 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/club', name: 'front_club_')]
 final class ClubController extends AbstractController
 {
+    /** Liste des clubs (sous-menu « Le championnat ») : cartes cliquables, triées par nom long. */
+    #[Route('s', name: 'index', methods: ['GET'])]
+    public function index(ClubRepository $clubRepository, SaisonRepository $saisonRepository): Response
+    {
+        $saison = $saisonRepository->findOneBy(['favori' => 1]);
+
+        return $this->render('front/club/index.html.twig', [
+            'clubs' => $clubRepository->findTousAvecRelations(),
+            'saison' => $saison,
+            'nombreEquipes' => $saison ? $clubRepository->nombreEquipesEngagees($saison) : [],
+        ]);
+    }
+
     #[Route('/{id}', name: 'show', requirements: ['id' => '\d+'], methods: ['GET'])]
     public function show(Club $club): Response
     {
@@ -29,12 +45,13 @@ final class ClubController extends AbstractController
 
     #[Route('/{id}/modifier', name: 'edit', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
     #[IsGranted(ClubVoter::MODIFIER, subject: 'club')]
-    public function edit(Request $request, Club $club, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Club $club, EntityManagerInterface $entityManager, ClubImageService $images): Response
     {
         $form = $this->createForm(ClubFicheType::class, $club);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $images->appliquerFormulaire($form, $club);
             $entityManager->flush();
             $this->addFlash('success', 'La fiche du club a été enregistrée.');
 

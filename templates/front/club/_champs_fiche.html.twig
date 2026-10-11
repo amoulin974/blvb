@@ -1,4 +1,4 @@
-{# Champs de la fiche d'un club (ClubFicheType) : nom long, abréviation, description, lien.
+{# Champs de la fiche d'un club (ClubFicheType) : nom long, abréviation, description, lien, image.
    Partagé par la page de modification du club (responsables) et le formulaire de l'admin. #}
 {% for champ in [form.nom, form.nomCourt, form.description, form.url] %}
     <div class="form-control w-full">
@@ -9,3 +9,22 @@
         {{ form_errors(champ) }}
     </div>
 {% endfor %}
+
+{# Image : aperçu de l'image actuelle, envoi d'une nouvelle, ou retrait #}
+<div class="form-control w-full">
+    {{ form_label(form.imageFichier, null, {'label_attr': {'class': 'label font-semibold'}}) }}
+    {% if club.image|default(null) %}
+        <div class="mb-2 flex items-center gap-4">
+            {{ include('front/club/_logo.html.twig', {club: club, taille: 'size-20'}) }}
+            <label class="label cursor-pointer gap-2">
+                {{ form_widget(form.supprimerImage, {'attr': {'class': 'checkbox checkbox-sm'}}) }}
+                <span>{{ form.supprimerImage.vars.label }}</span>
+            </label>
+        </div>
+    {% else %}
+        {% do form.supprimerImage.setRendered %}
+    {% endif %}
+    {{ form_widget(form.imageFichier, {'attr': {'class': 'file-input file-input-bordered w-full'}}) }}
+    <p class="mt-1 text-sm text-(--color-base-content)/70">{{ form.imageFichier.vars.help }}</p>
+    {{ form_errors(form.imageFichier) }}
+</div>

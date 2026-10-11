@@ -21,3 +21,6 @@
 ###< symfony/asset-mapper ###
 
 /doc
+
+# Fichiers envoyés par les utilisateurs (images des clubs)
+/public/uploads/

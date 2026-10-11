@@ -115,4 +115,79 @@ final class FicheClubTest extends TestFonctionnel
         $this->client->request('GET', $this->urlModifier('club.voisin'));
         self::assertResponseIsSuccessful();
     }
+
+    /** Image PNG minimale fabriquée pour le test. */
+    private function imagePng(): \Symfony\Component\HttpFoundation\File\UploadedFile
+    {
+        $chemin = sys_get_temp_dir().'/logo-test-'.bin2hex(random_bytes(3)).'.png';
+        $image = imagecreatetruecolor(8, 8);
+        imagepng($image, $chemin);
+
+        return new \Symfony\Component\HttpFoundation\File\UploadedFile($chemin, 'logo.png', 'image/png', null, true);
+    }
+
+    private function dossierImages(): string
+    {
+        return self::getContainer()->getParameter('app.dossier_images_clubs');
+    }
+
+    #[TestDox('Le responsable ajoute une image au club, affichée sur la fiche et la liste, puis la retire')]
+    public function test_image(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[imageFichier]']->upload($this->imagePng()->getPathname());
+        $this->client->submit($form);
+
+        self::assertResponseRedirects();
+        $image = $this->club()->getImage();
+        self::assertNotNull($image);
+        self::assertStringStartsWith('cta-', $image);
+        self::assertFileExists($this->dossierImages().'/'.$image);
+
+        $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+        self::assertSelectorExists('img[src$="/uploads/clubs/'.$image.'"]');
+        $this->client->request('GET', '/clubs');
+        self::assertSelectorExists('img[src$="/uploads/clubs/'.$image.'"]');
+
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[supprimerImage]']->tick();
+        $this->client->submit($form);
+
+        self::assertNull($this->club()->getImage());
+        self::assertFileDoesNotExist($this->dossierImages().'/'.$image);
+    }
+
+    #[TestDox('Un fichier qui n\'est pas une image est refusé')]
+    public function test_image_refusee(): void
+    {
+        $this->connecter('resp.club');
+        $chemin = sys_get_temp_dir().'/pas-une-image.txt';
+        file_put_contents($chemin, 'texte');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[imageFichier]']->upload($chemin);
+        $this->client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Choisissez une image JPEG, PNG, WebP ou GIF.');
+        self::assertNull($this->club()->getImage());
+    }
+
+    #[TestDox('La liste des clubs, triée par nom long, mène aux fiches ; le menu « Le championnat » y mène')]
+    public function test_liste_des_clubs(): void
+    {
+        $crawler = $this->client->request('GET', '/clubs');
+
+        self::assertResponseIsSuccessful();
+        $noms = $crawler->filter('main ul li a span.text-lg')->each(fn ($n) => $n->text());
+        self::assertSame(['Club test A1-B1', 'Club test voisin'], $noms);
+        self::assertCount(1, $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club')->getId().'"]'));
+        self::assertStringContainsString('2 équipes en Saison test', $crawler->filter('main')->text());
+
+        $crawler = $this->client->request('GET', '/');
+        self::assertGreaterThanOrEqual(1, $crawler->filter('a[href="/clubs"]')->count());
+    }
 }

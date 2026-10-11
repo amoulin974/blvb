@@ -9,8 +9,12 @@
 
         {# En-tête : nom long, abréviation, lien ; bouton de modification pour les responsables et l'admin #}
         <div>
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <h1 class="text-4xl uppercase tracking-wide">{{ club.nom }}</h1>
+            <a class="link link-hover text-sm" href="{{ path('front_club_index') }}">← Tous les clubs</a>
+            <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-4">
+                    {{ include('front/club/_logo.html.twig', {club: club, taille: 'size-20 md:size-24'}) }}
+                    <h1 class="text-3xl md:text-4xl uppercase tracking-wide">{{ club.nom }}</h1>
+                </div>
                 {% if is_granted('CLUB_MODIFIER', club) %}
                     <a class="btn btn-outline btn-primary md:btn-sm" href="{{ path('front_club_edit', {id: club.id}) }}">Modifier la fiche du club</a>
                 {% endif %}

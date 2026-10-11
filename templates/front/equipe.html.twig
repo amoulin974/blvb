@@ -24,7 +24,7 @@
                 </div>
             </div>
             {% if equipe.club %}
-                <p class="mt-1">Club : <a class="link link-hover link-primary font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
+                <p class="mt-2 flex items-center gap-2">{{ include('front/club/_logo.html.twig', {club: equipe.club, taille: 'size-8'}) }} Club : <a class="link link-hover link-primary font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
             {% endif %}
             <p class="mt-1">
                 Reçoit à

@@ -1,0 +1,36 @@
+{% extends "base_front.html.twig" %}
+{% block title %}Les clubs - Site du BLVB{% endblock %}
+
+{# Liste des clubs : une carte cliquable par club (logo, nom long, abréviation, gymnases, équipes engagées).
+   La description reste sur la fiche du club. Une colonne sur mobile, deux ou trois sur ordinateur. #}
+{% block body %}
+    <div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-6">
+        <div>
+            <h1 class="text-4xl uppercase tracking-wide">Les clubs</h1>
+            <p class="mt-1 text-(--color-base-content)/80">L'abréviation du club figure entre parenthèses après le nom de ses équipes.</p>
+        </div>
+
+        <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {% for club in clubs %}
+                {% set nb = nombreEquipes[club.id] ?? 0 %}
+                <li>
+                    <a href="{{ path('front_club_show', {id: club.id}) }}" class="h-full bg-base-100 border border-base-300 rounded-box p-4 flex items-center gap-4 hover:border-(--color-primary) hover:shadow-md focus-visible:outline-2 focus-visible:outline-(--color-primary) transition">
+                        {{ include('front/club/_logo.html.twig', {club: club, taille: 'size-16'}) }}
+                        <span class="min-w-0 flex flex-col gap-1">
+                            <span class="font-display text-lg font-semibold leading-tight">{{ club.nom }}</span>
+                            <span><span class="badge badge-outline badge-sm">{{ club.nomCourt }}</span></span>
+                            {% if club.lieux is not empty %}
+                                <span class="text-sm text-(--color-base-content)/80">{{ club.lieux|map(l => l.nom)|join(', ') }}</span>
+                            {% endif %}
+                            {% if saison %}
+                                <span class="text-sm text-(--color-base-content)/80">{{ nb == 0 ? 'Aucune équipe' : nb ~ ' équipe' ~ (nb > 1 ? 's' : '') }} en {{ saison.nom }}</span>
+                            {% endif %}
+                        </span>
+                    </a>
+                </li>
+            {% else %}
+                <li class="text-(--color-base-content)/70">Aucun club pour le moment.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}
