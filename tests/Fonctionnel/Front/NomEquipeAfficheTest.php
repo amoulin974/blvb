@@ -8,8 +8,8 @@ use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * Nom affiché d'une équipe : première lettre en majuscule, le reste en minuscules, suivi de l'abréviation du club
- * en majuscules (« Equipe a1 (CTA) ») ; en majuscules dans les titres. Le nom enregistré reste « EQUIPE A1 ».
+ * Nom affiché d'une équipe : nom tel qu'enregistré, suivi de l'abréviation du club en majuscules
+ * (« EQUIPE A1 (CTA) ») ; en majuscules dans les titres. Le formulaire de l'admin modifie le nom sans le club.
  */
 final class NomEquipeAfficheTest extends TestFonctionnel
 {
@@ -19,9 +19,9 @@ final class NomEquipeAfficheTest extends TestFonctionnel
         $crawler = $this->client->request('GET', '/calendrier');
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Equipe a1 (CTA)', $crawler->filter('body')->text());
-        self::assertStringContainsString('Equipe a3 (CTV)', $crawler->filter('body')->text());
-        self::assertStringNotContainsString('Equipe a2 (', $crawler->filter('body')->text(), 'A2 n\'a pas de club');
+        self::assertStringContainsString('EQUIPE A1 (CTA)', $crawler->filter('body')->text());
+        self::assertStringContainsString('EQUIPE A3 (CTV)', $crawler->filter('body')->text());
+        self::assertStringNotContainsString('EQUIPE A2 (', $crawler->filter('body')->text(), 'A2 n\'a pas de club');
     }
 
     #[TestDox('La fiche équipe affiche aussi le nom court du club dans la liste des matchs')]
@@ -30,7 +30,7 @@ final class NomEquipeAfficheTest extends TestFonctionnel
         $crawler = $this->client->request('GET', '/equipe/'.ChampionnatDeTest::get('equipe.A2')->getId());
 
         self::assertResponseIsSuccessful();
-        self::assertStringContainsString('Equipe a1 (CTA)', $crawler->filter('body')->text());
+        self::assertStringContainsString('EQUIPE A1 (CTA)', $crawler->filter('body')->text());
     }
 
     #[TestDox('Le formulaire de l\'équipe modifie le nom sans le club, qui n\'est pas ajouté une seconde fois')]
@@ -47,16 +47,15 @@ final class NomEquipeAfficheTest extends TestFonctionnel
 
         $equipe = self::getContainer()->get(EquipeRepository::class)->find($id);
         self::assertSame('EQUIPE A1 RENOMMEE', $equipe->getNomSansClub());
-        self::assertSame('Equipe a1 renommee (CTA)', $equipe->getNom());
+        self::assertSame('EQUIPE A1 RENOMMEE (CTA)', $equipe->getNom());
     }
 
-    #[TestDox('Mise en forme : première lettre en majuscule, abréviation du club en majuscules')]
+    #[TestDox('Mise en forme : nom tel qu\'enregistré, abréviation du club en majuscules')]
     public function test_mise_en_forme(): void
     {
-        self::assertSame('Les filous du filet (ASPTT)', \App\Entity\Equipe::formaterNom('LES FILOUS DU FILET', 'ASPTT'));
+        self::assertSame('La D3 d\'Ormuz (ASPTT)', \App\Entity\Equipe::formaterNom('La D3 d\'Ormuz', 'ASPTT'));
+        self::assertSame('Léo Lagrange (LÉO)', \App\Entity\Equipe::formaterNom(' Léo Lagrange', 'Léo'));
         self::assertSame('Titi et ses gros minets', \App\Entity\Equipe::formaterNom('Titi et ses gros minets'));
-        self::assertSame('Leo lagrange (LÉO)', \App\Entity\Equipe::formaterNom(' LEO LAGRANGE', 'Léo'));
-        self::assertSame('Équipe éclair', \App\Entity\Equipe::formaterNom('éQUIPE ÉCLAIR'));
     }
 
     #[TestDox('Dans les titres, le nom de l\'équipe est en majuscules')]

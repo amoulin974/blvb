@@ -35,7 +35,7 @@ final class FicheClubTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Club test A1-B1');
         self::assertSelectorTextContains('body', 'CTA');
-        self::assertSelectorTextContains('body', 'Equipe b1 (CTA)');
+        self::assertSelectorTextContains('body', 'EQUIPE B1 (CTA)');
         self::assertSelectorTextContains('body', 'Gymnase G2');
         self::assertSelectorNotExists('a[href$="/modifier"]', 'pas de bouton de modification pour un visiteur');
 
@@ -65,7 +65,7 @@ final class FicheClubTest extends TestFonctionnel
         self::assertSame('CTR', $club->getNomCourt());
         self::assertSame("Entraînements le mardi.\nTous niveaux.", $club->getDescription());
         self::assertSame('https://club.example.org', $club->getUrl());
-        self::assertSame('Equipe a1 (CTR)', $club->getEquipes()->first()->getNom());
+        self::assertSame('EQUIPE A1 (CTR)', $club->getEquipes()->first()->getNom());
     }
 
     #[TestDox('La description et le lien peuvent rester vides')]
@@ -200,10 +200,10 @@ final class FicheClubTest extends TestFonctionnel
 
         $equipes = $crawler->filter('#titre-equipes + ul li')->each(fn ($li) => preg_replace('/\s+/', ' ', trim($li->text())));
         self::assertCount(2, $equipes);
-        self::assertStringStartsWith('Equipe a1 (CTA)', $equipes[0]);
+        self::assertStringStartsWith('EQUIPE A1 (CTA)', $equipes[0]);
         self::assertStringContainsString('Poule', $equipes[0]);
-        self::assertStringStartsWith('Equipe b1 (CTA)', $equipes[1]);
-        self::assertStringNotContainsString('Equipe non engagee', $crawler->filter('body')->text());
+        self::assertStringStartsWith('EQUIPE B1 (CTA)', $equipes[1]);
+        self::assertStringNotContainsString('EQUIPE NON ENGAGEE', $crawler->filter('body')->text());
     }
 
     #[TestDox('La page « Qui sommes-nous ? » liste les clubs en lien vers leur fiche')]

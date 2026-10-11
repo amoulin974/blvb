@@ -14,12 +14,15 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 
+use function Symfony\Component\String\u;
+
 /**
  * Reprise des équipes existantes, à lancer une fois au déploiement des clubs :
  *  1. crée les clubs du référentiel ci-dessous (nom court, nom long, gymnases) ;
  *  2. rattache chaque équipe au club désigné par le sigle en fin de nom (« EROAK (AOVB) »), ancien sigle
  *     traduit au besoin (« (SJDL) » → VBLC), et retire ce sigle du nom enregistré ;
- *  3. rattache les équipes sans sigle listées dans le référentiel.
+ *  3. rattache les équipes sans sigle listées dans le référentiel ;
+ *  4. corrige l'écriture des noms (NOMS_EQUIPES) : majuscule initiale et majuscules utiles (noms propres, sigles).
  * L'affichage ajoute le nom court du club : « ADISKIDEAK (VBLC) » (Equipe::getNom).
  *
  * Sans --force : simulation, rien n'est enregistré. Relançable : une équipe traitée n'a plus de sigle,
@@ -45,6 +48,57 @@ final class ClubsDepuisNomsEquipesCommand extends Command
         ['court' => 'BVB', 'nom' => 'Bayonne Volley Ball', 'gymnases' => ['Bayonne'], 'sigles' => ['BAY']],
         ['court' => 'Léo', 'nom' => 'Léo Lagrange Bayonne', 'gymnases' => ['Bayonne'], 'equipes' => ['LEO LAGRANGE']],
         ['court' => 'Tosse', 'nom' => 'Tosse Volley Club', 'gymnases' => ['Tosse'], 'equipes' => ['les Tamalous', 'TOSSE 2', 'SAMOUSSAS']],
+    ];
+
+    /**
+     * Écriture des noms d'équipes (validée le 11/10/2026) : majuscule initiale, minuscules ensuite, sauf noms propres
+     * et sigles. Clé : nom sans sigle de club, en majuscules (comparaison sans tenir compte de la casse).
+     */
+    public const NOMS_EQUIPES = [
+        'ADISKIDEAK' => 'Adiskideak',
+        'ANGELUKO PRINTZESAK' => 'Angeluko printzesak',
+        'ANGLET 4' => 'Anglet 4',
+        'ANGRACE' => 'Angrace',
+        'ANGRACE 2' => 'Angrace 2',
+        'ASPATATAK' => 'Aspatatak',
+        'BAIONAKO PIKOLA' => 'Baionako pikola',
+        'BAYONNE VOLLEY BOULES' => 'Bayonne volley boules',
+        'BLOCK AND TXOTX' => 'Block and txotx',
+        'CAP2' => 'Cap2',
+        'CAPOUT' => 'Capout',
+        'CHAOUCHTADOR' => 'Chaouchtador',
+        'EGUZKI TXIKIAK' => 'Eguzki txikiak',
+        'EROAK' => 'Eroak',
+        'HARIBOULES' => 'Hariboules',
+        'JOKO LOKO' => 'Joko loko',
+        'KAYOU' => 'Kayou',
+        'KUKUTXUROS' => 'Kukutxuros',
+        'LA CAPSULE' => 'La capsule',
+        'LA D3 D\'ORMUZ' => 'La D3 d\'Ormuz',
+        'LA HIGH FIVE' => 'La high five',
+        'LA TRIME TEAM' => 'La trime team',
+        'LAGUNAK' => 'Lagunak',
+        'LAGUNAK-OSASUNA' => 'Lagunak-Osasuna',
+        'LAGUNEN ETXEA' => 'Lagunen etxea',
+        'LAPATINAK' => 'Lapatinak',
+        'LASAI ATACK' => 'Lasai atack',
+        'LEO LAGRANGE' => 'Léo Lagrange',
+        'LES CAPTAINES' => 'Les captaines',
+        'LES DARONNES' => 'Les daronnes',
+        'LES FILOUS DU FILET' => 'Les filous du filet',
+        'LES FRAPADINGUES' => 'Les frapadingues',
+        'LES TAMALOUS' => 'Les Tamalous',
+        'LES VAGABONDRES' => 'Les vagabondres',
+        'LES VOLLEYEURS DE POULES' => 'Les volleyeurs de poules',
+        'ONDRES DE CHOC' => 'Ondres de choc',
+        'OSASUNA' => 'Osasuna',
+        'PERLEMPACK' => 'Perlempack',
+        'SAMOUSSAS' => 'Samoussas',
+        'STRAPATTACK' => 'Strapattack',
+        'TAKABLOQUER' => 'Takabloquer',
+        'TITI ET SES GROS MINETS' => 'Titi et ses gros minets',
+        'TOSSE 2' => 'Tosse 2',
+        'TXULETAK' => 'Txuletak',
     ];
 
     public function __construct(
@@ -85,23 +139,39 @@ final class ClubsDepuisNomsEquipesCommand extends Command
                 $alias[$sigle] = $def['court'];
             }
             foreach ($def['equipes'] ?? [] as $nomEquipe) {
-                $equipesSansSigle[mb_strtolower($nomEquipe)] = $def['court'];
+                $equipesSansSigle[self::cle($nomEquipe)] = $def['court'];
             }
             $lignesClubs[] = [$club->getNomCourt(), $club->getNom(), implode(', ', $gymnases), $cree ? 'créé' : 'existant'];
         }
 
         // 2 et 3. Équipes
-        $rattachees = $sansClub = $conflits = [];
+        $rattachees = $sansClub = $conflits = $nomsAVerifier = [];
+        $renommees = 0;
         $trouvees = [];
         foreach ($this->equipeRepository->findBy([], ['nom' => 'ASC']) as $equipe) {
             $avant = (string) $equipe->getNomSansClub();
             $resultat = $this->service->rattacher($equipe, $alias);
 
-            if ($resultat['statut'] === 'sans_club' && isset($equipesSansSigle[mb_strtolower($resultat['nom'])]) && $equipe->getClub() === null) {
-                $nomCourt = $equipesSansSigle[mb_strtolower($resultat['nom'])];
-                $trouvees[mb_strtolower($resultat['nom'])] = true;
+            if ($resultat['statut'] === 'sans_club' && isset($equipesSansSigle[self::cle($resultat['nom'])]) && $equipe->getClub() === null) {
+                $nomCourt = $equipesSansSigle[self::cle($resultat['nom'])];
+                $trouvees[self::cle($resultat['nom'])] = true;
                 $this->service->club($nomCourt)['club']->addEquipe($equipe);
                 $resultat['statut'] = 'rattachee';
+            }
+
+            // Équipe sans sigle du référentiel déjà rattachée au bon club (commande relancée) : rien à signaler
+            $nomMinuscule = self::cle($resultat['nom']);
+            if (isset($equipesSansSigle[$nomMinuscule]) && $equipe->getClub()?->getNomCourt() === $equipesSansSigle[$nomMinuscule]) {
+                $trouvees[$nomMinuscule] = true;
+            }
+
+            // 4. Écriture du nom (après le rattachement, qui compare les noms sans tenir compte de la casse)
+            $cle = mb_strtoupper((string) $equipe->getNomSansClub());
+            if (isset(self::NOMS_EQUIPES[$cle]) && $equipe->getNomSansClub() !== self::NOMS_EQUIPES[$cle]) {
+                $equipe->setNom(self::NOMS_EQUIPES[$cle]);
+                $renommees++;
+            } elseif (!isset(self::NOMS_EQUIPES[$cle]) && !\in_array($equipe->getNomSansClub(), self::NOMS_EQUIPES, true)) {
+                $nomsAVerifier[] = (string) $equipe->getNomSansClub();
             }
 
             match ($resultat['statut']) {
@@ -119,6 +189,13 @@ final class ClubsDepuisNomsEquipesCommand extends Command
 
         $io->section(sprintf('Équipes rattachées à un club (%d)', \count($rattachees)));
         $rattachees ? $io->table(['Nom en base avant', 'Nom en base après', 'Club', 'Nom affiché'], $rattachees) : $io->text('Aucune.');
+
+        $io->section(sprintf('Noms d\'équipes réécrits (%d)', $renommees));
+        $io->text('Majuscule initiale et majuscules utiles, voir la colonne « Nom en base après ».');
+        if ($nomsAVerifier) {
+            $io->section(sprintf('Noms absents de la table d\'écriture, laissés tels quels (%d) : à vérifier dans l\'admin', \count($nomsAVerifier)));
+            $io->listing($nomsAVerifier);
+        }
 
         if ($sansClub) {
             $io->section(sprintf('Équipes sans club (%d) : à rattacher à la main dans l\'admin', \count($sansClub)));
@@ -142,5 +219,11 @@ final class ClubsDepuisNomsEquipesCommand extends Command
         $io->success('Changements enregistrés.');
 
         return Command::SUCCESS;
+    }
+
+    /** Clé de comparaison d'un nom d'équipe : sans accents ni casse (« Léo Lagrange » = « LEO LAGRANGE »). */
+    private static function cle(string $nom): string
+    {
+        return (string) u(trim($nom))->ascii()->lower();
     }
 }
