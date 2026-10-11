@@ -2,6 +2,7 @@
 
 namespace App\Command;
 
+use App\Entity\Club;
 use App\Entity\Creneau;
 use App\Entity\Equipe;
 use App\Entity\Indisponibilite;
@@ -16,6 +17,7 @@ use App\Entity\User;
 use App\Enum\PhaseType;
 use App\EventListener\SaisonListener;
 use App\Service\ClassementService;
+use App\Service\ClubImageService;
 use App\Service\JourneeService;
 use App\Service\PartieService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -28,6 +30,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 use Symfony\Component\String\Slugger\AsciiSlugger;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -36,7 +39,8 @@ use Symfony\Contracts\Cache\CacheInterface;
  * Charge dans une base de RECETTE une « Saison 2026-2027 test » (et une « Saison 2025-2026 test » archivée)
  * avec des données qui permettent de dérouler tous les tests fonctionnels : phases en cours, matchs passés,
  * à venir et sans score, classements, gymnases saturés / hors créneau / en vacances, capitaines avec ou sans
- * compte ou téléphone, simples joueurs, joueurs qui changent d'équipe d'une saison à l'autre, imports Excel…
+ * compte ou téléphone, simples joueurs, joueurs qui changent d'équipe d'une saison à l'autre, clubs et responsables
+ * de club, imports Excel…
  *
  * À lancer via bin/recette (qui recrée d'abord la base de recette depuis la base de développement).
  * Garde-fou : refuse de tourner si la base ne s'appelle pas « …recette… ».
@@ -63,31 +67,31 @@ class ChargerBaseRecetteCommand extends Command
         'Test Sans Créneau' => ['Salle Test, 64100 Bayonne', []],
     ];
 
-    /** code => [nom, gymnase (null = équipe sans gymnase), poule de la Phase 1] */
+    /** code => [nom (sans sigle : le club s'affiche après, voir CLUBS), gymnase (null = équipe sans gymnase), poule de la Phase 1] */
     private const EQUIPES = [
-        'A1' => ['ARRATS (ARR)', 'Test Anglet', 'A'],
-        'A2' => ['BIDART VB (BID)', 'Test Anglet', 'A'],
-        'A3' => ['CAPBRETON LOISIR (CAP)', 'Test Anglet', 'A'],
-        'A4' => ['ETXEA (ETX)', 'Test Biarritz', 'A'],
-        'A5' => ['GOIZ ARGI (GOI)', 'Test Capbreton', 'A'],
-        'A6' => ['HOSSEGOR (HOS)', 'Test St-Jean-de-Luz', 'A'],
-        'A7' => ['IRATI (IRA)', 'Test Ondres', 'A'],
-        'A8' => ["LES VOLLEYEURS DE LA CÔTE D'ARGENT (LVCA)", 'Test Bayonne', 'A'],
-        'B1' => ['KOSKO ALAI (KOS)', 'Test Anglet', 'B'],
-        'B2' => ['LAPURDI VOLLEY (LAP)', 'Test Biarritz', 'B'],
-        'B3' => ['MENDI (MEN)', 'Test Capbreton', 'B'],
-        'B4' => ['NIVE (NIV)', 'Test St-Jean-de-Luz', 'B'],
-        'B5' => ['OIHANA (OIH)', 'Test Ondres', 'B'],
-        'B6' => ['PIKA PIKA (PIK)', 'Test Bayonne', 'B'],
-        'C1' => ['SOKOA (SOK)', 'Test Anglet', 'C'],
-        'C2' => ['TXORI (TXO)', 'Test Capbreton', 'C'],
-        'C3' => ['URDAZURI (URD)', 'Test St-Jean-de-Luz', 'C'],
-        'C4' => ['XIBERO (XIB)', 'Test Bayonne', 'C'],
-        'C5' => ['ZEZEN (ZEZ)', 'Test Sans Créneau', 'C'],
-        'D1' => ['ADOUR (ADO)', 'Test Biarritz', 'D'],
-        'D2' => ['BAIGORRI (BAI)', 'Test Capbreton', 'D'],
-        'D3' => ['CHALOSSE (CHA)', 'Test Bayonne', 'D'],
-        'D4' => ['DUNES (DUN)', null, 'D'], // équipe sans gymnase
+        'A1' => ['Arrats', 'Test Anglet', 'A'],
+        'A2' => ['Bidart VB', 'Test Anglet', 'A'],
+        'A3' => ['Capbreton loisir', 'Test Anglet', 'A'],
+        'A4' => ['Etxea', 'Test Biarritz', 'A'],
+        'A5' => ['Goiz argi', 'Test Capbreton', 'A'],
+        'A6' => ['Hossegor', 'Test St-Jean-de-Luz', 'A'],
+        'A7' => ['Irati', 'Test Ondres', 'A'],
+        'A8' => ["Les volleyeurs de la Côte d'Argent", 'Test Bayonne', 'A'],
+        'B1' => ['Kosko alai', 'Test Anglet', 'B'],
+        'B2' => ['Lapurdi volley', 'Test Biarritz', 'B'],
+        'B3' => ['Mendi', 'Test Capbreton', 'B'],
+        'B4' => ['Nive', 'Test St-Jean-de-Luz', 'B'],
+        'B5' => ['Oihana', 'Test Ondres', 'B'],
+        'B6' => ['Pika pika', 'Test Bayonne', 'B'],
+        'C1' => ['Sokoa', 'Test Anglet', 'C'],
+        'C2' => ['Txori', 'Test Capbreton', 'C'],
+        'C3' => ['Urdazuri', 'Test St-Jean-de-Luz', 'C'],
+        'C4' => ['Xibero', 'Test Bayonne', 'C'],
+        'C5' => ['Zezen', 'Test Sans Créneau', 'C'],
+        'D1' => ['Adour', 'Test Biarritz', 'D'],
+        'D2' => ['Baigorri', 'Test Capbreton', 'D'],
+        'D3' => ['Chalosse', 'Test Bayonne', 'D'],
+        'D4' => ['Dunes', null, 'D'], // équipe sans gymnase
     ];
 
     /**
@@ -108,6 +112,27 @@ class ChargerBaseRecetteCommand extends Command
         'C1' => ['compte' => 'cap.c1', 'prenom' => 'Julie', 'nom' => 'Lafitte', 'tel' => '06 31 31 31 31'],
         'D1' => ['compte' => 'cap.d1', 'prenom' => 'Kepa', 'nom' => 'Sarthou', 'tel' => '06 41 41 41 41'],
         'D2' => ['partage' => 'B2'],
+    ];
+
+    /**
+     * Clubs de test. Clé : nom court (abréviation). Cas couverts :
+     *  ARR    : équipes dans 3 poules, 2 gymnases, un responsable sans fiche joueur (resp.arr), fiche complète et logo ;
+     *  CBT    : gymnase Test Biarritz partagé avec ARR ; responsables cap.a4 (aussi capitaine de A4) et resp.double ;
+     *  Landes : abréviation en minuscules (affichée en majuscules), resp.double responsable de 2 clubs, fiche vide ;
+     *  BAYT   : aucun responsable ; TSE : aucune équipe.
+     * Équipes sans club : A2, A6, A7, B4, B5, C3, C5, D4.
+     */
+    private const CLUBS = [
+        'ARR' => ['nom' => 'Arrats Volley Test', 'gymnases' => ['Test Anglet', 'Test Biarritz'], 'equipes' => ['A1', 'B1', 'C1'], 'responsables' => ['resp.arr'],
+            'description' => "Club de test de la base de recette.\nEntraînements le mercredi soir à Anglet, le mardi à Biarritz.", 'url' => 'https://example.org/arrats', 'logo' => true],
+        'CBT' => ['nom' => 'Côte Basque Test', 'gymnases' => ['Test Biarritz'], 'equipes' => ['A4', 'B2', 'D1'], 'responsables' => ['cap.a4', 'resp.double'],
+            'description' => 'Club de test dont un responsable est aussi capitaine.', 'url' => null, 'logo' => false],
+        'Landes' => ['nom' => 'Landes Volley Test', 'gymnases' => ['Test Capbreton', 'Test Ondres'], 'equipes' => ['A3', 'A5', 'B3', 'C2', 'D2'], 'responsables' => ['resp.double'],
+            'description' => null, 'url' => null, 'logo' => false],
+        'BAYT' => ['nom' => 'Bayonne Test', 'gymnases' => ['Test Bayonne'], 'equipes' => ['A8', 'B6', 'C4', 'D3'], 'responsables' => [],
+            'description' => null, 'url' => null, 'logo' => false],
+        'TSE' => ['nom' => 'Test Sans Équipe', 'gymnases' => [], 'equipes' => [], 'responsables' => [],
+            'description' => 'Club de test sans équipe engagée.', 'url' => null, 'logo' => false],
     ];
 
     /** Effectif (capitaine compris) par poule ; A8 : sans capitaine ; B6 : aucun joueur. */
@@ -132,6 +157,7 @@ class ChargerBaseRecetteCommand extends Command
         private readonly PartieService $partieService,
         private readonly ClassementService $classementService,
         private readonly CacheInterface $cache,
+        private readonly ClubImageService $clubImages,
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
     ) {
@@ -171,6 +197,13 @@ class ChargerBaseRecetteCommand extends Command
 
             return Command::FAILURE;
         }
+        foreach (array_keys(self::CLUBS) as $nomCourt) {
+            if ($this->em->getRepository(Club::class)->findOneBy(['nomCourt' => $nomCourt])) {
+                $io->error(sprintf('Un club « %s » existe déjà : relancez bin/recette reinitialiser.', $nomCourt));
+
+                return Command::FAILURE;
+            }
+        }
         $noms = array_column(self::EQUIPES, 0);
         foreach ($noms as $nom) {
             if ($this->em->getRepository(Equipe::class)->findOneBy(['nom' => $nom])) {
@@ -197,6 +230,10 @@ class ChargerBaseRecetteCommand extends Command
 
         $io->section('Joueurs, comptes et compositions');
         $this->creerEffectifs($equipes, $saison, $archive);
+        $this->em->flush();
+
+        $io->section('Clubs et responsables de club');
+        $this->creerClubs($equipes, $lieux);
         $this->em->flush();
         $this->em->clear();
 
@@ -372,6 +409,8 @@ class ChargerBaseRecetteCommand extends Command
         $this->creerUtilisateur('user.sansfiche', 'Sans', 'Fiche');
         $this->creerUtilisateur('user.nonverifie', 'Non', 'Vérifié', ['ROLE_USER'], false);
         $this->creerUtilisateur('autre.compte', 'Autre', 'Compte');
+        $this->creerUtilisateur('resp.arr', 'Rémi', 'Responsable'); // responsable du club ARR, sans fiche joueur
+        $this->creerUtilisateur('resp.double', 'Sylvie', 'Deuxclubs'); // responsable des clubs CBT et Landes
 
         // --- Joueurs particuliers --------------------------------------------------------------------------
         $this->joueurs['a1'] = $this->joueurAvecCompte('joueur.a1', 'Jean', 'Premier', '06 10 10 10 10');
@@ -491,6 +530,43 @@ class ChargerBaseRecetteCommand extends Command
     }
 
     // ---------------------------------------------------------------------------------------------------------
+    // Clubs
+    // ---------------------------------------------------------------------------------------------------------
+
+    /** @param array<string, Equipe> $equipes @param array<string, Lieu> $lieux */
+    private function creerClubs(array $equipes, array $lieux): void
+    {
+        foreach (self::CLUBS as $nomCourt => $def) {
+            $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription($def['description'])->setUrl($def['url']);
+            foreach ($def['gymnases'] as $gymnase) {
+                $club->addLieu($lieux[$gymnase]);
+            }
+            foreach ($def['equipes'] as $code) {
+                $club->addEquipe($equipes[$code]);
+            }
+            foreach ($def['responsables'] as $compte) {
+                $club->addResponsable($this->utilisateurs[$compte]);
+            }
+            if ($def['logo']) {
+                $this->clubImages->remplacer($club, $this->logoDeTest());
+            }
+            $this->em->persist($club);
+        }
+    }
+
+    /** Logo carré généré (fond bleu marine, ballon jaune) : un vrai fichier PNG, enregistré comme un envoi. */
+    private function logoDeTest(): UploadedFile
+    {
+        $image = imagecreatetruecolor(120, 120);
+        imagefill($image, 0, 0, imagecolorallocate($image, 0x14, 0x30, 0x6B));
+        imagefilledellipse($image, 60, 60, 80, 80, imagecolorallocate($image, 0xF2, 0xB7, 0x05));
+        $chemin = sys_get_temp_dir().'/logo-recette-'.bin2hex(random_bytes(4)).'.png';
+        imagepng($image, $chemin);
+
+        return new UploadedFile($chemin, 'logo.png', 'image/png', null, true);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
     // Matchs : cas particuliers, scores
     // ---------------------------------------------------------------------------------------------------------
 
@@ -562,10 +638,14 @@ class ChargerBaseRecetteCommand extends Command
         $equipesAvecCapitaineConnectable = array_map(fn (string $code) => self::EQUIPES[$code][0], array_keys(array_filter(self::CAPITAINES, fn ($c) => ($c['compte'] ?? null) !== null)));
         $sansScore = null;
         if ($scenario === 'en-cours') {
-            foreach (array_reverse($termines) as $p) {
-                if ($lettre($p) === 'A' && in_array($p->getIdEquipeRecoit()->getNomSansClub(), $equipesAvecCapitaineConnectable, true)) {
-                    $sansScore = $p;
-                    break;
+            // De préférence un match reçu par Arrats (club ARR) : « Saisir » pour cap.a1, pour resp.arr et pour l'admin
+            foreach ([fn (Partie $p) => $p->getIdEquipeRecoit()->getNomSansClub() === self::EQUIPES['A1'][0],
+                      fn (Partie $p) => in_array($p->getIdEquipeRecoit()->getNomSansClub(), $equipesAvecCapitaineConnectable, true)] as $critere) {
+                foreach (array_reverse($termines) as $p) {
+                    if ($lettre($p) === 'A' && $critere($p)) {
+                        $sansScore = $p;
+                        break 2;
+                    }
                 }
             }
         }
@@ -585,10 +665,17 @@ class ChargerBaseRecetteCommand extends Command
         }
         $this->cas[] = [sprintf('%d matchs de la phase 1 déjà joués, scores saisis', count($termines) - ($sansScore ? 1 : 0)), 'accueil : « Derniers résultats », classements calculés'];
         if ($sansScore) {
-            $this->cas[] = ['Match joué SANS score saisi (bouton « Saisir » pour son capitaine et pour l\'admin)', $decrire($sansScore)];
+            $this->cas[] = ['Match joué SANS score saisi (bouton « Saisir » pour le capitaine qui reçoit, le responsable de son club et l\'admin)', $decrire($sansScore)];
         }
         if ($forfait) {
             $this->cas[] = ['Forfait (score enregistré -1 / 3)', $decrire($forfait)];
+        }
+        // Responsable de club : il peut aussi modifier les matchs que les équipes de son club jouent à l'extérieur
+        foreach ($termines as $p) {
+            if ($p !== $sansScore && $p->getIdEquipeDeplace()->getClub()?->getNomCourt() === 'ARR' && $p->getIdEquipeRecoit()->getClub()?->getNomCourt() !== 'ARR') {
+                $this->cas[] = ['Match à l\'extérieur d\'une équipe du club ARR : crayon pour resp.arr, pas pour le capitaine de l\'équipe qui se déplace', $decrire($p)];
+                break;
+            }
         }
     }
 
@@ -636,20 +723,32 @@ class ChargerBaseRecetteCommand extends Command
         $io->section('Comptes (mot de passe commun : '.self::MOT_DE_PASSE.')');
         $io->table(['Compte', 'Rôle / situation'], [
             ['admin@blvb.test', 'Administrateur'],
-            ['cap.a1@blvb.test', 'Capitaine de ARRATS (poule A, gymnase Anglet) — téléphone renseigné'],
-            ['cap.a2@blvb.test', 'Capitaine de BIDART VB (poule A) — SANS téléphone'],
-            ['cap.a4 / cap.a6 / cap.a7', 'Capitaines des équipes A4, A6, A7 (poule A)'],
-            ['cap.a5@blvb.test', 'Capitaine de GOIZ ARGI — coordonnées seulement sur le compte (repli fiche → compte)'],
-            ['cap.b1@blvb.test', 'Capitaine de KOSKO ALAI (poule B)'],
-            ['cap.double@blvb.test', 'Capitaine de DEUX équipes : LAPURDI VOLLEY (B) et BAIGORRI (D)'],
-            ['cap.c1@blvb.test', 'Capitaine de SOKOA (poule C) — autre poule que A'],
-            ['cap.d1@blvb.test', 'Capitaine de ADOUR (poule D) — était simple joueur en 2025-2026'],
-            ['joueur.a1@blvb.test', 'Simple joueur de ARRATS (non capitaine), avec compte'],
-            ['joueur.a2@blvb.test', 'Simple joueur de BIDART VB, sans téléphone'],
-            ['mobile@blvb.test', 'Joueur de CAPBRETON LOISIR en 2026-27 ; il jouait à CHALOSSE en 2025-26'],
+            ['cap.a1@blvb.test', 'Capitaine de Arrats (poule A, club ARR) — téléphone renseigné'],
+            ['cap.a2@blvb.test', 'Capitaine de Bidart VB (poule A, sans club) — SANS téléphone'],
+            ['cap.a4@blvb.test', 'Capitaine de Etxea (poule A) ET responsable du club CBT'],
+            ['cap.a6 / cap.a7', 'Capitaines des équipes A6, A7 (poule A)'],
+            ['cap.a5@blvb.test', 'Capitaine de Goiz argi — coordonnées seulement sur le compte (repli fiche → compte)'],
+            ['cap.b1@blvb.test', 'Capitaine de Kosko alai (poule B, club ARR)'],
+            ['cap.double@blvb.test', 'Capitaine de DEUX équipes : Lapurdi volley (B) et Baigorri (D)'],
+            ['cap.c1@blvb.test', 'Capitaine de Sokoa (poule C) — autre poule que A'],
+            ['cap.d1@blvb.test', 'Capitaine de Adour (poule D) — était simple joueur en 2025-2026'],
+            ['joueur.a1@blvb.test', 'Simple joueur de Arrats (non capitaine), avec compte'],
+            ['joueur.a2@blvb.test', 'Simple joueur de Bidart VB, sans téléphone'],
+            ['mobile@blvb.test', 'Joueur de Capbreton loisir en 2026-27 ; il jouait à Chalosse en 2025-26'],
             ['user.sansfiche@blvb.test', 'Compte sans fiche joueur'],
             ['user.nonverifie@blvb.test', 'Compte dont l\'e-mail n\'est pas vérifié'],
+            ['resp.arr@blvb.test', 'Responsable du club ARR (Arrats, Kosko alai, Sokoa), sans fiche joueur'],
+            ['resp.double@blvb.test', 'Responsable de DEUX clubs : CBT et Landes'],
         ]);
+        $io->section('Clubs');
+        $io->table(['Abréviation', 'Club', 'Équipes', 'Responsables', 'Particularité'], [
+            ['ARR', 'Arrats Volley Test', 'A1, B1, C1', 'resp.arr', '3 poules, 2 gymnases, fiche complète avec logo'],
+            ['CBT', 'Côte Basque Test', 'A4, B2, D1', 'cap.a4, resp.double', 'gymnase Test Biarritz partagé avec ARR'],
+            ['LANDES', 'Landes Volley Test', 'A3, A5, B3, C2, D2', 'resp.double', 'abréviation saisie « Landes » ; fiche vide'],
+            ['BAYT', 'Bayonne Test', 'A8, B6, C4, D3', '—', 'aucun responsable'],
+            ['TSE', 'Test Sans Équipe', '—', '—', 'aucune équipe engagée'],
+        ]);
+        $io->text('Équipes sans club : A2, A6, A7, B4, B5, C3, C5, D4.');
         $io->text('Équipes particulières : A3 (capitaine sans compte, fiche seule), A8 (aucun capitaine), B6 (aucun joueur), C5 (gymnase sans créneau), D4 (aucun gymnase).');
         $io->text('Poules : A = 8 équipes, B = 6, C = 5 (nombre impair), D = 4. Phase 2 : poule A seule remplie, journées sans match. Phase finale vide.');
 

@@ -31,14 +31,17 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 | Compte | Situation |
 |---|---|
 | `admin` | administrateur |
-| `cap.a1` | capitaine de ARRATS (poule A), téléphone renseigné ; en 2025-2026, capitaine de ADOUR |
-| `cap.a2` | capitaine de BIDART VB, **sans téléphone** |
-| `cap.a4`, `cap.a6`, `cap.a7` | capitaines d'équipes de la poule A |
-| `cap.a5` | capitaine de GOIZ ARGI : coordonnées **seulement sur le compte** (la fiche n'en a pas) |
-| `cap.b1`, `cap.c1`, `cap.d1` | capitaines de KOSKO ALAI (B), SOKOA (C), ADOUR (D) ; `cap.d1` était simple joueur en 2025-2026 |
-| `cap.double` | capitaine de **deux équipes** : LAPURDI VOLLEY (B) et BAIGORRI (D) |
-| `joueur.a1`, `joueur.a2` | simples joueurs (non capitaines) de ARRATS et de BIDART VB |
-| `mobile` | joueur de CAPBRETON LOISIR en 2026-2027, de CHALOSSE en 2025-2026 |
+| `cap.a1` | capitaine de Arrats (poule A, club ARR), téléphone renseigné ; en 2025-2026, capitaine de Adour |
+| `cap.a2` | capitaine de Bidart VB (sans club), **sans téléphone** |
+| `cap.a4` | capitaine de Etxea (poule A) **et responsable du club CBT** |
+| `cap.a6`, `cap.a7` | capitaines d'équipes de la poule A |
+| `cap.a5` | capitaine de Goiz argi : coordonnées **seulement sur le compte** (la fiche n'en a pas) |
+| `cap.b1`, `cap.c1`, `cap.d1` | capitaines de Kosko alai (B), Sokoa (C), Adour (D) ; `cap.d1` était simple joueur en 2025-2026 |
+| `cap.double` | capitaine de **deux équipes** : Lapurdi volley (B) et Baigorri (D) |
+| `joueur.a1`, `joueur.a2` | simples joueurs (non capitaines) de Arrats et de Bidart VB |
+| `mobile` | joueur de Capbreton loisir en 2026-2027, de Chalosse en 2025-2026 |
+| `resp.arr` | **responsable du club ARR** (Arrats, Kosko alai, Sokoa), sans fiche joueur |
+| `resp.double` | **responsable de deux clubs** : CBT et Landes |
 | `user.sansfiche` | compte sans fiche joueur |
 | `user.nonverifie` | compte dont l'e-mail n'est pas vérifié |
 | `autre.compte` | compte lié à la fiche « Import Lié » (cas d'import) |
@@ -49,6 +52,18 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
   D = 4 (terminée). **Phase 2** : poule A remplie avec des journées mais sans match, autres poules vides. **Phase finale** vide.
 - **7 gymnases** « Test … » avec créneaux, capacités et priorités variés ; un gymnase sans créneau (C5), une équipe sans gymnase (D4).
 - Équipes particulières : A3 (capitaine sans compte, fiche seule), A8 (aucun capitaine), B6 (aucun joueur).
+- **Noms d'équipes** enregistrés sans abréviation de club ; le site l'ajoute à l'affichage : « Arrats (ARR) ».
+- **Clubs de test** (en plus des clubs réels copiés de la base de développement) :
+
+  | Abréviation | Club | Équipes | Responsables | Particularité |
+  |---|---|---|---|---|
+  | ARR | Arrats Volley Test | A1, B1, C1 | `resp.arr` | 3 poules, 2 gymnases, fiche complète avec logo |
+  | CBT | Côte Basque Test | A4, B2, D1 | `cap.a4`, `resp.double` | gymnase Test Biarritz partagé avec ARR |
+  | LANDES | Landes Volley Test | A3, A5, B3, C2, D2 | `resp.double` | abréviation saisie « Landes » (affichée en majuscules), fiche vide |
+  | BAYT | Bayonne Test | A8, B6, C4, D3 | aucun | sans responsable |
+  | TSE | Test Sans Équipe | aucune | aucun | aucune équipe engagée |
+
+  Équipes sans club : A2, A6, A7, B4, B5, C3, C5, D4.
 - Classements calculés par l'application ; un forfait enregistré (-1 / 3).
 - Les matchs sont générés par les services de l'application (journées, calendrier optimisé), puis quelques-uns sont déplacés
   pour créer les cas ci-dessous. La commande **affiche la liste exacte** de ces matchs à la fin du chargement.
@@ -57,7 +72,8 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 
 | Cas | Où le voir |
 |---|---|
-| Match joué **sans score** (bouton « Saisir » pour son capitaine et l'admin) | accueil, calendrier |
+| Match joué **sans score**, reçu par Arrats (bouton « Saisir » pour `cap.a1`, `resp.arr` et l'admin) | accueil, calendrier |
+| Match **à l'extérieur** d'une équipe du club ARR (crayon pour `resp.arr`, pas pour le capitaine qui se déplace) | calendrier |
 | Surcharge d'un gymnase (plusieurs matchs pour 1 terrain) | calendrier par gymnase, « Seulement les dates à problème » |
 | Match **hors créneau** | calendrier par gymnase |
 | Créneau **non prioritaire** | calendrier par gymnase |
@@ -70,6 +86,11 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 | Poule vide, poule sans match, phase vide | classement, calendrier, équipes |
 | « Mon équipe » (poule ouverte, surlignage, filtre du gymnase) | toutes les pages (choix gardé dans le navigateur) |
 | Import Excel d'utilisateurs | `/admin/user/excel/explication` avec `var/recette/import_utilisateurs.xlsx` |
+| Responsable de club : saisie de tous les matchs du club, refus hors du club | calendrier (`resp.arr`, `resp.double`) |
+| Fiche du club : modification par un responsable (avertissement sur l'abréviation, logo), refus pour un autre club | « Les clubs », fiche du club, « Mon profil » |
+| Capitaine **et** responsable (`cap.a4`), responsable de deux clubs (`resp.double`) | calendrier, « Mon profil » |
+| Liste des clubs, club sans équipe, club sans responsable, équipes sans club | « Les clubs », « Les équipes », « Qui sommes-nous ? » |
+| Gestion des clubs par l'admin (équipes, gymnases, responsables, suppression) | `/admin/club/` |
 
 ### Fichier d'import Excel
 
