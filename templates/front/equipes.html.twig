@@ -20,6 +20,9 @@
                         {% if poule.equipes|length ==0 %}
                             <p class="alert alert-info">Aucune équipe dans cette poule.</p>
                         {% else %}
+                        {# Tri de la poule (tri_equipes_controller.js) : par nom (défaut) ou par classement, au clic sur l'en-tête
+                           (ordinateur) ou sur les boutons « Trier » (mobile). Validé par l'ergonome. #}
+                        <div data-controller="tri-equipes">
                         {# Affichage pour grand écran sous forme de table (même style que le calendrier) #}
                             <div class="hidden md:block">
                                 <table class="table w-full table-fixed bg-base-100">
@@ -31,17 +34,21 @@
                                     </colgroup>
                                     <thead>
                                         <tr class="border-b-2 border-(--color-primary) text-xs uppercase tracking-wider text-(--color-base-content)/70">
-                                            <th>Équipe</th>
+                                            <th aria-sort="ascending" data-tri-equipes-target="entete" data-cle="nom">
+                                                <button type="button" class="inline-flex items-center gap-1 uppercase tracking-wider font-semibold cursor-pointer hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) rounded" data-action="tri-equipes#trier" data-tri-equipes-cle-param="nom">Équipe <span aria-hidden="true" data-tri-equipes-target="fleche" data-cle="nom">▲</span></button>
+                                            </th>
                                             <th>Gymnase</th>
                                             <th>Réception habituelle</th>
-                                            <th class="text-right">Classement</th>
+                                            <th class="text-right" data-tri-equipes-target="entete" data-cle="classement">
+                                                <button type="button" class="inline-flex items-center gap-1 uppercase tracking-wider font-semibold cursor-pointer hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) rounded" data-action="tri-equipes#trier" data-tri-equipes-cle-param="classement">Classement <span aria-hidden="true" class="opacity-40" data-tri-equipes-target="fleche" data-cle="classement">⇅</span></button>
+                                            </th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody data-tri-equipes-target="liste">
                                     {% for equipe in poule.equipes|sort((a, b) => a.nomSansClub|lower <=> b.nomSansClub|lower) %}
                                         {% set position = null %}
                                         {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
-                                        <tr class="hover:bg-(--color-base-200)" data-equipe="{{ equipe.id }}">
+                                        <tr class="hover:bg-(--color-base-200)" data-equipe="{{ equipe.id }}" data-tri-nom="{{ equipe.nomSansClub|lower }}" data-tri-classement="{{ position }}">
                                             <td>
                                                 <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ equipe.nomSimple }}</a>
                                                 {{ include('front/fragments/_sigle_club.html.twig') }}
@@ -66,10 +73,17 @@
                             </div>
                             {# Affichage pour mobile : cartes compactes, nom et classement en haut, gymnase et créneau dessous #}
                             <div class="md:hidden flex flex-col gap-2">
+                                {# Tri des cartes : pas d'en-tête sur mobile, deux boutons à la place #}
+                                <div class="flex items-center gap-2 text-sm" role="group" aria-label="Trier les équipes">
+                                    <span>Trier :</span>
+                                    <button type="button" class="btn btn-sm min-h-11 btn-primary" aria-pressed="true" data-tri-equipes-target="bouton" data-cle="nom" data-action="tri-equipes#trier" data-tri-equipes-cle-param="nom">Nom</button>
+                                    <button type="button" class="btn btn-sm min-h-11 btn-ghost" aria-pressed="false" data-tri-equipes-target="bouton" data-cle="classement" data-action="tri-equipes#trier" data-tri-equipes-cle-param="classement">Classement</button>
+                                </div>
+                                <div class="flex flex-col gap-2" data-tri-equipes-target="liste">
                                 {% for equipe in poule.equipes|sort((a, b) => a.nomSansClub|lower <=> b.nomSansClub|lower) %}
                                     {% set position = null %}
                                     {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
-                                    <div class="card card-xs bg-base-100 border border-base-300" data-equipe="{{ equipe.id }}">
+                                    <div class="card card-xs bg-base-100 border border-base-300" data-equipe="{{ equipe.id }}" data-tri-nom="{{ equipe.nomSansClub|lower }}" data-tri-classement="{{ position }}">
                                         <div class="card-body px-3 py-2 gap-1">
                                             <div class="flex items-center gap-3">
                                                 {# Nom de l'équipe et abréviation du club (lien vers la fiche du club) #}
@@ -88,7 +102,9 @@
                                         </div>
                                     </div>
                                 {% endfor %}
+                                </div>
                             </div>
+                        </div>
                         {% endif %}
                         </div>
 

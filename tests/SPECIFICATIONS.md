@@ -369,7 +369,7 @@ Couvre d'un coup les erreurs de gabarit (variables manquantes en `strict_variabl
 ### 4.14 Bout en bout dans un navigateur — `tests/e2e` (Playwright, lot 5, facultatif)
 
 Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scénarios maximum, exécutés en CI de nuit :
-**E2E-01** saisie d'un score dans la fenêtre (mobile et ordinateur), par un capitaine et par un responsable de club ; **E2E-02** « Mon équipe » (choix, surlignage, onglet ouvert) ; **E2E-03** fenêtre de confirmation admin (Annuler a le focus, Échap ferme, rien n'est supprimé) ; **E2E-04** listes admin (recherche, compteur, tri clavier) ; **E2E-05** filtre gymnase pré-sélectionné par « Mon équipe ».
+**E2E-01** saisie d'un score dans la fenêtre (mobile et ordinateur), par un capitaine et par un responsable de club ; **E2E-02** « Mon équipe » (choix, surlignage, onglet ouvert) ; **E2E-03** fenêtre de confirmation admin (Annuler a le focus, Échap ferme, rien n'est supprimé) ; **E2E-04** listes admin (recherche, compteur, tri clavier) ; **E2E-05** filtre gymnase pré-sélectionné par « Mon équipe » ; **E2E-06** tri de la page « Les équipes » (clic, second clic, non classées à la fin, surlignage « Mon équipe » conservé, boutons mobiles).
 
 ### 4.15 Clubs — `Fonctionnel/Front/FicheClubTest`, `Fonctionnel/Admin/ClubAdminTest`, `Fonctionnel/Front/NomEquipeAfficheTest`, `Integration/Service/ClubDepuisNomEquipeTest` (P1)
 
@@ -378,6 +378,7 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **NOM-02** ✅ — Titres (fiche équipe, composition, admin) : nom en majuscules.
 **NOM-03** ✅ — Le formulaire de l'équipe modifie le nom **sans** club ; l'abréviation n'est jamais ajoutée deux fois.
 **NOM-04** ✅ — Page « Les équipes » : abréviation en lien vers la fiche du club, nom long en infobulle.
+**TRI-01** ✅ *`TriEquipesTest`* — Page « Les équipes », tri par poule (validé par l'ergonome) : en-têtes Équipe et Classement en boutons (Gymnase non triable), `aria-sort="ascending"` sur Équipe au chargement et sur la seule colonne triée ensuite, flèche `aria-hidden` ; lignes et cartes avec `data-tri-nom` et `data-tri-classement`, ordre alphabétique au chargement ; sur mobile, boutons « Trier : Nom | Classement » avec `aria-pressed`. Le tri lui-même (sens, non classées toujours à la fin, départage alphabétique) s'exécute dans le navigateur : à couvrir par E2E-06.
 
 **Fiche et liste des clubs**
 **CLU-01** ✅ — Fiche publique : nom long, abréviation, description, lien, logo, gymnases ; **seulement les équipes engagées dans la saison en cours**, avec leur poule.
@@ -472,7 +473,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | Lot | Contenu | Livrable vérifiable | Charge estimée |
 |---|---|---|---|
 | **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
-| **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 74 tests verts (branche `clubs`) | fait le 11/10/2026 |
+| **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 77 tests verts (branche `clubs`) | fait le 11/10/2026 |
 | **1 — Accès** | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la CI | 0,5 j |
 | **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |
