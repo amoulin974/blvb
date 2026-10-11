@@ -1,37 +1,32 @@
-{% extends 'base.html.twig' %}
+{% extends 'base_auth.html.twig' %}
 
-{% block title %}Log in!{% endblock %}
+{% block title %}Connexion - BLVB{% endblock %}
 
-{% block body %}
-<div class="flex justify-center min-h-screen bg-base-200">
-    <div class="card w-full max-w-md bg-base-100 shadow-xl">
-        <div class="card-body">
+{% block auth_body %}
+    <h1>Connexion</h1>
+    <p>Espace réservé aux capitaines et aux administrateurs, pour saisir les résultats et gérer les équipes.</p>
+
+    {% if error %}
+        <div class="alert alert-error" role="alert">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
+    {% endif %}
+
+    {% if app.user %}
+        <div class="alert alert-info" role="status">
+            Vous êtes connecté en tant que {{ app.user.userIdentifier }}.
+        </div>
+    {% endif %}
+
     <form method="post" class="flex flex-col gap-4">
-        {% if error %}
-            <div class="alert alert-danger">{{ error.messageKey|trans(error.messageData, 'security') }}</div>
-        {% endif %}
-
-        {% if app.user %}
-            <div class="mb-3">
-                You are logged in as {{ app.user.userIdentifier }}, <a href="{{ path('app_logout') }}">Logout</a>
-            </div>
-        {% endif %}
-
-        <h1 class="h3 mb-3 font-weight-normal">Please sign in</h1>
-        <div class="form-control">
-                    <label class="label" for="username">
-                        <span class="label-text">Email</span>
-                    </label>
-                    <input type="email" value="{{ last_username }}" name="_username" id="username"
-                           class="input input-bordered w-full" autocomplete="email" required autofocus>
-                </div>
-        <div class="form-control">
-                    <label class="label" for="password">
-                        <span class="label-text">Password</span>
-                    </label>
-                    <input type="password" name="_password" id="password"
-                           class="input input-bordered w-full" autocomplete="current-password" required>
-                </div>
+        <div class="flex flex-col gap-1">
+            <label for="username" class="font-medium">Adresse e-mail</label>
+            <input type="email" value="{{ last_username }}" name="_username" id="username"
+                   class="input w-full text-base" autocomplete="email" required autofocus>
+        </div>
+        <div class="flex flex-col gap-1">
+            <label for="password" class="font-medium">Mot de passe</label>
+            <input type="password" name="_password" id="password"
+                   class="input w-full text-base" autocomplete="current-password" required>
+        </div>
 
         <input type="hidden" name="_csrf_token" data-controller="csrf-protection" value="{{ csrf_token('authenticate') }}">
 
@@ -45,15 +40,8 @@
             </div>
         #}
 
-         <button type="submit" class="btn btn-primary mt-2">Sign in</button>
+        <button type="submit" class="btn btn-accent w-full">Se connecter</button>
 
-        <!-- Lien mot de passe oublié -->
-        <div class="mt-2">
-            <a href="{{ path('app_forgot_password_request') }}" class="link">J’ai oublié mon mot de passe</a>
-        </div>
+        <a href="{{ path('app_forgot_password_request') }}" class="link link-hover link-primary w-fit">J’ai oublié mon mot de passe</a>
     </form>
-    </form>
-        </div>
-    </div>
-</div>
 {% endblock %}

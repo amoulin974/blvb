@@ -8,7 +8,7 @@ services:
       SERVER_NAME: ${SERVER_NAME:-localhost}, php:80
       DEFAULT_URI: https://${SERVER_NAME:-localhost}:${HTTPS_PORT:-443}
       # Connexion MySQL
-      DATABASE_URL: mysql://symfony:symfonypassword@database:3306/blvb_new?serverVersion=8.4.7&charset=utf8mb4
+      DATABASE_URL: mysql://symfony:symfonypassword@database:3306/${BLVB_DB:-blvb_new}?serverVersion=8.4.7&charset=utf8mb4
       DATABASE_OLD_URL: mysql://symfony:symfonypassword@database:3306/blvb_old?serverVersion=8.4.7&charset=utf8mb4
       STABILITY: stable
     volumes:
