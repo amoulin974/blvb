@@ -1,0 +1,3 @@
+{# Abréviation du club après le nom d'une équipe, en lien vers la fiche du club (nom long en infobulle).
+   Variable : equipe. Rien si l'équipe n'a pas de club. #}
+{% if equipe.club %}<a href="{{ path('front_club_show', {id: equipe.club.id}) }}" title="{{ equipe.club.nom }}" class="link link-hover shrink-0 text-sm font-semibold text-(--color-base-content)/80 focus-visible:underline"><span class="sr-only">Club : {{ equipe.club.nom }}, </span>({{ equipe.club.nomCourt|upper }})</a>{% endif %}

@@ -40,8 +40,8 @@ final class ChampionnatDeTestTest extends TestIntegration
     {
         $match = ChampionnatDeTest::get('match.reference');
 
-        self::assertSame('EQUIPE A1', $match->getIdEquipeRecoit()->getNom());
-        self::assertSame('EQUIPE A2', $match->getIdEquipeDeplace()->getNom());
+        self::assertSame('EQUIPE A1', $match->getIdEquipeRecoit()->getNomSansClub());
+        self::assertSame('EQUIPE A2', $match->getIdEquipeDeplace()->getNomSansClub());
         self::assertLessThan(new \DateTimeImmutable(), $match->getDate());
         self::assertNull($match->getNbSetGagnantReception());
         self::assertGreaterThan(new \DateTimeImmutable(), ChampionnatDeTest::get('match.futur')->getDate());

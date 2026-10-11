@@ -4,7 +4,7 @@
 
 {% block body %}
     {{ include('admin/_entete.html.twig', {
-        titre: partie.nomReception ~ ' contre ' ~ partie.nomDeplacement,
+        titre: partie.nomReception|upper ~ ' contre ' ~ partie.nomDeplacement|upper,
         sous_titre: (partie.date ? partie.date|date('d/m/Y H:i') : 'Date à définir') ~ (partie.nbSetGagnantReception is not null ? ' · score ' ~ partie.nbSetGagnantReception|sets ~ '–' ~ partie.nbSetGagnantDeplacement|sets : ''),
         retour: {url: path('admin_partie_index'), label: 'Matchs'},
         actions: [{url: path('admin_partie_edit', {id: partie.id}), label: 'Modifier', icone: 'crayon', principal: true}],

@@ -23,6 +23,9 @@
                 <button type="button" class="btn btn-outline btn-primary md:btn-sm" data-action="abonnement-agenda#ouvrir">Ajouter à mon agenda</button>
                 </div>
             </div>
+            {% if equipe.club %}
+                <p class="mt-2 flex items-center gap-2">{{ include('front/club/_logo.html.twig', {club: equipe.club, taille: 'size-8'}) }} Club : <a class="link link-hover link-primary font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
+            {% endif %}
             <p class="mt-1">
                 Reçoit à
                 {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}
@@ -84,7 +87,7 @@
             <div class="bg-base-100 border border-base-300 rounded-box p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Prochain match</p>
                 {% if prochain %}
-                    {% set domicile = prochain.equipe_recoit == equipe.nom %}
+                    {% set domicile = prochain.equipe_recoit_id == equipe.id %}
                     <p class="mt-1 font-display text-2xl font-bold text-(--color-primary)">{{ prochain.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ prochain.date_match|format_time('short', locale='fr') }}</p>
                     {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
                     <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
@@ -103,8 +106,8 @@
                 <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Dernier résultat</p>
                 {% if dernier %}
                     <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
-                    {% set advDernierId = dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace_id : dernier.equipe_recoit_id %}
-                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit == equipe.nom ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
+                    {% set advDernierId = dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace_id : dernier.equipe_recoit_id %}
+                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
                 {% else %}
                     <p class="mt-1">Aucun match joué</p>
@@ -143,11 +146,11 @@
                                 {% for match in matchsByPoule[poule.id] %}
                                     <tr class="hover:bg-(--color-base-200)">
                                         <td class="whitespace-nowrap text-(--color-base-content)/80">{{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }}</td>
-                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
+                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
                                         <td class="text-center">
                                             {{ include('front/fragments/_equipe_score.html.twig') }}
                                         </td>
-                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
+                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
                                         <td class="text-right whitespace-nowrap">
                                             {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
                                         </td>
@@ -164,8 +167,8 @@
                                     <div class="card-body px-3 py-2 gap-1">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                                                <div class="{{ match.equipe_recoit == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
-                                                <div class="{{ match.equipe_deplace == equipe.nom ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
+                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
+                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
                                             </div>
                                             <div class="shrink-0 text-right">
                                                 {{ include('front/fragments/_equipe_score.html.twig') }}

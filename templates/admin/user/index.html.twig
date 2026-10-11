@@ -36,7 +36,11 @@
                     <tr>
                         <td class="break-all"><a class="font-semibold text-(--color-primary) hover:underline" href="{{ path('admin_user_edit', {id: user.id}) }}">{{ user.email }}</a></td>
                         <td>{{ user.prenom }} {{ user.nom }}</td>
-                        <td>{% if 'ROLE_ADMIN' in user.roles %}<span class="badge badge-sm badge-primary">Administrateur</span>{% else %}Utilisateur{% endif %}</td>
+                        <td>
+                            {%- if 'ROLE_ADMIN' in user.roles %}<span class="badge badge-sm badge-primary">Administrateur</span>{% endif -%}
+                            {%- if 'ROLE_RESPONSABLE_CLUB' in user.roles %} <span class="badge badge-sm badge-secondary" title="{{ user.clubsResponsable|map(c => c.nom)|join(', ') }}">Responsable de club</span>{% endif -%}
+                            {%- if 'ROLE_ADMIN' not in user.roles and 'ROLE_RESPONSABLE_CLUB' not in user.roles %}Utilisateur{% endif -%}
+                        </td>
                         <td>{{ user.isVerified ? 'Oui' : 'Non' }}</td>
                         <td class="text-right"><a href="{{ path('admin_user_edit', {id: user.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier le compte {{ user.email }}">{{ icone.i('crayon') }} Modifier</a></td>
                     </tr>

@@ -25,6 +25,7 @@
                 <thead>
                 <tr>
                     <th>Nom</th>
+                    <th>Club</th>
                     <th>Gymnase</th>
                     <th data-datatable-no-sort><span class="sr-only">Actions</span></th>
                 </tr>
@@ -33,11 +34,12 @@
                 {% for equipe in equipes %}
                     <tr>
                         <td><a class="font-display text-base font-semibold tracking-wide text-(--color-primary) hover:underline" href="{{ path('admin_equipe_show', {id: equipe.id}) }}">{{ equipe.nom }}</a></td>
+                        <td>{{ equipe.club ? equipe.club.nom : '' }}</td>
                         <td>{{ equipe.lieu ? equipe.lieu.nom : '' }}</td>
                         <td class="text-right"><a href="{{ path('admin_equipe_edit', {id: equipe.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier {{ equipe.nom }}">{{ icone.i('crayon') }} Modifier</a></td>
                     </tr>
                 {% else %}
-                    <tr><td colspan="3">Aucune équipe.</td></tr>
+                    <tr><td colspan="4">Aucune équipe.</td></tr>
                 {% endfor %}
                 </tbody>
             </table>

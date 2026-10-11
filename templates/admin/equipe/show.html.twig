@@ -4,7 +4,7 @@
 
 {% block body %}
     {{ include('admin/_entete.html.twig', {
-        titre: equipe.nom,
+        titre: equipe.nom|upper,
         sous_titre: equipe.lieu ? 'Gymnase : ' ~ equipe.lieu.nom : 'Aucun gymnase renseigné',
         retour: {url: path('admin_equipe_index'), label: 'Équipes'},
         actions: [{url: path('admin_equipe_edit', {id: equipe.id}), label: 'Modifier', icone: 'crayon', principal: true}],

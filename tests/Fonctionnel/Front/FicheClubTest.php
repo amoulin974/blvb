@@ -1,0 +1,373 @@
+<?php
+
+namespace App\Tests\Fonctionnel\Front;
+
+use App\Entity\Club;
+use App\Repository\ClubRepository;
+use App\Tests\Support\Story\ChampionnatDeTest;
+use App\Tests\Support\TestFonctionnel;
+use PHPUnit\Framework\Attributes\TestDox;
+
+/**
+ * Fiche publique d'un club et sa modification par ses responsables (App\Security\ClubVoter) :
+ * nom long, abréviation, description et lien (ces deux derniers facultatifs).
+ */
+final class FicheClubTest extends TestFonctionnel
+{
+    /** Club relu en base (le gestionnaire d'entités est vidé : un formulaire refusé a pu modifier l'objet en mémoire). */
+    private function club(string $cle = 'club'): Club
+    {
+        self::getContainer()->get('doctrine')->getManager()->clear();
+
+        return self::getContainer()->get(ClubRepository::class)->find(ChampionnatDeTest::get($cle)->getId());
+    }
+
+    private function urlModifier(string $cle = 'club'): string
+    {
+        return '/club/'.ChampionnatDeTest::get($cle)->getId().'/modifier';
+    }
+
+    #[TestDox('La fiche du club est publique : nom long, abréviation, équipes, gymnases ; la fiche équipe y mène')]
+    public function test_fiche_publique(): void
+    {
+        $crawler = $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('h1', 'Club test A1-B1');
+        self::assertSelectorTextContains('body', 'CTA');
+        self::assertSelectorTextContains('body', 'EQUIPE B1 (CTA)');
+        self::assertSelectorTextContains('body', 'Gymnase G2');
+        self::assertSelectorNotExists('a[href$="/modifier"]', 'pas de bouton de modification pour un visiteur');
+
+        $crawler = $this->client->request('GET', '/equipe/'.ChampionnatDeTest::get('equipe.A1')->getId());
+        self::assertCount(1, $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club')->getId().'"]'));
+    }
+
+    #[TestDox('Le responsable modifie la fiche de son club : nom long, abréviation, description, lien')]
+    public function test_responsable_modifie(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+        self::assertSelectorExists('a[href$="/modifier"]');
+
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        self::assertResponseIsSuccessful();
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[nom]'] = 'Club test renommé';
+        $form['club_fiche[nomCourt]'] = 'CTR';
+        $form['club_fiche[description]'] = "Entraînements le mardi.\nTous niveaux.";
+        $form['club_fiche[url]'] = 'https://club.example.org';
+        $this->client->submit($form);
+
+        self::assertResponseRedirects('/club/'.ChampionnatDeTest::get('club')->getId());
+        $club = $this->club();
+        self::assertSame('Club test renommé', $club->getNom());
+        self::assertSame('CTR', $club->getNomCourt());
+        self::assertSame("Entraînements le mardi.\nTous niveaux.", $club->getDescription());
+        self::assertSame('https://club.example.org', $club->getUrl());
+        self::assertSame('EQUIPE A1 (CTR)', $club->getEquipes()->first()->getNom());
+    }
+
+    #[TestDox('La description et le lien peuvent rester vides')]
+    public function test_champs_facultatifs(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[description]'] = '   ';
+        $form['club_fiche[url]'] = '';
+        $this->client->submit($form);
+
+        self::assertResponseRedirects();
+        self::assertNull($this->club()->getDescription());
+        self::assertNull($this->club()->getUrl());
+    }
+
+    #[TestDox('Un lien qui n\'est pas une adresse web est refusé avec un message')]
+    public function test_lien_invalide(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[url]'] = 'pas une adresse';
+        $this->client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Indiquez une adresse web complète');
+        self::assertNull($this->club()->getUrl());
+    }
+
+    #[TestDox('Seuls les responsables du club et l\'admin peuvent modifier la fiche')]
+    public function test_acces_modification(): void
+    {
+        $this->client->request('GET', $this->urlModifier());
+        $this->assertRedirigeVersConnexion('visiteur');
+
+        $this->connecter('cap.a1');
+        $this->client->request('GET', $this->urlModifier());
+        $this->assertAccesRefuse('capitaine d\'une équipe du club, non responsable');
+
+        $this->connecter('resp.club');
+        $this->client->request('GET', $this->urlModifier('club.voisin'));
+        $this->assertAccesRefuse('responsable d\'un autre club');
+
+        $this->connecter('admin');
+        $this->client->request('GET', $this->urlModifier('club.voisin'));
+        self::assertResponseIsSuccessful();
+    }
+
+    /** Image PNG minimale fabriquée pour le test. */
+    private function imagePng(): \Symfony\Component\HttpFoundation\File\UploadedFile
+    {
+        $chemin = sys_get_temp_dir().'/logo-test-'.bin2hex(random_bytes(3)).'.png';
+        $image = imagecreatetruecolor(8, 8);
+        imagepng($image, $chemin);
+
+        return new \Symfony\Component\HttpFoundation\File\UploadedFile($chemin, 'logo.png', 'image/png', null, true);
+    }
+
+    private function dossierImages(): string
+    {
+        return self::getContainer()->getParameter('app.dossier_images_clubs');
+    }
+
+    #[TestDox('Le responsable ajoute une image au club, affichée sur la fiche et la liste, puis la retire')]
+    public function test_image(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[imageFichier]']->upload($this->imagePng()->getPathname());
+        $this->client->submit($form);
+
+        self::assertResponseRedirects();
+        $image = $this->club()->getImage();
+        self::assertNotNull($image);
+        self::assertStringStartsWith('cta-', $image);
+        self::assertFileExists($this->dossierImages().'/'.$image);
+
+        $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+        self::assertSelectorExists('img[src$="/uploads/clubs/'.$image.'"]');
+        $this->client->request('GET', '/clubs');
+        self::assertSelectorExists('img[src$="/uploads/clubs/'.$image.'"]');
+
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[supprimerImage]']->tick();
+        $this->client->submit($form);
+
+        self::assertNull($this->club()->getImage());
+        self::assertFileDoesNotExist($this->dossierImages().'/'.$image);
+    }
+
+    #[TestDox('Un fichier qui n\'est pas une image est refusé')]
+    public function test_image_refusee(): void
+    {
+        $this->connecter('resp.club');
+        $chemin = sys_get_temp_dir().'/pas-une-image.txt';
+        file_put_contents($chemin, 'texte');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[imageFichier]']->upload($chemin);
+        $this->client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Choisissez une image JPEG, PNG, WebP ou GIF.');
+        self::assertNull($this->club()->getImage());
+    }
+
+    #[TestDox('La liste des clubs, triée par nom long, mène aux fiches ; le menu « Le championnat » y mène')]
+    public function test_liste_des_clubs(): void
+    {
+        $crawler = $this->client->request('GET', '/clubs');
+
+        self::assertResponseIsSuccessful();
+        $noms = $crawler->filter('main ul li a span.text-lg')->each(fn ($n) => $n->text());
+        self::assertSame(['Club test A1-B1', 'Club test voisin'], $noms);
+        self::assertCount(1, $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club')->getId().'"]'));
+        self::assertStringContainsString('2 équipes en Saison test', $crawler->filter('main')->text());
+
+        $crawler = $this->client->request('GET', '/');
+        self::assertGreaterThanOrEqual(1, $crawler->filter('a[href="/clubs"]')->count());
+    }
+
+    #[TestDox('La fiche du club ne liste que les équipes engagées dans la saison en cours, avec leur poule')]
+    public function test_equipes_de_la_saison(): void
+    {
+        \App\Factory\EquipeFactory::createOne(['nom' => 'EQUIPE NON ENGAGEE', 'club' => ChampionnatDeTest::get('club')]);
+
+        $crawler = $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+
+        $equipes = $crawler->filter('#titre-equipes + ul li')->each(fn ($li) => preg_replace('/\s+/', ' ', trim($li->text())));
+        self::assertCount(2, $equipes);
+        self::assertStringStartsWith('EQUIPE A1 (CTA)', $equipes[0]);
+        self::assertStringContainsString('Poule', $equipes[0]);
+        self::assertStringStartsWith('EQUIPE B1 (CTA)', $equipes[1]);
+        self::assertStringNotContainsString('EQUIPE NON ENGAGEE', $crawler->filter('body')->text());
+    }
+
+    #[TestDox('La page « Qui sommes-nous ? » liste les clubs en lien vers leur fiche')]
+    public function test_qui_sommes_nous(): void
+    {
+        $crawler = $this->client->request('GET', '/qui-sommes-nous');
+
+        self::assertResponseIsSuccessful();
+        self::assertCount(1, $crawler->filter('main a[href="/club/'.ChampionnatDeTest::get('club.voisin')->getId().'"]'));
+        self::assertGreaterThanOrEqual(1, $crawler->filter('main a[href="/clubs"]')->count());
+    }
+
+    #[TestDox('Le responsable est prévenu des conséquences d\'un changement d\'abréviation, puis informé du nouveau nom des équipes')]
+    public function test_avertissement_abreviation(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+
+        self::assertSelectorTextContains('[role="note"]', 'Modifier l\'abréviation change le nom affiché des 2 équipes du club');
+        self::assertSelectorTextContains('[role="note"]', 'EQUIPE A1 (CTA)');
+
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[nomCourt]'] = 'Abc';
+        $this->client->submit($form);
+        $this->client->followRedirect();
+
+        self::assertSelectorTextContains('body', 'L\'abréviation est passée de CTA à ABC');
+        self::assertSelectorTextContains('body', '« EQUIPE A1 (ABC) »');
+    }
+
+    #[TestDox('Une image de plus de 2 Mo est refusée, sans fichier enregistré')]
+    public function test_image_trop_lourde(): void
+    {
+        // PNG de bruit aléatoire (incompressible) : plus de 2 Mo, mais une vraie image
+        $image = imagecreatetruecolor(1000, 1000);
+        for ($x = 0; $x < 1000; ++$x) {
+            for ($y = 0; $y < 1000; ++$y) {
+                imagesetpixel($image, $x, $y, random_int(0, 0xFFFFFF));
+            }
+        }
+        $chemin = sys_get_temp_dir().'/logo-lourd-'.bin2hex(random_bytes(3)).'.png';
+        imagepng($image, $chemin, 0);
+        self::assertGreaterThan(2 * 1024 * 1024, filesize($chemin));
+        $avant = glob($this->dossierImages().'/*') ?: [];
+
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $form['club_fiche[imageFichier]']->upload($chemin);
+        $this->client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'L\'image est trop lourde');
+        self::assertNull($this->club()->getImage());
+        self::assertSame($avant, glob($this->dossierImages().'/*') ?: []);
+    }
+
+    #[TestDox('Le nom du fichier envoyé est ignoré : un nom avec « ../ » ne sort pas du dossier des images')]
+    public function test_nom_de_fichier_ignore(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+        $form = $crawler->selectButton('Enregistrer')->form();
+        $fichier = new \Symfony\Component\HttpFoundation\File\UploadedFile($this->imagePng()->getPathname(), '../../../public/piege.php.png', 'image/png', null, true);
+        $this->client->request('POST', $form->getUri(), $form->getPhpValues(), ['club_fiche' => ['imageFichier' => $fichier]]);
+
+        self::assertResponseRedirects();
+        $image = $this->club()->getImage();
+        self::assertMatchesRegularExpression('/^cta-[0-9a-f]{8}\.png$/', $image, 'nom généré par l\'application');
+        self::assertFileExists($this->dossierImages().'/'.$image);
+        self::assertFileDoesNotExist(self::getContainer()->getParameter('kernel.project_dir').'/public/piege.php.png');
+        self::assertFileDoesNotExist(\dirname($this->dossierImages(), 3).'/public/piege.php.png');
+    }
+
+    /** Valeurs du formulaire de la fiche (jeton compris), pour fabriquer des requêtes que le navigateur n'enverrait pas. */
+    private function valeursFiche(): array
+    {
+        $crawler = $this->client->request('GET', $this->urlModifier());
+
+        return $crawler->selectButton('Enregistrer')->form()->getPhpValues();
+    }
+
+    #[TestDox('Une abréviation ou un nom avec retour à la ligne est refusé (injection dans les agendas .ics)')]
+    public function test_retour_a_la_ligne_refuse(): void
+    {
+        $this->connecter('resp.club');
+        foreach (['nomCourt' => "A\r\nEND:VCALENDAR", 'nom' => "Club\r\nX-INJECTE:oui"] as $champ => $valeur) {
+            $valeurs = $this->valeursFiche();
+            $valeurs['club_fiche'][$champ] = $valeur;
+            $this->client->request('POST', $this->urlModifier(), $valeurs);
+
+            self::assertResponseStatusCodeSame(422, $champ);
+        }
+        self::assertSame('CTA', $this->club()->getNomCourt());
+        self::assertSame('Club test A1-B1', $this->club()->getNom());
+    }
+
+    #[TestDox('Un responsable ne peut pas s\'attribuer d\'équipes ni de responsables en ajoutant des champs à la requête')]
+    public function test_champs_supplementaires_refuses(): void
+    {
+        $this->connecter('resp.club');
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['equipes'] = [(string) ChampionnatDeTest::get('equipe.A3')->getId()];
+        $valeurs['club_fiche']['responsables'] = [(string) ChampionnatDeTest::compte('joueur.a1')->getId()];
+        $valeurs['club_fiche']['nom'] = 'Club test modifié';
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+
+        self::assertResponseStatusCodeSame(422);
+        $club = $this->club();
+        self::assertSame('Club test A1-B1', $club->getNom(), 'rien n\'est enregistré');
+        self::assertSame('CTV', self::getContainer()->get(\App\Repository\EquipeRepository::class)->find(ChampionnatDeTest::get('equipe.A3')->getId())->getClub()?->getNomCourt());
+        self::assertCount(1, $club->getResponsabilites());
+    }
+
+    #[TestDox('Un lien « javascript: » ou « data: » est refusé')]
+    public function test_lien_dangereux_refuse(): void
+    {
+        $this->connecter('resp.club');
+        foreach (['javascript:alert(1)', 'data:text/html,<script>alert(1)</script>', 'JavaScript://exemple.fr/%0Aalert(1)'] as $lien) {
+            $valeurs = $this->valeursFiche();
+            $valeurs['club_fiche']['url'] = $lien;
+            $this->client->request('POST', $this->urlModifier(), $valeurs);
+
+            self::assertResponseStatusCodeSame(422, $lien);
+        }
+        self::assertNull($this->club()->getUrl());
+    }
+
+    #[TestDox('Du HTML saisi dans la fiche s\'affiche comme du texte (fiche, liste des clubs, calendrier)')]
+    public function test_html_echappe(): void
+    {
+        $this->connecter('resp.club');
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['nom'] = 'Club <b>gras</b>';
+        $valeurs['club_fiche']['description'] = "<script>alert('piege')</script>\nDeuxième ligne";
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+        self::assertResponseRedirects();
+
+        foreach (['/club/'.ChampionnatDeTest::get('club')->getId(), '/clubs', '/calendrier', '/equipes'] as $page) {
+            $this->client->request('GET', $page);
+            $html = (string) $this->client->getResponse()->getContent();
+            self::assertStringNotContainsString("<script>alert('piege')", $html, $page);
+            self::assertStringNotContainsString('<b>gras</b>', $html, $page);
+        }
+        $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
+        self::assertStringContainsString('&lt;script&gt;', (string) $this->client->getResponse()->getContent());
+    }
+
+    #[TestDox('La fiche ne peut pas être modifiée sans jeton de sécurité, ni depuis un autre site')]
+    public function test_protection_csrf(): void
+    {
+        $this->connecter('resp.club');
+
+        $valeurs = $this->valeursFiche();
+        unset($valeurs['club_fiche']['_token']);
+        $valeurs['club_fiche']['nom'] = 'Sans jeton';
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+        self::assertResponseStatusCodeSame(422, 'sans jeton');
+
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['nom'] = 'Autre site';
+        $this->client->request('POST', $this->urlModifier(), $valeurs, server: ['HTTP_ORIGIN' => 'https://site-pirate.example', 'HTTP_REFERER' => 'https://site-pirate.example/page']);
+        self::assertResponseStatusCodeSame(422, 'autre site');
+
+        self::assertSame('Club test A1-B1', $this->club()->getNom());
+    }
+}
