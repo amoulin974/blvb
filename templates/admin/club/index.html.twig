@@ -35,7 +35,10 @@
                             <span class="text-(--color-base-content)/70">Aucun</span>
                         {% endfor %}
                     </td>
-                    <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_club_edit', {id: club.id}) }}" aria-label="Modifier {{ club.nom }}">{{ icone.i('crayon') }} Modifier</a></td>
+                    <td class="text-right whitespace-nowrap">
+                        <a class="btn btn-ghost btn-sm" href="{{ path('front_club_show', {id: club.id}) }}" aria-label="Voir la fiche publique de {{ club.nom }}">Fiche</a>
+                        <a class="btn btn-ghost btn-sm" href="{{ path('admin_club_edit', {id: club.id}) }}" aria-label="Modifier {{ club.nom }}">{{ icone.i('crayon') }} Modifier</a>
+                    </td>
                 </tr>
             {% else %}
                 <tr><td colspan="6">Aucun club.</td></tr>

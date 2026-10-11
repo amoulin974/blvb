@@ -40,6 +40,17 @@ class Club
     #[Assert\Length(max: 20)]
     private ?string $nomCourt = null;
 
+    /** Présentation du club (fiche publique), modifiable par ses responsables */
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\Length(max: 5000)]
+    private ?string $description = null;
+
+    /** Lien vers le site du club ou sa page de réseau social */
+    #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Url(message: 'Indiquez une adresse web complète, ex. https://www.monclub.fr', requireTld: true)]
+    #[Assert\Length(max: 255)]
+    private ?string $url = null;
+
     /** @var Collection<int, Equipe> */
     #[ORM\OneToMany(targetEntity: Equipe::class, mappedBy: 'club')]
     #[ORM\OrderBy(['nom' => 'ASC'])]
@@ -95,6 +106,38 @@ class Club
         $this->nomCourt = trim($nomCourt);
 
         return $this;
+    }
+
+    public function getDescription(): ?string
+    {
+        return $this->description;
+    }
+
+    public function setDescription(?string $description): static
+    {
+        $description = $description === null ? null : trim($description);
+        $this->description = $description === '' ? null : $description;
+
+        return $this;
+    }
+
+    public function getUrl(): ?string
+    {
+        return $this->url;
+    }
+
+    public function setUrl(?string $url): static
+    {
+        $url = $url === null ? null : trim($url);
+        $this->url = $url === '' ? null : $url;
+
+        return $this;
+    }
+
+    /** Un responsable (ou l'admin, voir ClubVoter) peut modifier la fiche du club. */
+    public function estResponsable(?User $user): bool
+    {
+        return $user !== null && $this->responsables->contains($user);
     }
 
     /** @return Collection<int, Equipe> */

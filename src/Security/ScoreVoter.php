@@ -12,7 +12,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
  * is_granted('SAISIR_SCORE', partie) : l'administrateur, le capitaine de l'équipe qui reçoit
- * (saison du match) et les responsables du club de l'équipe qui reçoit (SaisieScoreService).
+ * (saison du match) et les responsables du club de l'une ou l'autre équipe (SaisieScoreService).
  *
  * @extends Voter<string, Partie>
  */
@@ -38,13 +38,7 @@ final class ScoreVoter extends Voter
         }
 
         $user = $token->getUser();
-        $recoit = $subject->getIdEquipeRecoit();
-        if (!$user instanceof User || $recoit === null) {
-            return false;
-        }
 
-        $saison = $subject->getPoule()?->getPhase()?->getSaison();
-
-        return $saison !== null && \in_array($recoit->getId(), $this->saisieScore->equipesAutoriseesIds($user, $saison), true);
+        return $user instanceof User && $this->saisieScore->peutSaisir($user, $subject);
     }
 }

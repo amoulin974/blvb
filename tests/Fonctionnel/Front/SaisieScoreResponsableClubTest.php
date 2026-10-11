@@ -9,8 +9,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * Saisie du score par un responsable de club : matchs reçus par une équipe de son club, quelle que soit
- * la poule. Le capitaine de l'équipe qui reçoit garde ce droit (App\Security\ScoreVoter).
+ * Saisie du score par un responsable de club : tous les matchs des équipes de son club, à domicile ou à
+ * l'extérieur, quelle que soit la poule. Le capitaine garde son droit sur les matchs que son équipe reçoit
+ * (App\Security\ScoreVoter).
  *
  * Championnat de référence : « Club test A1-B1 » (A1 et B1, responsable resp.club) ;
  * « Club test voisin » (A3) partage le gymnase G1.
@@ -34,10 +35,11 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
     {
         yield 'équipe du club qui reçoit (poule A)' => ['match.reference'];
         yield 'autre équipe du club qui reçoit (poule B)' => ['match.B1-B2'];
+        yield 'équipe du club qui se déplace' => ['match.A4-A1'];
     }
 
     #[DataProvider('matchsAutorises')]
-    #[TestDox('Le responsable de club saisit le score d\'un match reçu par une équipe de son club : $_dataName')]
+    #[TestDox('Le responsable de club saisit le score d\'un match de son club : $_dataName')]
     public function test_responsable_saisit_les_matchs_recus_par_son_club(string $match): void
     {
         $this->connecter('resp.club');
@@ -51,8 +53,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
 
     public static function matchsRefuses(): iterable
     {
-        yield 'match reçu par une équipe d\'un autre club' => ['match.A3-A4'];
-        yield 'match où l\'équipe du club se déplace' => ['match.A4-A1'];
+        yield 'match entre une équipe d\'un autre club et une équipe sans club' => ['match.A3-A4'];
     }
 
     #[DataProvider('matchsRefuses')]
@@ -81,6 +82,16 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
     }
 
+    #[TestDox('Le capitaine de l\'équipe qui se déplace ne peut pas saisir le score')]
+    public function test_capitaine_qui_se_deplace(): void
+    {
+        $this->connecter('cap.a2');
+
+        $this->saisir(ChampionnatDeTest::get('match.reference'));
+
+        self::assertResponseStatusCodeSame(400);
+    }
+
     #[TestDox('Un simple joueur de l\'équipe qui reçoit ne peut pas saisir le score')]
     public function test_joueur_ne_saisit_pas(): void
     {
@@ -91,7 +102,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(400);
     }
 
-    #[TestDox('Le calendrier propose « Saisir » au responsable sur les matchs reçus par son club, pas sur les autres')]
+    #[TestDox('Le calendrier propose « Saisir » au responsable sur les matchs de son club, pas sur les autres')]
     public function test_calendrier_du_responsable(): void
     {
         $this->connecter('resp.club');

@@ -66,8 +66,8 @@ final class FrontController extends AbstractController
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
             'equipe'=>$equipe,
-            // Équipes dont l'utilisateur peut saisir les matchs reçus (capitaine, responsable de club)
-            'equipesSaisieIds'=>$saisieScore->equipesAutoriseesIds($user, $saison),
+            // Droits de saisie du score : capitaine (matchs reçus), responsable de club (tous les matchs du club)
+            'droitsSaisie'=>$saisieScore->droits($user, $saison),
             'saison' => $saison,
             'phaseouverte' => $phaseouverte,
         ]);
@@ -274,8 +274,8 @@ final class FrontController extends AbstractController
             'idSaisonSelected' => $this->idSaisonSelected,
             'saison'=>$saison,
             'phaseouverte'=>$phaseouverte,
-            // Équipes dont l'utilisateur peut saisir les matchs reçus (capitaine, responsable de club)
-            'equipesSaisieIds'=>$saisieScore->equipesAutoriseesIds($this->getUser(), $saison),
+            // Droits de saisie du score : capitaine (matchs reçus), responsable de club (tous les matchs du club)
+            'droitsSaisie'=>$saisieScore->droits($this->getUser(), $saison),
         ]);
     }
     //Route pour afficher le calendrier des matchs de la saison sélectionnée en fonction des lieux

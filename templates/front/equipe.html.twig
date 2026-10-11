@@ -23,6 +23,9 @@
                 <button type="button" class="btn btn-outline btn-primary md:btn-sm" data-action="abonnement-agenda#ouvrir">Ajouter à mon agenda</button>
                 </div>
             </div>
+            {% if equipe.club %}
+                <p class="mt-1">Club : <a class="link link-hover link-primary font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
+            {% endif %}
             <p class="mt-1">
                 Reçoit à
                 {{ include('front/fragments/_lieu_lien.html.twig', {nom: equipe.lieu ? equipe.lieu.nom : null, adresse: equipe.lieu ? equipe.lieu.adresse : null}) }}

@@ -1,6 +1,6 @@
 {# Case « score » d'un match (calendrier : tableau ordinateur et cartes mobiles). Variable : partie.
    - match à venir                 : tiret
-   - match passé, score non saisi  : tiret, ou bouton « Saisir » à sa place pour le capitaine ou le responsable de club de l'équipe qui reçoit, et l'admin
+   - match passé, score non saisi  : tiret, ou bouton « Saisir » à sa place pour le capitaine de l'équipe qui reçoit, les responsables du club de l'une ou l'autre équipe, et l'admin
    - score saisi                   : score, plus un crayon discret pour le modifier (mêmes personnes)
    Un forfait (-1 set) s'affiche « F » (filtre sets, ScoreExtension), avec le nom de l'équipe forfait pour les lecteurs d'écran.
    La saisie n'est proposée qu'une fois la date du match passée ; un score déjà saisi reste modifiable à tout moment.
@@ -9,7 +9,12 @@
    met à jour .score_partie-<id>, ces attributs, et bascule l'affichage entre [data-score-action="saisir"] et [data-score-action="modifier"]. #}
 {% set joue = partie.getNbSetGagnantReception is not null and partie.getNbSetGagnantDeplacement is not null %}
 {% set passe = partie.date < date() %}
-{% set autorise = is_granted('ROLE_ADMIN') or (app.user is not null and partie.idEquipeRecoit.id in (equipesSaisieIds|default([]))) %}
+{# Même règle que App\Service\SaisieScoreService::peutSaisir (droitsSaisie fourni par le contrôleur) #}
+{% set droits = droitsSaisie|default({recoit: [], club: []}) %}
+{% set autorise = is_granted('ROLE_ADMIN') or (app.user is not null and (
+    partie.idEquipeRecoit.id in droits.recoit
+    or partie.idEquipeRecoit.id in droits.club
+    or partie.idEquipeDeplace.id in droits.club)) %}
 {% set peutSaisir = autorise and (passe or joue) %}
 <span class="inline-flex items-center justify-center gap-1.5">
     <span class="score_partie-{{ partie.id }}{{ (peutSaisir and not joue) ? ' hidden' : '' }}">

@@ -6,6 +6,7 @@ use App\Entity\Club;
 use App\Entity\Equipe;
 use App\Entity\Lieu;
 use App\Entity\User;
+use App\Form\Front\ClubFicheType;
 use App\Repository\EquipeRepository;
 use App\Repository\LieuRepository;
 use App\Repository\UserRepository;
@@ -14,8 +15,14 @@ use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
+/** Club dans l'admin : la fiche (ClubFicheType) plus les équipes, les gymnases et les responsables. */
 class ClubType extends AbstractType
 {
+    public function getParent(): string
+    {
+        return ClubFicheType::class;
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $multiple = static fn (string $placeholder) => [
@@ -26,11 +33,6 @@ class ClubType extends AbstractType
         ];
 
         $builder
-            ->add('nom', null, ['label' => 'Nom du club'])
-            ->add('nomCourt', null, [
-                'label' => 'Nom court',
-                'help' => 'Affiché entre parenthèses après le nom des équipes du club, ex. EROAK (AOVB).',
-            ])
             ->add('equipes', EntityType::class, [
                 'class' => Equipe::class,
                 'label' => 'Équipes du club',

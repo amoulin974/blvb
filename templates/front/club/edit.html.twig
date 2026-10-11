@@ -1,0 +1,21 @@
+{% extends "base_front.html.twig" %}
+{% block title %}Modifier la fiche du club {{ club.nom }} - Site du BLVB{% endblock %}
+
+{% block body %}
+    <div class="container mx-auto max-w-3xl md:px-4 flex flex-col gap-6">
+        <div>
+            <a class="link link-hover text-sm" href="{{ path('front_club_show', {id: club.id}) }}">← Retour à la fiche du club</a>
+            <h1 class="mt-2 text-3xl uppercase tracking-wide">Modifier la fiche du club</h1>
+            <p class="mt-1 text-(--color-base-content)/80">Les équipes, les gymnases et les responsables du club sont gérés par l'administrateur du championnat.</p>
+        </div>
+        <div class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+            {{ form_start(form, {'attr': {'class': 'space-y-4'}}) }}
+            {{ include('front/club/_champs_fiche.html.twig') }}
+            <div class="flex flex-wrap gap-3">
+                <button class="btn btn-primary">Enregistrer</button>
+                <a class="btn btn-ghost" href="{{ path('front_club_show', {id: club.id}) }}">Annuler</a>
+            </div>
+            {{ form_end(form) }}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,11 @@
+{# Champs de la fiche d'un club (ClubFicheType) : nom long, abréviation, description, lien.
+   Partagé par la page de modification du club (responsables) et le formulaire de l'admin. #}
+{% for champ in [form.nom, form.nomCourt, form.description, form.url] %}
+    <div class="form-control w-full">
+        {{ form_label(champ, null, {'label_attr': {'class': 'label font-semibold'}}) }}
+        {% set classe = champ.vars.block_prefixes[1] == 'textarea' ? 'textarea textarea-bordered w-full' : 'input input-bordered w-full' ~ (champ.vars.name == 'nomCourt' ? ' max-w-xs' : '') %}
+        {{ form_widget(champ, {'attr': {'class': classe}}) }}
+        {% if champ.vars.help %}<p class="mt-1 text-sm text-(--color-base-content)/70">{{ champ.vars.help }}</p>{% endif %}
+        {{ form_errors(champ) }}
+    </div>
+{% endfor %}
