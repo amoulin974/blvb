@@ -44,7 +44,9 @@ class MergeEquipesDoublonsCommand extends Command
         $connection = $this->em->getConnection();
 
         $groupes = $connection->fetchAllAssociative(
-            'SELECT nom, GROUP_CONCAT(id ORDER BY id) AS ids FROM equipe GROUP BY nom HAVING COUNT(*) > 1'
+            // Même nom ET même club : depuis que le nom court du club n'est plus dans le nom enregistré,
+            // deux équipes de clubs différents peuvent porter le même nom sans être des doublons.
+            'SELECT nom, GROUP_CONCAT(id ORDER BY id) AS ids FROM equipe GROUP BY nom, club_id HAVING COUNT(*) > 1'
         );
 
         if ($groupes === []) {

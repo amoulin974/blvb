@@ -66,8 +66,9 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('m.nb_set_gagnant_deplacement AS score_deplacement_match')
             ->addSelect('er.id AS equipe_recoit_id')
             ->addSelect('ed.id AS equipe_deplace_id')
-            ->addSelect('er.nom AS equipe_recoit')
-            ->addSelect('ed.nom AS equipe_deplace')
+            // Noms affichés : nom de l'équipe suivi du nom court de son club (comme Equipe::getNom)
+            ->addSelect("CONCAT(er.nom, CASE WHEN cr.id IS NULL THEN '' ELSE CONCAT(' (', cr.nomCourt, ')') END) AS equipe_recoit")
+            ->addSelect("CONCAT(ed.nom, CASE WHEN cd.id IS NULL THEN '' ELSE CONCAT(' (', cd.nomCourt, ')') END) AS equipe_deplace")
             ->addSelect('l.nom AS lieu_nom')
             ->addSelect('l.adresse AS lieu_adresse')
             ->addSelect('j.id AS journee_id')
@@ -79,6 +80,8 @@ class PartieRepository extends ServiceEntityRepository
             // 🔥 Deux JOIN séparés pour les 2 équipes
             ->join('m.id_equipe_recoit', 'er')     // ou join('m.equipeRecoit', 'er') selon ton mapping
             ->join('m.id_equipe_deplace', 'ed')    // idem
+            ->leftJoin('er.club', 'cr')
+            ->leftJoin('ed.club', 'cd')
 
             ->where('poule.id = :pouleId')
             ->andWhere('er.id = :equipeId OR ed.id = :equipeId')

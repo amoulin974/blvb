@@ -7,6 +7,13 @@
     {{ form_errors(form.nom) }}
 </div>
 
+<div class="form-control w-full">
+    {{ form_label(form.nomCourt, null, {'label_attr': {'class': 'label'}}) }}
+    {{ form_widget(form.nomCourt, {'attr': {'class': 'input input-bordered w-full max-w-xs', 'placeholder': 'ex. AOVB'}}) }}
+    <p class="mt-1 text-sm text-(--color-base-content)/70">{{ form.nomCourt.vars.help }}</p>
+    {{ form_errors(form.nomCourt) }}
+</div>
+
 {% for champ in [form.equipes, form.lieux, form.responsables] %}
     <div class="form-control w-full">
         {{ form_label(champ, null, {'label_attr': {'class': 'label'}}) }}

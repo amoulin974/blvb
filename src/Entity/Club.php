@@ -10,7 +10,9 @@ use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Validator\Constraints as Assert;
 
 /**
- * Club : regroupe des équipes. Le gymnase ne suffit pas à le déduire : plusieurs clubs partagent
+ * Club : regroupe des équipes. Nom long (ex. « Anglet Olympique Volley-Ball ») et nom court, le sigle
+ * affiché entre parenthèses après le nom de ses équipes (ex. « EROAK (AOVB) », voir Equipe::getNom).
+ * Le gymnase ne suffit pas à le déduire : plusieurs clubs partagent
  * parfois un gymnase, et un club peut jouer dans plusieurs gymnases.
  *
  * Les responsables du club peuvent saisir le score des matchs reçus par ses équipes, comme le
@@ -19,6 +21,7 @@ use Symfony\Component\Validator\Constraints as Assert;
  */
 #[ORM\Entity(repositoryClass: ClubRepository::class)]
 #[UniqueEntity(fields: ['nom'], message: 'Un club porte déjà ce nom.')]
+#[UniqueEntity(fields: ['nomCourt'], message: 'Un club porte déjà ce nom court.')]
 class Club
 {
     #[ORM\Id]
@@ -30,6 +33,12 @@ class Club
     #[Assert\NotBlank(message: 'Indiquez le nom du club.')]
     #[Assert\Length(max: 255)]
     private ?string $nom = null;
+
+    /** Sigle affiché après le nom des équipes du club, ex. AOVB */
+    #[ORM\Column(length: 20, unique: true)]
+    #[Assert\NotBlank(message: 'Indiquez le nom court du club.')]
+    #[Assert\Length(max: 20)]
+    private ?string $nomCourt = null;
 
     /** @var Collection<int, Equipe> */
     #[ORM\OneToMany(targetEntity: Equipe::class, mappedBy: 'club')]
@@ -72,6 +81,18 @@ class Club
     public function setNom(string $nom): static
     {
         $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getNomCourt(): ?string
+    {
+        return $this->nomCourt;
+    }
+
+    public function setNomCourt(string $nomCourt): static
+    {
+        $this->nomCourt = trim($nomCourt);
 
         return $this;
     }

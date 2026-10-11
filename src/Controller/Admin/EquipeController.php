@@ -9,6 +9,7 @@ use App\Form\Type\ImportExcelEquipeType;
 use App\Form\EquipeType;
 use App\Repository\EquipeRepository;
 use App\Repository\LieuRepository;
+use App\Service\ClubDepuisNomEquipeService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -100,7 +101,7 @@ final class EquipeController extends AbstractController
         return $this->redirectToRoute('admin_equipe_index', [], Response::HTTP_SEE_OTHER);
     }
     #[Route('/excel/explication', name: 'excel_explication', methods: ['GET', 'POST'])]
-    public function excelExplication(Request $request, EntityManagerInterface $em, LieuRepository $lieuRepo): Response
+    public function excelExplication(Request $request, EntityManagerInterface $em, LieuRepository $lieuRepo, ClubDepuisNomEquipeService $clubDepuisNom): Response
     {
         $form = $this->createForm(ImportExcelEquipeType::class);
         $form->handleRequest($request);
@@ -122,8 +123,10 @@ final class EquipeController extends AbstractController
                     if (!$lieu) continue; // ignorer si lieu introuvable
 
                     $equipe = new Equipe();
-                    $equipe->setNom($nomEquipe);
+                    $equipe->setNom((string) $nomEquipe);
                     $equipe->setLieu($lieu);
+                    // « NOM (AOVB) » : équipe rattachée au club AOVB (créé au besoin), nom enregistré sans le club
+                    $clubDepuisNom->rattacher($equipe);
 
                     $em->persist($equipe);
                 }

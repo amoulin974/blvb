@@ -27,12 +27,16 @@ class ClubType extends AbstractType
 
         $builder
             ->add('nom', null, ['label' => 'Nom du club'])
+            ->add('nomCourt', null, [
+                'label' => 'Nom court',
+                'help' => 'Affiché entre parenthèses après le nom des équipes du club, ex. EROAK (AOVB).',
+            ])
             ->add('equipes', EntityType::class, [
                 'class' => Equipe::class,
                 'label' => 'Équipes du club',
                 'help' => 'Une équipe appartient à un seul club : la choisir ici la retire de son club actuel.',
-                // Le club actuel est rappelé pour repérer une équipe déjà rattachée ailleurs
-                'choice_label' => static fn (Equipe $e) => $e->getNom().($e->getClub() ? ' ('.$e->getClub()->getNom().')' : ''),
+                // Nom affiché, avec le nom court du club actuel : repère une équipe déjà rattachée ailleurs
+                'choice_label' => 'nom',
                 'query_builder' => static fn (EquipeRepository $r) => $r->createQueryBuilder('e')->leftJoin('e.club', 'c')->addSelect('c')->orderBy('e.nom', 'ASC'),
                 'multiple' => true,
                 'required' => false,

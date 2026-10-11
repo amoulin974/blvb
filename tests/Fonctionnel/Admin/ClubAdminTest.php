@@ -47,6 +47,7 @@ final class ClubAdminTest extends TestFonctionnel
         $crawler = $this->client->request('GET', '/admin/club/new');
         $form = $crawler->selectButton('Créer le club')->form();
         $form['club[nom]'] = 'Club créé';
+        $form['club[nomCourt]'] = 'CC';
         $form['club[equipes]']->select([(string) $this->equipe('EQUIPE A2')->getId()]);
         $form['club[lieux]']->select([(string) ChampionnatDeTest::get('equipe.A2')->getLieu()->getId()]);
         $form['club[responsables]']->select([(string) ChampionnatDeTest::compte('cap.a2')->getId()]);
@@ -56,6 +57,7 @@ final class ClubAdminTest extends TestFonctionnel
         $club = $this->club('Club créé');
         self::assertNotNull($club);
         self::assertSame('Club créé', $this->equipe('EQUIPE A2')->getClub()?->getNom());
+        self::assertSame('EQUIPE A2 (CC)', $this->equipe('EQUIPE A2')->getNom());
         self::assertCount(1, $club->getLieux());
         self::assertContains('ROLE_RESPONSABLE_CLUB', ChampionnatDeTest::compte('cap.a2')->getRoles());
     }
@@ -72,7 +74,7 @@ final class ClubAdminTest extends TestFonctionnel
 
         self::assertResponseRedirects('/admin/club/');
         self::assertSame('Club test voisin', $this->equipe('EQUIPE A1')->getClub()?->getNom());
-        self::assertSame(['EQUIPE B1'], $this->club('Club test A1-B1')->getEquipes()->map(fn (Equipe $e) => $e->getNom())->getValues());
+        self::assertSame(['EQUIPE B1'], $this->club('Club test A1-B1')->getEquipes()->map(fn (Equipe $e) => $e->getNomSansClub())->getValues());
     }
 
     #[TestDox('Supprimer un club garde ses équipes, sans club, et retire le rôle de responsable')]

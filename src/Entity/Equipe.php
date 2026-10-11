@@ -79,16 +79,41 @@ class Equipe
         return $this;
     }
 
+    /**
+     * Nom affiché : nom de l'équipe suivi du nom court de son club entre parenthèses, ex. « EROAK (AOVB) ».
+     * Utilisé par tous les affichages (pages, iCal, listes de choix). Le nom enregistré en base, sans le club,
+     * s'obtient par getNomSansClub() ; c'est lui que modifie le formulaire de l'équipe.
+     */
     public function getNom(): ?string
+    {
+        if ($this->nom === null || $this->club?->getNomCourt() === null) {
+            return $this->nom;
+        }
+
+        return $this->nom.' ('.$this->club->getNomCourt().')';
+    }
+
+    /** Nom enregistré en base, sans le nom court du club. */
+    public function setNom(string $nom): static
+    {
+        $this->nom = trim($nom);
+
+        return $this;
+    }
+
+    public function getNomSansClub(): ?string
     {
         return $this->nom;
     }
 
-    public function setNom(string $nom): static
+    public function setNomSansClub(string $nom): static
     {
-        $this->nom = $nom;
+        return $this->setNom($nom);
+    }
 
-        return $this;
+    public function __toString(): string
+    {
+        return (string) $this->getNom();
     }
 
     public function getLieu(): ?Lieu

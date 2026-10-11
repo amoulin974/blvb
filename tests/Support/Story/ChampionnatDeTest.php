@@ -48,8 +48,9 @@ use Zenstruck\Foundry\Story;
  *    sans.equipe         compte sans fiche joueur
  *    resp.club           responsable du club A1-B1, sans fiche joueur
  *
- *  Clubs                       « Club test A1-B1 » : A1 et B1, gymnases G1 et G2, responsable resp.club
- *                              « Club test voisin » : A3, gymnase G1 (partagé)
+ *  Clubs                       « Club test A1-B1 » (CTA) : A1 et B1, gymnases G1 et G2, responsable resp.club
+ *                              « Club test voisin » (CTV) : A3, gymnase G1 (partagé)
+ *                              Noms affichés : « EQUIPE A1 (CTA) » ; en base : « EQUIPE A1 »
  */
 final class ChampionnatDeTest extends Story
 {
@@ -137,9 +138,9 @@ final class ChampionnatDeTest extends Story
         // Clubs : le club A1-B1 a deux gymnases et partage G1 avec le club voisin
         $responsable = UserFactory::createOne(['email' => 'resp.club@blvb.test', 'prenom' => 'Rene', 'nom' => 'Responsable']);
         $this->addState('compte.resp.club', $responsable);
-        $club = ClubFactory::createOne(['nom' => 'Club test A1-B1', 'lieux' => [$g1, $g2],
+        $club = ClubFactory::createOne(['nom' => 'Club test A1-B1', 'nomCourt' => 'CTA', 'lieux' => [$g1, $g2],
             'equipes' => [$equipes['A1'], $equipes['B1']], 'responsables' => [$responsable]]);
-        $voisin = ClubFactory::createOne(['nom' => 'Club test voisin', 'lieux' => [$g1], 'equipes' => [$equipes['A3']]]);
+        $voisin = ClubFactory::createOne(['nom' => 'Club test voisin', 'nomCourt' => 'CTV', 'lieux' => [$g1], 'equipes' => [$equipes['A3']]]);
         $this->addState('club', $club);
         $this->addState('club.voisin', $voisin);
     }

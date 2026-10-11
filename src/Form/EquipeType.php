@@ -15,7 +15,8 @@ class EquipeType extends AbstractType
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
-            ->add('nom')
+            // Nom enregistré, sans le nom court du club (ajouté à l'affichage : Equipe::getNom)
+            ->add('nomSansClub', null, ['label' => "Nom de l'équipe"])
             ->add('lieu', EntityType::class, [
                 'class' => Lieu::class,
                 'choice_label' => 'nom',

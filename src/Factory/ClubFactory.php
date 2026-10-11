@@ -21,6 +21,7 @@ final class ClubFactory extends PersistentObjectFactory
     {
         return [
             'nom' => 'Club '.self::faker()->unique()->city(),
+            'nomCourt' => strtoupper(self::faker()->unique()->lexify('???')),
         ];
     }
 }
