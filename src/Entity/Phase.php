@@ -11,6 +11,9 @@ use App\Enum\PhaseType;
 #[ORM\Entity(repositoryClass: PhaseRepository::class)]
 class Phase
 {
+    /** Valeur calculée pour la page de la saison (SaisonController::show), non enregistrée en base. */
+    public ?bool $cloturable = null;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

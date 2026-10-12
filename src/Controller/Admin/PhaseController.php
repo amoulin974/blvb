@@ -135,7 +135,9 @@ final class PhaseController extends AbstractController
     #[Route('/{id}/optimisertout', name: 'optimisertout', methods: ['POST'])]
     public function optimiserTout(Request $request, Phase $phase, PartieService $partieService): Response
     {
-        if ($this->isCsrfTokenValid('optimisertout'.$phase->getId(), $request->getPayload()->getString('_token'))) {
+        if (!($this->isCsrfTokenValid('optimisertout'.$phase->getId(), $request->getPayload()->getString('_token')))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } else {
             $rapport = $partieService->creerCalendrierOptimise($phase);
 
             foreach ($rapport as $ligne) {

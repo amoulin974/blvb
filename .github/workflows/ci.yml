@@ -4,7 +4,9 @@ name: CI
 
 on:
   push:
-    branches: ['**']
+    # prod = main + configuration du serveur (préfixe /blvb) : les tests y échoueraient par construction ;
+    # ils sont exécutés sur main et sur les branches de travail.
+    branches: ['**', '!prod']
   pull_request:
     branches: [main]
   schedule:

@@ -11,6 +11,16 @@ use Doctrine\ORM\Mapping as ORM;
 #[ORM\Entity(repositoryClass: LieuRepository::class)]
 class Lieu
 {
+    /**
+     * Valeurs calculées pour le calendrier par gymnase (FrontController::calendrierLieu), non enregistrées en base.
+     *
+     * @var array<string, mixed>
+     */
+    public array $partiesByDate = [];
+
+    /** @var array<string, mixed> */
+    public array $analysesByDate = [];
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

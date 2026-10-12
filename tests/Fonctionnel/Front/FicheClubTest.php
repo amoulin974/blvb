@@ -370,4 +370,22 @@ final class FicheClubTest extends TestFonctionnel
 
         self::assertSame('Club test A1-B1', $this->club()->getNom());
     }
+
+    #[TestDox('« Mon profil » liste les clubs dont le compte est responsable cette saison, en lien vers leur fiche')]
+    public function test_mon_profil(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', '/mon-profil');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Mes clubs (responsable)');
+        $lien = $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club')->getId().'"]');
+        self::assertCount(1, $lien);
+        self::assertStringContainsString('Club test A1-B1 (CTA)', $lien->text());
+        self::assertCount(0, $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club.voisin')->getId().'"]'), 'pas les autres clubs');
+
+        $this->connecter('cap.a1');
+        $this->client->request('GET', '/mon-profil');
+        self::assertSelectorTextNotContains('body', 'Mes clubs (responsable)', 'capitaine non responsable');
+    }
 }

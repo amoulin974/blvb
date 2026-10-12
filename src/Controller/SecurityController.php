@@ -2,6 +2,8 @@
 
 namespace App\Controller;
 
+use Symfony\Component\HttpFoundation\RedirectResponse;
+
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
@@ -30,9 +32,10 @@ class SecurityController extends AbstractController
         throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
     }
 
+    // Ancienne adresse (reste d'un modèle, qui renvoyait une erreur 500) : redirigée vers la demande de nouveau mot de passe
     #[Route(path: '/forgot-password', name: 'forgot_password')]
-    public function forgot_password(): void
+    public function forgot_password(): RedirectResponse
     {
-        throw new \LogicException('This method can be blank - it will be intercepted by the logout key on your firewall.');
+        return $this->redirectToRoute('app_forgot_password_request', [], Response::HTTP_MOVED_PERMANENTLY);
     }
 }
