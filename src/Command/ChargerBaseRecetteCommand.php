@@ -233,7 +233,7 @@ class ChargerBaseRecetteCommand extends Command
         $this->em->flush();
 
         $io->section('Clubs et responsables de club');
-        $this->creerClubs($equipes, $lieux, $saison);
+        $this->creerClubs($equipes, $lieux, $saison, $archive);
         $this->em->flush();
         $this->em->clear();
 
@@ -411,6 +411,7 @@ class ChargerBaseRecetteCommand extends Command
         $this->creerUtilisateur('autre.compte', 'Autre', 'Compte');
         $this->creerUtilisateur('resp.arr', 'Rémi', 'Responsable'); // responsable du club ARR, sans fiche joueur
         $this->creerUtilisateur('resp.double', 'Sylvie', 'Deuxclubs'); // responsable des clubs CBT et Landes
+        $this->creerUtilisateur('resp.ancien', 'Paul', 'Ancien'); // responsable du club CBT pour la saison archivée seulement
 
         // --- Joueurs particuliers --------------------------------------------------------------------------
         $this->joueurs['a1'] = $this->joueurAvecCompte('joueur.a1', 'Jean', 'Premier', '06 10 10 10 10');
@@ -533,8 +534,12 @@ class ChargerBaseRecetteCommand extends Command
     // Clubs
     // ---------------------------------------------------------------------------------------------------------
 
-    /** Responsables désignés pour la saison de test (en cours). @param array<string, Equipe> $equipes @param array<string, Lieu> $lieux */
-    private function creerClubs(array $equipes, array $lieux, Saison $saison): void
+    /**
+     * Responsables désignés pour la saison de test (en cours) ; resp.ancien seulement pour l'archive (club CBT).
+     *
+     * @param array<string, Equipe> $equipes @param array<string, Lieu> $lieux
+     */
+    private function creerClubs(array $equipes, array $lieux, Saison $saison, Saison $archive): void
     {
         foreach (self::CLUBS as $nomCourt => $def) {
             $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription($def['description'])->setUrl($def['url']);
@@ -545,6 +550,9 @@ class ChargerBaseRecetteCommand extends Command
                 $club->addEquipe($equipes[$code]);
             }
             $club->setResponsables($saison, array_map(fn (string $compte) => $this->utilisateurs[$compte], $def['responsables']));
+            if ($nomCourt === 'CBT') {
+                $club->setResponsables($archive, [$this->utilisateurs['resp.ancien']]); // droits sur l'archive seulement
+            }
             if ($def['logo']) {
                 $this->clubImages->remplacer($club, $this->logoDeTest());
             }
@@ -737,6 +745,7 @@ class ChargerBaseRecetteCommand extends Command
             ['user.nonverifie@blvb.test', 'Compte dont l\'e-mail n\'est pas vérifié'],
             ['resp.arr@blvb.test', 'Responsable du club ARR (Arrats, Kosko alai, Sokoa), sans fiche joueur'],
             ['resp.double@blvb.test', 'Responsable de DEUX clubs : CBT et Landes'],
+            ['resp.ancien@blvb.test', 'Responsable de CBT pour la saison 2025-2026 test SEULEMENT : saisit les matchs d\'Adour de l\'archive, rien en 2026-2027'],
         ]);
         $io->section('Clubs');
         $io->table(['Abréviation', 'Club', 'Équipes', 'Responsables', 'Particularité'], [

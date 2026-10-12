@@ -112,7 +112,7 @@ tests/
 | Gymnases | G1 (1 créneau mercredi 20:30, 1 terrain, priorité 1), G2 (2 créneaux, 2 terrains), G3 (aucun créneau) |
 | Équipes | A1–A4, B1–B3 ; A4 sans gymnase. Noms enregistrés sans club (« EQUIPE A1 »), affichés avec l'abréviation du club (« EQUIPE A1 (CTA) ») |
 | Clubs | « Club test A1-B1 » (CTA) : A1 et B1 (deux poules), gymnases G1 et G2, responsable `resp.club` · « Club test voisin » (CTV) : A3, gymnase G1 (partagé) · A2, A4, B2, B3 sans club |
-| Journées / matchs | créés explicitement (indépendants du générateur, testé à part au lot 4) : journée 1 la semaine passée (A1–A2 hier **sans score** = match de référence, A3–A4 3–1, B1–B2 3–2), journée 2 la semaine prochaine |
+| Journées / matchs | créés explicitement (indépendants du générateur, testé à part au lot 4). Poule A : journée 1 il y a deux semaines (A2–A1 1–3 : **une équipe du club CTA à l'extérieur, score saisi** ; A4–A3 3–0), journée 2 la semaine passée (A1–A2 hier **sans score** = match de référence, A3–A4 3–1), journée 3 la semaine prochaine (A2–A3, A4–A1). Poule B : journée 1 (B1–B2 3–2) |
 | Comptes | `admin` (ROLE_ADMIN) · `cap.a1` capitaine de A1 (qui reçoit le match de référence) · `cap.a2` capitaine de A2 (qui se déplace) · `cap.b1` capitaine de B1 (autre poule) · `joueur.a1` simple joueur de A1 · `joueur.a2` simple joueur de A2 · `cap.a1.precedente` capitaine de A1 la saison précédente seulement · `sans.equipe` compte sans fiche joueur · `resp.club` responsable du club CTA **pour la saison courante**, sans fiche joueur (rôle déduit ROLE_RESPONSABLE_CLUB) |
 | Match de référence | `A1 reçoit A2`, joué hier, sans score |
 
@@ -227,7 +227,7 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 **SCO-09 — Classement mis à jour** après chaque saisie (vérifie la ligne `Classement` des deux équipes).
 **SCO-10 — Match à venir** : saisie par un capitaine sur un match futur → ⚠ *règle à arbitrer* (l'interface ne propose « Saisir » qu'après la date ; l'API accepte) (§8, A5).
 **SCO-11** — Match inexistant → 404.
-**SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur, aucun sur les autres (✅ en partie) ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
+**SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
 
 ### 4.3 Calcul du classement — `Integration/Service/ClassementServiceTest` (P0)
 
@@ -386,6 +386,7 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **CLU-03** ✅ — Abréviation : avertissement sous le champ (nombre d'équipes, nom actuel) ; après changement, message avec le nouveau nom des équipes.
 **CLU-04** ✅ — Liste `/clubs` triée par nom long, cartes vers les fiches, nombre d'équipes engagées dans la saison ; lien dans le menu « Le championnat ».
 **CLU-05** ✅ — « Qui sommes-nous ? » : clubs tirés de la base, en lien vers leurs fiches.
+**CLU-07** ✅ — « Mon profil » du responsable : rubrique « Mes clubs (responsable) » avec ses seuls clubs de la saison en cours, en lien vers leur fiche ; absente pour un capitaine non responsable.
 **CLU-06** ✅ — Rôle `ROLE_RESPONSABLE_CLUB` déduit d'une désignation **pour la saison en cours** (présent pour `resp.club`, absent pour `cap.a1` et pour un responsable d'une saison précédente) ; retiré quand le club est supprimé.
 
 **Administration**
