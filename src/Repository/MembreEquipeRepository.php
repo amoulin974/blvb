@@ -82,7 +82,8 @@ class MembreEquipeRepository extends ServiceEntityRepository
             ->innerJoin('m.joueur', 'j')
             ->andWhere('j.user = :user')
             ->andWhere('m.capitaine = true')
-            ->setParameter('user', $user);
+            ->setParameter('user', $user)
+            ->orderBy('e.nom', 'ASC'); // ordre stable : « Mon équipe » par défaut = la première par nom
 
         if ($saison !== null) {
             $qb->andWhere('m.saison = :saison')->setParameter('saison', $saison);
