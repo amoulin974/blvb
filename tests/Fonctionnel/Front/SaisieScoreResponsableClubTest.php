@@ -213,4 +213,46 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         $this->client->request('GET', '/club/'.$club->getId().'/modifier');
         self::assertNotSame(200, $this->client->getResponse()->getStatusCode(), 'après retrait : fiche du club refusée');
     }
+
+    /** Nombre de boutons de saisie (« Saisir » ou crayon) d'un match dans la page. */
+    private function boutons(\Symfony\Component\DomCrawler\Crawler $crawler, string $match, string $action): int
+    {
+        return $crawler->filter(sprintf('[data-partie-id="%d"][data-score-action="%s"]', ChampionnatDeTest::get($match)->getId(), $action))->count();
+    }
+
+    #[TestDox('Calendrier : crayon de modification pour le responsable sur un match joué à l\'extérieur par une équipe de son club ; pas pour le capitaine qui se déplace')]
+    public function test_crayon_match_a_l_exterieur(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', '/calendrier');
+        self::assertGreaterThan(0, $this->boutons($crawler, 'match.A2-A1', 'modifier'), 'responsable du club de A1, qui se déplace');
+
+        $this->connecter('cap.a2');
+        $crawler = $this->client->request('GET', '/calendrier');
+        self::assertGreaterThan(0, $this->boutons($crawler, 'match.A2-A1', 'modifier'), 'capitaine de A2, qui reçoit');
+
+        $this->connecter('cap.a1');
+        $crawler = $this->client->request('GET', '/calendrier');
+        self::assertSame(0, $this->boutons($crawler, 'match.A2-A1', 'modifier'), 'capitaine de A1, qui se déplace : pas de crayon');
+
+        // Et l'enregistrement correspondant est accepté pour le responsable
+        $this->connecter('resp.club');
+        $this->saisir(ChampionnatDeTest::get('match.A2-A1'), '2', '3');
+        self::assertResponseIsSuccessful();
+    }
+
+    #[TestDox('Accueil : bouton « Saisir » pour le responsable sur le match passé sans score d\'une équipe de son club')]
+    public function test_accueil(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', '/');
+
+        self::assertResponseIsSuccessful();
+        self::assertGreaterThan(0, $this->boutons($crawler, 'match.reference', 'saisir'), 'A1 reçoit A2, sans score');
+        self::assertSame(0, $this->boutons($crawler, 'match.A3-A4', 'modifier'), 'A3 (autre club) reçoit A4 (sans club)');
+
+        $this->connecter('joueur.a1');
+        $crawler = $this->client->request('GET', '/');
+        self::assertSame(0, $this->boutons($crawler, 'match.reference', 'saisir'), 'simple joueur : aucun bouton');
+    }
 }

@@ -15,15 +15,15 @@ class ImportExcelUserType extends AbstractType
             'mapped' => false,
             'required' => true,
             'constraints' => [
-                new File([
-                    'maxSize' => '5M',
-                    'mimeTypes' => [
+                new File(
+                    maxSize: '5M',
+                    mimeTypes: [
                         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
                         'application/vnd.ms-excel',
                         'text/csv',
                     ],
-                    'mimeTypesMessage' => 'Merci d\'envoyer un fichier Excel ou csv valide',
-                ])
+                    mimeTypesMessage: 'Merci d\'envoyer un fichier Excel ou csv valide',
+                ),
             ]
         ]);
     }

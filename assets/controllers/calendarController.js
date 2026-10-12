@@ -356,7 +356,8 @@ export default class extends Controller {
                 if (suprrimer){
                     suprrimer.addEventListener('click', (e)=>{
                         fetch(this.partieApiUrlValue + '/' + info.event.id,{
-                            method: "DELETE"
+                            method: "DELETE",
+                            headers: { 'X-CSRF-TOKEN': this.csrfTokenValue }
                         })
                             .then(resp => resp.json())
                             .then(json => {

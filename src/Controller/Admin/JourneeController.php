@@ -19,6 +19,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/journee', name: 'admin_journee_')]
 final class JourneeController extends AbstractController
 {
+    use JetonApiTrait;
     use SuppressionTrait;
 
     #[Route(name: 'index', methods: ['GET'])]
@@ -85,11 +86,11 @@ final class JourneeController extends AbstractController
 
     //Crée les journées pour une poule
     #[Route('/{id}/createjournee', name: 'createjournee', methods: ['POST'])]
-    public function createJournee(Poule $poule, JourneeService $journeeService): Response
+    public function createJournee(Request $request, Poule $poule, JourneeService $journeeService): Response
     {
-        $error = $journeeService->creerJournees($poule);
-
-        if ($error) {
+        if (!$this->isCsrfTokenValid('createjournee'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } elseif ($error = $journeeService->creerJournees($poule)) {
             $this->addFlash('error', $error);
         }
 
@@ -103,7 +104,9 @@ final class JourneeController extends AbstractController
     #[Route('/{id}/deleteall', name: 'deleteall', methods: ['POST'])]
     public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('deleteall'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+        if (!($this->isCsrfTokenValid('deleteall'.$poule->getId(), $request->getPayload()->getString('_token')))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } else {
             foreach ($poule->getJournees() as $journee) {
                 $entityManager->remove($journee);
             }
@@ -152,6 +155,9 @@ final class JourneeController extends AbstractController
     #[Route('/{poule}/api/{id}', name: 'api_update', methods: ['PUT'])]
     public function apiJourneesUpdate(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $em): JsonResponse
     {
+        if ($refus = $this->refusSansJeton($request)) {
+            return $refus;
+        }
 
         $data = json_decode($request->getContent(), true);
         if (isset($data['datedebut'])) {
@@ -176,6 +182,9 @@ final class JourneeController extends AbstractController
     #[Route('/{poule}/api/{id}', name: 'api_delete', methods: ['DELETE'])]
     public function apiJourneesDelete(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $em): JsonResponse
     {
+        if ($refus = $this->refusSansJeton($request)) {
+            return $refus;
+        }
         //On supprime la journée
         $em->remove($journee);
         $em->flush();
@@ -202,6 +211,9 @@ final class JourneeController extends AbstractController
     #[Route('/{poule}/api', name: 'api_add', methods: ['POST'])]
     public function apiJourneesAdd(Request $request, Poule $poule, EntityManagerInterface $em): JsonResponse
     {
+        if ($refus = $this->refusSansJeton($request)) {
+            return $refus;
+        }
         $data = json_decode($request->getContent(), true);
         $journee = new Journee();
         if (isset($data['datedebut'])) {

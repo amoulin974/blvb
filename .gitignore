@@ -24,3 +24,6 @@
 
 # Fichiers envoyés par les utilisateurs (images des clubs)
 /public/uploads/
+
+# Généré automatiquement par Symfony 7.4 (formes de configuration pour l’éditeur)
+/config/reference.php

@@ -36,9 +36,11 @@ use function Zenstruck\Foundry\Persistence\save;
  *  Phase 2 (championnat)       vide, ordre 2 (pour la clôture)
  *  Gymnases                    G1 : mercredi 20:30, 1 terrain · G2 : lundi et jeudi, 2 terrains · G3 : aucun créneau
  *                              A4 n'a pas de gymnase
- *  Journée 1 (semaine passée)  A1 reçoit A2, hier, SANS score  ← match de référence
- *                              A3 reçoit A4, hier, 3-1          B1 reçoit B2, hier, 3-2
- *  Journée 2 (semaine à venir) A2 reçoit A3, A4 reçoit A1 (sans score)
+ *  Poule A, journée 1 (il y a deux semaines)  A2 reçoit A1, 1-3 (A1 du club CTA à l'extérieur, score saisi)
+ *                                             A4 reçoit A3, 3-0
+ *  Journée 2 (semaine passée)  A1 reçoit A2, hier, SANS score  ← match de référence
+ *                              A3 reçoit A4, hier, 3-1          (poule B, journée 1 : B1 reçoit B2, hier, 3-2)
+ *  Journée 3 (semaine à venir) A2 reçoit A3, A4 reçoit A1 (sans score)
  *
  *  Comptes (mot de passe non utilisable : se connecter avec KernelBrowser::loginUser) :
  *    admin               administrateur
@@ -111,15 +113,21 @@ final class ChampionnatDeTest extends Story
         $this->addState('poule.B', $pouleB);
 
         // Journées et matchs
-        $j1A = JourneeFactory::createOne(['poule' => $pouleA, 'numero' => 1,
+        $j0A = JourneeFactory::createOne(['poule' => $pouleA, 'numero' => 1,
+            'date_debut' => new \DateTimeImmutable('monday last week')->modify('-7 days'), 'date_fin' => new \DateTimeImmutable('sunday last week')->modify('-7 days')]);
+        $j1A = JourneeFactory::createOne(['poule' => $pouleA, 'numero' => 2,
             'date_debut' => new \DateTimeImmutable('monday last week'), 'date_fin' => new \DateTimeImmutable('sunday last week')]);
-        $j2A = JourneeFactory::createOne(['poule' => $pouleA, 'numero' => 2,
+        $j2A = JourneeFactory::createOne(['poule' => $pouleA, 'numero' => 3,
             'date_debut' => new \DateTimeImmutable('monday next week'), 'date_fin' => new \DateTimeImmutable('sunday next week')]);
         $j1B = JourneeFactory::createOne(['poule' => $pouleB, 'numero' => 1,
             'date_debut' => new \DateTimeImmutable('monday last week'), 'date_fin' => new \DateTimeImmutable('sunday last week')]);
 
         $hier = new \DateTimeImmutable('yesterday 20:30');
         $dansUneSemaine = new \DateTimeImmutable('+7 days 20:30');
+        // Il y a deux semaines : A1 (club CTA) joue À L'EXTÉRIEUR, score saisi (crayon pour le responsable du club)
+        $ilYaDeuxSemaines = new \DateTimeImmutable('wednesday last week 20:30')->modify('-7 days');
+        $this->addState('match.A2-A1', $this->match($j0A, $equipes['A2'], $equipes['A1'], $ilYaDeuxSemaines, [1, 3]));
+        $this->match($j0A, $equipes['A4'], $equipes['A3'], $ilYaDeuxSemaines, [3, 0]);
         $this->addState('match.reference', $this->match($j1A, $equipes['A1'], $equipes['A2'], $hier));
         $this->addState('match.A3-A4', $this->match($j1A, $equipes['A3'], $equipes['A4'], $hier, [3, 1]));
         $this->addState('match.B1-B2', $this->match($j1B, $equipes['B1'], $equipes['B2'], $hier, [3, 2]));

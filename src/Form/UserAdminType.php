@@ -41,7 +41,7 @@ class UserAdminType extends AbstractType
                 'help' => PasswordPolicy::HELP_TEXT,
                 'attr' => ['autocomplete' => 'new-password'],
                 'constraints' => [
-                    ...($isEdit ? [] : [new NotBlank(['message' => 'Veuillez entrer un mot de passe'])]),
+                    ...($isEdit ? [] : [new NotBlank(message: 'Veuillez entrer un mot de passe')]),
                     // Groupe "password_change" : validé uniquement si un nouveau mot de passe est réellement saisi
                     // (en édition, un champ vide signifie "ne pas modifier le mot de passe").
                     ...PasswordPolicy::constraints(['password_change']),

@@ -22,9 +22,6 @@ return [
     '@symfony/stimulus-bundle' => [
         'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
     ],
-    '@hotwired/turbo' => [
-        'version' => '7.3.0',
-    ],
     'tom-select/dist/css/tom-select.css' => [
         'version' => '2.5.1',
         'type' => 'css',
@@ -53,14 +50,16 @@ return [
         'version' => '2.5.1',
         'type' => 'css',
     ],
-    'moment' => [
-        'version' => '2.30.1',
-    ],
-    'moment/locale/fr' => [
-        'version' => '2.30.1',
-    ],
     'tocbot' => [
         'version' => '4.36.4',
     ],
-
+    '@hotwired/turbo' => [
+        'version' => '8.0.23',
+    ],
+    'moment' => [
+        'version' => '2.31.0',
+    ],
+    'moment/locale/fr' => [
+        'version' => '2.31.0',
+    ],
 ];

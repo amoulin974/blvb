@@ -112,7 +112,7 @@ tests/
 | Gymnases | G1 (1 créneau mercredi 20:30, 1 terrain, priorité 1), G2 (2 créneaux, 2 terrains), G3 (aucun créneau) |
 | Équipes | A1–A4, B1–B3 ; A4 sans gymnase. Noms enregistrés sans club (« EQUIPE A1 »), affichés avec l'abréviation du club (« EQUIPE A1 (CTA) ») |
 | Clubs | « Club test A1-B1 » (CTA) : A1 et B1 (deux poules), gymnases G1 et G2, responsable `resp.club` · « Club test voisin » (CTV) : A3, gymnase G1 (partagé) · A2, A4, B2, B3 sans club |
-| Journées / matchs | créés explicitement (indépendants du générateur, testé à part au lot 4) : journée 1 la semaine passée (A1–A2 hier **sans score** = match de référence, A3–A4 3–1, B1–B2 3–2), journée 2 la semaine prochaine |
+| Journées / matchs | créés explicitement (indépendants du générateur, testé à part au lot 4). Poule A : journée 1 il y a deux semaines (A2–A1 1–3 : **une équipe du club CTA à l'extérieur, score saisi** ; A4–A3 3–0), journée 2 la semaine passée (A1–A2 hier **sans score** = match de référence, A3–A4 3–1), journée 3 la semaine prochaine (A2–A3, A4–A1). Poule B : journée 1 (B1–B2 3–2) |
 | Comptes | `admin` (ROLE_ADMIN) · `cap.a1` capitaine de A1 (qui reçoit le match de référence) · `cap.a2` capitaine de A2 (qui se déplace) · `cap.b1` capitaine de B1 (autre poule) · `joueur.a1` simple joueur de A1 · `joueur.a2` simple joueur de A2 · `cap.a1.precedente` capitaine de A1 la saison précédente seulement · `sans.equipe` compte sans fiche joueur · `resp.club` responsable du club CTA **pour la saison courante**, sans fiche joueur (rôle déduit ROLE_RESPONSABLE_CLUB) |
 | Match de référence | `A1 reçoit A2`, joué hier, sans score |
 
@@ -140,20 +140,20 @@ Chaque cas a un identifiant stable (repris dans le nom de la classe ou en `#[Tes
 
 ### 4.1 Sécurité et droits d'accès — `Fonctionnel/Securite` (P0)
 
-**SEC-01 — Garde-fou automatique sur tout `/admin`** *(le test le plus important de la suite)*
+**SEC-01 — Garde-fou automatique sur tout `/admin`** *(le test le plus important de la suite)* ✅ *`Securite/AccesAdminTest`* — vérifié : réintroduire la faille `^/Admin` fait échouer 5 tests sur 6. Le responsable de club est ajouté aux profils refusés. Pour l'admin, seules les routes GET sont parcourues (les actions sont couvertes par SEC-08).
 Le test lit la table de routage (`router->getRouteCollection()`), retient **toutes** les routes dont le chemin commence par `/admin`, et pour chacune (paramètres remplis avec des identifiants de la story) :
 - anonyme → redirection vers `/login` (302) ;
 - `joueur.a1` (ROLE_USER) → 403 ;
 - `admin` → tout sauf 403/302-vers-login (200, 302 interne, 404 si la ressource n'existe pas, 405 si la méthode ne correspond pas).
 Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une liste blanche explicite (vide aujourd'hui) documente les éventuelles exceptions.
 
-**SEC-02 — Règle `access_control`** : `config/packages/security.yaml` contient une règle couvrant `/admin` exigeant `ROLE_ADMIN` (test qui lit la configuration chargée, pour empêcher le retour de `^/Admin`). Accepter `^/admin` (main) et `^/(blvb/)?admin` (branche prod, servie sous le préfixe /blvb).
+**SEC-02 — Règle `access_control`** ✅ : `config/packages/security.yaml` contient une règle couvrant `/admin` exigeant `ROLE_ADMIN` (test qui lit la configuration chargée, pour empêcher le retour de `^/Admin`). Accepter `^/admin` (main) et `^/(blvb/)?admin` (branche prod, servie sous le préfixe /blvb).
 
-**SEC-03 — Pages publiques** : `/`, `/equipes`, `/equipe/{id}`, `/calendrier`, `/calendrierlieu`, `/classement`, `/reglement`, `/qui-sommes-nous`, `/clubs`, `/club/{id}`, ICS → 200 pour anonyme, joueur, capitaine, responsable de club, admin.
+**SEC-03 — Pages publiques** ✅ *`Securite/PagesPubliquesTest`* : `/`, `/equipes`, `/equipe/{id}`, `/calendrier`, `/calendrierlieu`, `/classement`, `/reglement`, `/qui-sommes-nous`, `/clubs`, `/club/{id}`, ICS → 200 pour anonyme, joueur, capitaine, responsable de club, admin.
 
-**SEC-04 — Pages réservées aux connectés** : `/mon-profil` → anonyme redirigé vers la connexion ; connecté → 200.
+**SEC-04 — Pages réservées aux connectés** ✅ : `/mon-profil` → anonyme redirigé vers la connexion ; connecté → 200.
 
-**SEC-05 — Composition côté site** `/equipe/{e}/saison/{s}/composition` (GET et les 4 POST) :
+**SEC-05 — Composition côté site** `/equipe/{e}/saison/{s}/composition` (GET et les 4 POST) ✅ *`Securite/CompositionAccesTest`* (le responsable de club est aussi refusé : il ne gère pas les compositions) :
 
 | Profil | Attendu |
 |---|---|
@@ -164,15 +164,15 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 | `cap.a1` | 200 |
 | `admin` | 200 |
 
-**SEC-06 — Composition côté admin** `/admin/equipe/{e}/saison/{s}/composition` : `cap.a1` → 403 (même s'il a les droits côté site) ; `admin` → 200.
+**SEC-06 — Composition côté admin** ✅ *(couvert par SEC-01)* `/admin/equipe/{e}/saison/{s}/composition` : `cap.a1` → 403 (même s'il a les droits côté site) ; `admin` → 200.
 
-**SEC-07 — Manipulation d'identifiants** : retirer / nommer capitaine un `MembreEquipe` d'une **autre** équipe ou saison en changeant l'identifiant dans l'URL → 404, aucune modification en base.
+**SEC-07 — Manipulation d'identifiants** ✅ : retirer / nommer capitaine un `MembreEquipe` d'une **autre** équipe ou saison en changeant l'identifiant dans l'URL → 404, aucune modification en base.
 
-**SEC-08 — CSRF sur les actions qui modifient** : pour chaque formulaire POST de l'admin (suppressions, clôture, favori, composition), un envoi **sans jeton** ou avec un jeton faux ne modifie rien et affiche « La page a expiré… ». Pour l'API de score : voir SCO-01.
+**SEC-08 — CSRF sur les actions qui modifient** ✅ *`Securite/JetonsAdminTest`* (20 actions de l'admin, sans jeton et avec un jeton faux ; API du calendrier de l'admin : 403 sans jeton, acceptée avec celui de la page) : pour chaque formulaire POST de l'admin (suppressions, clôture, favori, composition), un envoi **sans jeton** ou avec un jeton faux ne modifie rien et affiche « La page a expiré… ». Pour l'API de score : voir SCO-01.
 
-**SEC-09 — Connexion** : identifiants faux → message en français, pas de fuite (« identifiants invalides » sans préciser lequel) ; après connexion admin, le lien « Administration » est présent ; pour un joueur, absent.
+**SEC-09 — Connexion** ✅ *`Securite/ConnexionTest`* : identifiants faux → message en français, pas de fuite (« identifiants invalides » sans préciser lequel) ; après connexion admin, le lien « Administration » est présent ; pour un joueur, absent.
 
-**SEC-10 — Déconnexion** : `/logout` termine la session ; une page admin redemande la connexion.
+**SEC-10 — Déconnexion** ✅ : `/logout` termine la session ; une page admin redemande la connexion.
 
 **SEC-11 — Fiche du club** `/club/{id}/modifier` (voter `CLUB_MODIFIER`) ✅ *`FicheClubTest`* :
 
@@ -227,7 +227,7 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 **SCO-09 — Classement mis à jour** après chaque saisie (vérifie la ligne `Classement` des deux équipes).
 **SCO-10 — Match à venir** : saisie par un capitaine sur un match futur → ⚠ *règle à arbitrer* (l'interface ne propose « Saisir » qu'après la date ; l'API accepte) (§8, A5).
 **SCO-11** — Match inexistant → 404.
-**SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur, aucun sur les autres (✅ en partie) ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
+**SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
 
 ### 4.3 Calcul du classement — `Integration/Service/ClassementServiceTest` (P0)
 
@@ -362,9 +362,9 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 
 ### 4.13 Fumée : toutes les pages s'affichent — `Fonctionnel/Fumee` (P2, très rentable)
 
-**FUM-01** — Pour chaque route **GET** de l'application (lue dans le routeur, paramètres remplis depuis la story), avec le profil adéquat (anonyme pour le site, admin pour `/admin`) : statut 200 (ou 302 attendu), **aucune erreur Twig**, aucune « Notice/Deprecation ».
+**FUM-01** ✅ *`Fumee/PagesTest`* (visiteur, capitaine, responsable de club ; les pages /admin sont parcourues par SEC-01) — Pour chaque route **GET** de l'application (lue dans le routeur, paramètres remplis depuis la story), avec le profil adéquat (anonyme pour le site, admin pour `/admin`) : statut 200 (ou 302 attendu), **aucune erreur Twig**, aucune « Notice/Deprecation ».
 Couvre d'un coup les erreurs de gabarit (variables manquantes en `strict_variables`, gymnase absent → page 500 corrigée en octobre 2026).
-**FUM-02** — Même parcours sur une saison **vide** (sans phase) et sur une base **sans aucune saison** (`/aucune-saison`).
+**FUM-02** ✅ *`Fumee/PagesTest`, `Fumee/SansSaisonTest`* — Même parcours sur une saison **vide** (sans phase) et sur une base **sans aucune saison** (`/aucune-saison`).
 
 ### 4.14 Bout en bout dans un navigateur — `tests/e2e` (Playwright, lot 5, facultatif)
 
@@ -386,6 +386,7 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **CLU-03** ✅ — Abréviation : avertissement sous le champ (nombre d'équipes, nom actuel) ; après changement, message avec le nouveau nom des équipes.
 **CLU-04** ✅ — Liste `/clubs` triée par nom long, cartes vers les fiches, nombre d'équipes engagées dans la saison ; lien dans le menu « Le championnat ».
 **CLU-05** ✅ — « Qui sommes-nous ? » : clubs tirés de la base, en lien vers leurs fiches.
+**CLU-07** ✅ — « Mon profil » du responsable : rubrique « Mes clubs (responsable) » avec ses seuls clubs de la saison en cours, en lien vers leur fiche ; absente pour un capitaine non responsable.
 **CLU-06** ✅ — Rôle `ROLE_RESPONSABLE_CLUB` déduit d'une désignation **pour la saison en cours** (présent pour `resp.club`, absent pour `cap.a1` et pour un responsable d'une saison précédente) ; retiré quand le club est supprimé.
 
 **Administration**
@@ -474,7 +475,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 |---|---|---|---|
 | **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
 | **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 77 tests verts (branche `clubs`) | fait le 11/10/2026 |
-| **1 — Accès** | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la CI | 0,5 j |
+| **1 — Accès** ✅ | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la suite (vérifié) ; 108 tests verts | fait le 12/10/2026 |
 | **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |
 | **4 — Calculs et fonctions annexes** | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-* ; job de nuit | Génération de calendrier couverte | 1,5 j |
@@ -497,6 +498,16 @@ Ces points ont été trouvés en lisant le code pour écrire ces spécifications
 | A5 | API de score | L'API accepte un score sur un match **à venir** (l'interface ne le propose qu'après la date) | Refuser pour un capitaine, autoriser pour un admin (correction d'erreur de date) |
 | A6 | `SaisonController::delete` | La saison affichée sur le site n'est protégée que dans l'interface ; un POST direct la supprime | Refuser aussi côté serveur |
 | A7 | `/register` | L'inscription libre est active (route accessible) alors que les liens sont commentés dans les menus | Décider : fermer la route ou l'assumer (avec vérification d'e-mail) |
+
+### Défauts trouvés et corrigés par le lot 1
+
+| Où | Constat | Correction |
+|---|---|---|
+| `JourneeController::createJournee` | « Créer les journées » ne vérifiait aucun jeton CSRF | Jeton dans le formulaire (`createjournee<poule>`), vérifié ; message « La page a expiré » |
+| API du calendrier de l'admin (journées et matchs : PUT, DELETE, POST) | Le jeton envoyé par `calendarController.js` (en-tête `X-CSRF-TOKEN`) n'était jamais vérifié ; la suppression d'un match depuis la fenêtre ne l'envoyait pas | Vérification commune (`JetonApiTrait`), 403 sans jeton ; en-tête ajouté à la suppression |
+| Suppressions groupées, génération des matchs, calendrier de la phase | Jeton faux : rien n'était fait, sans le dire | Message « La page a expiré : rechargez-la puis recommencez. Rien n'a été modifié. » |
+| `/forgot-password` | Reste d'un modèle : erreur 500 pour tout le monde | Redirection permanente vers `/reset-password` |
+| Formulaires (mot de passe, inscription, imports, comptes) | Contraintes en tableau : avertissements d'obsolescence Symfony 7.3, messages en anglais | Arguments nommés, messages en français |
 
 ---
 

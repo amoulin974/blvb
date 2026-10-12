@@ -42,6 +42,7 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 | `mobile` | joueur de Capbreton loisir en 2026-2027, de Chalosse en 2025-2026 |
 | `resp.arr` | **responsable du club ARR** (Arrats, Kosko alai, Sokoa), sans fiche joueur |
 | `resp.double` | **responsable de deux clubs** : CBT et Landes |
+| `resp.ancien` | responsable de CBT pour la **saison 2025-2026 test seulement** : peut saisir les matchs de Adour dans l'archive, rien en 2026-2027 (ni saisie, ni fiche du club, ni badge) |
 | `user.sansfiche` | compte sans fiche joueur |
 | `user.nonverifie` | compte dont l'e-mail n'est pas vérifié |
 | `autre.compte` | compte lié à la fiche « Import Lié » (cas d'import) |
@@ -91,6 +92,7 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 | Responsable de club : saisie de tous les matchs du club, refus hors du club | calendrier (`resp.arr`, `resp.double`) |
 | Fiche du club : modification par un responsable (avertissement sur l'abréviation, logo), refus pour un autre club | « Les clubs », fiche du club, « Mon profil » |
 | Capitaine **et** responsable (`cap.a4`), responsable de deux clubs (`resp.double`) | calendrier, « Mon profil » |
+| Droits rattachés à une saison (`resp.ancien`) | sélecteur de saison (2025-2026 test : crayons sur les matchs de Adour ; 2026-2027 test : aucun), fiche du club CBT refusée |
 | Liste des clubs, club sans équipe, club sans responsable, équipes sans club | « Les clubs », « Les équipes », « Qui sommes-nous ? » |
 | Gestion des clubs par l'admin (équipes, gymnases, responsables, suppression) | `/admin/club/` |
 
