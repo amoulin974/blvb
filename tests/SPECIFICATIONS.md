@@ -260,7 +260,7 @@ Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/
 
 ### 4.4 Visibilité des coordonnées — `Fonctionnel/Front/CoordonneesTest` (P0, RGPD) ✅ lot 3
 
-Règle validée : *on ne voit que les coordonnées du capitaine adverse ; seuls les membres d'une même équipe voient les coordonnées des joueurs non capitaines.*
+Règle validée : *on ne voit que les coordonnées du capitaine adverse ; seuls les membres d'une même équipe voient les coordonnées des joueurs non capitaines.* Le responsable d'un club voit les coordonnées des capitaines des poules où joue une équipe de son club (saison de sa désignation), comme un capitaine de ces poules.
 
 **CON-01 — Matrice sur la fiche équipe de A1** ✅ (rendu HTML, on cherche l'e-mail/téléphone de chaque personne dans la page) :
 
@@ -270,7 +270,7 @@ Règle validée : *on ne voit que les coordonnées du capitaine adverse ; seuls 
 | `joueur.a2` (autre équipe) | non visible | non visible |
 | `cap.a2` (capitaine adverse, même poule) | **visible** | non visible |
 | `cap.b1` (capitaine d'une autre poule) | non visible (figé : seuls les capitaines de la même poule, phase en cours) | non visible |
-| `resp.club` (responsable du club de A1, non membre) | non visible | non visible |
+| `resp.club` (responsable du club de A1, non membre) | **visible** (décidé en octobre 2026 : comme un capitaine de la poule) | non visible |
 | `joueur.a1` (coéquipier) | visible | **visible** |
 | `admin` | visible | visible |
 

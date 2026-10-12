@@ -10,9 +10,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * CON-01 à CON-05 : visibilité des coordonnées (RGPD). Règle : le capitaine d'une équipe est visible des capitaines
- * de sa poule (phase en cours), de ses coéquipiers et des administrateurs ; les autres joueurs, de leurs coéquipiers
- * et des administrateurs seulement.
+ * CON-01 à CON-06 : visibilité des coordonnées (RGPD). Règle : le capitaine d'une équipe est visible des capitaines
+ * de sa poule (phase en cours), des responsables d'un club qui a une équipe dans cette poule, de ses coéquipiers et
+ * des administrateurs ; les autres joueurs, de leurs coéquipiers et des administrateurs seulement.
  * Story : cap.a1 (06 11 11 11 11, cap.a1@blvb.test) capitaine de A1 ; joueur.a1 (06 10 10 10 10) simple joueur de A1.
  */
 final class CoordonneesTest extends TestFonctionnel
@@ -38,7 +38,7 @@ final class CoordonneesTest extends TestFonctionnel
             'capitaine adverse (même poule)' => ['cap.a2', true, false],
             'capitaine d\'une autre poule' => ['cap.b1', false, false],
             'coéquipier' => ['joueur.a1', true, true],
-            'responsable du club de l\'équipe' => ['resp.club', false, false],
+            'responsable du club de l\'équipe' => ['resp.club', true, false],
             'administrateur' => ['admin', true, true],
         ];
     }
@@ -130,5 +130,28 @@ final class CoordonneesTest extends TestFonctionnel
         ], content: '{"scoreReception":"3","scoreDeplacement":"1"}');
         self::assertResponseIsSuccessful();
         self::assertDoesNotMatchRegularExpression('/@|0\d( ?\d\d){4}/', (string) $this->client->getResponse()->getContent());
+    }
+
+    #[TestDox('CON-06 Responsable de club : ligne « Capitaine » sur les matchs de son club ; rien dans une poule où son club n\'a pas d\'équipe')]
+    public function test_responsable_de_club(): void
+    {
+        // Calendrier : A1 (club CTA) reçoit A2 → le responsable voit le capitaine de A2
+        $this->connecter('resp.club');
+        $this->client->request('GET', '/calendrier');
+        self::assertStringContainsString('cap.a2@blvb.test', $this->client->getCrawler()->filter('main')->html());
+
+        // Responsable du club voisin (A3, poule A seulement) : pas le capitaine de B1 (poule B)
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $voisin = $em->find(\App\Entity\Club::class, ChampionnatDeTest::get('club.voisin')->getId());
+        $responsable = \App\Factory\UserFactory::createOne(['email' => 'resp.voisin@blvb.test']);
+        $voisin->setResponsables($em->find(\App\Entity\Saison::class, ChampionnatDeTest::get('saison')->getId()), [$em->find(User::class, $responsable->getId())]);
+        $em->flush();
+        $this->client->loginUser($em->find(User::class, $responsable->getId()));
+
+        $this->client->request('GET', '/equipe/'.ChampionnatDeTest::get('equipe.B1')->getId());
+        self::assertStringNotContainsString('cap.b1@blvb.test', $this->client->getCrawler()->filter('main')->html(), 'poule B : rien');
+        $page = $this->ficheA1();
+        self::assertStringContainsString(self::CAPITAINE_A1[0], $page, 'poule A : capitaine de A1 visible');
+        self::assertStringNotContainsString(self::JOUEUR_A1[0], $page, 'mais pas ses joueurs');
     }
 }
