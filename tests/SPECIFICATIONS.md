@@ -309,60 +309,60 @@ Pour chaque entité : la suppression n'est plus proposée dans les listes ; elle
 **SUP-10 — Suppressions en masse** ✅ (matchs d'une poule, d'une journée ; journées d'une poule) → n'affectent que la cible, jeton exigé.
 **SUP-11 — Clôture de phase** ✅ → jeton `cloturer<id>` exigé ; sans jeton : message, phase non clôturée.
 
-### 4.7 Génération des journées et des matchs — `Integration/Service` (P1, en partie `lent`)
+### 4.7 Génération des journées et des matchs — `Integration/Service/JourneeServiceTest`, `GenerationMatchsTest`, `OptimiseurTest` (P1, en partie `lent`)
 
-**JOU-01** — `JourneeService::creerJournees` sur une poule de n équipes : n−1 journées si n pair, n si n impair (équipe exempte) ; numéros 1..k consécutifs.
-**JOU-02** — Les journées tombent dans les dates de la phase et **sautent les semaines indisponibles** (indisponibilités de la saison).
-**JOU-03** — Phase de finales : journées nommées selon `getNomJournee` (demi-finales, finale, barrage le cas échéant).
-**MAT-01 — Round-robin** (`createCalendar`) : chaque paire d'équipes se rencontre **exactement une fois** par phase ; aucune équipe ne joue deux fois la même journée ; avec n impair, une équipe exempte par journée, chacune exactement une fois.
-**MAT-02 — Domicile/extérieur** : écart domicile − extérieur ≤ 1 par équipe ; nombre de « breaks » (deux matchs consécutifs au même endroit) ≤ seuil documenté.
-**MAT-03 — Date et lieu** : un match a lieu dans le gymnase de l'équipe qui reçoit, le jour de son créneau prioritaire, dans la semaine de la journée (`calculerDateMatch` — testable en **unitaire** : « mercredi » + semaine du 14/09 → mercredi 16/09 20:30).
-**MAT-04 — Équipe sans gymnase** : pas d'erreur ; match créé sans lieu (« Gymnase à définir »).
-**MAT-05 — Optimiseur** (`creerCalendrierOptimise`, `#[Group('lent')]`) : à capacité suffisante, aucune surcharge de gymnase ; à capacité insuffisante, les surcharges sont **rapportées** dans le rapport (pas d'exception) ; résultat identique sur deux exécutions (déterminisme) ; mémoire < 512 Mo sur 4 poules de 8 (la commande de recette a dû monter à 1 Go : à mesurer).
-**MAT-06** — Régénérer une poule (« Optimiser cette poule ») supprime puis recrée ses matchs, sans toucher aux autres poules.
+**JOU-01** ✅ — `JourneeService::creerJournees` sur une poule de n équipes : n−1 journées si n pair, n si n impair (équipe exempte) ; numéros 1..k consécutifs.
+**JOU-02** ✅ — Les journées tombent dans les dates de la phase et **sautent les semaines indisponibles** (indisponibilités de la saison).
+**JOU-03** ✅ — Phase de finales : journées nommées selon `getNomJournee` (demi-finales, finale, barrage le cas échéant).
+**MAT-01 — Round-robin** ✅ (`createCalendar`) : chaque paire d'équipes se rencontre **exactement une fois** par phase ; aucune équipe ne joue deux fois la même journée ; avec n impair, une équipe exempte par journée, chacune exactement une fois.
+**MAT-02 — Domicile/extérieur** ✅ : écart domicile − extérieur ≤ 1 par équipe ; nombre de « breaks » (deux matchs consécutifs au même endroit) ≤ seuil documenté.
+**MAT-03 — Date et lieu** ✅ : un match a lieu dans le gymnase de l'équipe qui reçoit, le jour de son créneau prioritaire, dans la semaine de la journée (`calculerDateMatch` — testable en **unitaire** : « mercredi » + semaine du 14/09 → mercredi 16/09 20:30).
+**MAT-04 — Équipe sans gymnase** ✅ : pas d'erreur ; match créé sans lieu (« Gymnase à définir »).
+**MAT-05 — Optimiseur** ✅ (`creerCalendrierOptimise`, `#[Group('lent')]`) : à capacité suffisante, aucune surcharge de gymnase ; à capacité insuffisante, les surcharges sont **rapportées** dans le rapport (pas d'exception) ; résultat identique sur deux exécutions (déterminisme) ; mémoire < 512 Mo sur 4 poules de 8 (mesuré : environ 55 Mo, 14 s).
+**MAT-06** ✅ — Régénérer une poule (« Optimiser cette poule ») supprime puis recrée ses matchs, sans toucher aux autres poules.
 
-### 4.8 Clôture de phase — `Integration/Service/PhaseServiceTest` (P1)
+### 4.8 Clôture de phase — `Integration/Service/PhaseServiceTest` + `Fonctionnel/Admin/CloturePhaseTest` (P1)
 
-**PHA-01** — Montées/descentes : les `nbMontee` premiers de la poule de niveau k passent au niveau k−1, les `nbDescente` derniers au niveau k+1 ; les autres restent au même niveau.
-**PHA-02** — Poule de niveau le plus haut : pas de montée ; le plus bas : pas de descente.
-**PHA-03** — Après clôture : phase marquée close, journées et matchs de la phase suivante créés.
-**PHA-04** — Dernière phase (pas de suivante) → message d'erreur, rien ne change.
-**PHA-05** — Clôturer deux fois → refusé ou sans effet (à figer).
+**PHA-01** ✅ — Montées/descentes : les `nbMontee` premiers de la poule de niveau k passent au niveau k−1, les `nbDescente` derniers au niveau k+1 ; les autres restent au même niveau.
+**PHA-02** ✅ — Poule de niveau le plus haut : pas de montée ; le plus bas : pas de descente.
+**PHA-03** ✅ — Après clôture : phase marquée close, journées et matchs de la phase suivante créés.
+**PHA-04** ✅ — Dernière phase (pas de suivante) → message d'erreur, rien ne change.
+**PHA-05** ✅ — Clôturer deux fois → refusé par le contrôleur (« La phase X est déjà clôturée. Rien n'a été modifié. ») et sans effet dans le service : les matchs et scores de la phase suivante sont conservés.
 
 ### 4.9 Agenda ICS — `Integration/Service/CalendarIcsGeneratorTest` + `Fonctionnel/Front/IcsTest` (P2)
 
-**ICS-01** — `GET /calendar/saison/{s}/equipe/{e}.ics` → 200, `Content-Type: text/calendar; charset=utf-8`, nom de fichier en `.ics`.
-**ICS-02** — Un `VEVENT` par match **de cette équipe et de cette saison** uniquement (pas la saison précédente).
-**ICS-03 — UID stables** : deux générations successives → mêmes UID (sinon les agendas dupliquent les événements).
-**ICS-04** — Fuseau `Europe/Paris` déclaré, heure de début correcte en été comme en hiver.
-**ICS-05** — Description : phase, poule, journée ; score au format « 3–1 » quand il existe.
-**ICS-06 — Cache** : `ETag` identique entre deux appels sans changement ; requête avec `If-None-Match` égal → 304 ; après saisie d'un score → nouvel `ETag`.
-**ICS-07** — Lignes pliées à 75 octets (RFC 5545), fins de ligne CRLF.
-**ICS-08** — Ancienne route `/calendar/{poule}/{equipe}.ics` toujours servie (abonnements existants).
+**ICS-01** ✅ — `GET /calendar/saison/{s}/equipe/{e}.ics` → 200, `Content-Type: text/calendar; charset=utf-8`, nom de fichier en `.ics`.
+**ICS-02** ✅ — Un `VEVENT` par match **de cette équipe et de cette saison** uniquement (pas la saison précédente).
+**ICS-03 — UID stables** ✅ : deux générations successives → mêmes UID (sinon les agendas dupliquent les événements).
+**ICS-04** ✅ — Fuseau `Europe/Paris` déclaré, heure de début correcte en été comme en hiver.
+**ICS-05** ✅ — Description : phase, poule, journée ; score au format « 3–1 » quand il existe.
+**ICS-06 — Cache** ✅ : `ETag` identique entre deux appels sans changement ; requête avec `If-None-Match` égal → 304 ; après saisie d'un score → nouvel `ETag`.
+**ICS-07** ✅ — Lignes pliées à 75 octets (RFC 5545), fins de ligne CRLF.
+**ICS-08** ✅ — Ancienne route `/calendar/{poule}/{equipe}.ics` toujours servie (abonnements existants).
 
-### 4.10 Import Excel des utilisateurs — `Integration/Import/ImportUtilisateursTest` (P2)
+### 4.10 Import Excel des utilisateurs — `Fonctionnel/Admin/ImportUtilisateursTest` (P2)
 
 Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
-**IMP-01** — Lignes valides → comptes créés (rôle utilisateur), fiches joueurs créées et liées.
-**IMP-02** — E-mail d'une fiche existante (casse différente) → fiche liée au nouveau compte, pas de doublon.
-**IMP-03** — Fiche déjà liée à un **autre** compte → avertissement dans le rapport, pas de modification de la fiche.
-**IMP-04** — E-mail invalide → ligne rejetée avec le motif « Adresse e-mail invalide », les autres lignes importées.
-**IMP-05** — Compte déjà existant → non dupliqué.
+**IMP-01** ✅ — Lignes valides → comptes créés (rôle utilisateur), fiches joueurs créées et liées.
+**IMP-02** ✅ — E-mail d'une fiche existante (casse différente) → fiche liée au nouveau compte, pas de doublon.
+**IMP-03** ✅ — Fiche déjà liée à un **autre** compte → avertissement dans le rapport, pas de modification de la fiche.
+**IMP-04** ✅ — E-mail invalide → ligne rejetée avec le motif « Adresse e-mail invalide », les autres lignes importées.
+**IMP-05** ✅ — Compte déjà existant → non dupliqué.
 
-### 4.11 Calendrier par gymnase — `Unitaire/Service/CalendrierAnalyseServiceTest` (P2)
+### 4.11 Calendrier par gymnase — `Unitaire/Service/CalendrierAnalyseServiceTest` + `Fonctionnel/Front/CalendrierGymnaseTest` (P2)
 
-**GYM-01** — Date sans créneau avec matchs → alerte « hors créneau ».
-**GYM-02** — Plus de matchs que de terrains → surcharge ; autant → complet ; moins → « N terrains libres ».
-**GYM-03** — Créneau non prioritaire alors qu'un autre jour l'est → alerte priorité.
-**GYM-04** — Date pendant des vacances scolaires (indisponibilité) avec match → alerte vacances ; sans match → simple mention.
-**GYM-05 (fonctionnel)** — La page `/calendrierlieu` affiche aussi les dates de créneau **libres** de la phase, et le filtre « Seulement les dates à problème » s'appuie sur `data-alerte`.
+**GYM-01** ✅ — Date sans créneau avec matchs → alerte « hors créneau ».
+**GYM-02** ✅ — Plus de matchs que de terrains → surcharge ; autant → complet ; moins → « N terrains libres ».
+**GYM-03** ✅ — Créneau non prioritaire alors qu'un autre jour l'est → alerte priorité.
+**GYM-04** ✅ — Date pendant des vacances scolaires (indisponibilité) avec match → alerte vacances ; sans match → simple mention.
+**GYM-05 (fonctionnel)** ✅ — La page `/calendrierlieu` affiche aussi les dates de créneau **libres** de la phase, et le filtre « Seulement les dates à problème » s'appuie sur `data-alerte`.
 
-### 4.12 « Mon équipe » et fonctions Twig — `Integration/Twig` (P2)
+### 4.12 « Mon équipe » et fonctions Twig — `Fonctionnel/Front/MonEquipeTest`, `Integration/Twig/SaisonCouranteTest` (P2)
 
-**MEQ-01** — `mon_equipe_defaut()` : capitaine connecté → son équipe de la saison courante ; joueur non capitaine, anonyme → `null` (rendu `{'id': null}`, jamais `[]`, qui casse le contrôleur Stimulus).
-**MEQ-02** — Capitaine de deux équipes → règle de choix déterministe.
-**MEQ-03** — `mon_equipe_choix()` : équipes de la saison, triées alphabétiquement.
-**ADM-01** — `admin_saison_courante()` : saison favorite, sinon la plus récente.
+**MEQ-01** ✅ — `mon_equipe_defaut()` : capitaine connecté → son équipe de la saison courante ; joueur non capitaine, anonyme → `null` (rendu `{'id': null}`, jamais `[]`, qui casse le contrôleur Stimulus).
+**MEQ-02** ✅ — Capitaine de deux équipes → la première par nom, toujours la même.
+**MEQ-03** ✅ — `mon_equipe_choix()` : équipes de la saison, triées alphabétiquement.
+**ADM-01** ✅ — `admin_saison_courante()` : saison favorite, sinon la plus récente.
 
 ### 4.13 Fumée : toutes les pages s'affichent — `Fonctionnel/Fumee` (P2, très rentable)
 
@@ -482,7 +482,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **1 — Accès** ✅ | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la suite (vérifié) ; 108 tests verts | fait le 12/10/2026 |
 | **2 — Scores et classement** ✅ | SCO-*, CLA-* ; anomalies A1–A7 arbitrées et corrigées | 181 tests verts ; le départage et le set-average échouent avec l'ancien code (vérifié) | fait le 13/10/2026 |
 | **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
-| **4 — Calculs et fonctions annexes** | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-* ; job de nuit | Génération de calendrier couverte | 1,5 j |
+| **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.
@@ -512,6 +512,17 @@ Ces points ont été trouvés en lisant le code pour écrire ces spécifications
 | Suppressions groupées, génération des matchs, calendrier de la phase | Jeton faux : rien n'était fait, sans le dire | Message « La page a expiré : rechargez-la puis recommencez. Rien n'a été modifié. » |
 | `/forgot-password` | Reste d'un modèle : erreur 500 pour tout le monde | Redirection permanente vers `/reset-password` |
 | Formulaires (mot de passe, inscription, imports, comptes) | Contraintes en tableau : avertissements d'obsolescence Symfony 7.3, messages en anglais | Arguments nommés, messages en français |
+
+### Défauts trouvés et corrigés par le lot 4
+
+| Où | Constat | Correction |
+|---|---|---|
+| `CalendarIcsGenerator` | Un retour à la ligne dans le nom d'une équipe ajoutait une ligne (propriété arbitraire) à l'agenda | Caractères de contrôle remplacés par une espace, texte échappé (RFC 5545) |
+| `MembreEquipeRepository::findEquipesOuCapitaine` | Capitaine de deux équipes : « Mon équipe » par défaut variait selon l'ordre de la base | Tri par nom d'équipe |
+| `JourneeService::creerJournees` | Phase trop courte : le message d'erreur était calculé mais jamais renvoyé, aucun avertissement affiché | Message renvoyé |
+| Clôture de phase (`PhaseController::cloturer`, `PhaseService`) | Une seconde clôture (double clic, second onglet) redistribuait les équipes et recréait les matchs de la phase suivante, scores perdus | Refus dans le contrôleur, service sans effet sur une phase close |
+| `PhaseService::cloturerEtBasculer` | Les classements étaient lus sans être recalculés : une poule sans ligne de classement n'envoyait aucune équipe dans la phase suivante | Classements recalculés avant la répartition ; recherche de la phase suivante commune au contrôleur et au service (`phaseSuivante`) |
+| Optimiseur (`PartieService::calculerScoreCombine`) | Poule impaire : une équipe pouvait recevoir 3 fois pour 1 déplacement | Pénalité de déséquilibre domicile/extérieur (écart ≤ 1 par équipe) |
 
 ---
 

@@ -65,6 +65,10 @@ class PartieService
     // une surcharge de lieu supplémentaire : la surcharge est toujours résolue en priorité.
     private const POIDS_SURCHARGE = 100000;
 
+    // Poids d'un match de déséquilibre domicile/extérieur au-delà d'un écart de 1 pour une équipe : passe après la
+    // surcharge des gymnases, mais avant le nombre de breaks (une équipe ne doit pas recevoir plus souvent qu'une autre).
+    private const POIDS_DESEQUILIBRE = 1000;
+
     /**
      * Version "optimisée" de createCalendar qui traite toutes les poules d'une phase en une fois.
      * Contrairement à createCalendar (poule par poule, alternance domicile/extérieur naïve, sans
@@ -482,12 +486,25 @@ class PartieService
     ): array {
         $occupation = $occupationFixe;
         $breaksTotal = 0;
+        $desequilibre = 0;
 
         foreach ($schedulesByPoule as $pouleIdx => $schedule) {
             $equipes = $equipesParPoule[$pouleIdx];
             $journees = $journeesParPoule[$pouleIdx];
 
             $breaksTotal += $this->compterBreaks($schedule, count($equipes), $equipes);
+
+            // Équilibre domicile/extérieur : au plus un match d'écart par équipe
+            $solde = array_fill(0, count($equipes), 0);
+            foreach ($schedule as $paires) {
+                foreach ($paires as [$homeIdx, $awayIdx]) {
+                    $solde[$homeIdx]++;
+                    $solde[$awayIdx]--;
+                }
+            }
+            foreach ($solde as $ecart) {
+                $desequilibre += max(0, abs($ecart) - 1);
+            }
 
             foreach ($schedule as $round => $paires) {
                 if (!isset($journees[$round])) {
@@ -514,7 +531,7 @@ class PartieService
         }
 
         return [
-            'score' => self::POIDS_SURCHARGE * $surchargeExcess + $breaksTotal,
+            'score' => self::POIDS_SURCHARGE * $surchargeExcess + self::POIDS_DESEQUILIBRE * $desequilibre + $breaksTotal,
             'breaks' => $breaksTotal,
             'surchargeExcess' => $surchargeExcess,
             'occupation' => $occupation,
