@@ -208,4 +208,17 @@ final class SaisieScoreTest extends TestFonctionnel
         self::assertSame($baseA1 + $pointsA1, $this->points('A1'));
         self::assertSame($baseA2 + $pointsA2, $this->points('A2'));
     }
+
+    #[TestDox('La fenêtre de saisie renvoie vers la règle 1R du règlement (nouvel onglet), et l\'ancre existe')]
+    public function test_lien_regle_1r(): void
+    {
+        $this->connecter('cap.a1');
+        $crawler = $this->client->request('GET', '/calendrier');
+        $lien = $crawler->filter('[data-score-modal-target="aideInterrompu"] a');
+        self::assertSame('/reglement#regle-1r', $lien->attr('href'));
+        self::assertSame('_blank', $lien->attr('target'));
+
+        $crawler = $this->client->request('GET', '/reglement');
+        self::assertStringContainsString('RÈGLE 1R', $crawler->filter('#regle-1r')->text());
+    }
 }
