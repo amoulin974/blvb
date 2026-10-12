@@ -278,6 +278,7 @@ Règle validée : *on ne voit que les coordonnées du capitaine adverse ; seuls 
 **CON-03** ✅ — Coordonnées prises sur la fiche joueur, à défaut sur le compte ; aucune coordonnée → mention neutre, pas de ligne vide.
 **CON-04 — Saison** ✅ : le capitaine de la saison précédente n'est pas présenté comme capitaine de la saison courante.
 **CON-05 — Pas de fuite par l'API ou l'ICS** ✅ : l'agenda ICS et les réponses JSON ne contiennent aucune coordonnée personnelle.
+**CON-06** ✅ — Responsable de club : ligne « Capitaine » du capitaine adverse sur les matchs de son club (accueil, calendrier) ; capitaines visibles sur la fiche des équipes des poules où joue son club, jamais les autres joueurs ; rien dans une poule où son club n'a pas d'équipe.
 
 ### 4.5 Composition des équipes — `Fonctionnel/Front/CompositionTest` (P1) ✅ lot 3
 
