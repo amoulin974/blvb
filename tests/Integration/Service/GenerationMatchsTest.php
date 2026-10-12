@@ -118,6 +118,51 @@ final class GenerationMatchsTest extends TestIntegration
         }
     }
 
+    public static function derbys(): iterable
+    {
+        yield '3 équipes du même gymnase sur 5' => [3, 2];
+        yield '4 équipes du même gymnase sur 6' => [4, 2];
+        yield '4 équipes du même gymnase sur 7' => [4, 3];
+        yield '5 équipes du même gymnase sur 7' => [5, 2];
+        yield '2 équipes du même gymnase sur 6' => [2, 4];
+    }
+
+    #[DataProvider('derbys')]
+    #[TestDox('MAT-02 Derbys (équipes du même gymnase) : comptés ni à domicile ni à l\'extérieur ; écart d\'au plus un match sur les autres : $_dataName')]
+    public function test_derbys_ignores(int $nbPartage, int $nbAutres): void
+    {
+        $partage = LieuFactory::createOne(['nom' => 'Gymnase partagé']);
+        CreneauFactory::createOne(['lieu' => $partage, 'jourSemaine' => 3, 'capacite' => 8, 'prioritaire' => 1, 'heureDebut' => new \DateTimeImmutable('20:30')]);
+        $equipes = [];
+        for ($i = 1; $i <= $nbPartage; ++$i) {
+            $equipes[] = EquipeFactory::createOne(['nom' => "D$i", 'lieu' => $partage]);
+        }
+        for ($i = 1; $i <= $nbAutres; ++$i) {
+            $equipes[] = $this->equipe("X$i");
+        }
+        $poule = PouleFactory::createOne(['phase' => $this->phase, 'nom' => 'Poule D', 'equipes' => $equipes]);
+        $em = self::service('doctrine')->getManager();
+        self::service(JourneeService::class)->creerJournees($em->find(Poule::class, $poule->getId()));
+        self::service(PartieService::class)->creerCalendrierOptimisePourPoule($em->find(Poule::class, $poule->getId()));
+        $em->clear();
+
+        $solde = $derbys = [];
+        foreach ($this->matchs($em->find(Poule::class, $poule->getId())) as $m) {
+            $recoit = $m->getIdEquipeRecoit();
+            $deplace = $m->getIdEquipeDeplace();
+            if ($recoit->getLieu()?->getId() === $deplace->getLieu()?->getId()) {
+                $derbys[] = $m;
+                continue;
+            }
+            $solde[$recoit->getNomSansClub()] = ($solde[$recoit->getNomSansClub()] ?? 0) + 1;
+            $solde[$deplace->getNomSansClub()] = ($solde[$deplace->getNomSansClub()] ?? 0) - 1;
+        }
+        self::assertCount($nbPartage * ($nbPartage - 1) / 2, $derbys);
+        foreach ($solde as $nom => $ecart) {
+            self::assertLessThanOrEqual(1, abs($ecart), "$nom : écart domicile/extérieur hors derbys");
+        }
+    }
+
     #[TestDox('MAT-03 Le match a lieu au gymnase de l\'équipe qui reçoit, au jour et à l\'heure de son créneau préféré, dans la semaine de la journée')]
     public function test_date_et_lieu(): void
     {

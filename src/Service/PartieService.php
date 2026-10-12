@@ -494,10 +494,15 @@ class PartieService
 
             $breaksTotal += $this->compterBreaks($schedule, count($equipes), $equipes);
 
-            // Équilibre domicile/extérieur : au plus un match d'écart par équipe
+            // Équilibre domicile/extérieur : au plus un match d'écart par équipe. Un derby (même gymnase) n'est
+            // compté ni à domicile ni à l'extérieur : il n'impose aucun déplacement (même règle que les breaks)
             $solde = array_fill(0, count($equipes), 0);
             foreach ($schedule as $paires) {
                 foreach ($paires as [$homeIdx, $awayIdx]) {
+                    $lieuHome = $equipes[$homeIdx]->getLieu();
+                    if ($lieuHome && $lieuHome === $equipes[$awayIdx]->getLieu()) {
+                        continue;
+                    }
                     $solde[$homeIdx]++;
                     $solde[$awayIdx]--;
                 }

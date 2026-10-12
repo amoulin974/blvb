@@ -315,7 +315,7 @@ Pour chaque entité : la suppression n'est plus proposée dans les listes ; elle
 **JOU-02** ✅ — Les journées tombent dans les dates de la phase et **sautent les semaines indisponibles** (indisponibilités de la saison).
 **JOU-03** ✅ — Phase de finales : journées nommées selon `getNomJournee` (demi-finales, finale, barrage le cas échéant).
 **MAT-01 — Round-robin** ✅ (`createCalendar`) : chaque paire d'équipes se rencontre **exactement une fois** par phase ; aucune équipe ne joue deux fois la même journée ; avec n impair, une équipe exempte par journée, chacune exactement une fois.
-**MAT-02 — Domicile/extérieur** ✅ : écart domicile − extérieur ≤ 1 par équipe ; nombre de « breaks » (deux matchs consécutifs au même endroit) ≤ seuil documenté.
+**MAT-02 — Domicile/extérieur** ✅ : écart domicile − extérieur ≤ 1 par équipe, **derbys exclus** (deux équipes du même gymnase : aucun déplacement, le match ne compte ni à domicile ni à l'extérieur) ; nombre de « breaks » (deux matchs consécutifs au même endroit) ≤ seuil documenté.
 **MAT-03 — Date et lieu** ✅ : un match a lieu dans le gymnase de l'équipe qui reçoit, le jour de son créneau prioritaire, dans la semaine de la journée (`calculerDateMatch` — testable en **unitaire** : « mercredi » + semaine du 14/09 → mercredi 16/09 20:30).
 **MAT-04 — Équipe sans gymnase** ✅ : pas d'erreur ; match créé sans lieu (« Gymnase à définir »).
 **MAT-05 — Optimiseur** ✅ (`creerCalendrierOptimise`, `#[Group('lent')]`) : à capacité suffisante, aucune surcharge de gymnase ; à capacité insuffisante, les surcharges sont **rapportées** dans le rapport (pas d'exception) ; résultat identique sur deux exécutions (déterminisme) ; mémoire < 512 Mo sur 4 poules de 8 (mesuré : environ 55 Mo, 14 s).
@@ -522,7 +522,7 @@ Ces points ont été trouvés en lisant le code pour écrire ces spécifications
 | `JourneeService::creerJournees` | Phase trop courte : le message d'erreur était calculé mais jamais renvoyé, aucun avertissement affiché | Message renvoyé |
 | Clôture de phase (`PhaseController::cloturer`, `PhaseService`) | Une seconde clôture (double clic, second onglet) redistribuait les équipes et recréait les matchs de la phase suivante, scores perdus | Refus dans le contrôleur, service sans effet sur une phase close |
 | `PhaseService::cloturerEtBasculer` | Les classements étaient lus sans être recalculés : une poule sans ligne de classement n'envoyait aucune équipe dans la phase suivante | Classements recalculés avant la répartition ; recherche de la phase suivante commune au contrôleur et au service (`phaseSuivante`) |
-| Optimiseur (`PartieService::calculerScoreCombine`) | Poule impaire : une équipe pouvait recevoir 3 fois pour 1 déplacement | Pénalité de déséquilibre domicile/extérieur (écart ≤ 1 par équipe) |
+| Optimiseur (`PartieService::calculerScoreCombine`) | Poule impaire : une équipe pouvait recevoir 3 fois pour 1 déplacement | Pénalité de déséquilibre domicile/extérieur (écart ≤ 1 par équipe, derbys du même gymnase exclus) |
 
 ---
 
