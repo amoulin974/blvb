@@ -172,20 +172,16 @@ final class PhaseController extends AbstractController
 
             return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
         }
-        $phases = $saison->getPhases();
+        // Une phase déjà clôturée ne l'est pas une seconde fois : cela recréerait les journées et les matchs de la
+        // phase suivante, et effacerait ses scores
+        if ($phase->getClose()) {
+            $this->addFlash('error', sprintf('La phase %s est déjà clôturée. Rien n\'a été modifié.', $phase->getNom()));
 
-        // 1. Trouver la phase suivante
-        $phaseSuivante = null;
-        $trouve = false;
-        foreach ($phases as $p) {
-            if ($trouve) {
-                $phaseSuivante = $p;
-                break;
-            }
-            if ($p->getId() === $phase->getId()) {
-                $trouve = true;
-            }
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
         }
+
+        // 1. Trouver la phase suivante (même règle que PhaseService : ordre immédiatement supérieur)
+        $phaseSuivante = $phaseService->phaseSuivante($phase);
 
         if (!$phaseSuivante) {
             $this->addFlash('error', 'Il n’y a pas de phase suivante pour clôturer celle-ci.');

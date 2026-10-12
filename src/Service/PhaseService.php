@@ -15,23 +15,38 @@ class PhaseService
         private ClassementService $classementService
     ) {}
 
-    public function cloturerEtBasculer(Phase $phaseActuelle): void
+    /** Phase qui suit dans la saison : le plus petit ordre supérieur à celui de la phase (null si c'est la dernière). */
+    public function phaseSuivante(Phase $phase): ?Phase
     {
-        $saison = $phaseActuelle->getSaison();
-
-        // 1. Trouver la phase suivante par l'ordre
-        $ordreSuivant = $phaseActuelle->getOrdre() + 1;
-        $phaseSuivante = null;
-
-        foreach ($saison->getPhases() as $p) {
-            if ($p->getOrdre() === $ordreSuivant) {
-                $phaseSuivante = $p;
-                break;
+        $suivante = null;
+        foreach ($phase->getSaison()->getPhases() as $p) {
+            if ($p->getOrdre() > $phase->getOrdre() && ($suivante === null || $p->getOrdre() < $suivante->getOrdre())) {
+                $suivante = $p;
             }
         }
 
+        return $suivante;
+    }
+
+    /**
+     * Clôture la phase : les équipes passent dans les poules de la phase suivante selon leur classement (montées,
+     * descentes), puis la phase est marquée close. Sans effet sur une phase déjà close ou sans phase suivante.
+     */
+    public function cloturerEtBasculer(Phase $phaseActuelle): void
+    {
+        if ($phaseActuelle->getClose()) {
+            return; // déjà clôturée : ne jamais redistribuer les équipes une seconde fois
+        }
+
+        // 1. Trouver la phase suivante
+        $phaseSuivante = $this->phaseSuivante($phaseActuelle);
         if (!$phaseSuivante) {
             return; // Pas de phase suivante, fin de saison
+        }
+
+        // Classements à jour avant de les lire (une poule sans score saisi n'a pas encore de ligne de classement)
+        foreach ($phaseActuelle->getPoules() as $poule) {
+            $this->classementService->mettreAJourClassementPoule($poule);
         }
 
         // 2. Préparer un accès rapide aux poules de destination par niveau

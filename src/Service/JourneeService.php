@@ -35,8 +35,7 @@ class JourneeService
 
 
         if ($phase->getType() === PhaseType::CHAMPIONNAT) {
-            $this->creerJourneesChampionnat($poule);
-            return null;
+            return $this->creerJourneesChampionnat($poule);
         } elseif ($phase->getType() === PhaseType::FINALE) {
             return $this->creerJourneesFinales($poule);
         }else{
@@ -85,7 +84,7 @@ class JourneeService
             // Vérifie si la phase peut contenir toutes les journées (1 semaine par journée)
             $dureePhaseEnSemaines = intval($finPhase->diff($debutPhase)->days / 7) + 1;
             if ($dureePhaseEnSemaines < $nbJournee) {
-                $error = "La phase est trop courte pour contenir toutes les journées.";
+                return "La phase est trop courte pour contenir toutes les journées.";
             } else {
 
                 $this->em->flush();
