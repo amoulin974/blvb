@@ -18,8 +18,8 @@ class UserChangePasswordType extends AbstractType
                 'mapped' => false,
                 'label' => 'Mot de passe actuel',
                 'constraints' => [
-                    new NotBlank(['message' => 'Veuillez saisir votre mot de passe actuel']),
-                    new UserPassword(['message' => 'Le mot de passe actuel est incorrect.']),
+                    new NotBlank(message: 'Veuillez saisir votre mot de passe actuel'),
+                    new UserPassword(message: 'Le mot de passe actuel est incorrect.'),
                 ],
             ])
             ->add('plainPassword', RepeatedType::class, [
@@ -32,7 +32,7 @@ class UserChangePasswordType extends AbstractType
                 ],
                 'second_options' => ['label' => 'Confirmer le nouveau mot de passe'],
                 'constraints' => [
-                    new NotBlank(['message' => 'Veuillez entrer un mot de passe']),
+                    new NotBlank(message: 'Veuillez entrer un mot de passe'),
                     ...PasswordPolicy::constraints(),
                 ],
             ]);

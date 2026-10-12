@@ -24,9 +24,7 @@ class ChangePasswordFormType extends AbstractType
                 ],
                 'first_options' => [
                     'constraints' => [
-                        new NotBlank([
-                            'message' => 'Entrez un mot de passe',
-                        ]),
+                        new NotBlank(message: 'Entrez un mot de passe'),
                         ...PasswordPolicy::constraints(),
                     ],
                     'label' => 'Nouveau mot de passe',

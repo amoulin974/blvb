@@ -38,11 +38,9 @@ class RegistrationFormType extends AbstractType
             ])
             ->add('agreeTerms', CheckboxType::class, [
                 'mapped' => false,
-                'label' => 'Accepter les conditions* :',
+                'label' => 'J\'accepte les conditions d\'utilisation du site',
                 'constraints' => [
-                    new IsTrue([
-                        'message' => 'You should agree to our terms.',
-                    ]),
+                    new IsTrue(message: 'Pour créer un compte, acceptez les conditions d\'utilisation du site.'),
                 ],
             ])
             ->add('plainPassword', PasswordType::class, [
@@ -53,9 +51,7 @@ class RegistrationFormType extends AbstractType
                 'help' => PasswordPolicy::HELP_TEXT,
                 'attr' => ['autocomplete' => 'new-password'],
                 'constraints' => [
-                    new NotBlank([
-                        'message' => 'Please enter a password',
-                    ]),
+                    new NotBlank(message: 'Indiquez un mot de passe.'),
                     ...PasswordPolicy::constraints(),
                 ],
             ])
