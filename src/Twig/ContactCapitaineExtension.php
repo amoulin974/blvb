@@ -8,14 +8,15 @@ use App\Entity\Saison;
 use App\Entity\User;
 use App\Repository\MembreEquipeRepository;
 use App\Service\ContactCapitaineService;
+use App\Service\SaisieScoreService;
 use Symfony\Bundle\SecurityBundle\Security;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * contact_capitaine_adverse(partie, saison) : pour un capitaine connecté dont l'équipe joue ce match,
- * le capitaine de l'équipe adverse et ses coordonnées. null dans tous les autres cas (visiteur, utilisateur
- * qui n'est pas capitaine d'une des deux équipes, administrateur : l'administrateur passe par la fiche équipe).
+ * contact_capitaine_adverse(partie, saison) : pour un capitaine connecté dont l'équipe joue ce match, ou un
+ * responsable du club (saison du match) d'une des deux équipes, le capitaine de l'équipe adverse et ses coordonnées.
+ * null dans tous les autres cas (visiteur, simple joueur, administrateur : l'administrateur passe par la fiche équipe).
  * La règle d'accès est appliquée ici, côté serveur, et non dans les gabarits.
  */
 class ContactCapitaineExtension extends AbstractExtension
@@ -27,6 +28,7 @@ class ContactCapitaineExtension extends AbstractExtension
         private readonly Security $security,
         private readonly MembreEquipeRepository $membreEquipeRepository,
         private readonly ContactCapitaineService $contactCapitaineService,
+        private readonly SaisieScoreService $saisieScore,
     ) {
     }
 
@@ -44,7 +46,10 @@ class ContactCapitaineExtension extends AbstractExtension
         }
 
         $mesEquipes = $this->equipesCapitaine[$saison->getId()]
-            ??= array_map(static fn (Equipe $e) => $e->getId(), $this->membreEquipeRepository->findEquipesOuCapitaine($user, $saison));
+            ??= array_values(array_unique([
+                ...array_map(static fn (Equipe $e) => $e->getId(), $this->membreEquipeRepository->findEquipesOuCapitaine($user, $saison)),
+                ...$this->saisieScore->droits($user, $saison)['club'], // équipes des clubs dont il est responsable
+            ]));
 
         $recoit = $partie->getIdEquipeRecoit();
         $deplace = $partie->getIdEquipeDeplace();

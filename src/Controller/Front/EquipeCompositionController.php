@@ -197,6 +197,11 @@ final class EquipeCompositionController extends AbstractController
         if ($this->isCsrfTokenValid('capitaine'.$membre->getId(), $request->getPayload()->getString('_token'))) {
             $membreEquipeRepository->definirCapitaine($equipe, $saison, $membre);
             $this->addFlash('success', sprintf('%s %s est maintenant capitaine.', $membre->getJoueur()->getPrenom(), $membre->getJoueur()->getNom()));
+
+            // Le capitaine qui passe la main n'a plus accès à la composition : retour à la fiche de l'équipe
+            if (!$this->isGranted('ROLE_ADMIN') && !$membreEquipeRepository->estCapitaine($this->getUser(), $equipe, $saison)) {
+                return $this->redirectToRoute('front_equipe_detail', ['id' => $equipe->getId()]);
+            }
         } else {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez.');
         }
