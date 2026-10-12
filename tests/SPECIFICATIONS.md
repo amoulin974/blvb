@@ -320,6 +320,7 @@ Pour chaque entité : la suppression n'est plus proposée dans les listes ; elle
 **MAT-04 — Équipe sans gymnase** ✅ : pas d'erreur ; match créé sans lieu (« Gymnase à définir »).
 **MAT-05 — Optimiseur** ✅ (`creerCalendrierOptimise`, `#[Group('lent')]`) : à capacité suffisante, aucune surcharge de gymnase ; à capacité insuffisante, les surcharges sont **rapportées** dans le rapport (pas d'exception) ; résultat identique sur deux exécutions (déterminisme) ; mémoire < 512 Mo sur 4 poules de 8 (mesuré : environ 55 Mo, 14 s).
 **MAT-06** ✅ — Régénérer une poule (« Optimiser cette poule ») supprime puis recrée ses matchs, sans toucher aux autres poules.
+**MAT-07** ✅ *`AlternanceTest`, `Fonctionnel/Admin/OptimiserPageTest`* — Page « Optimiser les matchs » : statut de chaque match (Dom, Ext, Der = derby, même gymnase) ; **break** = deuxième déplacement de suite (un derby compte comme domicile, une journée exempte n'interrompt pas la suite), signalé en orange ; légende des couleurs affichée (sarcelle = pas de déplacement, orange/rouge = à surveiller, comme la charge des gymnases).
 
 ### 4.8 Clôture de phase — `Integration/Service/PhaseServiceTest` + `Fonctionnel/Admin/CloturePhaseTest` (P1)
 

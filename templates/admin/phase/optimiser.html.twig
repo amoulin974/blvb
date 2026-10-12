@@ -24,6 +24,17 @@
             }) }}
         </div>
 
+        {# Légende : les teintes sarcelle = pas de déplacement ; orange / rouge = à surveiller (comme la charge des lieux) #}
+        <ul class="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm mb-6" aria-label="Légende des tableaux">
+            <li class="flex items-center gap-2"><span class="inline-block w-10 text-center text-xs border-2 border-base-300 bg-secondary/30">Dom</span> à domicile</li>
+            <li class="flex items-center gap-2"><span class="inline-block w-10 text-center text-xs border-2 border-base-300 bg-secondary/10 italic">Der</span> derby : même gymnase, pas de déplacement</li>
+            <li class="flex items-center gap-2"><span class="inline-block w-10 text-center text-xs border-2 border-base-300">Ext</span> à l'extérieur</li>
+            <li class="flex items-center gap-2"><span class="inline-block w-10 text-center text-xs border-2 border-base-300 bg-warning/25 font-bold">Ext</span> 2<sup>e</sup> déplacement de suite (break)</li>
+            <li class="flex items-center gap-2"><span class="inline-block w-10 text-center text-xs border-2 border-base-300 text-(--color-base-content)/50">-</span> exempt</li>
+            <li class="flex items-center gap-2"><span class="inline-block w-10 h-5 border-2 border-base-300 bg-error/20"></span> gymnase surchargé</li>
+            <li class="flex items-center gap-2"><span class="inline-block w-10 h-5 border-2 border-base-300 bg-warning/25"></span> créneau non prioritaire ou hors créneau</li>
+        </ul>
+
         <div class="flex flex-col lg:flex-row gap-8">
             {# ----------------------------------------------------------- #}
             {# Alternance domicile / extérieur, un tableau par poule       #}
@@ -64,15 +75,15 @@
                                         {% for journee in data.journees %}
                                             {% set cell = row.cells[journee.id] %}
                                             <td class="border-2 border-base-300 text-center
-                                                {% if cell %}
-                                                    {% if cell.label == 'Dom' %}bg-success text-success-content
-                                                    {% elseif cell.label == 'Der' %}bg-warning text-warning-content
-                                                    {% endif %}
+                                                {% if not cell %}text-(--color-base-content)/50
+                                                {% elseif cell.break %}bg-warning/25 font-bold
+                                                {% elseif cell.label == 'Dom' %}bg-secondary/30
+                                                {% elseif cell.label == 'Der' %}bg-secondary/10 italic
                                                 {% endif %}">
                                                 {% if cell %}
-                                                    <span class="tooltip" data-tip="{{ cell.adversaire }}">{{ cell.label }}</span>
+                                                    <span class="tooltip" data-tip="{{ cell.adversaire }}{{ cell.break ? ' · 2e déplacement de suite' }}">{{ cell.label }}{% if cell.break %}<span class="sr-only"> (2e déplacement de suite)</span>{% endif %}</span>
                                                 {% else %}
-                                                    -
+                                                    <span title="Exempt">-</span>
                                                 {% endif %}
                                             </td>
                                         {% endfor %}
@@ -113,7 +124,7 @@
             <div class="w-full lg:w-1/3 min-w-0">
                 <h2 class="font-bold text-lg mb-2">Charge des lieux</h2>
                 <div class="overflow-x-auto w-full">
-                    <table class="table table-xs table-zebra w-full">
+                    <table class="table table-xs w-full">
                         <thead>
                         <tr>
                             <th>Lieu</th>
@@ -123,7 +134,8 @@
                         </thead>
                         <tbody>
                         {% for ligne in chargeLieux %}
-                            <tr class="{% if ligne.analyse.alerte_capacite %}bg-error text-error-content{% elseif ligne.analyse.alerte_priorite or ligne.analyse.alerte_horscrenau %}bg-warning text-warning-content{% endif %}">
+                            <tr class="{% if ligne.analyse.alerte_capacite %}bg-error/20 font-semibold{% elseif ligne.analyse.alerte_priorite or ligne.analyse.alerte_horscrenau %}bg-warning/25{% endif %}"
+                                {% if ligne.analyse.alerte_capacite %}title="Gymnase surchargé"{% elseif ligne.analyse.alerte_priorite or ligne.analyse.alerte_horscrenau %}title="Créneau non prioritaire ou hors créneau"{% endif %}>
                                 <td class="whitespace-nowrap">{{ ligne.lieu.nom }}</td>
                                 <td class="whitespace-nowrap">{{ ligne.date|date('d/m/Y') }}</td>
                                 <td class="text-center">{{ ligne.nbMatchs }} / {{ ligne.analyse.capacite_max }}</td>

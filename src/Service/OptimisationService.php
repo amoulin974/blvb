@@ -118,6 +118,7 @@ class OptimisationService
                 $cells = [];
                 $totalDom = 0;
                 $totalExt = 0;
+                $precedent = null; // statut du match précédent (une journée exempte n'interrompt pas la suite)
 
                 foreach ($journees as $journee) {
                     $cell = null;
@@ -141,7 +142,10 @@ class OptimisationService
                         $cell = [
                             'adversaire' => $adversaire ? $adversaire->getNom() : $partie->getNom(),
                             'label' => $label,
+                            // Break : deuxième déplacement de suite (un derby compte comme un match à domicile)
+                            'break' => $label === 'Ext' && $precedent === 'Ext',
                         ];
+                        $precedent = $label;
 
                         // Les derbies sont cumulés avec les matchs à domicile
                         if ($label === 'Ext') {
