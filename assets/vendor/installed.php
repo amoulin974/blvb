@@ -9,16 +9,6 @@
     array (
     ),
   ),
-  '@hotwired/turbo' => 
-  array (
-    'version' => '7.3.0',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
   'tom-select/dist/css/tom-select.css' => 
   array (
     'version' => '2.5.1',
@@ -103,26 +93,6 @@
     array (
     ),
   ),
-  'moment' => 
-  array (
-    'version' => '2.30.1',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'moment/locale/fr' => 
-  array (
-    'version' => '2.30.1',
-    'dependencies' => 
-    array (
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
   'tocbot' => 
   array (
     'version' => '4.36.4',
@@ -133,9 +103,9 @@
     array (
     ),
   ),
-  'preact' => 
+  '@hotwired/turbo' => 
   array (
-    'version' => '10.12.1',
+    'version' => '8.0.23',
     'dependencies' => 
     array (
     ),
@@ -143,214 +113,21 @@
     array (
     ),
   ),
-  'preact/compat' => 
+  'moment' => 
   array (
-    'version' => '10.12.1',
+    'version' => '2.31.0',
     'dependencies' => 
     array (
-      0 => 'preact',
-      1 => 'preact',
-      2 => 'preact/hooks',
-      3 => 'preact/hooks',
     ),
     'extraFiles' => 
     array (
     ),
   ),
-  'preact/hooks' => 
+  'moment/locale/fr' => 
   array (
-    'version' => '10.12.1',
+    'version' => '2.31.0',
     'dependencies' => 
     array (
-      0 => 'preact',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'fullcalendar' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/index.js',
-      2 => '@fullcalendar/interaction/index.js',
-      3 => '@fullcalendar/interaction/index.js',
-      4 => '@fullcalendar/daygrid/index.js',
-      5 => '@fullcalendar/timegrid/index.js',
-      6 => '@fullcalendar/list/index.js',
-      7 => '@fullcalendar/multimonth/index.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/core/index.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => 'preact',
-      1 => 'preact',
-      2 => 'preact/compat',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/interaction/index.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/internal.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/daygrid/index.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/internal.js',
-      2 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/timegrid/index.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/internal.js',
-      2 => '@fullcalendar/core/preact.js',
-      3 => '@fullcalendar/daygrid/internal.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/list/index.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/internal.js',
-      2 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/multimonth/index.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/daygrid/internal.js',
-      2 => '@fullcalendar/core/internal.js',
-      3 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/core/internal.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => 'preact',
-      1 => 'preact',
-      2 => 'preact/compat',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/core/preact.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => 'preact',
-      1 => 'preact',
-      2 => 'preact',
-      3 => 'preact/compat',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/daygrid/internal.js' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/internal.js',
-      1 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/core' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => 'preact',
-      1 => 'preact',
-      2 => 'preact/compat',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/daygrid' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/internal.js',
-      2 => '@fullcalendar/core/preact.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/interaction' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/core/internal.js',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@fullcalendar/multimonth' => 
-  array (
-    'version' => '6.1.20',
-    'dependencies' => 
-    array (
-      0 => '@fullcalendar/core/index.js',
-      1 => '@fullcalendar/daygrid/internal.js',
-      2 => '@fullcalendar/core/internal.js',
-      3 => '@fullcalendar/core/preact.js',
     ),
     'extraFiles' => 
     array (
