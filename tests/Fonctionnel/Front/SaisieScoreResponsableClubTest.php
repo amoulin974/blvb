@@ -43,7 +43,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
     {
         yield 'équipe du club qui reçoit (poule A)' => ['match.reference'];
         yield 'autre équipe du club qui reçoit (poule B)' => ['match.B1-B2'];
-        yield 'équipe du club qui se déplace' => ['match.A4-A1'];
+        yield 'équipe du club qui se déplace' => ['match.A2-A1'];
     }
 
     #[DataProvider('matchsAutorises')]
@@ -74,7 +74,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
 
         $this->saisir($partie, '3', '0');
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(403);
         self::assertSame('Modification interdite', json_decode($this->client->getResponse()->getContent(), true)['error']);
         $partie = ChampionnatDeTest::get($match);
         self::assertSame($avant, [$partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement()]);
@@ -97,7 +97,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
 
         $this->saisir(ChampionnatDeTest::get('match.reference'));
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(403);
     }
 
     #[TestDox('Un simple joueur de l\'équipe qui reçoit ne peut pas saisir le score')]
@@ -107,7 +107,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
 
         $this->saisir(ChampionnatDeTest::get('match.reference'));
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(403);
     }
 
     #[TestDox('Le calendrier propose « Saisir » au responsable sur les matchs de son club, pas sur les autres')]
@@ -159,7 +159,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
 
         $this->saisir($ancien);
 
-        self::assertResponseStatusCodeSame(400);
+        self::assertResponseStatusCodeSame(403);
         self::assertSame('Modification interdite', json_decode($this->client->getResponse()->getContent(), true)['error']);
     }
 
@@ -178,7 +178,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         $this->client->loginUser($user);
 
         $this->saisir(ChampionnatDeTest::get('match.reference'));
-        self::assertResponseStatusCodeSame(400, 'match de la saison en cours refusé');
+        self::assertResponseStatusCodeSame(403, 'match de la saison en cours refusé');
 
         $this->saisir($ancien);
         self::assertResponseIsSuccessful('match de la saison de sa désignation accepté');
@@ -205,7 +205,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         $this->client->request('PUT', '/front/partie/'.$match->getId().'/api/update', server: [
             'CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $jeton, 'HTTP_X_REQUESTED_WITH' => 'XMLHttpRequest',
         ], content: json_encode(['scoreReception' => '0', 'scoreDeplacement' => '3']));
-        self::assertContains($this->client->getResponse()->getStatusCode(), [400, 403], 'après retrait : saisie refusée');
+        self::assertContains($this->client->getResponse()->getStatusCode(), [302, 403], 'après retrait : saisie refusée (403, ou renvoi vers la connexion si la session est fermée)');
         $em->clear();
         $match = $em->find(Partie::class, $match->getId());
         self::assertSame($avant, [$match->getNbSetGagnantReception(), $match->getNbSetGagnantDeplacement()]);

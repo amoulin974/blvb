@@ -19,6 +19,7 @@ use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
 use App\Security\ScoreVoter;
 use App\Service\ClassementService;
+use App\Service\RegleScore;
 use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -444,9 +445,13 @@ final class FrontController extends AbstractController
 
     $data = json_decode($request->getContent(), true);
     try{
-        // Admin, capitaine de l'équipe qui reçoit ou responsable de son club (App\Security\ScoreVoter)
+        // Admin, capitaine de l'équipe qui reçoit ou responsable de son club (App\Security\ScoreVoter) : sinon 403
         if (!$this->isGranted(ScoreVoter::SAISIR, $partie)) {
-            throw new Exception("Modification interdite");
+            return $this->json(['error' => 'Modification interdite'], 403);
+        }
+        // Match à venir (ou sans date) : seul un administrateur peut saisir son score (décision d'octobre 2026)
+        if (!$this->isGranted('ROLE_ADMIN') && ($partie->getDate() === null || $partie->getDate() > new \DateTimeImmutable())) {
+            return $this->json(['error' => 'Ce match n\'a pas encore eu lieu : seul un administrateur peut saisir son score.'], 403);
         }
 
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
@@ -472,11 +477,12 @@ final class FrontController extends AbstractController
 
 
         }else{
-            //Cas normal
-            if (! is_numeric($data['scoreReception']) || ! is_numeric($data['scoreDeplacement'])) throw new Exception ("score invalide");
-            $scoreReception = (int)($data['scoreReception']);
-            $scoreDeplacement = (int)$data['scoreDeplacement'];
-            if ($scoreDeplacement > 3 || $scoreReception > 3 || $scoreDeplacement < 0 || $scoreReception < 0) throw new Exception("Score invalide");
+            //Cas normal : nombres entiers de sets, match complet ou interrompu (règle 1R) — App\Service\RegleScore
+            $entier = static fn ($v) => \is_int($v) || (\is_string($v) && ctype_digit(trim($v)));
+            if (!$entier($data['scoreReception']) || !$entier($data['scoreDeplacement'])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
+            $scoreReception = (int) $data['scoreReception'];
+            $scoreDeplacement = (int) $data['scoreDeplacement'];
+            if (!RegleScore::estValide($scoreReception, $scoreDeplacement)) throw new Exception("Score impossible : une équipe doit avoir 3 sets et l'autre de 0 à 2, ou, pour un match interrompu (règle 1R), 2-1, 2-2, 1-1 ou 1-0.");
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);

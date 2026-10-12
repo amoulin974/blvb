@@ -197,12 +197,12 @@ Il ne peut pas non plus s'attribuer d'équipes ni de responsables en ajoutant de
 
 **SEC-12 — Envoi d'image (logo d'un club)** ✅ *`FicheClubTest`* : fichier non image → 422, rien d'enregistré ; image de plus de 2 Mo → 422, aucun fichier écrit ; nom du fichier généré par l'application (`<abréviation>-<aléa>.<ext>`), jamais celui envoyé : un nom avec `../` ne sort pas du dossier des images ; types acceptés JPEG, PNG, WebP, GIF (pas de SVG) ; remplacer ou retirer l'image supprime l'ancien fichier.
 
-### 4.2 Saisie des scores — `Fonctionnel/Front/SaisieScoreTest` (P0)
+### 4.2 Saisie des scores — `Fonctionnel/Front/SaisieScoreTest` (P0) ✅ lot 2
 
 Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreDeplacement}`, en-tête `X-CSRF-TOKEN` (jeton `score_update`).
 
-**SCO-01** — Sans en-tête CSRF ou jeton faux → 403, score inchangé.
-**SCO-02** — Anonyme (même avec un jeton) → refus, score inchangé. ⚠ *Actuel : 400 « Modification interdite ». Attendu proposé : 403* (§8, A4).
+**SCO-01** ✅ — Sans en-tête CSRF ou jeton faux → 403, score inchangé.
+**SCO-02** ✅ — Anonyme → refus 403, score inchangé. Tout refus de droits renvoie **403** « Modification interdite » (A4, décidé).
 **SCO-03** — Matrice des droits sur le match de référence (A1 reçoit A2). Règle unique : `SaisieScoreService::peutSaisir` (API via `ScoreVoter`, interface via `droitsSaisie`) :
 
 | Profil | Attendu |
@@ -219,17 +219,18 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 **SCO-14 — Droits rattachés à une saison** ✅ : le responsable est désigné pour une saison (`ResponsableClub`), comme le capitaine. Désigné pour la saison courante : refus sur un match de la saison précédente. Désigné pour la saison précédente seulement : saisie des matchs de cette saison-là, mais refus pour la saison courante, pas de fiche du club, pas de rôle.
 **SCO-15 — Retrait immédiat** ✅ : un responsable retiré par l'admin perd ses droits à la requête suivante, sans se reconnecter (une saisie préparée avant le retrait est refusée, score inchangé).
 
-**SCO-04 — Scores valides** (data provider) : 3–0, 3–1, 3–2, 2–3, 1–3, 0–3 → 200, valeurs enregistrées, réponse `newScore` = « 3 - 1 ».
-**SCO-05 — Scores invalides** → 400, score inchangé : 4–0, −1–3 (en chiffres), « a »–3, 2.5–3, champ absent.
-**SCO-06 — Scores impossibles au volley** → 400 : 3–3, 0–0, 2–1, 1–1, 0–2 (aucune équipe à 3 sets). ⚠ *Actuel : acceptés* (§8, A2).
-**SCO-07 — Forfait** : `F` + vide → réception −1 / déplacement 3, `newScore` = « F - 3 » ; vide + `F` → symétrique ; `F` + `F` → 400.
-**SCO-08 — Effacement** : deux champs vides → les deux valeurs à `null`, `newScore` = null, le classement est recalculé (l'équipe perd les points de ce match).
-**SCO-09 — Classement mis à jour** après chaque saisie (vérifie la ligne `Classement` des deux équipes).
-**SCO-10 — Match à venir** : saisie par un capitaine sur un match futur → ⚠ *règle à arbitrer* (l'interface ne propose « Saisir » qu'après la date ; l'API accepte) (§8, A5).
-**SCO-11** — Match inexistant → 404.
+**SCO-04 — Scores valides** ✅ (data provider) : 3–0, 3–1, 3–2, 2–3, 1–3, 0–3 (en texte ou en nombres JSON, espaces tolérés) → 200, valeurs enregistrées, réponse `newScore` = « 3 - 1 ».
+**SCO-05 — Scores invalides** ✅ → 400, score inchangé : 4–0, −1–3 (en chiffres), « a »–3, 2.5–3 (texte et nombre), champ absent, deux forfaits.
+**SCO-06 — Scores impossibles** ✅ → 400 : 3–3, 0–0, 2–0, 0–2. Règle (A2, décidé, `App\Service\RegleScore`) : match complet (une équipe à 3 sets, l'autre de 0 à 2), match **interrompu** selon la règle 1R du règlement (2–1, 2–2, 1–1, 1–0, dans un sens ou dans l'autre) ou forfait.
+**SCO-07 — Forfait** ✅ : `F` + vide → réception −1 / déplacement 3, `newScore` = « F - 3 » ; vide + `F` → symétrique ; `F` + `F` → 400.
+**SCO-08 — Effacement** ✅ : deux champs vides → les deux valeurs à `null`, `newScore` = null, le classement est recalculé (l'équipe perd les points de ce match).
+**SCO-09 — Classement mis à jour** ✅ après chaque saisie (vérifie la ligne `Classement` des deux équipes).
+**SCO-10 — Match à venir** ✅ : refusé (403, « Ce match n'a pas encore eu lieu… ») au capitaine et au responsable de club, accepté pour l'admin (A5, décidé). Un match sans date est traité comme à venir.
+**SCO-11** ✅ — Match inexistant → 404.
+**SCO-16 — Match interrompu (règle 1R)** ✅ : saisi par le capitaine comme par le responsable de club ou l'admin (décidé) ; points du règlement, quel que soit le barème de la saison : 2–1 → 2 et 1 point, 2–2 → 1 point chacun (set-average inchangé), 1–1 et 1–0 → aucun point. La fenêtre de saisie propose l'option « Match interrompu (règle 1R) » avec un rappel de la règle et le résumé des points (vérifié avec Node, à couvrir par E2E-01).
 **SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
 
-### 4.3 Calcul du classement — `Integration/Service/ClassementServiceTest` (P0)
+### 4.3 Calcul du classement — `Unitaire/Service/ClassementServicePointsTest`, `Unitaire/Service/RegleScoreTest`, `Integration/Service/ClassementServiceTest` (P0) ✅ lot 2
 
 Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/−3) pour qu'une inversion de règle soit visible.
 
@@ -242,19 +243,20 @@ Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/
 | 2–3 | défaite forte (2) |
 | 1–3, 0–3 | défaite faible (1) |
 | match non joué (null) | 0 |
-| vainqueur par forfait (3 contre −1) | victoire forte (5) ⚠ *actuel : tombe dans le cas par défaut → défaite faible (1)* (§8, A1) |
-| équipe forfait (−1 contre 3) | points de forfait de la saison (−3) ⚠ *actuel : défaite faible (1) ; `points_forfait` n'est jamais utilisé* (§8, A1) |
+| vainqueur par forfait (3 contre −1) | victoire forte (5) ✅ (A1 corrigée) |
+| équipe forfait (−1 contre 3) | points de forfait de la saison (−3) ✅ |
+| match interrompu (règle 1R) 2–1 / 2–2 / 1–1 / 1–0 | 2 et 1 / 1 et 1 / 0 et 0 / 0 et 0 ✅ |
 
-**CLA-02 — Le barème vient de la saison** : modifier `pointsVictoireForte` de la saison change le total ; deux saisons au barème différent ne se mélangent pas.
-**CLA-03 — Domicile et extérieur** : les points d'une équipe additionnent ses matchs à domicile et à l'extérieur.
-**CLA-04 — Contexte de poule** : un match d'une autre poule (phase 2, autre poule de la même équipe) n'est pas compté.
-**CLA-05 — Sets** : total gagnés / perdus correct ; un forfait (−1) compte pour 0 set, sans retirer de sets.
-**CLA-06 — Ordre** : points décroissants ; à égalité, différence de sets décroissante.
-**CLA-07 — Confrontation directe** (égalité de points et de différence de sets) : l'équipe qui a **gagné** le match direct est classée **devant**. ⚠ *Le comparateur renvoie +1 quand A a gagné ; avec `usort`, +1 place A **après** B : le vainqueur serait classé derrière* (§8, A3). Le test tranche.
-**CLA-08 — Confrontation non jouée** : si le match direct n'a pas de score, aucune préférence (ordre stable). ⚠ *Actuel : `null > null` est faux → compté comme une victoire de l'équipe qui se déplace* (§8, A3).
-**CLA-09 — Aller-retour** : si les deux équipes se sont rencontrées deux fois, la règle retenue (cumul des deux matchs, ou sets) est appliquée — ⚠ *à arbitrer ; actuellement seul le premier match trouvé compte.*
-**CLA-10 — Positions** : 1 à n sans trou ni doublon ; recalcul **idempotent** (deux appels successifs → même résultat, pas de doublon de lignes `Classement`).
-**CLA-11 — Nouvelle équipe ajoutée** à la poule → apparaît au classement avec 0 point au prochain recalcul.
+**CLA-02 — Le barème vient de la saison** ✅ : modifier `pointsVictoireForte` de la saison change le total ; deux saisons au barème différent ne se mélangent pas.
+**CLA-03 — Domicile et extérieur** ✅ : les points d'une équipe additionnent ses matchs à domicile et à l'extérieur.
+**CLA-04 — Contexte de poule** ✅ : un match d'une autre poule (phase 2, autre poule de la même équipe) n'est pas compté.
+**CLA-05 — Sets** ✅ : total gagnés / perdus correct ; un forfait (−1) compte pour 0 set, sans retirer de sets ; un match interrompu à 2–2 n'est pas compté (règle 1R).
+**CLA-06 — Ordre** ✅ : points décroissants ; à égalité, différence de sets décroissante.
+**CLA-07 — Confrontation directe** ✅ (égalité de points et de différence de sets) : l'équipe qui a **gagné** le match direct est classée **devant**, qu'elle ait reçu ou non. Le comparateur était inversé (A3, corrigé ; le test échoue avec l'ancien code).
+**CLA-08 — Confrontation non jouée ou nulle** ✅ : match direct sans score, ou interrompu à 2–2 / 1–1 → aucune préférence ; dernier critère : **ordre alphabétique** (classement identique d'un calcul à l'autre).
+**CLA-09 — Aller-retour** ✅ : seul le **dernier match joué** entre les deux équipes départage (décidé en octobre 2026).
+**CLA-10 — Positions** ✅ : 1 à n sans trou ni doublon ; recalcul **idempotent** (deux appels successifs → même résultat, pas de doublon de lignes `Classement`).
+**CLA-11 — Nouvelle équipe ajoutée** ✅ à la poule → apparaît au classement avec 0 point au prochain recalcul.
 
 ### 4.4 Visibilité des coordonnées — `Integration/Service/ContactCapitaineServiceTest` + `Fonctionnel/Front/FicheEquipeTest` (P0, RGPD)
 
@@ -476,7 +478,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
 | **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 77 tests verts (branche `clubs`) | fait le 11/10/2026 |
 | **1 — Accès** ✅ | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la suite (vérifié) ; 108 tests verts | fait le 12/10/2026 |
-| **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
+| **2 — Scores et classement** ✅ | SCO-*, CLA-* ; anomalies A1–A7 arbitrées et corrigées | 181 tests verts ; le départage et le set-average échouent avec l'ancien code (vérifié) | fait le 13/10/2026 |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |
 | **4 — Calculs et fonctions annexes** | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-* ; job de nuit | Génération de calendrier couverte | 1,5 j |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
@@ -485,9 +487,9 @@ Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaq
 
 ---
 
-## 8. Anomalies relevées pendant l'analyse — à arbitrer avant le lot 2
+## 8. Anomalies relevées pendant l'analyse — arbitrées et corrigées (lot 2, octobre 2026)
 
-Ces points ont été trouvés en lisant le code pour écrire ces spécifications. **Aucun n'a été modifié.** Le test correspondant fixera la règle choisie.
+Ces points ont été trouvés en lisant le code pour écrire ces spécifications. **Décisions** : A1 corrigée avant le lot 2 ; A2 : matchs complets **et** matchs interrompus selon la règle 1R, pour tous ; A3 : départage par le **dernier match direct joué**, puis ordre alphabétique ; A4 : 403 ; A5 : match à venir réservé à l'admin ; A6 : saison affichée protégée côté serveur ; A7 : inscription libre **fermée** (`/register` renvoie vers la connexion).
 
 | # | Où | Constat | Proposition |
 |---|---|---|---|

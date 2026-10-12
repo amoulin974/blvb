@@ -50,8 +50,13 @@ class ClassementService
                 return $diffB <=> $diffA;
             }
 
-            // 3) Confrontation directe (si les deux équipes se sont déjà rencontrées)
-            return $this->confrontationDirecte($a['equipe'], $b['equipe'], $poule);
+            // 3) Confrontation directe : le dernier match joué entre les deux équipes (aller ou retour)
+            if (($direct = $this->confrontationDirecte($a['equipe'], $b['equipe'], $poule)) !== 0) {
+                return $direct;
+            }
+
+            // 4) Ordre alphabétique, pour un classement toujours identique d'un calcul à l'autre
+            return strcasecmp((string) $a['equipe']->getNomSansClub(), (string) $b['equipe']->getNomSansClub());
         });
 
         // Mise à jour / insertion classement
@@ -132,11 +137,17 @@ class ClassementService
             return $saison->getPointsVictoireForte(); // victoire par forfait de l'adversaire
         }
 
+        // Match interrompu (règle 1R) : points fixés par le règlement
+        if (($interrompu = RegleScore::pointsInterrompu($setsGagnes, $setsPerdus)) !== null) {
+            return $interrompu;
+        }
+
         return match([$setsGagnes, $setsPerdus]) {
             [3,0], [3,1] => $saison->getPointsVictoireForte(),
             [3,2] => $saison->getPointsVictoireFaible(),
             [2,3] => $saison->getPointsDefaiteForte(),
-            default => $saison->getPointsDefaiteFaible()
+            [1,3], [0,3] => $saison->getPointsDefaiteFaible(),
+            default => 0, // score hors règlement (refusé à la saisie depuis octobre 2026)
         };
     }
 
@@ -151,6 +162,9 @@ class ClassementService
             if ($pouleContext && $partie->getPoule() !== $pouleContext) {
                 continue;
             }
+            if (!RegleScore::setsComptes($partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())) {
+                continue; // match interrompu à 2-2 : set-average inchangé (règle 1R)
+            }
             $val = $partie->getNbSetGagnantReception();
             // Si c'est un forfait (-1), on ajoute 0, sinon on ajoute la valeur
             $total += ($val === -1) ? 0 : ($val ?? 0);
@@ -159,6 +173,9 @@ class ClassementService
         foreach ($equipe->getPartiesDeplacement() as $partie) {
             if ($pouleContext && $partie->getPoule() !== $pouleContext) {
                 continue;
+            }
+            if (!RegleScore::setsComptes($partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())) {
+                continue; // match interrompu à 2-2 : set-average inchangé (règle 1R)
             }
             $val = $partie->getNbSetGagnantDeplacement();
             $total += ($val === -1) ? 0 : ($val ?? 0);
@@ -178,6 +195,9 @@ class ClassementService
             if ($pouleContext && $partie->getPoule() !== $pouleContext) {
                 continue;
             }
+            if (!RegleScore::setsComptes($partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())) {
+                continue; // match interrompu à 2-2 : set-average inchangé (règle 1R)
+            }
             $valAdversaire = $partie->getNbSetGagnantDeplacement();
             // L'équipe perd les sets que l'adversaire a gagnés.
             // Si l'adversaire est forfait (-1), l'équipe n'en perd aucun (0).
@@ -187,6 +207,9 @@ class ClassementService
         foreach ($equipe->getPartiesDeplacement() as $partie) {
             if ($pouleContext && $partie->getPoule() !== $pouleContext) {
                 continue;
+            }
+            if (!RegleScore::setsComptes($partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement())) {
+                continue; // match interrompu à 2-2 : set-average inchangé (règle 1R)
             }
             $valAdversaire = $partie->getNbSetGagnantReception();
             $total += ($valAdversaire === -1) ? 0 : ($valAdversaire ?? 0);
@@ -202,29 +225,29 @@ class ClassementService
          *  +1 si $equipeA doit passer avant $equipeB
          *   0 si aucune info / égalité parfaite
          */
-        private function confrontationDirecte(Equipe $equipeA, Equipe $equipeB, Poule $poule): int
-        {
-            foreach ($poule->getParties() as $partie) {
-
-                // Cas A reçoit B
-                if ($partie->getIdEquipeRecoit() === $equipeA && $partie->getIdEquipeDeplace() === $equipeB) {
-                    if ($partie->getNbSetGagnantReception() > $partie->getNbSetGagnantDeplacement()) {
-                        return +1; // A a gagné
-                    } else {
-                        return -1; // B a gagné
-                    }
-                }
-
-                // Cas B reçoit A
-                if ($partie->getIdEquipeRecoit() === $equipeB && $partie->getIdEquipeDeplace() === $equipeA) {
-                    if ($partie->getNbSetGagnantReception() > $partie->getNbSetGagnantDeplacement()) {
-                        return -1; // B a gagné en recevant
-                    } else {
-                        return +1; // A a gagné en déplacement
-                    }
-                }
+    /**
+     * Départage par la confrontation directe : seul le DERNIER match joué entre les deux équipes dans la poule compte
+     * (aller ou retour, décision d'octobre 2026). Comparateur pour usort : -1 si A l'a gagné (A devant), +1 si B l'a
+     * gagné, 0 si aucun match joué entre elles ou match nul (match interrompu à 2-2 ou 1-1).
+     */
+    private function confrontationDirecte(Equipe $equipeA, Equipe $equipeB, Poule $poule): int
+    {
+        $dernier = null;
+        foreach ($poule->getParties() as $partie) {
+            $entreElles = ($partie->getIdEquipeRecoit() === $equipeA && $partie->getIdEquipeDeplace() === $equipeB)
+                || ($partie->getIdEquipeRecoit() === $equipeB && $partie->getIdEquipeDeplace() === $equipeA);
+            $joue = $partie->getNbSetGagnantReception() !== null && $partie->getNbSetGagnantDeplacement() !== null;
+            if ($entreElles && $joue && ($dernier === null || $partie->getDate() > $dernier->getDate())) {
+                $dernier = $partie;
             }
-
-            return 0; // aucune confrontation ou scores non saisis → aucune préférence
         }
+        if ($dernier === null) {
+            return 0;
+        }
+
+        $setsA = $dernier->getIdEquipeRecoit() === $equipeA ? $dernier->getNbSetGagnantReception() : $dernier->getNbSetGagnantDeplacement();
+        $setsB = $dernier->getIdEquipeRecoit() === $equipeA ? $dernier->getNbSetGagnantDeplacement() : $dernier->getNbSetGagnantReception();
+
+        return $setsB <=> $setsA; // forfait : -1 set, donc perdant
+    }
 }

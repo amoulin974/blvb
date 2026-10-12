@@ -4,7 +4,8 @@
    - sets en champs numériques 0 à 3, score impossible signalé dans la fenêtre avant l'envoi ;
    - résumé en direct des points attribués, selon le barème de la saison du match ;
    - « Effacer le score » explicite ; erreurs affichées dans la fenêtre (pas d'alerte du navigateur) ;
-   - options et champs d'au moins 44 px de haut (mobile). #}
+   - options et champs d'au moins 44 px de haut (mobile).
+   Match interrompu (règle 1R, octobre 2026) : option dédiée, scores 2-1, 2-2, 1-1, 1-0, barème du règlement (App\Service\RegleScore). #}
 <div data-score-modal-target="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="score-modal-titre">
     <div class="modal-box max-w-lg">
         <h3 id="score-modal-titre" class="text-xl">Saisir le résultat</h3>
@@ -15,6 +16,10 @@
             <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
                 <input type="radio" name="score-modal-type" value="joue" class="radio radio-primary" data-score-modal-target="typeJoue" data-action="score-modal#changerType">
                 <span>Match joué</span>
+            </label>
+            <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
+                <input type="radio" name="score-modal-type" value="interrompu" class="radio radio-primary" data-score-modal-target="typeInterrompu" data-action="score-modal#changerType">
+                <span>Match interrompu <span class="text-sm text-(--color-base-content)/70">(règle 1R)</span></span>
             </label>
             <label class="flex items-center gap-3 min-h-[44px] cursor-pointer">
                 <input type="radio" name="score-modal-type" value="forfait-reception" class="radio radio-primary" data-score-modal-target="typeForfaitReception" data-action="score-modal#changerType">
@@ -28,6 +33,11 @@
 
         <fieldset class="mt-4 disabled:opacity-50" data-score-modal-target="sets">
             <legend class="text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80 mb-1">Sets gagnés</legend>
+            {# Règle 1R du règlement, rappelée quand « Match interrompu » est choisi #}
+            <p class="mb-2 text-sm text-(--color-base-content)/80 hidden" data-score-modal-target="aideInterrompu">
+                Partie interrompue (coupure de courant, fermeture du gymnase, blessure obligeant à finir à 4) : 2–1, 2–2, 1–1 ou 1–0.
+                Si une équipe menait dans le set en cours, elle est déclarée vainqueur : comptez ce set pour elle.
+            </p>
             {# Les deux colonnes ont la même hauteur (grille) : mt-auto garde les champs alignés en bas,
                même quand le nom d'une équipe passe sur plusieurs lignes #}
             <div class="grid grid-cols-2 gap-3">
