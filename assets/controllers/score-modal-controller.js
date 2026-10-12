@@ -16,7 +16,7 @@ import { Controller } from '@hotwired/stimulus';
  * Les erreurs ne s'affichent qu'à l'enregistrement ou une fois les deux champs remplis, jamais avant la saisie.
  */
 export default class extends Controller {
-    static targets = ['modal', 'title', 'typeJoue', 'typeForfaitReception', 'typeForfaitDeplacement',
+    static targets = ['modal', 'title', 'typeJoue', 'typeInterrompu', 'aideInterrompu', 'typeForfaitReception', 'typeForfaitDeplacement',
         'nomForfaitReception', 'nomForfaitDeplacement', 'sets', 'labelReception', 'labelDeplacement',
         'inputReception', 'inputDeplacement', 'resume', 'erreur', 'effacer', 'enregistrer'];
 
@@ -59,7 +59,9 @@ export default class extends Controller {
         const dejaSaisi = r !== '' && d !== '';
         this.typeForfaitReceptionTarget.checked = r === '-1';
         this.typeForfaitDeplacementTarget.checked = d === '-1';
-        this.typeJoueTarget.checked = r !== '-1' && d !== '-1';
+        const interrompu = dejaSaisi && r !== '-1' && d !== '-1' && r !== '3' && d !== '3';
+        this.typeInterrompuTarget.checked = interrompu;
+        this.typeJoueTarget.checked = r !== '-1' && d !== '-1' && !interrompu;
         this.inputReceptionTarget.value = dejaSaisi && r !== '-1' && d !== '-1' ? r : '';
         this.inputDeplacementTarget.value = dejaSaisi && r !== '-1' && d !== '-1' ? d : '';
         this.effacerTarget.classList.toggle('hidden', !dejaSaisi);
@@ -67,7 +69,7 @@ export default class extends Controller {
         this.masquerErreur();
         this.changerType();
         this.modalTarget.classList.add('modal-open');
-        (this.type() === 'joue' ? this.inputReceptionTarget : this.radioCoche()).focus();
+        (['joue', 'interrompu'].includes(this.type()) ? this.inputReceptionTarget : this.radioCoche()).focus();
     }
 
     closeModal(event) {
@@ -79,18 +81,20 @@ export default class extends Controller {
     type() {
         if (this.typeForfaitReceptionTarget.checked) return 'forfait-reception';
         if (this.typeForfaitDeplacementTarget.checked) return 'forfait-deplacement';
+        if (this.typeInterrompuTarget.checked) return 'interrompu';
         return 'joue';
     }
 
     radioCoche() {
-        return [this.typeJoueTarget, this.typeForfaitReceptionTarget, this.typeForfaitDeplacementTarget].find((r) => r.checked);
+        return [this.typeJoueTarget, this.typeInterrompuTarget, this.typeForfaitReceptionTarget, this.typeForfaitDeplacementTarget].find((r) => r.checked);
     }
 
     changerType() {
         // En cas de forfait, les sets ne s'appliquent pas : le bloc est masqué (valeurs gardées si l'on revient à « Match joué »)
-        const forfait = this.type() !== 'joue';
+        const forfait = !['joue', 'interrompu'].includes(this.type());
         this.setsTarget.disabled = forfait;
         this.setsTarget.classList.toggle('hidden', forfait);
+        this.aideInterrompuTarget.classList.toggle('hidden', this.type() !== 'interrompu');
         this.masquerErreur();
         this.actualiser();
     }
@@ -123,15 +127,34 @@ export default class extends Controller {
         }
         const r = Number(brutR);
         const d = Number(brutD);
+        if (this.type() === 'interrompu') {
+            return this.analyserInterrompu(r, d, complet);
+        }
         const valide = Number.isInteger(r) && Number.isInteger(d) && r >= 0 && d >= 0 && r <= 3 && d <= 3
             && (r === 3) !== (d === 3);
         if (!valide) {
-            return { complet, erreur: 'Score impossible : une des deux équipes doit avoir gagné 3 sets, l\'autre 0, 1 ou 2.' };
+            return { complet, erreur: 'Score impossible : une des deux équipes doit avoir gagné 3 sets, l\'autre 0, 1 ou 2. Pour une partie interrompue, choisissez « Match interrompu ».' };
         }
 
         const [gagnant, perdant, sg, sp] = r === 3 ? [this.recoit, this.deplace, r, d] : [this.deplace, this.recoit, d, r];
         const [pg, pp] = sp === 2 ? [b.victoireFaible, b.defaiteForte] : [b.victoireForte, b.defaiteFaible];
         return { complet, valeurs: [String(r), String(d)], resume: `${gagnant} gagne ${sg}–${sp} : ${gagnant} ${this.points(pg)}, ${perdant} ${this.points(pp)}.` };
+    }
+
+    // Règle 1R : points fixés par le règlement (mêmes valeurs que App\Service\RegleScore)
+    analyserInterrompu(r, d, complet) {
+        const BAREME_1R = { '2-1': [2, 1], '1-2': [1, 2], '2-2': [1, 1], '1-1': [0, 0], '1-0': [0, 0], '0-1': [0, 0] };
+        const points = BAREME_1R[`${r}-${d}`];
+        if (!Number.isInteger(r) || !Number.isInteger(d) || !points) {
+            return { complet, erreur: 'Match interrompu : les scores possibles sont 2–1, 2–2, 1–1 et 1–0, dans un sens ou dans l\'autre.' };
+        }
+        const valeurs = [String(r), String(d)];
+        if (r === d || points[0] === points[1]) {
+            const detail = r === 2 && d === 2 ? '1 point chacun, set-average inchangé' : 'aucun point pour les deux équipes';
+            return { complet, valeurs, resume: `Match interrompu à ${r}–${d} : ${detail}.` };
+        }
+        const [gagnant, perdant, sg, sp, pg, pp] = r > d ? [this.recoit, this.deplace, r, d, ...points] : [this.deplace, this.recoit, d, r, points[1], points[0]];
+        return { complet, valeurs, resume: `Match interrompu, ${gagnant} gagne ${sg}–${sp} : ${gagnant} ${this.points(pg)}, ${perdant} ${this.points(pp)}.` };
     }
 
     points(n) {

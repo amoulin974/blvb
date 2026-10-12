@@ -69,6 +69,12 @@ final class SaisonController extends AbstractController
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
     public function delete(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
     {
+        // La saison affichée sur le site ne peut pas être supprimée (l'interface le cache, le serveur le refuse aussi)
+        if ($saison->getFavori()) {
+            $this->addFlash('error', sprintf('La saison %s est celle affichée sur le site : choisissez d\'abord une autre saison favorite. Rien n\'a été supprimé.', $saison->getNom()));
+
+            return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
+        }
         if ($this->supprimerEntite($request, $entityManager, $saison, 'delete'.$saison->getId(), 'la saison '.$saison->getNom(), true)) {
             $cache->delete('saisons_all');
         }

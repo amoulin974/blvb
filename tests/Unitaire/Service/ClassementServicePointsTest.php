@@ -52,6 +52,12 @@ final class ClassementServicePointsTest extends TestCase
         yield 'forfait de l\'équipe qui se déplace' => [3, -1, 5, -3];
         yield 'forfait de l\'équipe qui reçoit' => [-1, 3, -3, 5];
         yield 'match non joué' => [null, null, 0, 0];
+        // Règle 1R (match interrompu) : points fixés par le règlement, quel que soit le barème de la saison
+        yield 'interrompu 2-1 : 2 points / 1 point' => [2, 1, 2, 1];
+        yield 'interrompu 1-2 : 1 point / 2 points' => [1, 2, 1, 2];
+        yield 'interrompu 2-2 : 1 point chacun' => [2, 2, 1, 1];
+        yield 'interrompu 1-1 : aucun point' => [1, 1, 0, 0];
+        yield 'interrompu 1-0 : aucun point' => [1, 0, 0, 0];
     }
 
     #[DataProvider('scores')]

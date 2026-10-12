@@ -19,6 +19,7 @@ use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
 use App\Security\ScoreVoter;
 use App\Service\ClassementService;
+use App\Service\RegleScore;
 use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -170,7 +171,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository, ContactCapitaineService $contactCapitaineService): Response
+    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository, ContactCapitaineService $contactCapitaineService, SaisieScoreService $saisieScore): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -203,7 +204,8 @@ final class FrontController extends AbstractController
         }
 
         // Droits d'accès aux coordonnées, du plus large au plus restreint :
-        //  - capitaine de l'équipe consultée : réservé aux capitaines des équipes de sa poule (phase en cours) et aux administrateurs ;
+        //  - capitaine de l'équipe consultée : réservé aux capitaines des équipes de sa poule (phase en cours), aux
+        //    responsables d'un club dont une équipe joue dans cette poule (saison de la page) et aux administrateurs ;
         //  - coordonnées des autres joueurs : réservées aux membres de l'équipe (et aux administrateurs).
         // Un capitaine ne voit donc jamais que les coordonnées du capitaine adverse.
         $user = $this->getUser();
@@ -213,10 +215,16 @@ final class FrontController extends AbstractController
         //On récupère la liste des capitaines des équipes de la même poule que l'équipe sélectionnée
         $listeCapitaines=[];
         $capitainesAdverses=[]; // id équipe adverse => coordonnées du capitaine (ou null si non désigné)
+        // Équipes des clubs dont l'utilisateur est responsable pour cette saison (SaisieScoreService::droits)
+        $equipesDeMesClubs = $user instanceof User ? $saisieScore->droits($user, $saison)['club'] : [];
+        $responsableDansLaPoule = false;
         foreach ($poules as $poule) {
             $phaseEnCours = $phaseouverte !== null && $poule->getPhase()->getId() === $phaseouverte->getId();
             foreach ($poule->getEquipes() as $equipePoule) {
                 $capitaineMembre = $membreEquipeRepository->findCapitaine($equipePoule, $saison);
+                if ($phaseEnCours && \in_array($equipePoule->getId(), $equipesDeMesClubs, true)) {
+                    $responsableDansLaPoule = true;
+                }
                 if ($phaseEnCours) {
                     $capitaineUser = $capitaineMembre?->getJoueur()->getUser();
                     if ($capitaineUser !== null && !in_array($capitaineUser->getId(), $listeCapitaines)){
@@ -229,7 +237,7 @@ final class FrontController extends AbstractController
             }
         }
 
-        $canViewCapitaine = $estAdmin || ($user !== null && in_array($user->getId(), $listeCapitaines));
+        $canViewCapitaine = $estAdmin || $responsableDansLaPoule || ($user !== null && in_array($user->getId(), $listeCapitaines));
         $peutVoirCapitaine = $canViewCapitaine || $estMembre;
         $peutVoirMembres = $estMembre || $estAdmin;
         if (!$canViewCapitaine) {
@@ -444,9 +452,13 @@ final class FrontController extends AbstractController
 
     $data = json_decode($request->getContent(), true);
     try{
-        // Admin, capitaine de l'équipe qui reçoit ou responsable de son club (App\Security\ScoreVoter)
+        // Admin, capitaine de l'équipe qui reçoit ou responsable de son club (App\Security\ScoreVoter) : sinon 403
         if (!$this->isGranted(ScoreVoter::SAISIR, $partie)) {
-            throw new Exception("Modification interdite");
+            return $this->json(['error' => 'Modification interdite'], 403);
+        }
+        // Match à venir (ou sans date) : seul un administrateur peut saisir son score (décision d'octobre 2026)
+        if (!$this->isGranted('ROLE_ADMIN') && ($partie->getDate() === null || $partie->getDate() > new \DateTimeImmutable())) {
+            return $this->json(['error' => 'Ce match n\'a pas encore eu lieu : seul un administrateur peut saisir son score.'], 403);
         }
 
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
@@ -472,11 +484,12 @@ final class FrontController extends AbstractController
 
 
         }else{
-            //Cas normal
-            if (! is_numeric($data['scoreReception']) || ! is_numeric($data['scoreDeplacement'])) throw new Exception ("score invalide");
-            $scoreReception = (int)($data['scoreReception']);
-            $scoreDeplacement = (int)$data['scoreDeplacement'];
-            if ($scoreDeplacement > 3 || $scoreReception > 3 || $scoreDeplacement < 0 || $scoreReception < 0) throw new Exception("Score invalide");
+            //Cas normal : nombres entiers de sets, match complet ou interrompu (règle 1R) — App\Service\RegleScore
+            $entier = static fn ($v) => \is_int($v) || (\is_string($v) && ctype_digit(trim($v)));
+            if (!$entier($data['scoreReception']) || !$entier($data['scoreDeplacement'])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
+            $scoreReception = (int) $data['scoreReception'];
+            $scoreDeplacement = (int) $data['scoreDeplacement'];
+            if (!RegleScore::estValide($scoreReception, $scoreDeplacement)) throw new Exception("Score impossible : une équipe doit avoir 3 sets et l'autre de 0 à 2, ou, pour un match interrompu (règle 1R), 2-1, 2-2, 1-1 ou 1-0.");
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);

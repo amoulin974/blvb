@@ -44,6 +44,10 @@ class RegistrationController extends AbstractController
     JoueurRepository $joueurRepository,
     ): Response
     {
+        // Inscription libre fermée (décision d'octobre 2026) : les comptes sont créés par l'administrateur
+        // (formulaire ou import Excel). La route reste pour les anciens liens et renvoie vers la connexion.
+        return $this->redirectToRoute('app_login');
+
         $user = new User();
         $form = $this->createForm(RegistrationFormType::class, $user);
         $form->handleRequest($request);
