@@ -24,6 +24,7 @@ use function PHPUnit\Framework\throwException;
 #[Route('/admin/partie', name: 'admin_partie_')]
 final class PartieController extends AbstractController
 {
+    use JetonApiTrait;
     use SuppressionTrait;
 
     #[Route("/", name: 'index', methods: ['GET'])]
@@ -100,7 +101,9 @@ final class PartieController extends AbstractController
     #[Route('/{id}/deleteall', name: 'deleteall', methods: ['POST'])]
     public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
     {
-        if ($this->isCsrfTokenValid('deleteallparties'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+        if (!($this->isCsrfTokenValid('deleteallparties'.$poule->getId(), $request->getPayload()->getString('_token')))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } else {
             foreach ($poule->getParties() as $partie) {
                 $entityManager->remove($partie);
             }
@@ -121,7 +124,9 @@ final class PartieController extends AbstractController
             throw $this->createNotFoundException("Cette journée n'appartient pas à cette poule.");
         }
 
-        if ($this->isCsrfTokenValid('deleteallbyjournee'.$journee->getId(), $request->getPayload()->getString('_token'))) {
+        if (!($this->isCsrfTokenValid('deleteallbyjournee'.$journee->getId(), $request->getPayload()->getString('_token')))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } else {
             foreach ($journee->getParties() as $partie) {
                 $entityManager->remove($partie);
             }
@@ -138,7 +143,9 @@ final class PartieController extends AbstractController
     #[Route('/{id}/optimiser', name: 'optimiser', methods: ['POST'])]
     public function optimiser(Request $request, Poule $poule, PartieService $partieService): Response
     {
-        if ($this->isCsrfTokenValid('optimiser'.$poule->getId(), $request->getPayload()->getString('_token'))) {
+        if (!($this->isCsrfTokenValid('optimiser'.$poule->getId(), $request->getPayload()->getString('_token')))) {
+            $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } else {
             $resultat = $partieService->creerCalendrierOptimisePourPoule($poule);
 
             if ($resultat['type'] === 'championnat') {
@@ -281,6 +288,9 @@ final class PartieController extends AbstractController
     #[Route('/{poule}/api/{partie}', name: 'api_update', methods: ['PUT'])]
     public function apiJourneesUpdate(Request $request, Poule $poule, Partie $partie, EntityManagerInterface $em): JsonResponse
     {
+        if ($refus = $this->refusSansJeton($request)) {
+            return $refus;
+        }
         if ($partie->getPoule() !== $poule) throw $this->createNotFoundException("Cette partie n'appartient pas à cette poule");
         $data = json_decode($request->getContent(), true);
         if (isset($data['datedebut'])) {
@@ -302,6 +312,9 @@ final class PartieController extends AbstractController
     #[Route('/{poule}/api/{partie}', name: 'api_delete', methods: ['DELETE'])]
     public function apiPartiesDelete(Request $request, Poule $poule, Partie $partie, EntityManagerInterface $em): JsonResponse
     {
+        if ($refus = $this->refusSansJeton($request)) {
+            return $refus;
+        }
         //On supprime la journée
         $em->remove($partie);
         $em->flush();

@@ -140,20 +140,20 @@ Chaque cas a un identifiant stable (repris dans le nom de la classe ou en `#[Tes
 
 ### 4.1 Sécurité et droits d'accès — `Fonctionnel/Securite` (P0)
 
-**SEC-01 — Garde-fou automatique sur tout `/admin`** *(le test le plus important de la suite)*
+**SEC-01 — Garde-fou automatique sur tout `/admin`** *(le test le plus important de la suite)* ✅ *`Securite/AccesAdminTest`* — vérifié : réintroduire la faille `^/Admin` fait échouer 5 tests sur 6. Le responsable de club est ajouté aux profils refusés. Pour l'admin, seules les routes GET sont parcourues (les actions sont couvertes par SEC-08).
 Le test lit la table de routage (`router->getRouteCollection()`), retient **toutes** les routes dont le chemin commence par `/admin`, et pour chacune (paramètres remplis avec des identifiants de la story) :
 - anonyme → redirection vers `/login` (302) ;
 - `joueur.a1` (ROLE_USER) → 403 ;
 - `admin` → tout sauf 403/302-vers-login (200, 302 interne, 404 si la ressource n'existe pas, 405 si la méthode ne correspond pas).
 Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une liste blanche explicite (vide aujourd'hui) documente les éventuelles exceptions.
 
-**SEC-02 — Règle `access_control`** : `config/packages/security.yaml` contient une règle couvrant `/admin` exigeant `ROLE_ADMIN` (test qui lit la configuration chargée, pour empêcher le retour de `^/Admin`). Accepter `^/admin` (main) et `^/(blvb/)?admin` (branche prod, servie sous le préfixe /blvb).
+**SEC-02 — Règle `access_control`** ✅ : `config/packages/security.yaml` contient une règle couvrant `/admin` exigeant `ROLE_ADMIN` (test qui lit la configuration chargée, pour empêcher le retour de `^/Admin`). Accepter `^/admin` (main) et `^/(blvb/)?admin` (branche prod, servie sous le préfixe /blvb).
 
-**SEC-03 — Pages publiques** : `/`, `/equipes`, `/equipe/{id}`, `/calendrier`, `/calendrierlieu`, `/classement`, `/reglement`, `/qui-sommes-nous`, `/clubs`, `/club/{id}`, ICS → 200 pour anonyme, joueur, capitaine, responsable de club, admin.
+**SEC-03 — Pages publiques** ✅ *`Securite/PagesPubliquesTest`* : `/`, `/equipes`, `/equipe/{id}`, `/calendrier`, `/calendrierlieu`, `/classement`, `/reglement`, `/qui-sommes-nous`, `/clubs`, `/club/{id}`, ICS → 200 pour anonyme, joueur, capitaine, responsable de club, admin.
 
-**SEC-04 — Pages réservées aux connectés** : `/mon-profil` → anonyme redirigé vers la connexion ; connecté → 200.
+**SEC-04 — Pages réservées aux connectés** ✅ : `/mon-profil` → anonyme redirigé vers la connexion ; connecté → 200.
 
-**SEC-05 — Composition côté site** `/equipe/{e}/saison/{s}/composition` (GET et les 4 POST) :
+**SEC-05 — Composition côté site** `/equipe/{e}/saison/{s}/composition` (GET et les 4 POST) ✅ *`Securite/CompositionAccesTest`* (le responsable de club est aussi refusé : il ne gère pas les compositions) :
 
 | Profil | Attendu |
 |---|---|
@@ -164,15 +164,15 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 | `cap.a1` | 200 |
 | `admin` | 200 |
 
-**SEC-06 — Composition côté admin** `/admin/equipe/{e}/saison/{s}/composition` : `cap.a1` → 403 (même s'il a les droits côté site) ; `admin` → 200.
+**SEC-06 — Composition côté admin** ✅ *(couvert par SEC-01)* `/admin/equipe/{e}/saison/{s}/composition` : `cap.a1` → 403 (même s'il a les droits côté site) ; `admin` → 200.
 
-**SEC-07 — Manipulation d'identifiants** : retirer / nommer capitaine un `MembreEquipe` d'une **autre** équipe ou saison en changeant l'identifiant dans l'URL → 404, aucune modification en base.
+**SEC-07 — Manipulation d'identifiants** ✅ : retirer / nommer capitaine un `MembreEquipe` d'une **autre** équipe ou saison en changeant l'identifiant dans l'URL → 404, aucune modification en base.
 
-**SEC-08 — CSRF sur les actions qui modifient** : pour chaque formulaire POST de l'admin (suppressions, clôture, favori, composition), un envoi **sans jeton** ou avec un jeton faux ne modifie rien et affiche « La page a expiré… ». Pour l'API de score : voir SCO-01.
+**SEC-08 — CSRF sur les actions qui modifient** ✅ *`Securite/JetonsAdminTest`* (20 actions de l'admin, sans jeton et avec un jeton faux ; API du calendrier de l'admin : 403 sans jeton, acceptée avec celui de la page) : pour chaque formulaire POST de l'admin (suppressions, clôture, favori, composition), un envoi **sans jeton** ou avec un jeton faux ne modifie rien et affiche « La page a expiré… ». Pour l'API de score : voir SCO-01.
 
-**SEC-09 — Connexion** : identifiants faux → message en français, pas de fuite (« identifiants invalides » sans préciser lequel) ; après connexion admin, le lien « Administration » est présent ; pour un joueur, absent.
+**SEC-09 — Connexion** ✅ *`Securite/ConnexionTest`* : identifiants faux → message en français, pas de fuite (« identifiants invalides » sans préciser lequel) ; après connexion admin, le lien « Administration » est présent ; pour un joueur, absent.
 
-**SEC-10 — Déconnexion** : `/logout` termine la session ; une page admin redemande la connexion.
+**SEC-10 — Déconnexion** ✅ : `/logout` termine la session ; une page admin redemande la connexion.
 
 **SEC-11 — Fiche du club** `/club/{id}/modifier` (voter `CLUB_MODIFIER`) ✅ *`FicheClubTest`* :
 
@@ -362,9 +362,9 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 
 ### 4.13 Fumée : toutes les pages s'affichent — `Fonctionnel/Fumee` (P2, très rentable)
 
-**FUM-01** — Pour chaque route **GET** de l'application (lue dans le routeur, paramètres remplis depuis la story), avec le profil adéquat (anonyme pour le site, admin pour `/admin`) : statut 200 (ou 302 attendu), **aucune erreur Twig**, aucune « Notice/Deprecation ».
+**FUM-01** ✅ *`Fumee/PagesTest`* (visiteur, capitaine, responsable de club ; les pages /admin sont parcourues par SEC-01) — Pour chaque route **GET** de l'application (lue dans le routeur, paramètres remplis depuis la story), avec le profil adéquat (anonyme pour le site, admin pour `/admin`) : statut 200 (ou 302 attendu), **aucune erreur Twig**, aucune « Notice/Deprecation ».
 Couvre d'un coup les erreurs de gabarit (variables manquantes en `strict_variables`, gymnase absent → page 500 corrigée en octobre 2026).
-**FUM-02** — Même parcours sur une saison **vide** (sans phase) et sur une base **sans aucune saison** (`/aucune-saison`).
+**FUM-02** ✅ *`Fumee/PagesTest`, `Fumee/SansSaisonTest`* — Même parcours sur une saison **vide** (sans phase) et sur une base **sans aucune saison** (`/aucune-saison`).
 
 ### 4.14 Bout en bout dans un navigateur — `tests/e2e` (Playwright, lot 5, facultatif)
 
@@ -474,7 +474,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 |---|---|---|---|
 | **0 — Socle** ✅ | `dama/doctrine-test-bundle`, suites PHPUnit, factories manquantes, story `ChampionnatDeTest`, classes de base et connexion, workflow GitHub Actions (`qualite`, `tests`, `securite` informatif), raccourcis Composer, cache en mémoire en test | 20 tests verts en ~3 s ; `composer tests` en local dans Docker | fait le 10/10/2026 |
 | **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 77 tests verts (branche `clubs`) | fait le 11/10/2026 |
-| **1 — Accès** | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la CI | 0,5 j |
+| **1 — Accès** ✅ | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la suite (vérifié) ; 108 tests verts | fait le 12/10/2026 |
 | **2 — Scores et classement** | SCO-*, CLA-* ; arbitrage des anomalies A1–A5 puis corrections | Barème testé ; anomalies corrigées ou explicitement acceptées | 1 j (+ corrections) |
 | **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |
 | **4 — Calculs et fonctions annexes** | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-* ; job de nuit | Génération de calendrier couverte | 1,5 j |
@@ -497,6 +497,16 @@ Ces points ont été trouvés en lisant le code pour écrire ces spécifications
 | A5 | API de score | L'API accepte un score sur un match **à venir** (l'interface ne le propose qu'après la date) | Refuser pour un capitaine, autoriser pour un admin (correction d'erreur de date) |
 | A6 | `SaisonController::delete` | La saison affichée sur le site n'est protégée que dans l'interface ; un POST direct la supprime | Refuser aussi côté serveur |
 | A7 | `/register` | L'inscription libre est active (route accessible) alors que les liens sont commentés dans les menus | Décider : fermer la route ou l'assumer (avec vérification d'e-mail) |
+
+### Défauts trouvés et corrigés par le lot 1
+
+| Où | Constat | Correction |
+|---|---|---|
+| `JourneeController::createJournee` | « Créer les journées » ne vérifiait aucun jeton CSRF | Jeton dans le formulaire (`createjournee<poule>`), vérifié ; message « La page a expiré » |
+| API du calendrier de l'admin (journées et matchs : PUT, DELETE, POST) | Le jeton envoyé par `calendarController.js` (en-tête `X-CSRF-TOKEN`) n'était jamais vérifié ; la suppression d'un match depuis la fenêtre ne l'envoyait pas | Vérification commune (`JetonApiTrait`), 403 sans jeton ; en-tête ajouté à la suppression |
+| Suppressions groupées, génération des matchs, calendrier de la phase | Jeton faux : rien n'était fait, sans le dire | Message « La page a expiré : rechargez-la puis recommencez. Rien n'a été modifié. » |
+| `/forgot-password` | Reste d'un modèle : erreur 500 pour tout le monde | Redirection permanente vers `/reset-password` |
+| Formulaires (mot de passe, inscription, imports, comptes) | Contraintes en tableau : avertissements d'obsolescence Symfony 7.3, messages en anglais | Arguments nommés, messages en français |
 
 ---
 

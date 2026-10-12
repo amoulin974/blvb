@@ -66,6 +66,7 @@
                                 <div class="flex flex-wrap items-center gap-2 mb-5">
                                     {% if aDesEquipes and not aDesJournees %}
                                         <form action="{{ path('admin_journee_createjournee', {id: poule.id}) }}" method="post">
+                                            <input type="hidden" name="_token" value="{{ csrf_token('createjournee' ~ poule.id) }}">
                                             <button type="submit" class="btn btn-accent btn-sm">Créer les journées</button>
                                         </form>
                                     {% elseif aDesEquipes and aDesJournees and not aDesMatchs %}
