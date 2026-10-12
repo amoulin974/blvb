@@ -8,6 +8,11 @@
     {% set agendaWebcal = agendaUrl|replace({'https://': 'webcal://', 'http://': 'webcal://'}) %}
     <div class="container mx-auto max-w-5xl md:px-4 flex flex-col gap-6" data-controller="abonnement-agenda" data-abonnement-agenda-adresse-value="{{ agendaUrl }}">
 
+        {# Messages (ex. après avoir désigné un nouveau capitaine depuis la composition) #}
+        {% for message in app.flashes('success') %}
+            <div role="status" class="alert alert-success">{{ message }}</div>
+        {% endfor %}
+
         {# En-tête : nom de l'équipe, gymnase et créneaux de réception #}
         <div>
             <div class="flex flex-wrap items-center justify-between gap-3">

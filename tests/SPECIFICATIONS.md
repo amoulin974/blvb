@@ -258,54 +258,55 @@ Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/
 **CLA-10 — Positions** ✅ : 1 à n sans trou ni doublon ; recalcul **idempotent** (deux appels successifs → même résultat, pas de doublon de lignes `Classement`).
 **CLA-11 — Nouvelle équipe ajoutée** ✅ à la poule → apparaît au classement avec 0 point au prochain recalcul.
 
-### 4.4 Visibilité des coordonnées — `Integration/Service/ContactCapitaineServiceTest` + `Fonctionnel/Front/FicheEquipeTest` (P0, RGPD)
+### 4.4 Visibilité des coordonnées — `Fonctionnel/Front/CoordonneesTest` (P0, RGPD) ✅ lot 3
 
 Règle validée : *on ne voit que les coordonnées du capitaine adverse ; seuls les membres d'une même équipe voient les coordonnées des joueurs non capitaines.*
 
-**CON-01 — Matrice sur la fiche équipe de A1** (rendu HTML, on cherche l'e-mail/téléphone de chaque personne dans la page) :
+**CON-01 — Matrice sur la fiche équipe de A1** ✅ (rendu HTML, on cherche l'e-mail/téléphone de chaque personne dans la page) :
 
 | Spectateur | Capitaine de A1 | Joueurs non capitaines de A1 |
 |---|---|---|
 | anonyme | non visible | non visible |
 | `joueur.a2` (autre équipe) | non visible | non visible |
 | `cap.a2` (capitaine adverse, même poule) | **visible** | non visible |
-| `cap.b1` (capitaine d'une autre poule) | ⚠ selon règle `canViewCapitaine` actuelle — à figer par le test | non visible |
+| `cap.b1` (capitaine d'une autre poule) | non visible (figé : seuls les capitaines de la même poule, phase en cours) | non visible |
+| `resp.club` (responsable du club de A1, non membre) | non visible | non visible |
 | `joueur.a1` (coéquipier) | visible | **visible** |
 | `admin` | visible | visible |
 
-**CON-02** — Sur l'accueil et le calendrier, la ligne « Capitaine : … » d'un match n'apparaît que pour le capitaine de l'équipe adverse de ce match (`contact_capitaine_adverse`).
-**CON-03** — Coordonnées prises sur la fiche joueur, à défaut sur le compte ; aucune coordonnée → mention neutre, pas de ligne vide.
-**CON-04 — Saison** : le capitaine de la saison précédente n'est pas présenté comme capitaine de la saison courante.
-**CON-05 — Pas de fuite par l'API ou l'ICS** : l'agenda ICS et les réponses JSON ne contiennent aucune coordonnée personnelle.
+**CON-02** ✅ — Sur l'accueil et le calendrier, la ligne « Capitaine : … » d'un match n'apparaît que pour le capitaine de l'équipe adverse de ce match (`contact_capitaine_adverse`).
+**CON-03** ✅ — Coordonnées prises sur la fiche joueur, à défaut sur le compte ; aucune coordonnée → mention neutre, pas de ligne vide.
+**CON-04 — Saison** ✅ : le capitaine de la saison précédente n'est pas présenté comme capitaine de la saison courante.
+**CON-05 — Pas de fuite par l'API ou l'ICS** ✅ : l'agenda ICS et les réponses JSON ne contiennent aucune coordonnée personnelle.
 
-### 4.5 Composition des équipes — `Fonctionnel/Front/CompositionTest` et `Fonctionnel/Admin/CompositionAdminTest` (P1)
+### 4.5 Composition des équipes — `Fonctionnel/Front/CompositionTest` (P1) ✅ lot 3
 
-**COM-01** — Ajouter un joueur existant → membre créé (équipe, saison) ; message nommant l'action.
-**COM-02** — Ajouter un joueur déjà présent → refus « fait déjà partie », pas de doublon.
-**COM-03** — Créer une fiche avec un e-mail **inconnu** → nouvelle fiche + membre.
-**COM-04** — Créer une fiche avec l'e-mail d'un **compte existant** (casse différente : `Cap.A1@BLVB.test`) → fiche liée à ce compte, ou réutilisation de la fiche déjà liée ; pas de seconde fiche.
-**COM-05** — Retirer → le membre disparaît, la fiche joueur reste ; message nommant le joueur.
-**COM-06** — Désigner capitaine → **exactement un** capitaine pour (équipe, saison) après l'opération ; l'ancien redevient membre.
-**COM-07** — Une même personne peut être capitaine de deux équipes différentes (cas `cap.double` de la recette) sans interférence.
-**COM-08 — Côté de retour** : chaque action lancée depuis `/admin/…` redirige vers `/admin/…` ; depuis le site, vers le site.
-**COM-09** — Le sélecteur « Ajouter un joueur existant » ne propose pas les joueurs déjà dans la composition.
-**COM-10 — Admin** : la page admin liste les saisons de l'équipe ; le lien « Gérer la composition » de la fiche équipe admin pointe vers la version admin.
+**COM-01** ✅ — Ajouter un joueur existant → membre créé (équipe, saison) ; message nommant l'action.
+**COM-02** ✅ — Ajouter un joueur déjà présent → refus « fait déjà partie », pas de doublon.
+**COM-03** ✅ — Créer une fiche avec un e-mail **inconnu** → nouvelle fiche + membre.
+**COM-04** ✅ — Créer une fiche avec l'e-mail d'un **compte existant** (casse différente : `Cap.A1@BLVB.test`) → fiche liée à ce compte, ou réutilisation de la fiche déjà liée ; pas de seconde fiche.
+**COM-05** ✅ — Retirer → le membre disparaît, la fiche joueur reste ; message nommant le joueur.
+**COM-06** ✅ — Désigner capitaine → **exactement un** capitaine pour (équipe, saison) après l'opération ; l'ancien redevient membre. Le capitaine qui passe la main n'a plus accès à la composition : il est renvoyé sur la fiche de l'équipe, qui affiche le message (corrigé : il tombait sur une page « accès refusé »).
+**COM-07** ✅ — Une même personne peut être capitaine de deux équipes différentes (cas `cap.double` de la recette) sans interférence.
+**COM-08 — Côté de retour** ✅ : chaque action lancée depuis `/admin/…` redirige vers `/admin/…` ; depuis le site, vers le site.
+**COM-09** ✅ — Le sélecteur « Ajouter un joueur existant » ne propose pas les joueurs déjà dans la composition.
+**COM-10 — Admin** ✅ : la page admin liste les saisons de l'équipe ; le lien « Gérer la composition » de la fiche équipe admin pointe vers la version admin.
 
-### 4.6 Suppressions dans l'admin — `Fonctionnel/Admin/SuppressionTest` (P1)
+### 4.6 Suppressions dans l'admin — `Fonctionnel/Admin/SuppressionTest` (P1) ✅ lot 3
 
 Pour chaque entité : la suppression n'est plus proposée dans les listes ; elle se fait depuis la page de modification, via la fenêtre de confirmation (`data-action="confirmation#ouvrir"`).
 
-**SUP-01 — Équipe sans match** → supprimée, message « L'équipe X a été supprimée. », sa composition supprimée, fiches joueurs conservées, retirée des poules.
-**SUP-02 — Équipe avec matchs ou classement** → la page de modification affiche le **blocage** (pas de bouton de confirmation) ; un POST forcé avec un jeton valide → message « n'a pas pu être supprimée… Rien n'a été modifié », **pas de 500**, l'équipe et ses matchs existent toujours.
-**SUP-03 — Gymnase utilisé** (équipe ou match) → même comportement que SUP-02 ; gymnase libre → supprimé avec ses créneaux.
-**SUP-04 — Fiche joueur membre de compositions** → retirée des compositions puis supprimée ; le compte lié éventuel est conservé.
-**SUP-05 — Compte utilisateur lié à une fiche** → compte supprimé, fiche conservée avec `user = null` ; demandes de réinitialisation de mot de passe du compte supprimées.
-**SUP-06 — Son propre compte** → refusé côté serveur (message), compte intact.
-**SUP-07 — Saison** : saison non affichée → supprimée avec phases/poules/journées/matchs. Saison **affichée sur le site** → ⚠ *bloquée seulement dans l'interface ; un POST direct la supprime* (§8, A6).
-**SUP-08 — Phase / poule** → supprimées avec leur contenu ; redirection vers la page de la saison.
-**SUP-09 — Match** → supprimé ; redirection vers la saison, poule ouverte.
-**SUP-10 — Suppressions en masse** (matchs d'une poule, d'une journée ; journées d'une poule) → n'affectent que la cible, jeton exigé.
-**SUP-11 — Clôture de phase** → jeton `cloturer<id>` exigé ; sans jeton : message, phase non clôturée.
+**SUP-01 — Équipe sans match** ✅ → supprimée, message « L'équipe X a été supprimée. », sa composition supprimée, fiches joueurs conservées, retirée des poules.
+**SUP-02 — Équipe avec matchs ou classement** ✅ → la page de modification affiche le **blocage** (pas de bouton de confirmation) ; un POST forcé avec un jeton valide → message « n'a pas pu être supprimée… Rien n'a été modifié », **pas de 500**, l'équipe et ses matchs existent toujours.
+**SUP-03 — Gymnase utilisé** ✅ (équipe ou match) → même comportement que SUP-02 ; gymnase libre → supprimé avec ses créneaux.
+**SUP-04 — Fiche joueur membre de compositions** ✅ → retirée des compositions puis supprimée ; le compte lié éventuel est conservé.
+**SUP-05 — Compte utilisateur lié à une fiche** ✅ → compte supprimé, fiche conservée avec `user = null` ; demandes de réinitialisation de mot de passe du compte supprimées.
+**SUP-06 — Son propre compte** ✅ → refusé côté serveur (message), compte intact.
+**SUP-07 — Saison** ✅ : saison non affichée → supprimée avec phases/poules/journées/matchs. Saison **affichée sur le site** → refusée aussi côté serveur (A6, `ReglesAdminTest`).
+**SUP-08 — Phase / poule** ✅ → supprimées avec leur contenu ; redirection vers la page de la saison.
+**SUP-09 — Match** ✅ → supprimé ; redirection vers la saison, poule ouverte.
+**SUP-10 — Suppressions en masse** ✅ (matchs d'une poule, d'une journée ; journées d'une poule) → n'affectent que la cible, jeton exigé.
+**SUP-11 — Clôture de phase** ✅ → jeton `cloturer<id>` exigé ; sans jeton : message, phase non clôturée.
 
 ### 4.7 Génération des journées et des matchs — `Integration/Service` (P1, en partie `lent`)
 
@@ -479,7 +480,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Clubs** ✅ | SEC-11 à SEC-14, SCO-13 à 15, NOM-*, CLU-*, ADC-*, REP-* ; story enrichie (clubs, `resp.club` par saison) ; relecture de l'expert sécurité | 77 tests verts (branche `clubs`) | fait le 11/10/2026 |
 | **1 — Accès** ✅ | SEC-01 à SEC-10, FUM-01/02 | La faille `^/Admin` réintroduite volontairement fait échouer la suite (vérifié) ; 108 tests verts | fait le 12/10/2026 |
 | **2 — Scores et classement** ✅ | SCO-*, CLA-* ; anomalies A1–A7 arbitrées et corrigées | 181 tests verts ; le départage et le set-average échouent avec l'ancien code (vérifié) | fait le 13/10/2026 |
-| **3 — Données personnelles et admin** | CON-*, COM-*, SUP-* ; seuils de couverture par fichier | Matrice de visibilité figée par les tests | 1 j |
+| **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
 | **4 — Calculs et fonctions annexes** | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-* ; job de nuit | Génération de calendrier couverte | 1,5 j |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
