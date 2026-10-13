@@ -12,7 +12,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 0 | Cadrage : décisions, plan, lots, méthode | ✅ |
 | 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | ✅ |
 | 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | ✅ |
-| 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9) | ⬜ |
+| 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D27) | 🟡 |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ⬜ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ⬜ |
 | 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ⬜ |
@@ -70,6 +70,23 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Tests : CLA-12 à CLA-16 (quotient de sets, mini-classement, barème de phase, liste de
       départage) ; tests existants verts ; `tests/SPECIFICATIONS.md` à jour
 - [x] Pas d'écran (D19)
+
+## Lot 3 : règles de passage en données 🟡
+- [x] Branche `formats-competition-lot3` ; décisions D20 à D27
+- [ ] Codes : `Phase.code`, `Poule.code` (D20), calcul automatique (création, migration)
+- [ ] Entité `RegleDePassage` : phase source, ordre, source (notation des places), destination
+      (poule d'une phase suivante, ou niveau de la saison suivante, D22), placement, points conservés
+      (D23)
+- [ ] `ReglesParDefaut` : règles du schéma 2025 (D21), utilisées par la migration, la création de
+      saison et la clôture d'une phase sans règles (D26)
+- [ ] `ResultatsPhases` branché sur Doctrine (classements, issues de match) ; `ResolveurPlace` en service
+- [ ] `VerificationPassages` (D5) : notation, phase et poule existantes, chaque équipe une seule
+      destination
+- [ ] `PhaseService::cloturerEtBasculer` applique les règles (D24 : avertir et continuer) ;
+      avertissements affichés à la clôture (texte relu par l'ergonome)
+- [ ] Migration : colonnes de codes, table des règles, règles générées pour les saisons existantes
+      (D21). **À appliquer au déploiement seulement**
+- [ ] Tests (PHA-*, nouvelles règles, vérification, migration) ; `tests/SPECIFICATIONS.md` à jour
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;

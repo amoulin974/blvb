@@ -148,6 +148,63 @@ phase) et les calculs, sans écran. Les saisons existantes gardent leurs valeurs
 dans le wizard (lot 4). Pas d'interface, donc pas de relecture ergonome / webdesigner pour ce lot.
 *(2026-10-13, lot 2)*
 
+## D20. Codes des phases et des poules : automatiques, modifiables
+**Décision** : phases `P1`, `P2`… dans l'ordre, `F` pour une phase finale ; poules : la lettre tirée
+du nom (« Poule A » → `A`), sinon `A`, `B`, `C`… dans l'ordre des niveaux. Calculés par la migration
+et à la création ; modifiables plus tard dans le wizard. Uniques dans la saison (phase) et dans la
+phase (poule).
+*(2026-10-13, lot 3)*
+
+## D21. Règles des saisons existantes : le schéma 2025 (F1)
+**Décision** : la migration génère, pour les saisons existantes, les règles du schéma 2025 :
+- entre deux phases de championnat : montées et descentes de la poule (`nb_montee_defaut`,
+  `nb_descente_defaut`) vers le niveau voisin, les autres équipes au même niveau ; si le niveau
+  voisin n'existe pas, l'équipe reste à son niveau ;
+- vers une phase finale : chaque poule vers le tableau de son niveau, dans l'ordre du classement ;
+  les montées et descentes de la poule sont enregistrées **pour la saison suivante** (D22).
+**Conséquence assumée** : la clôture de la phase 2 ne fait plus changer les équipes de tableau
+(c'était le cas avec le calcul niveau ± 1) ; le comportement de la saison en cours change sur ce point.
+*(2026-10-13, lot 3)*
+
+## D22. Montées et descentes pour la saison suivante : enregistrées au lot 3, appliquées au lot 4
+**Décision** : une règle peut avoir pour destination un niveau de la **saison suivante**. Le lot 3
+les enregistre et les vérifie ; le wizard les appliquera en créant la saison suivante par copie
+(lot 4), pour pré-remplir ses poules.
+*(2026-10-13, lot 3)*
+
+## D23. Points conservés : le champ existe, seule la remise à zéro est appliquée
+**Décision** : chaque règle porte « points conservés » ; seule la remise à zéro (comportement actuel)
+est appliquée au lot 3. Les autres options (tout, moitié, contre les qualifiés) viendront avec les
+play-offs (lot 8).
+*(2026-10-13, lot 3)*
+
+## D24. Vérification en échec : avertir et continuer
+**Décision** : si la vérification des règles échoue à la clôture (équipe sans destination ou avec
+deux, poule ou rang inexistant…), la clôture se fait quand même et un avertissement liste les
+problèmes. Règle d'application, pour un résultat prévisible : les règles s'appliquent dans l'ordre ;
+une équipe déjà placée ne l'est pas une seconde fois ; une règle impossible à résoudre est ignorée ;
+les équipes restées sans destination sont nommées dans l'avertissement.
+*(2026-10-13, lot 3)*
+
+## D25. Zones ▲ ▼ du classement : colonnes conservées jusqu'au wizard
+**Décision** : `nb_montee_defaut` et `nb_descente_defaut` restent en base pour l'affichage des zones
+de montée et de descente sur la page publique du classement ; le gabarit ne change pas au lot 3.
+Les zones seront déduites des règles avec le wizard.
+*(2026-10-13, lot 3)*
+
+## D26. Phase sans règles enregistrées : règles par défaut
+**Décision** : une phase créée sans règles (à la main dans l'admin, ou par les tests) reçoit, à la
+clôture, les règles par défaut de D21, calculées à la volée. Les saisons créées par l'application
+enregistrent leurs règles.
+**Pourquoi** : aucune clôture ne doit perdre d'équipe parce qu'une règle manque.
+*(2026-10-13, lot 3)*
+
+## D27. Champ `format` de la phase : reporté au lot 4
+**Décision** : `PhaseType` (championnat, finale) reste le type de la phase au lot 3 ; son
+remplacement par un champ `format` se fera avec le wizard, car il touche le formulaire de phase de
+l'admin.
+*(2026-10-13, lot 3)*
+
 ---
 
 ## Points ouverts
