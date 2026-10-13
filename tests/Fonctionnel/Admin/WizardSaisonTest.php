@@ -90,6 +90,28 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSelectorTextContains('body', 'Brouillon · étape 3 sur 6');
     }
 
+    #[TestDox('WIZ-16 Étape 2 : une période de fermeture ajoutée mais vide, ou dont les dates sont inversées, est refusée (422) sans erreur 500 ni enregistrement')]
+    public function test_periode_de_fermeture_vide(): void
+    {
+        $saison = $this->demarrer(['depart[depart]' => 'modele', 'depart[modele]' => 'blvb_actuel']);
+        $url = '/admin/saison/'.$saison->getId().'/wizard/2';
+        $valeurs = $this->client->request('GET', $url)->filter('#wizard-form')->form()->getPhpValues();
+
+        $valeurs['saison_wizard']['indisponibilites'] = [['nom' => '', 'dateDebut' => '', 'dateFin' => '']];
+        $this->client->request('POST', $url, $valeurs + ['aller' => 'suivant']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Indiquez le motif de la fermeture.');
+        self::assertSelectorTextContains('body', 'Indiquez le premier jour de la fermeture.');
+        self::assertSelectorTextContains('body', 'Indiquez le dernier jour de la fermeture.');
+
+        $valeurs['saison_wizard']['indisponibilites'] = [['nom' => 'Noël', 'dateDebut' => '2030-12-31', 'dateFin' => '2030-12-20']];
+        $this->client->request('POST', $url, $valeurs + ['aller' => 'suivant']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Le dernier jour ne peut pas précéder le premier.');
+        $this->em()->clear();
+        self::assertCount(0, $this->em()->find(Saison::class, $saison->getId())->getIndisponibilites(), 'rien enregistré');
+    }
+
     /** Brouillon du modèle BLVB, toutes les étapes déjà vues ; renvoie l'URL de l'étape demandée. */
     private function brouillonA(int $etape): array
     {
