@@ -218,6 +218,33 @@ icône des messages de succès (modification à part) ; avertissements affichés
 « Clôturer » (avec le wizard).
 *(2026-10-13, lot 3)*
 
+## D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
+**Décision** : `ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
+comme recommandé (13/10/2026) :
+1. brouillon créé dès l'étape 1, enregistré à chaque changement d'étape ;
+2. à la copie, dates et périodes de fermeture décalées d'un an, bandeau « à vérifier » ;
+3. copie d'une saison non terminée permise, avec avertissement, poules non pré-remplies ;
+4. « nombre d'équipes prévu » ajouté aux poules (facultatif, pré-rempli à la copie) ;
+5. passages en mode simple par défaut (montées, descentes, « les autres »), mode détaillé en option ;
+6. notation des places au récapitulatif seulement, masquée par défaut ;
+7. codes des phases et poules dans des « Options avancées » repliées de l'étape 3 ;
+8. « Modifier la saison » ouvre le wizard (étapes 2 à 5) tant qu'aucun match n'est joué, ensuite
+   seulement nom, dates et périodes de fermeture ;
+9. formats pas encore disponibles masqués ;
+10. sport en texte fixe « Volley-ball » tant qu'il n'y en a qu'un ;
+11. à la création, les erreurs de vérification bloquent la validation, les avertissements non
+    (différent de la clôture, D24) ;
+12. brouillon invisible sur le site, ne peut pas être la saison affichée, supprimable ;
+13. nom proposé « Saison AAAA-AAAA+1 » ;
+14. stepper en deux groupes : « Organisation » (1-6) puis « Mise en place » (lot 5) ;
+15. réordonner par boutons Monter / Descendre seulement ;
+16. « points conservés » caché jusqu'au lot 8 ;
+17. schéma : matrice par niveaux sur ordinateur, flux vertical sur téléphone ;
+18. « Valider la saison » visible même avec des erreurs, désactivé avec la raison écrite ;
+19. libellés « Passages » (étape 4) et « Périodes de fermeture » (terme déjà en usage), modifiables à
+    la relecture.
+*(2026-10-13, lot 4)*
+
 ---
 
 ## Points ouverts

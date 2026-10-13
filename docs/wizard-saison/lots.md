@@ -101,7 +101,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       `config/app/saison.yaml` supprimé, `CompetitionCreator` délègue au modèle (D6, D10)
 - [x] Copie d'une saison : `App\Competition\CopieSaison` (D3, D10, D22)
 - [x] Proposition d'écrans de l'ergonome et du webdesigner : `ecrans.md`
-- [ ] **Questions de `ecrans.md` §6 à trancher par l'utilisateur**, puis décisions dans `decisions.md`
+- [x] Questions de `ecrans.md` §6 tranchées comme recommandé (D29)
 - [ ] `Phase.format` à la place de `PhaseType` (D27)
 - [ ] Écrans du wizard (étapes 1 à 6) ; relecture ergonome + webdesigner
 - [ ] Fin de la création automatique (`SaisonListener`) une fois le wizard en place (D6)
