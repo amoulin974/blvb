@@ -33,35 +33,11 @@ final class SaisonController extends AbstractController
 
 
 
-    //Ajoute une saison
-    //Attention au EventListener/SaisonListener qui créé les phases et les poules automatiquement
-    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, CacheInterface $cache): Response
+    // Une saison se crée désormais avec le wizard (docs/wizard-saison/decisions.md, D6 et D29) : ancienne adresse conservée
+    #[Route('/new', name: 'new', methods: ['GET'])]
+    public function new(): Response
     {
-        // creates a saison object
-        $saison = new Saison();
-
-        //Créer le formulaire et lui envoyer l'objet saison
-        $form = $this->createForm(SaisonType::class, $saison);
-
-
-        //Si le formulaire est soumis et valide
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            $saison = $form->getData();
-            $em->persist($saison);
-            $em->flush();
-            $cache->delete('saisons_all');
-            return $this->redirectToRoute('admin_saison_show', [
-                'id' => $saison->getId(),
-            ]);
-        }
-
-        return $this->render('admin/saison/new.html.twig', [
-            'form' => $form,
-            'saison' => $saison,
-        ]);
-
+        return $this->redirectToRoute('admin_saison_wizard_nouvelle');
     }
 
 

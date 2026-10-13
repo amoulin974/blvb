@@ -1,0 +1,14 @@
+{# Barre du bas du wizard, à l'intérieur du formulaire de l'étape. Variables : etape (numéro). #}
+<div class="wizard-navigation mt-6 flex flex-wrap items-center gap-2">
+    {% if etape > 1 %}
+        <button type="submit" name="aller" value="precedent" class="btn btn-ghost">← Précédent</button>
+    {% endif %}
+    <span class="flex-1"></span>
+    <button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>
+    {% if etape >= 2 and etape <= 5 %}
+        <button type="submit" name="aller" value="verification" class="btn btn-ghost">Aller à la vérification</button>
+    {% endif %}
+    {% if etape < 6 %}
+        <button type="submit" name="aller" value="suivant" class="btn btn-primary">Suivant →</button>
+    {% endif %}
+</div>

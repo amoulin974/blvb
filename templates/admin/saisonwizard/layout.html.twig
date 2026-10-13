@@ -1,66 +1,40 @@
 {% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{# Wizard de création d'une saison (docs/wizard-saison/ecrans.md). Variables : etapes (stepper), etape (numéro courant),
+   saison (brouillon, absent à l'étape 1 d'une nouvelle saison). Le formulaire de chaque étape porte l'id « wizard-form » :
+   les boutons du stepper et de la barre du bas lui sont rattachés (attribut form) et enregistrent avant de changer d'étape. #}
+{% set etape_courante = etapes|filter(e => e.etat == 'en cours')|first %}
+
+{% block title %}Étape {{ etape_courante.numero }} sur 6 : {{ etape_courante.libelle }} · Nouvelle saison{% endblock %}
 
 {% block body %}
-    <div class="container mx-auto p-4">
+    {{ include('admin/_entete.html.twig', {
+        titre: saison is defined and saison ? 'Nouvelle saison : ' ~ saison.nom : 'Nouvelle saison',
+        sous_titre: 'Brouillon · non visible sur le site',
+        retour: {url: path('admin_saison_index'), label: 'Saisons'},
+    }) }}
 
-        <h1 class="text-3xl font-bold mb-6">Pilotage : {{ saison.nom }} </h1>
+    <nav aria-label="Étapes de création de la saison" class="mb-6">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Organisation</p>
+        <ol class="steps w-full">
+            {% for e in etapes %}
+                {% set classe = e.etat == 'à venir' ? 'step' : 'step step-primary' %}
+                <li class="{{ classe }}" data-content="{{ e.etat == 'faite' ? '✓' : e.numero }}" {% if e.etat == 'en cours' %}aria-current="step"{% endif %}>
+                    {% if e.accessible and e.etat != 'en cours' %}
+                        <button type="submit" form="wizard-form" name="aller" value="{{ e.numero }}" class="max-md:sr-only hover:underline">{{ e.libelle }}<span class="sr-only"> ({{ e.etat }})</span></button>
+                    {% else %}
+                        <span class="max-md:sr-only {{ e.etat == 'en cours' ? 'font-semibold' : '' }}">{{ e.libelle }}</span><span class="sr-only"> ({{ e.etat }})</span>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ol>
+        <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape {{ etape_courante.numero }} sur 6 · {{ etape_courante.libelle }}</p>
+        <p class="mt-3 text-sm text-(--color-base-content)/80">Mise en place (après validation) : poules, journées, matchs.</p>
+    </nav>
 
-        {# --- LE STEPPER DAISYUI --- #}
-        <ul class="steps steps-vertical lg:steps-horizontal w-full mb-8">
-
-            {# Étape 1 : Config #}
-            <li class="step {{ current_step == 'configuration' or current_step == 'poules' or current_step == 'calendrier' or current_step == 'matchs' ? 'step-primary' : '' }}">
-                <a href="{{ path('admin_saison_wizard_dispatch', {id: saison.id, step: 'configuration'}) }}">
-                    Architecture
-                </a>
-            </li>
-
-            {# Étape 2 : Poules #}
-            <li class="step {{ current_step == 'poules' or current_step == 'calendrier' or current_step == 'matchs' ? 'step-primary' : '' }}">
-                <a href="{{ path('admin_saison_wizard_dispatch', {id: saison.id, step: 'poules'}) }}">
-                    Composition Poules
-                </a>
-            </li>
-
-            {# Étape 3 : Journées #}
-            <li class="step {{ current_step == 'calendrier' or current_step == 'matchs' ? 'step-primary' : '' }}">
-                <a href="{{ path('admin_saison_wizard_dispatch', {id: saison.id, step: 'calendrier'}) }}">
-                    Calendrier
-                </a>
-            </li>
-
-            {# Étape 4 : Matchs #}
-            <li class="step {{ current_step == 'matchs' ? 'step-primary' : '' }}">
-                <a href="{{ path('admin_saison_wizard_dispatch', {id: saison.id, step: 'matchs'}) }}">
-                    Génération Matchs
-                </a>
-            </li>
-        </ul>
-
-        {# --- LE CONTENU DYNAMIQUE --- #}
-        <div class="bg-base-100 rounded-box shadow-lg p-6 border border-base-200">
-{#            {% if current_step == 'configuration' %}#}
-{#                {{ include('admin/phase_wizard/steps/_step1_config.html.twig') }}#}
-
-{#            {% elseif current_step == 'poules' %}#}
-{#                #}{# Ici tu inclus ton interface de Drag & Drop existante #}
-{#                {{ include('admin/phase_wizard/steps/_step2_poules.html.twig') }}#}
-
-{#            {% elseif current_step == 'calendrier' %}#}
-{#                #}{# Ici le tableau des journées #}
-{#                {{ include('admin/phase_wizard/steps/_step3_calendrier.html.twig') }}#}
-
-{#            {% elseif current_step == 'matchs' %}#}
-{#                #}{# L'outil de génération finale et résolution de conflits #}
-{#                {{ include('admin/phase_wizard/steps/_step4_matchs.html.twig') }}#}
-{#            {% endif %}#}
-        </div>
-
-        {# --- NAVIGATION BAS DE PAGE --- #}
-        <div class="flex justify-between mt-6">
-            <a href="#" class="btn btn-outline">Précédent</a>
-            <a href="#" class="btn btn-primary">Étape Suivante</a>
-        </div>
-
+    <div class="admin-carte">
+        <h2 id="titre-etape" tabindex="-1" class="mb-4">{% block titre_etape %}{{ etape_courante.libelle }}{% endblock %}</h2>
+        {% block contenu %}{% endblock %}
     </div>
 {% endblock %}

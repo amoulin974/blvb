@@ -44,7 +44,15 @@ final class BrouillonSaisonTest extends TestFonctionnel
         $id = $this->brouillon();
         $this->connecter('admin');
         $crawler = $this->client->request('GET', '/admin/saison/saison');
-        $jeton = $crawler->filter('form[action$="/admin/saison/'.$id.'/favorite/"] input[name="_token"]')->attr('value');
+        self::assertCount(0, $crawler->filter('form[action$="/admin/saison/'.$id.'/favorite/"]'), 'le bouton « Afficher sur le site » n\'est pas proposé');
+        self::assertSelectorTextContains('body', 'Brouillon · étape');
+        // Requête forgée par un administrateur : jeton valide de la session
+        $requete = $this->client->getRequest();
+        $pile = $this->client->getContainer()->get('request_stack');
+        $pile->push($requete);
+        $jeton = $this->client->getContainer()->get('security.csrf.token_manager')->getToken('favorite'.$id)->getValue();
+        $requete->getSession()->save();
+        $pile->pop();
 
         $this->client->request('POST', '/admin/saison/'.$id.'/favorite/', ['_token' => $jeton]);
         self::assertResponseRedirects();

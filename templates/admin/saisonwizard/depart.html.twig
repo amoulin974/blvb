@@ -1,0 +1,42 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+
+{% block titre_etape %}Comment voulez-vous commencer ?{% endblock %}
+
+{% block contenu %}
+    {{ form_start(form, {attr: {id: 'wizard-form', 'data-controller': 'wizard-depart'}}) }}
+        <fieldset class="grid gap-4 md:grid-cols-2">
+            <legend class="sr-only">Point de départ</legend>
+            {% for choix in form.depart %}
+                <label class="choix-carte">
+                    <span class="flex items-center gap-2 text-lg font-semibold">{{ form_widget(choix, {attr: {class: 'radio radio-primary', 'data-action': 'wizard-depart#choisir'}}) }} {{ choix.vars.label }}</span>
+                    {% if choix.vars.value == 'copie' %}
+                        <span class="text-sm text-(--color-base-content)/80">Les phases, poules, passages, barème et départage sont recopiés. Si la saison copiée est terminée, les équipes qui montent ou descendent sont placées dans les bonnes poules de la Phase 1.</span>
+                    {% else %}
+                        <span class="text-sm text-(--color-base-content)/80">Formats prêts à l'emploi.</span>
+                    {% endif %}
+                </label>
+            {% endfor %}
+        </fieldset>
+
+        <div class="mt-4 grid gap-4 md:grid-cols-2">
+            <div data-wizard-depart-target="copie">
+                {{ form_label(form.saison, null, {label_attr: {class: 'label font-semibold'}}) }}
+                {{ form_widget(form.saison, {attr: {class: 'select select-bordered w-full'}}) }}
+                {{ form_errors(form.saison) }}
+            </div>
+            <div data-wizard-depart-target="modele">
+                {{ form_label(form.modele, null, {label_attr: {class: 'label font-semibold'}}) }}
+                {{ form_widget(form.modele, {attr: {class: 'select select-bordered w-full', 'aria-describedby': 'aide-modeles'}}) }}
+                <ul id="aide-modeles" class="mt-2 text-sm text-(--color-base-content)/80">
+                    {% for modele in modeles %}<li><strong>{{ modele.libelle }}</strong> : {{ modele.description }}</li>{% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="wizard-navigation mt-6 flex flex-wrap items-center gap-2">
+            <a href="{{ path('admin_saison_index') }}" class="btn btn-ghost">Annuler</a>
+            <span class="flex-1"></span>
+            <button type="submit" class="btn btn-primary">Suivant →</button>
+        </div>
+    {{ form_end(form) }}
+{% endblock %}

@@ -204,6 +204,12 @@ body{
 /* Carte de contenu du back-office (formulaires, listes) */
 .admin-carte { background-color: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 1rem; }
 @media (min-width: 64rem) { .admin-carte { padding: 1.5rem; } }
+/* Wizard de saison : carte de choix (radio visible dans un label) et barre de navigation collée en bas sur téléphone */
+.choix-carte { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background-color: var(--color-base-100); cursor: pointer; }
+.choix-carte:has(:checked) { border: 2px solid var(--color-primary); background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); }
+.choix-carte:focus-within { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.wizard-navigation { border-top: 1px solid var(--color-base-300); padding-top: 0.75rem; background-color: var(--color-base-100); }
+@media (max-width: 63.99rem) { .wizard-navigation { position: sticky; bottom: 0; z-index: 2; padding-bottom: 0.75rem; } }
 /* Alertes de l'admin (admin/_alerte.html.twig) : texte lisible (contraste AA) en couleur de base ; l'état est porté par
    l'icône et le filet gauche ; icône en haut des messages sur plusieurs lignes (hors couche : passe devant daisyUI) */
 .admin-alerte { color: var(--color-base-content); border-left: 4px solid var(--alert-color); align-items: start; }

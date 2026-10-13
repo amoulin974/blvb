@@ -1,0 +1,14 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+
+{% block contenu %}
+    <form id="wizard-form" method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('wizard' ~ saison.id) }}">
+        {% if etape == 1 %}
+            <p>Le point de départ est appliqué : les phases, poules et passages de ce brouillon en viennent.</p>
+            <p class="mt-2 text-sm text-(--color-base-content)/80">Pour repartir d'un autre point de départ, supprimez ce brouillon depuis la page de la saison, puis créez une nouvelle saison.</p>
+        {% else %}
+            <p>Cette étape est en cours de réalisation.</p>
+        {% endif %}
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    </form>
+{% endblock %}

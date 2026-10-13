@@ -106,7 +106,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       `Version20261013150000`) ; brouillon invisible sur le site et jamais « affiché sur le site »
       (`SaisonRepository::findPubliees`, `findPubliee`, `findPlusRecentePubliee`)
 - [ ] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : reporté au lot 6 (D33)
-- [ ] Écrans du wizard (étapes 1 à 6) ; relecture ergonome + webdesigner
+- [ ] Écrans du wizard : étapes 1 (départ) et 2 (saison) faites ; étapes 3 à 6 à faire ; relecture ergonome + webdesigner à la fin
 - [ ] Fin de la création automatique (`SaisonListener`) une fois le wizard en place (D6)
 
 ## À faire hors lots (relevé en relecture)
