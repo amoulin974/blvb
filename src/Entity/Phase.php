@@ -47,6 +47,15 @@ class Phase
     #[ORM\Column]
     private ?int $close = null;
 
+    /**
+     * Barème propre à la phase, valeur par valeur (ex. un barrage ou un tableau final sans points) ; les valeurs
+     * absentes sont celles de la saison. Clés : App\Competition\Sport\Bareme::CLES.
+     *
+     * @var array<string, int>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $bareme = null;
+
 
     public function __construct()
     {
@@ -180,5 +189,17 @@ class Phase
         return $this;
     }
 
+    /** @return array<string, int>|null surcharges du barème de la saison (App\Competition\Sport\Bareme::CLES), null si aucune */
+    public function getBareme(): ?array
+    {
+        return $this->bareme;
+    }
 
+    /** @param array<string, int>|null $bareme */
+    public function setBareme(?array $bareme): static
+    {
+        $this->bareme = $bareme ?: null;
+
+        return $this;
+    }
 }

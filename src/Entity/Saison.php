@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Entity;
+use App\Competition\Classement\CritereDepartage;
 use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Repository\SaisonRepository;
@@ -61,6 +62,14 @@ class Saison
     private ?int $points_defaite_faible = 0;
 
     /**
+     * Critères de départage du classement, dans l'ordre (codes de App\Competition\Classement\CritereDepartage).
+     *
+     * @var list<string>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $departage = null;
+
+    /**
      * @var Collection<int, Indisponibilite>
      */
     #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'saison', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -81,6 +90,21 @@ class Saison
         $this->date_fin = new \DateTimeImmutable("last day of july $nextYear"); // date actuelle par défaut
         $this->indisponibilites = new ArrayCollection();
         $this->membres = new ArrayCollection();
+        $this->setDepartage(CritereDepartage::parDefaut());
+    }
+
+    /** @return list<CritereDepartage> critères dans l'ordre, ordre alphabétique en dernier */
+    public function getDepartage(): array
+    {
+        return CritereDepartage::depuisCodes($this->departage);
+    }
+
+    /** @param list<CritereDepartage> $criteres */
+    public function setDepartage(array $criteres): static
+    {
+        $this->departage = array_map(fn (CritereDepartage $c) => $c->value, CritereDepartage::normaliser($criteres));
+
+        return $this;
     }
 
     public function getId(): ?int

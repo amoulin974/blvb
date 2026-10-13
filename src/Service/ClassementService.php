@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Competition\Classement\CritereDepartage;
 use App\Competition\Sport\Bareme;
 use App\Competition\Sport\RegleSport;
 use App\Competition\Sport\Sports;
@@ -23,46 +24,47 @@ class ClassementService
 
 
     /**
-     * Met à jour le classement pour une poule entière.
+     * Met à jour le classement pour une poule entière : barème de la phase (à défaut celui de la saison), départage
+     * dans l'ordre choisi pour la saison (App\Competition\Classement\CritereDepartage).
      */
     public function mettreAJourClassementPoule(Poule $poule): void
     {
         $classements = [];
         $saison = $poule->getPhase()->getSaison();
         $sport = $this->sports->pourSaison($saison);
+        $bareme = Bareme::dePhase($poule->getPhase());
         foreach ($poule->getEquipes() as $equipe) {
             [$setsGagnes, $setsPerdus] = $this->statistiquesEquipe($equipe, $sport, $poule);
             $classements[] = [
                 'equipe'      => $equipe,
-                'points'      => $this->calculerPointsEquipe($equipe, $saison, $poule),
+                'points'      => $this->pointsEquipe($equipe, $sport, $bareme, $poule),
                 'setsGagnes'  => $setsGagnes,
                 'setsPerdus'  => $setsPerdus,
+                'mini'        => [0, 0],
             ];
         }
 
-        // Tri par points DESC puis par ratio sets
-        usort($classements, function ($a, $b) use ($poule) {
+        $criteres = $saison->getDepartage();
+        if (\in_array(CritereDepartage::MINI_CLASSEMENT, $criteres, true)) {
+            $this->calculerMiniClassements($classements, $criteres, $poule, $sport, $bareme);
+        }
 
-            // 1) Tri par points
-            if ($b['points'] !== $a['points']) {
-                return $b['points'] <=> $a['points'];
+        usort($classements, function (array $a, array $b) use ($criteres, $poule): int {
+            foreach ($criteres as $critere) {
+                $ordre = match ($critere) {
+                    // Confrontation directe : le dernier match joué entre les deux équipes (aller ou retour)
+                    CritereDepartage::CONFRONTATION_DIRECTE => $this->confrontationDirecte($a['equipe'], $b['equipe'], $poule),
+                    CritereDepartage::MINI_CLASSEMENT => $b['mini'] <=> $a['mini'],
+                    // Ordre alphabétique, pour un classement toujours identique d'un calcul à l'autre
+                    CritereDepartage::ALPHABETIQUE => strcasecmp((string) $a['equipe']->getNomSansClub(), (string) $b['equipe']->getNomSansClub()),
+                    default => self::valeur($critere, $b) <=> self::valeur($critere, $a),
+                };
+                if ($ordre !== 0) {
+                    return $ordre;
+                }
             }
 
-            // 2) Différence de sets (sets gagnés - sets perdus)
-            $diffA = $a['setsGagnes'] - $a['setsPerdus'];
-            $diffB = $b['setsGagnes'] - $b['setsPerdus'];
-
-            if ($diffB !== $diffA) {
-                return $diffB <=> $diffA;
-            }
-
-            // 3) Confrontation directe : le dernier match joué entre les deux équipes (aller ou retour)
-            if (($direct = $this->confrontationDirecte($a['equipe'], $b['equipe'], $poule)) !== 0) {
-                return $direct;
-            }
-
-            // 4) Ordre alphabétique, pour un classement toujours identique d'un calcul à l'autre
-            return strcasecmp((string) $a['equipe']->getNomSansClub(), (string) $b['equipe']->getNomSansClub());
+            return 0;
         });
 
         // Mise à jour / insertion classement
@@ -96,14 +98,85 @@ class ClassementService
      */
     public function calculerPointsEquipe(Equipe $equipe, Saison $saison, ?Poule $pouleContext = null): int
     {
-        $sport = $this->sports->pourSaison($saison);
-        $bareme = Bareme::deSaison($saison);
+        $bareme = $pouleContext ? Bareme::dePhase($pouleContext->getPhase()) : Bareme::deSaison($saison);
+
+        return $this->pointsEquipe($equipe, $this->sports->pourSaison($saison), $bareme, $pouleContext);
+    }
+
+    private function pointsEquipe(Equipe $equipe, RegleSport $sport, Bareme $bareme, ?Poule $pouleContext): int
+    {
         $points = 0;
         foreach ($this->scoresEquipe($equipe, $pouleContext) as [$pour, $contre]) {
             $points += $sport->points($pour, $contre, $bareme);
         }
 
         return $points;
+    }
+
+    /** Valeur d'une ligne de classement pour un critère qui se calcule par équipe (plus grand = mieux classé). */
+    private static function valeur(CritereDepartage $critere, array $ligne): int|float
+    {
+        return match ($critere) {
+            CritereDepartage::POINTS => $ligne['points'],
+            CritereDepartage::DIFFERENCE_SETS => $ligne['setsGagnes'] - $ligne['setsPerdus'],
+            // Sets gagnés / sets perdus ; aucun set perdu : infini s'il y a des sets gagnés, 0 sinon
+            CritereDepartage::QUOTIENT_SETS => $ligne['setsPerdus'] > 0 ? $ligne['setsGagnes'] / $ligne['setsPerdus'] : ($ligne['setsGagnes'] > 0 ? INF : 0),
+            default => throw new \LogicException("Le critère {$critere->value} ne se calcule pas par équipe."),
+        };
+    }
+
+    /**
+     * Mini-classement (D16) : pour chaque groupe d'équipes à égalité sur les critères par équipe qui précèdent le
+     * mini-classement dans le départage, points puis différence de sets sur les seuls matchs joués entre elles.
+     * Résultat dans $classements[…]['mini'] = [points, différence de sets].
+     *
+     * @param list<CritereDepartage> $criteres
+     */
+    private function calculerMiniClassements(array &$classements, array $criteres, Poule $poule, RegleSport $sport, Bareme $bareme): void
+    {
+        $precedents = [];
+        foreach ($criteres as $critere) {
+            if ($critere === CritereDepartage::MINI_CLASSEMENT) {
+                break;
+            }
+            if ($critere->estUneValeur()) {
+                $precedents[] = $critere;
+            }
+        }
+
+        $groupes = [];
+        foreach ($classements as $i => $ligne) {
+            $cle = json_encode(array_map(fn (CritereDepartage $c) => (string) self::valeur($c, $ligne), $precedents));
+            $groupes[$cle][] = $i;
+        }
+
+        foreach ($groupes as $indices) {
+            if (\count($indices) < 2) {
+                continue;
+            }
+            $equipes = array_map(fn (int $i) => $classements[$i]['equipe'], $indices);
+            foreach ($indices as $i) {
+                $points = $sets = 0;
+                foreach ($poule->getParties() as $partie) {
+                    $recoit = $partie->getIdEquipeRecoit();
+                    $deplace = $partie->getIdEquipeDeplace();
+                    if (!\in_array($recoit, $equipes, true) || !\in_array($deplace, $equipes, true)) {
+                        continue;
+                    }
+                    if ($recoit === $classements[$i]['equipe']) {
+                        [$pour, $contre] = [$partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement()];
+                    } elseif ($deplace === $classements[$i]['equipe']) {
+                        [$pour, $contre] = [$partie->getNbSetGagnantDeplacement(), $partie->getNbSetGagnantReception()];
+                    } else {
+                        continue;
+                    }
+                    $points += $sport->points($pour, $contre, $bareme);
+                    [$gagnes, $perdus] = $sport->statistiques($pour, $contre);
+                    $sets += $gagnes - $perdus;
+                }
+                $classements[$i]['mini'] = [$points, $sets];
+            }
+        }
     }
 
     /**
