@@ -61,6 +61,17 @@ class Saison
     #[ORM\Column(options: ['default' => 0])]
     private ?int $points_defaite_faible = 0;
 
+    /**
+     * Saison en cours de création dans le wizard : invisible sur le site, ne peut pas être la saison affichée
+     * (docs/wizard-saison/decisions.md, D29). Les saisons existantes ne sont pas des brouillons.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $brouillon = false;
+
+    /** Dernière étape du wizard atteinte (1 à 6), pour reprendre un brouillon ; null hors wizard. */
+    #[ORM\Column(nullable: true)]
+    private ?int $etapeWizard = null;
+
     /** Sport de la saison (code d'un App\Competition\Sport\RegleSport) : forme du score, barème, départage. */
     #[ORM\Column(length: 30, options: ['default' => 'volley'])]
     private string $sport = 'volley';
@@ -95,6 +106,30 @@ class Saison
         $this->indisponibilites = new ArrayCollection();
         $this->membres = new ArrayCollection();
         $this->setDepartage(CritereDepartage::parDefaut());
+    }
+
+    public function isBrouillon(): bool
+    {
+        return $this->brouillon;
+    }
+
+    public function setBrouillon(bool $brouillon): static
+    {
+        $this->brouillon = $brouillon;
+
+        return $this;
+    }
+
+    public function getEtapeWizard(): ?int
+    {
+        return $this->etapeWizard;
+    }
+
+    public function setEtapeWizard(?int $etapeWizard): static
+    {
+        $this->etapeWizard = $etapeWizard;
+
+        return $this;
     }
 
     public function getSport(): string

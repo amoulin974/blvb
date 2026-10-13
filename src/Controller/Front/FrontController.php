@@ -423,7 +423,7 @@ final class FrontController extends AbstractController
     public function setSaison(Request $request, SessionInterface $session, SaisonRepository $saisonRepository): Response
     {
         $idSaisonSelected = $request->request->get('idSaisonSelected'); // récupère l'id envoyé
-        $saison = $saisonRepository->find($idSaisonSelected);   // récupère l'objet saison
+        $saison = $saisonRepository->findPubliee($idSaisonSelected);   // récupère l'objet saison (jamais un brouillon)
 
         if ($saison) {
             $session->set('idSaisonSelected', $saison->getId());   // stocke la saison dans la session
@@ -523,7 +523,7 @@ final class FrontController extends AbstractController
     {
         $this->saisons = $cache->get('saisons_all', function (ItemInterface $item) use ($saisonRepository){
             $item->expiresAfter(3600);
-            return $saisonRepository->findBy([], ['favori' => 'DESC']);
+            return $saisonRepository->findPubliees(); // sans les brouillons du wizard
         });
 
 
@@ -537,16 +537,16 @@ final class FrontController extends AbstractController
     public function getSaisonSession(SessionInterface $session, Request $request, SaisonRepository $saisonRepository): ?Response
     {
         $idSelected = $session->has('idSaisonSelected') ? $session->get('idSaisonSelected') : null;
-        $saison = $idSelected ? $saisonRepository->find($idSelected) : null;
+        $saison = $saisonRepository->findPubliee($idSelected);
 
         if (!$saison) {
-            // L'id en session est absent, invalide ou ne correspond plus à une saison existante :
+            // L'id en session est absent, invalide ou ne correspond plus à une saison visible (supprimée, brouillon) :
             // on retombe sur la saison favorite...
             $saison = $saisonRepository->findOneBy(['favori' => 1]);
 
             // ... sinon sur la saison la plus récente...
             if (!$saison) {
-                $saison = $saisonRepository->findOneBy([], ['date_debut' => 'DESC']);
+                $saison = $saisonRepository->findPlusRecentePubliee();
             }
 
             // ... sinon il n'y a tout simplement aucune saison en base.

@@ -59,6 +59,22 @@ class Poule
     #[ORM\Column(type: 'integer', nullable: true)]
     private ?int $niveau = null;
 
+    /** Nombre d'équipes prévu (indicatif) : contrôle des passages à la création de la saison (D29, D30). */
+    #[ORM\Column(nullable: true)]
+    private ?int $nbEquipesPrevu = null;
+
+    public function getNbEquipesPrevu(): ?int
+    {
+        return $this->nbEquipesPrevu;
+    }
+
+    public function setNbEquipesPrevu(?int $nbEquipesPrevu): static
+    {
+        $this->nbEquipesPrevu = $nbEquipesPrevu;
+
+        return $this;
+    }
+
     public function __construct()
     {
         $this->parties = new ArrayCollection();

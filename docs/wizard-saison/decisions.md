@@ -264,6 +264,13 @@ barrages, puis depuis elle). Pour chaque poule, une ligne par rang rend visibles
 un barrage ; le nombre de montées directes reste un choix. Format réalisé au lot 6.
 *(2026-10-13, relecture du wireframe)*
 
+## D33. Champ `format` de la phase : reporté au lot 6 (modifie D27)
+**Décision** : le wizard du lot 4 ne propose que deux types de phase (championnat, tableau à
+élimination), qui correspondent exactement à `PhaseType` ; `PhaseType` est donc conservé. Son
+remplacement par un champ `format` se fera au lot 6, avec l'arrivée des barrages (D31, D32).
+**Pourquoi** : un seul refactoring, au moment où un troisième format en a réellement besoin.
+*(2026-10-13, lot 4)*
+
 ---
 
 ## Points ouverts

@@ -69,7 +69,9 @@ final class CopieSaison
                     ->setCode($anciennePoule->getCode())
                     ->setNiveau($anciennePoule->getNiveau())
                     ->setNbMonteeDefaut($anciennePoule->getNbMonteeDefaut())
-                    ->setNbDescenteDefaut($anciennePoule->getNbDescenteDefaut());
+                    ->setNbDescenteDefaut($anciennePoule->getNbDescenteDefaut())
+                    // Nombre d'équipes prévu : celui saisi, sinon l'effectif de la poule copiée (D29)
+                    ->setNbEquipesPrevu($anciennePoule->getNbEquipesPrevu() ?? ($anciennePoule->getEquipes()->count() ?: null));
                 $phase->addPoule($poule);
                 $poules[spl_object_id($anciennePoule)] = $poule;
             }

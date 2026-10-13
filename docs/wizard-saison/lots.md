@@ -102,7 +102,10 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Copie d'une saison : `App\Competition\CopieSaison` (D3, D10, D22)
 - [x] Proposition d'écrans de l'ergonome et du webdesigner : `ecrans.md`
 - [x] Questions de `ecrans.md` §6 tranchées comme recommandé (D29)
-- [ ] `Phase.format` à la place de `PhaseType` (D27)
+- [x] Brouillon : `Saison.brouillon`, `Saison.etapeWizard`, `Poule.nbEquipesPrevu` (migration
+      `Version20261013150000`) ; brouillon invisible sur le site et jamais « affiché sur le site »
+      (`SaisonRepository::findPubliees`, `findPubliee`, `findPlusRecentePubliee`)
+- [ ] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : reporté au lot 6 (D33)
 - [ ] Écrans du wizard (étapes 1 à 6) ; relecture ergonome + webdesigner
 - [ ] Fin de la création automatique (`SaisonListener`) une fois le wizard en place (D6)
 

@@ -111,6 +111,12 @@ final class SaisonController extends AbstractController
             return $this->redirectToRoute('admin_saison_index');
         }
         $saisons=$em->getRepository(Saison::class)->findAll();
+        $choisie = $em->getRepository(Saison::class)->find($id);
+        if ($choisie?->isBrouillon()) {
+            $this->addFlash('error', sprintf('La saison %s est un brouillon : terminez sa création avant de l\'afficher sur le site. Rien n\'a été modifié.', $choisie->getNom()));
+
+            return $this->redirectToRoute('admin_saison_index');
+        }
         foreach ($saisons as $saison) {
             if ($saison->getId() == $id) {
                 $this->addFlash('success', sprintf('La saison %s est maintenant affichée sur le site.', $saison->getNom()));

@@ -20,7 +20,24 @@ class SaisonRepository extends ServiceEntityRepository
      */
     public function findCourante(): ?Saison
     {
-        return ($this->courante ??= [$this->findOneBy(['favori' => 1]) ?? $this->findOneBy([], ['date_debut' => 'DESC'])])[0];
+        return ($this->courante ??= [$this->findOneBy(['favori' => 1]) ?? $this->findPlusRecentePubliee()])[0];
+    }
+
+    /** Saisons visibles sur le site (hors brouillons du wizard), la saison affichée d'abord. @return list<Saison> */
+    public function findPubliees(): array
+    {
+        return $this->findBy(['brouillon' => false], ['favori' => 'DESC']);
+    }
+
+    /** La saison de cet identifiant si elle est visible sur le site, sinon null (brouillon, inexistante). */
+    public function findPubliee(mixed $id): ?Saison
+    {
+        return $id ? $this->findOneBy(['id' => $id, 'brouillon' => false]) : null;
+    }
+
+    public function findPlusRecentePubliee(): ?Saison
+    {
+        return $this->findOneBy(['brouillon' => false], ['date_debut' => 'DESC']);
     }
 
     public function __construct(ManagerRegistry $registry)

@@ -1,0 +1,58 @@
+<?php
+
+namespace App\Tests\Fonctionnel\Admin;
+
+use App\Entity\Saison;
+use App\Factory\SaisonFactory;
+use App\Repository\SaisonRepository;
+use App\Tests\Support\TestFonctionnel;
+use PHPUnit\Framework\Attributes\TestDox;
+
+/** WIZ-01 : une saison en brouillon (wizard de création) est invisible sur le site et ne peut pas y être affichée (D29). */
+final class BrouillonSaisonTest extends TestFonctionnel
+{
+    private const NOM = 'Saison brouillon du wizard';
+
+    private function brouillon(): int
+    {
+        // La plus récente de toutes : sans la règle des brouillons, elle serait choisie par défaut
+        return SaisonFactory::createOne(['nom' => self::NOM, 'brouillon' => true, 'favori' => 0,
+            'date_debut' => new \DateTimeImmutable('+2 years'), 'date_fin' => new \DateTimeImmutable('+3 years')])->getId();
+    }
+
+    #[TestDox('WIZ-01 Le site ne propose pas le brouillon, même demandé explicitement ; il ne devient jamais la saison par défaut')]
+    public function test_invisible_sur_le_site(): void
+    {
+        $id = $this->brouillon();
+
+        $this->client->request('GET', '/');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextNotContains('body', self::NOM);
+
+        $this->client->request('POST', '/set-saison', ['idSaisonSelected' => $id]);
+        $this->client->request('GET', '/');
+        self::assertSelectorTextNotContains('body', self::NOM);
+
+        $repo = self::getContainer()->get(SaisonRepository::class);
+        self::assertNull($repo->findPubliee($id));
+        self::assertNotSame($id, $repo->findPlusRecentePubliee()?->getId());
+    }
+
+    #[TestDox('WIZ-01 Un brouillon ne peut pas être « affiché sur le site », même par une requête directe avec un jeton valide')]
+    public function test_pas_affichable(): void
+    {
+        $id = $this->brouillon();
+        $this->connecter('admin');
+        $crawler = $this->client->request('GET', '/admin/saison/saison');
+        $jeton = $crawler->filter('form[action$="/admin/saison/'.$id.'/favorite/"] input[name="_token"]')->attr('value');
+
+        $this->client->request('POST', '/admin/saison/'.$id.'/favorite/', ['_token' => $jeton]);
+        self::assertResponseRedirects();
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'est un brouillon : terminez sa création');
+
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $em->clear();
+        self::assertSame(0, (int) $em->find(Saison::class, $id)->getFavori());
+    }
+}
