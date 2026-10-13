@@ -38,7 +38,10 @@ final class VerificationSaison
                 $erreurs[] = ['texte' => sprintf('%s : les dates doivent être comprises dans la saison (du %s au %s).', $phase->getNom(), $format($saison->getDateDebut()), $format($saison->getDateFin())), 'etape' => 3];
             }
             $suivante = $phases[$i + 1] ?? null;
-            if ($suivante !== null && $jour($phase->getDateFin()) > $jour($suivante->getDateDebut())) {
+            if ($suivante !== null && $jour($suivante->getDateDebut()) < $jour($phase->getDateDebut())) {
+                // L'ordre des phases décide des passages : il doit suivre les dates (phases en parallèle : même début)
+                $erreurs[] = ['texte' => sprintf('%s est placée avant %s mais commence plus tard (%s contre %s) : changez l\'ordre des phases ou leurs dates.', $phase->getNom(), $suivante->getNom(), $format($phase->getDateDebut()), $format($suivante->getDateDebut())), 'etape' => 3];
+            } elseif ($suivante !== null && $jour($phase->getDateFin()) > $jour($suivante->getDateDebut())) {
                 $avertissements[] = ['texte' => sprintf('%s et %s se chevauchent.', $phase->getNom(), $suivante->getNom()), 'etape' => 3];
             }
 

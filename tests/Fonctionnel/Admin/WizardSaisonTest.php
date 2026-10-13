@@ -315,7 +315,30 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/3');
     }
 
-    #[TestDox('WIZ-13 Saison créée, pas encore lancée : « Modifier la saison » propose le wizard (étapes 2 à 6, sans le départ), « Terminer » ; nom, dates et fermetures modifiables sur la page')]
+    #[TestDox('WIZ-17 Étape 6 : une phase placée avant une phase qui commence plus tôt (finale montée en premier) bloque la validation ; une phase finale n\'a pas à être la dernière si les dates le permettent')]
+    public function test_ordre_des_phases_selon_les_dates(): void
+    {
+        [$id, $url] = $this->brouillonA(3);
+        $this->cliquer($url, 'monter-phase-2');
+        $this->cliquer($url, 'monter-phase-1');
+        self::assertSame(['Phase Finale', 'Phase 1', 'Phase 2'], array_column($this->phases($id), 0));
+
+        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/6');
+        self::assertSelectorTextContains('body', 'Phase Finale est placée avant Phase 1 mais commence plus tard');
+        self::assertSame('true', $this->client->getCrawler()->filter('button[value="valider"]')->attr('aria-disabled'));
+
+        // Les dates suivent l'ordre choisi : plus d'erreur
+        $this->em()->clear();
+        $phases = $this->em()->find(Saison::class, $id)->getPhases()->toArray();
+        usort($phases, fn ($a, $b) => $a->getOrdre() <=> $b->getOrdre());
+        $debut = $phases[1]->getDateDebut();
+        $phases[0]->setDateDebut($debut->modify('-30 days'))->setDateFin($debut->modify('-1 day'));
+        $this->em()->flush();
+        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/6');
+        self::assertSelectorTextNotContains('body', 'commence plus tard');
+    }
+
+    #[TestDox('WIZ-13Saison créée, pas encore lancée : « Modifier la saison » propose le wizard (étapes 2 à 6, sans le départ), « Terminer » ; nom, dates et fermetures modifiables sur la page')]
     public function test_modification_saison_creee(): void
     {
         [$id, $url] = $this->brouillonA(6);
