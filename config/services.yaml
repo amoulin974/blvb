@@ -36,6 +36,9 @@ services:
     App\Competition\Format\:
         resource: '../src/Competition/Format/'
 
+    # Copie d'une saison, point de départ du wizard (D10, D22)
+    App\Competition\CopieSaison: ~
+
     # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
     App\Competition\Modele\:
         resource: '../src/Competition/Modele/'
