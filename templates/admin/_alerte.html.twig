@@ -1,0 +1,11 @@
+{# Alerte du back-office : texte en couleur de base (contraste AA) ; l'état est porté par l'icône, le filet gauche
+   (.admin-alerte, assets/styles/app.css) et un préfixe lu par les lecteurs d'écran.
+   Usage : {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}…{% endblock %}{% endembed %}
+   Types : success, warning, error, info. Classes construites ci-dessous, déclarées ici pour Tailwind :
+   text-success text-warning text-error text-info #}
+{% import 'admin/_icones.html.twig' as icone %}
+{% set type = type|default('info') in ['success', 'warning', 'error', 'info'] ? type : 'info' %}
+<div class="alert alert-{{ type }} alert-soft admin-alerte {{ classe|default('') }}" role="{{ type == 'error' ? 'alert' : 'status' }}">
+    <span class="text-{{ type }}">{{ icone.i({success: 'valide', error: 'erreur', warning: 'alerte', info: 'info'}[type], 'size-5') }}</span>
+    <div class="min-w-0 break-words"><span class="sr-only">{{ {success: 'Succès : ', error: 'Erreur : ', warning: 'Attention : ', info: 'Information : '}[type] }}</span>{% block contenu %}{% endblock %}</div>
+</div>

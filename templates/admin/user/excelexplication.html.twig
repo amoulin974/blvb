@@ -32,12 +32,10 @@
     {# --- BLOC RAPPORT D'ERREURS --- #}
     {% if rapportErreurs is defined and rapportErreurs is not empty %}
 
-        <div class="alert alert-error shadow-lg mt-6">
-            <div>
-                <span class="font-bold">Rapport des lignes non importées</span>
-                <p>Les lignes suivantes ont été ignorées :</p>
-            </div>
-        </div>
+        {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mt-6'} %}{% block contenu %}
+            <span class="font-bold">Rapport des lignes non importées</span>
+            <p>Les lignes suivantes ont été ignorées :</p>
+        {% endblock %}{% endembed %}
 
         <div class="overflow-x-auto mt-4">
             <table class="table w-full table-zebra">

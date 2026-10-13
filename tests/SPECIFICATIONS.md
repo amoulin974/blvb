@@ -387,6 +387,7 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 **MEQ-02** ✅ — Capitaine de deux équipes → la première par nom, toujours la même.
 **MEQ-03** ✅ — `mon_equipe_choix()` : équipes de la saison, triées alphabétiquement.
 **ADM-01** ✅ — `admin_saison_courante()` : saison favorite, sinon la plus récente.
+**ADM-02 — Alertes de l'admin lisibles** ✅ *`Fonctionnel/Admin/CloturePhaseTest`* (PHA-03, PHA-04) : toutes les alertes de l'admin (messages flash, erreurs des calendriers de poule, du formulaire de compte et du rapport d'import) passent par `admin/_alerte.html.twig` ; texte en couleur de base (classe `.admin-alerte`, contraste AA ; avant : texte coloré à environ 3:1), état porté par une icône pour chaque type (succès, avertissement, erreur, information) et le filet gauche, préfixe lu par les lecteurs d'écran conforme au type (« Succès : », « Attention : », « Erreur : ») ; `role="alert"` pour une erreur, `status` sinon.
 
 ### 4.13 Fumée : toutes les pages s'affichent — `Fonctionnel/Fumee` (P2, très rentable)
 
@@ -519,9 +520,10 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **2 — Scores et classement** ✅ | SCO-*, CLA-* ; anomalies A1–A7 arbitrées et corrigées | 181 tests verts ; le départage et le set-average échouent avec l'ancien code (vérifié) | fait le 13/10/2026 |
 | **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
 | **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
+| **Contraste des alertes de l'admin** ✅ | ADM-02 : relecture du webdesigner (contraste, icônes, lecteurs d'écran) | 256 tests verts + 2 lents (`main`) | fait le 13/10/2026 |
 | **Formats de compétition, lot 1** ✅ | NOT-*, SPT-01, FMT-01 (§4.16) ; `RegleScoreTest` devenu `VolleyTest` ; génération des calendriers déplacée dans `App\Competition\Format` sans changement de comportement | 309 tests verts + 2 lents (branche `formats-competition-lot1`) | fait le 13/10/2026 |
 | **Formats de compétition, lot 2** ✅ | CLA-12 à CLA-16 (§4.3) : départage paramétrable par saison (quotient de sets, mini-classement), barème surchargeable par phase ; migration `Version20261013100000` | 319 tests verts + 2 lents (branche `formats-competition-lot2`) | fait le 13/10/2026 |
-| **Formats de compétition, lot 3** (en cours) | COD-01, REG-01 (§4.16) : codes des phases et des poules, règles de passage par défaut ; PHA-06 à PHA-09, VER-01 (§4.8) : clôture par les règles de passage, message relu par l'ergonome et le webdesigner | 351 tests verts + 2 lents (branche `formats-competition-lot3`) | en cours |
+| **Formats de compétition, lot 3** ✅ | COD-01, REG-01 (§4.16) : codes des phases et des poules, règles de passage par défaut ; PHA-06 à PHA-09, VER-01 (§4.8) : clôture par les règles de passage, message relu par l'ergonome et le webdesigner ; fusion de `main` (ADM-02) | 351 tests verts + 2 lents (branche `formats-competition`) | fait le 13/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

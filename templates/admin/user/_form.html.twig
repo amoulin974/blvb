@@ -6,9 +6,7 @@
     'data-action': 'submit->password-rules#preventInvalidSubmit'
 } }) }}
 {% if not form.vars.valid %}
-    <div class="alert alert-error mb-4">
-        {{ form_errors(form) }}
-    </div>
+    {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}{{ form_errors(form) }}{% endblock %}{% endembed %}
 {% endif %}
 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
     <div>

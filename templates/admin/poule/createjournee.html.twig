@@ -3,7 +3,7 @@
 {% block body %}
 
     {% if error %}
-        <p class="alert alert-error alert-soft" role="alert">{{ error }}</p>
+        {% embed 'admin/_alerte.html.twig' with {type: 'error'} %}{% block contenu %}{{ error }}{% endblock %}{% endembed %}
     {% else %}
         {{ include('admin/_entete.html.twig', {
             titre: 'Calendrier des journées · poule ' ~ poule.nom,
