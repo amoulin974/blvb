@@ -20,6 +20,9 @@ use App\Enum\PhaseType;
  */
 final class EtapePassages
 {
+    /** Niveau de poule le plus faible accepté (saisie de l'étape 3, destinations « saison suivante »). */
+    public const NIVEAU_MAX = 20;
+
     /** @return list<Phase> */
     public static function phasesDansLOrdre(Saison $saison): array
     {
@@ -67,7 +70,7 @@ final class EtapePassages
                 $niveaux[] = (int) $poule->getNiveau();
             }
         }
-        $niveauMax = max([1, ...$niveaux]);
+        $niveauMax = min(self::NIVEAU_MAX, max([1, ...$niveaux]));
 
         $transitions = [];
         foreach ($phases as $i => $phase) {
@@ -163,7 +166,7 @@ final class EtapePassages
             foreach (self::poules($phase) as $poule) {
                 $id = $poule->getId();
                 $prefixe = $phase->getCode().'.'.$poule->getCode().'#';
-                $champs = $saisie[$id] ?? null;
+                $champs = \is_array($saisie[$id] ?? null) ? $saisie[$id] : null;
 
                 if ($action === 'simple-'.$id) {
                     $detail = array_values(array_diff($detail, [$id]));
@@ -189,17 +192,17 @@ final class EtapePassages
                         'versDescente' => $permises[(int) ($champs['versDescente'] ?? 0)] ?? null,
                         'versAutres' => $permises[(int) ($champs['versAutres'] ?? 0)] ?? null,
                         'saisonSuivante' => !empty($champs['saisonSuivante']),
-                        'niveauMontee' => max(1, (int) ($champs['niveauMontee'] ?? 1)),
-                        'niveauDescente' => max(1, (int) ($champs['niveauDescente'] ?? 1)),
-                        'niveauAutres' => max(1, (int) ($champs['niveauAutres'] ?? 1)),
+                        'niveauMontee' => self::niveau($champs['niveauMontee'] ?? 1),
+                        'niveauDescente' => self::niveau($champs['niveauDescente'] ?? 1),
+                        'niveauAutres' => self::niveau($champs['niveauAutres'] ?? 1),
                     ];
                     array_push($nouvelles, ...PassagesSimples::regles($prefixe, $valeurs, $versFinale));
                 } else {
-                    $lignes = array_values($champs['r'] ?? []);
+                    $lignes = \is_array($champs['r'] ?? null) ? array_values($champs['r']) : [];
                     $premiere = self::poules($suivante)[0] ?? null;
                     $lignes = self::agirSurLignes($action, $id, $lignes, $premiere ? 'p:'.$premiere->getId() : '');
                     foreach ($lignes as $ligne) {
-                        $regle = self::regleDepuisLigne($prefixe, $ligne, $permises);
+                        $regle = \is_array($ligne) ? self::regleDepuisLigne($prefixe, $ligne, $permises) : null;
                         if ($regle === null) {
                             $problemes[] = sprintf('%s : une règle incomplète a été ignorée.', $poule->getNom());
                             continue;
@@ -271,11 +274,17 @@ final class EtapePassages
         if (preg_match('/^p:(\d+)$/', $dest, $m) && isset($permises[(int) $m[1]])) {
             return $regle->setPouleDestination($permises[(int) $m[1]]);
         }
-        if (preg_match('/^n:([1-9]\d*)$/', $dest, $m)) {
+        if (preg_match('/^n:([1-9]\d?)$/', $dest, $m) && (int) $m[1] <= self::NIVEAU_MAX) {
             return $regle->setNiveauSaisonSuivante((int) $m[1]);
         }
 
         return null;
+    }
+
+    /** Niveau de la saison suivante saisi, ramené entre 1 et NIVEAU_MAX. */
+    private static function niveau(mixed $valeur): int
+    {
+        return max(1, min(self::NIVEAU_MAX, \is_scalar($valeur) ? (int) $valeur : 1));
     }
 
     /** Règle → ligne du mode détaillé. */

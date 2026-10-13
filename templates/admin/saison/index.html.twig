@@ -36,10 +36,18 @@
                     </td>
                     <td class="text-right whitespace-nowrap">
                         {% if saison.brouillon %}
-                            <a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: saison.etapeWizard|default(2)}) }}" class="btn btn-primary btn-sm">Reprendre<span class="sr-only"> la création de {{ saison.nom }}</span></a>
+                            {# Brouillon (D29) : on le reprend ou on le supprime ; il n'a encore rien à piloter #}
+                            <div class="inline-flex gap-2">
+                                <a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: saison.etapeWizard|default(2)}) }}" class="btn btn-primary btn-sm">Reprendre<span class="sr-only"> la création de {{ saison.nom }}</span></a>
+                                <form method="post" action="{{ path('admin_saison_delete', {id: saison.id}) }}" data-turbo-confirm="Supprimer le brouillon {{ saison.nom }} ? Ses phases, poules et passages seront supprimés.">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ saison.id) }}">
+                                    <button type="submit" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer le brouillon {{ saison.nom }}">{{ icone.i('poubelle') }} Supprimer</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <a href="{{ path('admin_saison_show', {id: saison.id}) }}" class="btn btn-ghost btn-sm">Piloter</a>
+                            <a href="{{ path('admin_saison_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier {{ saison.nom }}">{{ icone.i('crayon') }} Modifier</a>
                         {% endif %}
-                        <a href="{{ path('admin_saison_show', {id: saison.id}) }}" class="btn btn-ghost btn-sm">Piloter</a>
-                        <a href="{{ path('admin_saison_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier {{ saison.nom }}">{{ icone.i('crayon') }} Modifier</a>
                     </td>
                 </tr>
             {% else %}

@@ -107,9 +107,18 @@ matchs individuels), qui changent le modèle lui-même (D13).
       (`SaisonRepository::findPubliees`, `findPubliee`, `findPlusRecentePubliee`)
 - [ ] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : reporté au lot 6 (D33)
 - [x] Écrans du wizard : 6 étapes (départ, saison, phases, passages, classement, vérification et validation)
-- [x] « Modifier la saison » (D29, question 8) : wizard en mode édition tant qu'aucun match n'est joué ;
-      la page de modification ne garde que nom, dates et périodes de fermeture
-- [ ] Relecture ergonome + webdesigner + sécurité des écrans réalisés
+- [x] « Modifier la saison » (D29, question 8) : wizard en mode édition tant que la saison n'est pas
+      lancée (D34) ; la page de modification ne garde que nom, dates et périodes de fermeture
+- [x] Relecture ergonome + webdesigner + sécurité des écrans réalisés, retours intégrés :
+      garde-fou « saison lancée » et quitter avec erreurs (D34), agenda `.ics` d'un brouillon en 404,
+      saisies bornées et robustes (WIZ-14, WIZ-15) ; poules en cartes et schéma vertical sur téléphone,
+      stepper cliquable sur téléphone, barre du bas allégée, icônes au lieu des glyphes, cibles de
+      44 px, pluriels, textes sans article devant un nom saisi, règles en clair dans les messages,
+      aperçu et avertissement de la saison copiée dès l'étape 1, brouillon supprimable depuis la liste
+- [ ] Reporté au lot 5 (relecture) : carte « Point de départ » du récapitulatif (le départ n'est pas
+      enregistré), « Brouillon enregistré à 14 h 32 », écarts d'effectif dans le schéma (« 9 / 8 »),
+      aide courte sous chaque critère de départage, liens de l'alerte d'erreur de l'étape 3 vers les
+      champs ; vérifier dans le navigateur les utilitaires Tailwind écrasés par daisyUI (webdesigner)
 - [x] Fin de la création automatique : `SaisonListener` supprimé, « Créer une saison » ouvre le wizard (D6)
 
 ## À faire hors lots (relevé en relecture)

@@ -55,7 +55,7 @@ final class VerificationPassagesTest extends TestCase
     public function test_couverture(): void
     {
         self::assertSame(
-            ['Poule A : aucune poule prévue pour le 4e dans la phase suivante.', 'Poule A : les 2e et 3e sont prévus dans plusieurs poules ; c\'est la première règle qui a été appliquée.'],
+            ['Poule A : aucune poule prévue pour le 4e dans la phase suivante.', 'Poule A : les 2e et 3e sont prévus dans plusieurs poules ; seule la première règle compte.'],
             $this->verifier([['P1.A#1..3'], ['P1.A#2..3']]),
         );
         self::assertSame(['Poule A : aucune poule prévue pour les 2e, 3e et 4e dans la phase suivante.'], $this->verifier([['P1.A#1']]));
@@ -79,7 +79,7 @@ final class VerificationPassagesTest extends TestCase
         self::assertSame('avant-dernier de la Poule A (Phase 1) vers le niveau 3 la saison prochaine [P1.A#-2]', (string) (new RegleDePassage())->setSource('P1.A#-2')->setNiveauSaisonSuivante(3)->setPhase($this->phase));
         self::assertSame(
             // Règle non rattachée à sa phase : la poule de départ est nommée par son code
-            ['Règle « 9e en partant de la fin de la poule A vers la Poule A (Phase 2) [P1.A#-9] » ignorée : la poule n\'a que 4 équipes : il n\'y a pas de 9e en partant de la fin.'],
+            ['Règle « 9e en partant de la fin de la poule A vers la Poule A (Phase 2) » ignorée : la poule n\'a que 4 équipes : il n\'y a pas de 9e en partant de la fin.'],
             array_slice($this->verifier([['P1.A#1..-1'], ['P1.A#-9']]), 0, 1),
         );
     }

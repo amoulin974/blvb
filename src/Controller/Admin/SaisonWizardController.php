@@ -90,8 +90,14 @@ class SaisonWizardController extends AbstractController
             return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 2]);
         }
 
+        $apercus = [];
+        foreach ($saisons->findPubliees() as $source) {
+            $apercus[$source->getId()] = CopieSaison::apercu($source);
+        }
+
         return $this->render('admin/saisonwizard/depart.html.twig', [
             'form' => $form,
+            'apercus' => $apercus,
             'modeles' => $modeles->tous(),
             'etapes' => self::etapes(null, 1),
         ]);
@@ -102,9 +108,9 @@ class SaisonWizardController extends AbstractController
     public function etape(Saison $saison, int $etape, Request $request, EntityManagerInterface $em, SaisonRepository $saisons, Sports $sports, CacheInterface $cache): Response
     {
         if (!$saison->isBrouillon()) {
-            // Saison créée : son organisation se modifie dans le wizard (étapes 2 à 6) tant qu'aucun match n'est joué (D29)
-            if ($saisons->aDesMatchsJoues($saison)) {
-                $this->addFlash('error', sprintf('Des matchs de la saison %s sont déjà joués : seuls le nom, les dates et les périodes de fermeture se modifient.', $saison->getNom()));
+            // Saison créée : son organisation se modifie dans le wizard (étapes 2 à 6) tant qu'elle n'est pas lancée (D29)
+            if ($saisons->estLancee($saison)) {
+                $this->addFlash('error', sprintf('La saison %s est lancée (matchs programmés ou phase clôturée) : seuls le nom, les dates et les périodes de fermeture se modifient.', $saison->getNom()));
 
                 return $this->redirectToRoute('admin_saison_edit', ['id' => $saison->getId()]);
             }
@@ -177,7 +183,7 @@ class SaisonWizardController extends AbstractController
         $ouverte = $request->query->getInt('phase', 0);
 
         if ($form->isSubmitted()) {
-            self::verifierCodes($form, $phases);
+            self::verifierCodes($form);
             if ($form->isValid()) {
                 $action = $request->getPayload()->getString('action');
                 if ($action !== '') {
@@ -264,8 +270,8 @@ class SaisonWizardController extends AbstractController
                 $em->flush();
                 $cache->delete('saisons_all');
                 $premiere = self::phasesDansLOrdre($saison)[0] ?? null;
-                $this->addFlash('success', sprintf('Organisation de la saison %s enregistrée.%s', $saison->getNom(),
-                    $premiere ? sprintf(' Prochaine étape : composer les poules de la %s.', $premiere->getNom()) : ''));
+                $this->addFlash('success', sprintf('Saison %s validée.%s', $saison->getNom(),
+                    $premiere ? sprintf(' Prochaine étape : composer les poules de « %s ».', $premiere->getNom()) : ''));
 
                 return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
             }
@@ -327,6 +333,7 @@ class SaisonWizardController extends AbstractController
             $baremesPhases = [];
             foreach ($phases as $phase) {
                 $champs = $payload->all('phase')[$phase->getId()] ?? [];
+                $champs = \is_array($champs) ? $champs : [];
                 if (empty($champs['propre'])) {
                     $baremesPhases[$phase->getId()] = null;
                 } elseif (($champs['mode'] ?? 'aucun') === 'aucun') {
@@ -470,10 +477,10 @@ class SaisonWizardController extends AbstractController
     }
 
     /** Codes saisis : uniques dans la saison (phases) et dans la phase (poules), sinon erreur sur le champ. */
-    private static function verifierCodes(FormInterface $form, array $phases): void
+    private static function verifierCodes(FormInterface $form): void
     {
         $codesPhases = [];
-        foreach ($form->get('phases') as $i => $phaseForm) {
+        foreach ($form->get('phases') as $phaseForm) {
             $code = (string) $phaseForm->get('code')->getData();
             if ($code !== '' && isset($codesPhases[$code])) {
                 $phaseForm->get('code')->addError(new FormError(sprintf('Le code %s est déjà utilisé par une autre phase.', $code)));
@@ -508,6 +515,12 @@ class SaisonWizardController extends AbstractController
         $aller = $request->getPayload()->getString('aller', 'suivant');
         if ($aller === 'quitter') {
             if (!$saison->isBrouillon()) {
+                // Saison visible sur le site : on ne la quitte pas avec des erreurs bloquantes
+                if (VerificationSaison::verifier($saison)['erreurs'] !== []) {
+                    $this->addFlash('error', 'Vos modifications sont enregistrées, mais la saison contient des erreurs : corrigez-les avant de quitter.');
+
+                    return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 6]);
+                }
                 $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.', $saison->getNom()));
 
                 return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);

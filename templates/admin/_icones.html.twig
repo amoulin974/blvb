@@ -25,6 +25,11 @@
         eclair: 'm3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z',
         menu: 'M4 6h16M4 12h16M4 18h16',
         retour: 'M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18',
+        'fleche-haut': 'm4.5 15.75 7.5-7.5 7.5 7.5',
+        'fleche-bas': 'm19.5 8.25-7.5 7.5-7.5-7.5',
+        'fleche-droite': 'M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3',
+        coche: 'm4.5 12.75 6 6 9-13.5',
+        restaurer: 'M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3',
     } -%}
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.75" stroke="currentColor" class="{{ classe }} shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="{{ chemins[nom] }}"/></svg>
 {%- endmacro %}

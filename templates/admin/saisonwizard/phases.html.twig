@@ -14,14 +14,16 @@
         <ol class="flex flex-col gap-3">
             {% for i, phaseForm in form.phases %}
                 {% set phase = phaseForm.vars.data %}
+                {% set finale = phase.type.name == 'FINALE' %}
+                {% set nbPoules = phase.poules|length %}
+                {% set unite = finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule') %}
                 {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
                 <li id="phase-{{ i }}" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
                     <div class="flex flex-wrap items-center gap-2 p-3">
-                        <button type="submit" name="action" value="monter-phase-{{ i }}" class="btn btn-ghost btn-square" {% if i == 0 %}disabled{% endif %} aria-label="Monter {{ phase.nom }}">▲</button>
-                        <button type="submit" name="action" value="descendre-phase-{{ i }}" class="btn btn-ghost btn-square" {% if i == nb - 1 %}disabled{% endif %} aria-label="Descendre {{ phase.nom }}">▼</button>
-                        <span class="badge badge-outline">{{ phase.code }}</span>
+                        <button type="submit" name="action" value="monter-phase-{{ i }}" class="btn btn-ghost btn-square" {% if i == 0 %}disabled{% endif %} aria-label="Monter {{ phase.nom }}">{{ icone.i('fleche-haut') }}</button>
+                        <button type="submit" name="action" value="descendre-phase-{{ i }}" class="btn btn-ghost btn-square" {% if i == nb - 1 %}disabled{% endif %} aria-label="Descendre {{ phase.nom }}">{{ icone.i('fleche-bas') }}</button>
                         <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }}</span>
-                        <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ phase.poules|length }} {{ phase.type.name == 'FINALE' ? 'tableau(x)' : 'poule(s)' }}</span>
+                        <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
                     </div>
                     <details class="border-t border-base-300" {% if i == ouverte or enErreur %}open{% endif %}>
                         <summary class="cursor-pointer px-4 py-3 font-semibold min-h-11">Modifier {{ phase.nom }}</summary>
@@ -57,23 +59,23 @@
                             </div>
 
                             <fieldset class="fieldset border border-base-300 rounded-box p-3">
-                                <legend class="fieldset-legend">{{ phase.type.name == 'FINALE' ? 'Tableaux' : 'Poules' }}</legend>
-                                <div class="max-md:overflow-x-auto">
-                                    <table class="table table-admin">
-                                        <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
-                                        <tbody>
-                                        {% for j, pouleForm in phaseForm.poules %}
-                                            <tr>
-                                                <td>{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, poule ' ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
-                                                <td>{{ form_widget(pouleForm.niveau, {attr: {class: 'input input-bordered w-24', 'aria-label': 'Niveau, ' ~ pouleForm.vars.data.nom}}) }}{{ form_errors(pouleForm.niveau) }}</td>
-                                                <td>{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered w-24', 'aria-label': 'Équipes prévues, ' ~ pouleForm.vars.data.nom}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
-                                                <td class="text-right"><button type="submit" name="action" value="supprimer-poule-{{ i }}-{{ j }}" class="btn btn-ghost btn-sm text-error" aria-label="Supprimer {{ pouleForm.vars.data.nom }} de {{ phase.nom }}">{{ icone.i('poubelle') }} Supprimer</button></td>
-                                            </tr>
-                                        {% endfor %}
-                                        </tbody>
-                                    </table>
-                                </div>
-                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter {{ phase.type.name == 'FINALE' ? 'un tableau' : 'une poule' }}</button></div>
+                                <legend class="fieldset-legend">{{ finale ? 'Tableaux' : 'Poules' }}</legend>
+                                {# Tableau sur grand écran, une carte par poule sur téléphone (.table-empilee) #}
+                                <table class="table table-admin table-empilee">
+                                    <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                                    <tbody>
+                                    {% for j, pouleForm in phaseForm.poules %}
+                                        {% set nomPoule = pouleForm.vars.data.nom %}
+                                        <tr>
+                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ' ~ (finale ? 'tableau ' : 'poule ') ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
+                                            <td data-label="Niveau">{{ form_widget(pouleForm.niveau, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Niveau, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.niveau) }}</td>
+                                            <td data-label="Équipes prévues">{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Équipes prévues, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
+                                            <td class="pleine-largeur text-right"><button type="submit" name="action" value="supprimer-poule-{{ i }}-{{ j }}" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer {{ nomPoule }} de {{ phase.nom }}" data-turbo-confirm="Supprimer {{ nomPoule }} de {{ phase.nom }} ? Les passages qui en partent ou y arrivent seront supprimés.">{{ icone.i('poubelle') }} Supprimer</button></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter {{ finale ? 'un tableau' : 'une poule' }}</button></div>
                             </fieldset>
 
                             <details class="rounded-box border border-dashed border-base-300 p-3">
@@ -96,14 +98,14 @@
                             </details>
 
                             <div class="text-right">
-                                <button type="submit" name="action" value="supprimer-phase-{{ i }}" class="btn btn-ghost text-error" data-turbo-confirm="Supprimer {{ phase.nom }} et ses {{ phase.poules|length }} poule(s) ? Les règles de passage qui les concernent seront supprimées.">{{ icone.i('poubelle') }} Supprimer la phase</button>
+                                <button type="submit" name="action" value="supprimer-phase-{{ i }}" class="btn btn-ghost btn-error" data-turbo-confirm="Supprimer {{ phase.nom }} et ses {{ nbPoules }} {{ unite }} ? Les passages qui les concernent seront supprimés.">{{ icone.i('poubelle') }} Supprimer la phase</button>
                             </div>
                         </div>
                     </details>
                 </li>
             {% endfor %}
         </ol>
-        <button type="submit" name="action" value="ajouter-phase" class="btn mt-3 w-full border-dashed">{{ icone.i('plus') }} Ajouter une phase</button>
+        <button type="submit" name="action" value="ajouter-phase" class="btn btn-ajout mt-3 w-full">{{ icone.i('plus') }} Ajouter une phase</button>
 
         {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
     {{ form_end(form) }}

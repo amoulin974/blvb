@@ -5,6 +5,7 @@ namespace App\Tests\Fonctionnel\Admin;
 use App\Entity\Saison;
 use App\Factory\SaisonFactory;
 use App\Repository\SaisonRepository;
+use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
 
@@ -36,6 +37,18 @@ final class BrouillonSaisonTest extends TestFonctionnel
         $repo = self::getContainer()->get(SaisonRepository::class);
         self::assertNull($repo->findPubliee($id));
         self::assertNotSame($id, $repo->findPlusRecentePubliee()?->getId());
+    }
+
+    #[TestDox('WIZ-01 L\'agenda .ics d\'une équipe n\'existe pas pour un brouillon (adresse devinée en changeant l\'identifiant)')]
+    public function test_agenda_ics(): void
+    {
+        $id = $this->brouillon();
+        $equipe = ChampionnatDeTest::get('equipe.A1')->getId();
+
+        $this->client->request('GET', '/calendar/saison/'.$id.'/equipe/'.$equipe.'.ics');
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('GET', '/calendar/saison/'.ChampionnatDeTest::get('saison')->getId().'/equipe/'.$equipe.'.ics');
+        self::assertResponseIsSuccessful();
     }
 
     #[TestDox('WIZ-01 Un brouillon ne peut pas être « affiché sur le site », même par une requête directe avec un jeton valide')]

@@ -271,6 +271,20 @@ remplacement par un champ `format` se fera au lot 6, avec l'arrivée des barrage
 **Pourquoi** : un seul refactoring, au moment où un troisième format en a réellement besoin.
 *(2026-10-13, lot 4)*
 
+## D34. Modifier une saison créée : jusqu'à son lancement, enregistrement à chaque étape (précise D29)
+**Décision** (relectures ergonome et sécurité du lot 4) :
+- le wizard reste ouvert sur une saison créée tant qu'elle n'est pas **lancée** : aucun match
+  programmé (même sans score), aucune phase clôturée, aucun classement enregistré. Ensuite, seuls le
+  nom, les dates et les périodes de fermeture se modifient ;
+- chaque étape enregistre en la quittant, comme pour un brouillon ; un bandeau le rappelle.
+  « Enregistrer et quitter » renvoie à la vérification tant que la saison contient une erreur ; le
+  bouton final s'appelle « Terminer » ;
+- un brouillon, dans la liste des saisons, ne propose que « Reprendre » et « Supprimer » (D29.12).
+**Pourquoi** : supprimer une poule d'une saison dont le calendrier est généré emportait les matchs
+programmés, les abonnements `.ics` et, après une clôture, provoquait une erreur 500 ; une saison
+visible sur le site ne doit pas rester incohérente.
+*(2026-10-13, lot 4)*
+
 ---
 
 ## Points ouverts

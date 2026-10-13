@@ -113,6 +113,37 @@ final class CopieSaison
     }
 
     /**
+     * Aperçu d'une saison à copier pour l'étape 1 du wizard : résumé (« 3 phases · 12 poules ») et, si ses montées et
+     * descentes ne sont pas encore connues, l'avertissement que les poules de la première phase seront à composer.
+     *
+     * @return array{resume: string, avertissement: ?string}
+     */
+    public static function apercu(Saison $source): array
+    {
+        $phases = self::phasesDansLOrdre($source);
+        $nbPoules = array_sum(array_map(fn (Phase $p) => $p->getPoules()->count(), $phases));
+        $resume = sprintf('%d phase%s · %d poule%s', \count($phases), \count($phases) > 1 ? 's' : '', $nbPoules, $nbPoules > 1 ? 's' : '');
+
+        $phaseRegles = null;
+        foreach ($phases as $phase) {
+            foreach ($phase->getReglesDePassage() as $regle) {
+                if ($regle->versSaisonSuivante()) {
+                    $phaseRegles = $phase;
+                }
+            }
+        }
+        $premiere = $phases[0] ?? null;
+        $avertissement = match (true) {
+            $premiere === null => null,
+            $phaseRegles === null => sprintf('Cette saison ne prévoit pas de montées et descentes : les poules de « %s » seront à composer.', $premiere->getNom()),
+            !$phaseRegles->getClose() => sprintf('Cette saison n\'est pas terminée (« %s » n\'est pas clôturée) : les poules de « %s » seront à composer.', $phaseRegles->getNom(), $premiere->getNom()),
+            default => null,
+        };
+
+        return ['resume' => $resume, 'avertissement' => $avertissement];
+    }
+
+    /**
      * Place les équipes dans les poules de la première phase de la nouvelle saison, selon les règles « saison
      * suivante » de la saison copiée (D22) : destination = poule de même niveau, à défaut la première poule.
      *

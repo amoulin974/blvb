@@ -33,7 +33,7 @@ final class VerificationSaison
                 $sansPrevu += $poule->getNbEquipesPrevu() === null ? 1 : 0;
             }
             if ($jour($phase->getDateFin()) <= $jour($phase->getDateDebut())) {
-                $erreurs[] = ['texte' => sprintf('%s : la date de fin est avant la date de début.', $phase->getNom()), 'etape' => 3];
+                $erreurs[] = ['texte' => sprintf('%s : la date de fin doit être après la date de début.', $phase->getNom()), 'etape' => 3];
             } elseif ($jour($phase->getDateDebut()) < $jour($saison->getDateDebut()) || $jour($phase->getDateFin()) > $jour($saison->getDateFin())) {
                 $erreurs[] = ['texte' => sprintf('%s : les dates doivent être comprises dans la saison (du %s au %s).', $phase->getNom(), $format($saison->getDateDebut()), $format($saison->getDateFin())), 'etape' => 3];
             }
@@ -47,14 +47,18 @@ final class VerificationSaison
             }
             $versSuivante = array_filter($phase->getReglesDePassage()->toArray(), fn ($r) => $r->getPouleDestination()?->getPhase() === $suivante);
             if ($versSuivante === []) {
-                $erreurs[] = ['texte' => sprintf('Aucun passage de la %s vers la %s.', $phase->getNom(), $suivante->getNom()), 'etape' => 4];
+                $erreurs[] = ['texte' => sprintf('Aucun passage de « %s » vers « %s ».',$phase->getNom(), $suivante->getNom()), 'etape' => 4];
             }
             $tailles = [];
             foreach ($phase->getPoules() as $poule) {
                 $tailles[$poule->getCode()] = EtapePassages::taille($poule);
             }
             foreach (VerificationPassages::verifier($phase, $phase->getReglesDePassage(), $tailles) as $probleme) {
-                $erreurs[] = ['texte' => $probleme, 'etape' => 4];
+                // « Poule A : … » → « Poule A (Phase 1) : … » : plusieurs phases ont souvent une Poule A
+                $texte = str_starts_with($probleme, 'Règle ')
+                    ? sprintf('%s : %s', $phase->getNom(), $probleme)
+                    : preg_replace('/^(.+?) : /', '$1 ('.addcslashes($phase->getNom(), '\\$').') : ', $probleme, 1);
+                $erreurs[] = ['texte' => $texte, 'etape' => 4];
             }
             foreach (EtapePassages::effectifs($phase, $suivante) as $e) {
                 if ($e['prevues'] !== null && $e['recues'] !== null && $e['recues'] !== $e['prevues']) {
@@ -80,7 +84,7 @@ final class VerificationSaison
     public static function schema(Saison $saison): array
     {
         $phases = EtapePassages::phasesDansLOrdre($saison);
-        $colonnes = array_map(fn ($p) => $p->getCode().' · '.$p->getNom(), $phases);
+        $colonnes = array_map(fn ($p) => (string) $p->getNom(), $phases);
         $lignes = [];
         $saisonSuivante = [];
         foreach ($phases as $i => $phase) {

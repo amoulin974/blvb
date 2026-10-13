@@ -20,7 +20,13 @@ class SaisonRepository extends ServiceEntityRepository
      */
     public function findCourante(): ?Saison
     {
-        return ($this->courante ??= [$this->findOneBy(['favori' => 1]) ?? $this->findPlusRecentePubliee()])[0];
+        return ($this->courante ??= [$this->findFavoritePubliee() ?? $this->findPlusRecentePubliee()])[0];
+    }
+
+    /** Saison affichée par défaut sur le site ; jamais un brouillon du wizard. */
+    public function findFavoritePubliee(): ?Saison
+    {
+        return $this->findOneBy(['favori' => 1, 'brouillon' => false]);
     }
 
     /** Saisons visibles sur le site (hors brouillons du wizard), la saison affichée d'abord. @return list<Saison> */
@@ -35,13 +41,23 @@ class SaisonRepository extends ServiceEntityRepository
         return $id ? $this->findOneBy(['id' => $id, 'brouillon' => false]) : null;
     }
 
-    /** Un match de la saison a-t-il un score ? Ensuite, son organisation ne se modifie plus dans le wizard (D29). */
-    public function aDesMatchsJoues(Saison $saison): bool
+    /**
+     * La saison est-elle lancée : un match programmé, une phase clôturée ou un classement enregistré ? Ensuite, son
+     * organisation ne se modifie plus dans le wizard (D29) : supprimer une poule emporterait matchs et classements.
+     */
+    public function estLancee(Saison $saison): bool
     {
-        return (bool) $this->getEntityManager()->createQuery(
-            'SELECT COUNT(p.id) FROM App\Entity\Partie p JOIN p.poule po JOIN po.phase ph
-             WHERE ph.saison = :saison AND p.nb_set_gagnant_reception IS NOT NULL'
-        )->setParameter('saison', $saison)->getSingleScalarResult();
+        $em = $this->getEntityManager();
+
+        return (bool) $em->createQuery(
+            'SELECT COUNT(p.id) FROM App\Entity\Partie p JOIN p.poule po JOIN po.phase ph WHERE ph.saison = :saison'
+        )->setParameter('saison', $saison)->getSingleScalarResult()
+            || (bool) $em->createQuery(
+                'SELECT COUNT(ph.id) FROM App\Entity\Phase ph WHERE ph.saison = :saison AND ph.close = 1'
+            )->setParameter('saison', $saison)->getSingleScalarResult()
+            || (bool) $em->createQuery(
+                'SELECT COUNT(c.id) FROM App\Entity\Classement c JOIN c.poule po JOIN po.phase ph WHERE ph.saison = :saison'
+            )->setParameter('saison', $saison)->getSingleScalarResult();
     }
 
     public function findPlusRecentePubliee(): ?Saison

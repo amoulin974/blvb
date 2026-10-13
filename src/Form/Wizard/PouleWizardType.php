@@ -2,6 +2,7 @@
 
 namespace App\Form\Wizard;
 
+use App\Competition\EtapePassages;
 use App\Entity\Poule;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -23,7 +24,7 @@ class PouleWizardType extends AbstractType
             ])
             ->add('niveau', IntegerType::class, [
                 'label' => 'Niveau (1 = le plus fort)',
-                'constraints' => [new Assert\NotBlank(message: 'Indiquez le niveau de la poule.'), new Assert\Positive(message: 'Le niveau est un nombre à partir de 1.')],
+                'constraints' => [new Assert\NotBlank(message: 'Indiquez le niveau de la poule.'), new Assert\Range(min: 1, max: EtapePassages::NIVEAU_MAX, notInRangeMessage: 'Le niveau est un nombre de {{ min }} à {{ max }}.')],
             ])
             ->add('nbEquipesPrevu', IntegerType::class, [
                 'label' => 'Équipes prévues',

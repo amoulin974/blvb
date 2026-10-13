@@ -23,7 +23,7 @@
                 {% for cle, b in bareme %}
                     <tr>
                         <td><label for="bareme-{{ cle }}">{{ b[1] }}</label>{% if b[2] %}<p class="text-sm text-(--color-base-content)/80">{{ b[2] }}</p>{% endif %}</td>
-                        <td><input id="bareme-{{ cle }}" name="bareme[{{ cle }}]" inputmode="numeric" class="input input-bordered w-24 text-center tabular-nums" value="{{ saisie ? saisie.bareme[cle]|default('') : valeursSaison[cle] }}"></td>
+                        <td><input id="bareme-{{ cle }}" name="bareme[{{ cle }}]" type="text" inputmode="text" pattern="-?[0-9]{1,2}" class="input input-bordered champ-court text-center tabular-nums" value="{{ saisie ? saisie.bareme[cle]|default('') : valeursSaison[cle] }}"></td>
                     </tr>
                 {% endfor %}
                 </tbody>
@@ -34,17 +34,18 @@
                     {% set propre = phase.bareme is not null %}
                     {% set aucun = propre and phase.bareme|filter(v => v != 0)|length == 0 and phase.bareme|length == bareme|length %}
                     <details class="rounded-box border border-base-300 p-3" {% if propre %}open{% endif %}>
-                        <summary class="cursor-pointer font-semibold min-h-11">Barème propre à la {{ phase.nom }}{% if propre %} <span class="badge badge-outline ml-2">Barème propre</span>{% endif %}</summary>
+                        <summary class="cursor-pointer font-semibold min-h-11">Barème propre : {{ phase.nom }}{% if propre %} <span class="badge badge-outline ml-2">Barème propre</span>{% endif %}</summary>
                         <label class="mt-2 flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" name="phase[{{ phase.id }}][propre]" value="1" {% if propre %}checked{% endif %}> Barème différent pour cette phase</label>
                         <fieldset class="pl-7">
-                            <legend class="sr-only">Barème de la {{ phase.nom }}</legend>
+                            <legend class="sr-only">Barème, {{ phase.nom }}</legend>
                             <label class="flex min-h-11 items-center gap-2"><input type="radio" class="radio" name="phase[{{ phase.id }}][mode]" value="aucun" {% if not propre or aucun %}checked{% endif %}> Aucun point (tableau, barrage)</label>
                             <label class="flex min-h-11 items-center gap-2"><input type="radio" class="radio" name="phase[{{ phase.id }}][mode]" value="autre" {% if propre and not aucun %}checked{% endif %}> Autre barème :</label>
                             <div class="flex flex-wrap gap-3 pl-7">
                                 {% for cle, b in bareme %}
-                                    <label class="flex flex-col gap-1 text-sm">{{ b[1] }}<input name="phase[{{ phase.id }}][{{ cle }}]" inputmode="numeric" class="input input-bordered w-24 text-center" placeholder="{{ valeursSaison[cle] }}, comme la saison" value="{{ propre and not aucun ? phase.bareme[cle]|default('') : '' }}"></label>
+                                    <label class="flex flex-col gap-1 text-sm">{{ b[1] }}<input name="phase[{{ phase.id }}][{{ cle }}]" type="text" inputmode="text" pattern="-?[0-9]{1,2}" class="input input-bordered champ-court text-center" placeholder="{{ valeursSaison[cle] }}" value="{{ propre and not aucun ? phase.bareme[cle]|default('') : '' }}"></label>
                                 {% endfor %}
                             </div>
+                            <p class="mt-1 pl-7 text-sm text-(--color-base-content)/80">Laissez vide : valeur de la saison.</p>
                         </fieldset>
                     </details>
                 {% endfor %}
@@ -60,8 +61,8 @@
                         <input type="hidden" name="departage[]" value="{{ c.value }}">
                         <strong class="w-6">{{ i + 1 }}.</strong>
                         <span class="flex-1 min-w-48 font-semibold">{{ c.libelle }}</span>
-                        <button type="submit" name="action" value="monter-critere-{{ i }}" class="btn btn-ghost btn-square" {% if loop.first %}disabled{% endif %} aria-label="Monter {{ c.libelle }}">▲</button>
-                        <button type="submit" name="action" value="descendre-critere-{{ i }}" class="btn btn-ghost btn-square" {% if loop.last %}disabled{% endif %} aria-label="Descendre {{ c.libelle }}">▼</button>
+                        <button type="submit" name="action" value="monter-critere-{{ i }}" class="btn btn-ghost btn-square" {% if loop.first %}disabled{% endif %} aria-label="Monter {{ c.libelle }}">{{ icone.i('fleche-haut') }}</button>
+                        <button type="submit" name="action" value="descendre-critere-{{ i }}" class="btn btn-ghost btn-square" {% if loop.last %}disabled{% endif %} aria-label="Descendre {{ c.libelle }}">{{ icone.i('fleche-bas') }}</button>
                         <button type="submit" name="action" value="retirer-critere-{{ i }}" class="btn btn-ghost" aria-label="Retirer {{ c.libelle }}">Retirer</button>
                     </li>
                 {% endfor %}

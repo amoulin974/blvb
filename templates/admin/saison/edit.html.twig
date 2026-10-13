@@ -1,21 +1,21 @@
 {% extends 'base_admin.html.twig' %}
 {% import 'admin/_icones.html.twig' as icone %}
 
-{% block title %}Modifier la saison {{ saison.nom }}{% endblock %}
+{% block title %}Modifier la saison : {{ saison.nom }}{% endblock %}
 
 {% block body %}
-    {{ include('admin/_entete.html.twig', {titre: 'Modifier la saison ' ~ saison.nom, retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom}}) }}
+    {{ include('admin/_entete.html.twig', {titre: 'Modifier la saison : ' ~ saison.nom, retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom}}) }}
 
-    {% if not matchs_joues %}
+    {% if not lancee %}
         <div class="max-w-3xl mb-4">
             {% embed 'admin/_alerte.html.twig' with {type: 'info'} %}{% block contenu %}
                 {% import 'admin/_icones.html.twig' as icone %}{# les macros du gabarit parent ne sont pas visibles ici #}
-                Aucun match n'est encore joué : les phases, les passages et le classement se modifient avec l'assistant de création.
-                <div class="mt-2"><a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 3}) }}" class="btn btn-primary btn-sm">{{ icone.i('crayon') }} Modifier l'organisation de la saison</a></div>
+                Aucun match n'est encore programmé : les phases, les passages et le classement se modifient avec l'assistant de création.
+                <div class="mt-2"><a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 3}) }}" class="btn btn-outline btn-primary btn-sm">{{ icone.i('crayon') }} Modifier l'organisation de la saison</a></div>
             {% endblock %}{% endembed %}
         </div>
     {% else %}
-        <p class="max-w-3xl mb-4 text-(--color-base-content)/80">Des matchs sont déjà joués : seuls le nom, les dates et les périodes de fermeture se modifient.</p>
+        <p class="max-w-3xl mb-4 text-(--color-base-content)/80">La saison est lancée (matchs programmés ou phase clôturée) : seuls le nom, les dates et les périodes de fermeture se modifient.</p>
     {% endif %}
 
     <div class="admin-carte max-w-3xl">

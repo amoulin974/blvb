@@ -183,3 +183,12 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   YAML), copie d'une saison ; 361 tests verts.
 - Propositions d'écrans de l'ergonome et du webdesigner synthétisées dans `ecrans.md`, avec
   19 questions à trancher par l'utilisateur. **Suite** : réponses aux questions, puis écrans.
+
+### 2026-10-13 : lot 4, wizard réalisé et relu
+
+- Wireframe cliquable validé (D29 à D33), puis les 6 étapes du wizard, le brouillon et la
+  modification d'une saison créée ; `SaisonListener` supprimé.
+- Relectures ergonome, webdesigner et sécurité des écrans réalisés : retours intégrés (D34, WIZ-14,
+  WIZ-15, détail dans `lots.md`) ; quelques points reportés au lot 5. 383 tests verts + 2 lents.
+  **Suite** : fusion de `formats-competition-lot4` dans `formats-competition`, puis lot 5 (mise en
+  place des poules, journées et matchs).

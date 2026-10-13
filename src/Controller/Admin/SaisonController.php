@@ -62,7 +62,7 @@ final class SaisonController extends AbstractController
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     /**
-     * Nom, dates et périodes de fermeture ; tant qu'aucun match n'est joué, lien vers le wizard pour l'organisation
+     * Nom, dates et périodes de fermeture ; tant que la saison n'est pas lancée, lien vers le wizard pour l'organisation
      * (phases, passages, classement) (docs/wizard-saison/decisions.md, D29).
      */
     public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache, SaisonRepository $saisons, Sports $sports): Response
@@ -88,7 +88,7 @@ final class SaisonController extends AbstractController
             'saison' => $saison,
             'form' => $form,
             'sport' => $sports->pourSaison($saison)->libelle(),
-            'matchs_joues' => $saisons->aDesMatchsJoues($saison),
+            'lancee' => $saisons->estLancee($saison),
         ], new Response(status: $form->isSubmitted() ? 422 : 200));
     }
 

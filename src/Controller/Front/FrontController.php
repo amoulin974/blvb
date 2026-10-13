@@ -542,7 +542,7 @@ final class FrontController extends AbstractController
         if (!$saison) {
             // L'id en session est absent, invalide ou ne correspond plus à une saison visible (supprimée, brouillon) :
             // on retombe sur la saison favorite...
-            $saison = $saisonRepository->findOneBy(['favori' => 1]);
+            $saison = $saisonRepository->findFavoritePubliee();
 
             // ... sinon sur la saison la plus récente...
             if (!$saison) {

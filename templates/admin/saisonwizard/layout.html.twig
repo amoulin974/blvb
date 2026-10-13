@@ -7,12 +7,14 @@
 {% set etape_courante = etapes|filter(e => e.etat == 'en cours')|first %}
 
 {% set edition = saison is defined and saison and not saison.brouillon %}
-{% block title %}Étape {{ etape_courante.numero }} sur 6 : {{ etape_courante.libelle }} · {{ edition ? 'Modifier la saison' : 'Nouvelle saison' }}{% endblock %}
+{# Rang dans le stepper affiché (en modification, le départ n'y figure pas) #}
+{% set rang = etapes|filter(e => e.numero < etape_courante.numero)|length + 1 %}
+{% block title %}Étape {{ rang }} sur {{ etapes|length }} : {{ etape_courante.libelle }} · {{ edition ? 'Modifier la saison' : 'Nouvelle saison' }}{% endblock %}
 
 {% block body %}
     {{ include('admin/_entete.html.twig', edition ? {
         titre: 'Modifier la saison : ' ~ saison.nom,
-        sous_titre: 'Organisation de la saison (aucun match n\'est encore joué)',
+        sous_titre: 'Chaque étape est enregistrée dès que vous la quittez, et la saison est visible sur le site.',
         retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom},
     } : {
         titre: saison is defined and saison ? 'Nouvelle saison : ' ~ saison.nom : 'Nouvelle saison',
@@ -20,26 +22,27 @@
         retour: {url: path('admin_saison_index'), label: 'Saisons'},
     }) }}
 
-    <nav aria-label="Étapes de création de la saison" class="mb-6">
+    <nav aria-label="Étapes de la saison" class="mb-6">
         <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Organisation</p>
-        <ol class="steps w-full">
+        <ol class="steps steps-wizard w-full">
             {% for e in etapes %}
                 {% set classe = e.etat == 'à venir' ? 'step' : (e.etat == 'à corriger' ? 'step step-warning' : 'step step-primary') %}
-                <li class="{{ classe }}" data-content="{{ e.etat == 'faite' ? '✓' : (e.etat == 'à corriger' ? '!' : e.numero) }}" {% if e.etat == 'en cours' %}aria-current="step"{% endif %}>
+                <li class="{{ classe }} relative" data-content="{{ e.etat == 'faite' ? '✓' : (e.etat == 'à corriger' ? '!' : loop.index) }}" {% if e.etat == 'en cours' %}aria-current="step"{% endif %}>
                     {% if e.accessible and e.etat != 'en cours' %}
-                        <button type="submit" form="wizard-form" name="aller" value="{{ e.numero }}" class="max-md:sr-only hover:underline">{{ e.libelle }}<span class="sr-only"> ({{ e.etat }})</span></button>
+                        {# Sur téléphone, le bouton couvre la pastille (z-10 : devant le ::after de daisyUI) #}
+                        <button type="submit" form="wizard-form" name="aller" value="{{ e.numero }}" class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)"><span class="max-md:sr-only">{{ e.libelle }}</span><span class="sr-only"> ({{ e.etat }})</span></button>
                     {% else %}
                         <span class="max-md:sr-only {{ e.etat == 'en cours' ? 'font-semibold' : '' }}">{{ e.libelle }}</span><span class="sr-only"> ({{ e.etat }})</span>
                     {% endif %}
                 </li>
             {% endfor %}
         </ol>
-        <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape {{ etape_courante.numero }} sur 6 · {{ etape_courante.libelle }}</p>
+        <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape {{ rang }} sur {{ etapes|length }} · {{ etape_courante.libelle }}</p>
         {% if not edition %}<p class="mt-3 text-sm text-(--color-base-content)/80">Mise en place (après validation) : poules, journées, matchs.</p>{% endif %}
     </nav>
 
     <div class="admin-carte">
-        <h2 id="titre-etape" tabindex="-1" class="mb-4">{% block titre_etape %}{{ etape_courante.libelle }}{% endblock %}</h2>
+        <h2 id="titre-etape" class="mb-4">{% block titre_etape %}{{ etape_courante.libelle }}{% endblock %}</h2>
         {% block contenu %}{% endblock %}
     </div>
 {% endblock %}

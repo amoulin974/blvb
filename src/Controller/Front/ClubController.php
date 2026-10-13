@@ -26,7 +26,7 @@ final class ClubController extends AbstractController
     #[Route('s', name: 'index', methods: ['GET'])]
     public function index(ClubRepository $clubRepository, SaisonRepository $saisonRepository): Response
     {
-        $saison = $saisonRepository->findOneBy(['favori' => 1]);
+        $saison = $saisonRepository->findFavoritePubliee();
 
         return $this->render('front/club/index.html.twig', [
             'clubs' => $clubRepository->findTousAvecRelations(),
@@ -39,7 +39,7 @@ final class ClubController extends AbstractController
     public function show(Club $club, ClubRepository $clubRepository, SaisonRepository $saisonRepository): Response
     {
         // Seules les équipes engagées dans la saison en cours sont listées, avec leur poule
-        $saison = $saisonRepository->findOneBy(['favori' => 1]);
+        $saison = $saisonRepository->findFavoritePubliee();
 
         return $this->render('front/club/show.html.twig', [
             'club' => $club,

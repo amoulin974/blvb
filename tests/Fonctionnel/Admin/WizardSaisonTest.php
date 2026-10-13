@@ -45,10 +45,13 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSame(28, array_sum(array_map(fn ($p) => $p->getReglesDePassage()->count(), $saison->getPhases()->toArray())));
     }
 
-    #[TestDox('WIZ-03 Copier une saison : structure recopiée, dates décalées d\'un an, avertissement si la saison copiée n\'est pas terminée')]
+    #[TestDox('WIZ-03 Copier une saison : avertissement dès le choix si elle n\'est pas terminée ; structure recopiée, dates décalées d\'un an')]
     public function test_depart_copie(): void
     {
         $source = $this->em()->find(Saison::class, ChampionnatDeTest::get('saison')->getId());
+        $this->connecter('admin');
+        $this->client->request('GET', '/admin/saison/wizard/nouvelle');
+        self::assertSelectorTextContains('[data-saison="'.$source->getId().'"]', 'seront à composer');
         $saison = $this->demarrer(['depart[depart]' => 'copie', 'depart[saison]' => (string) $source->getId()]);
 
         self::assertTrue($saison->isBrouillon());
@@ -73,7 +76,7 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->client->submit($form, ['saison_wizard[nom]' => ChampionnatDeTest::get('saison')->getNom()]);
         self::assertSelectorTextContains('body', 'Une saison porte déjà ce nom.');
 
-        $form = $this->client->request('GET', $url)->selectButton('Suivant →')->form();
+        $form = $this->client->request('GET', $url)->filter('button[value="suivant"]')->form();
         $this->client->submit($form, ['saison_wizard[nom]' => 'Saison du wizard']);
         self::assertResponseRedirects('/admin/saison/'.$saison->getId().'/wizard/3');
         $this->em()->clear();
@@ -179,8 +182,8 @@ final class WizardSaisonTest extends TestFonctionnel
         $avant = $this->sources($id, 0);
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
-        self::assertSelectorTextContains('body', 'De la Phase 1 vers la Phase 2');
-        self::assertSelectorTextContains('body', 'De la Phase 2 vers la Phase Finale');
+        self::assertSelectorTextContains('body', 'Phase 1 → Phase 2');
+        self::assertSelectorTextContains('body', 'Phase 2 → Phase Finale');
         self::assertSelectorTextContains('body', 'Montées et descentes pour la saison suivante');
 
         $this->client->submit($crawler->filter('button[value="suivant"]')->form());
@@ -260,7 +263,7 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->client->submit($crawler->filter('button[value="valider"]')->form());
         self::assertResponseRedirects('/admin/saison/'.$id);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('body', 'Prochaine étape : composer les poules de la Phase 1.');
+        self::assertSelectorTextContains('body', 'Prochaine étape : composer les poules de « Phase 1 ».');
         $this->em()->clear();
         $saison = $this->em()->find(Saison::class, $id);
         self::assertFalse($saison->isBrouillon());
@@ -276,7 +279,7 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->em()->flush();
 
         $crawler = $this->client->request('GET', $url);
-        self::assertSelectorTextContains('body', 'Phase 2 : la date de fin est avant la date de début.');
+        self::assertSelectorTextContains('body', 'Phase 2 : la date de fin doit être après la date de début.');
         self::assertSame('true', $crawler->filter('button[value="valider"]')->attr('aria-disabled'));
         self::assertSame('!', $crawler->filter('.steps li')->eq(2)->attr('data-content'), 'étape « Phases » à corriger');
 
@@ -289,14 +292,14 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/3');
     }
 
-    #[TestDox('WIZ-13 Saison créée sans match joué : « Modifier la saison » propose le wizard (étapes 2 à 6, sans le départ), « Enregistrer les modifications » ; nom, dates et fermetures modifiables sur la page')]
+    #[TestDox('WIZ-13 Saison créée, pas encore lancée : « Modifier la saison » propose le wizard (étapes 2 à 6, sans le départ), « Terminer » ; nom, dates et fermetures modifiables sur la page')]
     public function test_modification_saison_creee(): void
     {
         [$id, $url] = $this->brouillonA(6);
         $this->client->submit($this->client->request('GET', $url)->filter('button[value="valider"]')->form());
 
         $crawler = $this->client->request('GET', '/admin/saison/'.$id.'/edit');
-        self::assertSelectorTextContains('body', 'Aucun match n\'est encore joué');
+        self::assertSelectorTextContains('body', 'Aucun match n\'est encore programmé');
         $crawler = $this->client->click($crawler->selectLink('Modifier l\'organisation de la saison')->link());
         self::assertSelectorTextContains('h1', 'Modifier la saison :');
         self::assertCount(5, $crawler->filter('.steps li'), 'pas d\'étape « Départ »');
@@ -304,7 +307,7 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->client->request('GET', '/admin/saison/'.$id.'/wizard/1');
         self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/2');
 
-        $this->client->submit($this->client->request('GET', '/admin/saison/'.$id.'/wizard/6')->selectButton('Enregistrer les modifications')->form());
+        $this->client->submit($this->client->request('GET', '/admin/saison/'.$id.'/wizard/6')->selectButton('Terminer')->form());
         self::assertResponseRedirects('/admin/saison/'.$id);
         $this->client->followRedirect();
         self::assertSelectorTextContains('body', 'sont enregistrées');
@@ -318,7 +321,67 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSame('Saison renommée', $this->em()->find(Saison::class, $id)->getNom());
     }
 
-    #[TestDox('WIZ-05 Garde-fous : une saison dont des matchs sont joués n\'ouvre pas le wizard (modification simple) ; une étape pas encore atteinte renvoie à la dernière atteinte')]
+    #[TestDox('WIZ-14 Saison créée : « Enregistrer et quitter » avec une erreur renvoie à la vérification ; une phase clôturée ferme le wizard')]
+    public function test_modification_garde_fous(): void
+    {
+        [$id, $url] = $this->brouillonA(6);
+        $this->client->submit($this->client->request('GET', $url)->filter('button[value="valider"]')->form());
+        $phase2 = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === 1)->first();
+        $phase2->setDatefin($phase2->getDateDebut()->modify('-1 day'));
+        $this->em()->flush();
+
+        $this->cliquer('/admin/saison/'.$id.'/wizard/5', 'quitter');
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/6');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'corrigez-les avant de quitter');
+
+        $this->em()->clear();
+        $this->em()->find(Saison::class, $id)->getPhases()->first()->setClose(1);
+        $this->em()->flush();
+        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/3');
+        self::assertResponseRedirects('/admin/saison/'.$id.'/edit');
+    }
+
+    #[TestDox('WIZ-15 Sécurité : sans jeton, les étapes 4 à 6 n\'enregistrent rien ; une poule d\'une autre saison n\'est pas une destination ; champs mal formés et niveau démesuré refusés sans erreur 500')]
+    public function test_entrees_refusees(): void
+    {
+        [$id, $url] = $this->brouillonA(4);
+        $avant = $this->sources($id, 0);
+        $phase1 = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === 0)->first()->getId();
+
+        $this->client->request('POST', $url, ['action' => 'retablir-'.$phase1, 'p' => []]);
+        self::assertResponseRedirects($url);
+        $this->client->request('POST', '/admin/saison/'.$id.'/wizard/5', ['bareme' => ['victoire_forte' => '9'], 'aller' => 'suivant']);
+        $this->client->request('POST', '/admin/saison/'.$id.'/wizard/6', ['aller' => 'valider']);
+        $this->em()->clear();
+        $saison = $this->em()->find(Saison::class, $id);
+        self::assertTrue($saison->isBrouillon(), 'pas validée sans jeton');
+        self::assertNotSame(9, $saison->getPointsVictoireForte());
+        self::assertSame($avant, $this->sources($id, 0));
+
+        $a = $this->poule($id, 0, 'A');
+        $etrangere = ChampionnatDeTest::get('poule.A')->getId();
+        $this->cliquer($url, 'detail-'.$a);
+        // Requête forgée : la liste ne propose pas cette poule
+        $valeurs = $this->client->request('GET', $url)->filter('#wizard-form')->form()->getPhpValues();
+        $valeurs['p'][$a]['r'][0]['dest'] = 'p:'.$etrangere;
+        $this->client->request('POST', $url, $valeurs + ['aller' => 'suivant']);
+        self::assertNotContains('P1.A#1..2', $this->sources($id, 0), 'règle vers une poule d\'une autre saison ignorée');
+
+        $valeurs = $this->client->request('GET', $url)->filter('#wizard-form')->form()->getPhpValues();
+        $valeurs['p'][$a] = 'x';
+        $this->client->request('POST', $url, $valeurs);
+        self::assertResponseRedirects();
+        $valeurs['p'][$a] = ['mode' => 'detail', 'r' => 'x'];
+        $this->client->request('POST', $url, $valeurs);
+        self::assertResponseRedirects();
+
+        $this->cliquer('/admin/saison/'.$id.'/wizard/3', 'suivant', ['phases_wizard[phases][0][poules][0][niveau]' => '2000000000']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Le niveau est un nombre de 1 à 20.');
+    }
+
+    #[TestDox('WIZ-05 Garde-fous : une saison lancée (matchs programmés) n\'ouvre pas le wizard, ni en lecture ni en envoi ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {
         $this->connecter('admin');
@@ -328,6 +391,10 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->client->followRedirect();
         self::assertSelectorTextContains('body', 'seuls le nom, les dates et les périodes de fermeture se modifient');
         self::assertSelectorNotExists('a[href$="/wizard/3"]', 'pas de lien vers le wizard');
+        $this->client->request('POST', '/admin/saison/'.$id.'/wizard/5', ['bareme' => ['victoire_forte' => '9'], 'aller' => 'suivant']);
+        self::assertResponseRedirects('/admin/saison/'.$id.'/edit');
+        $this->em()->clear();
+        self::assertNotSame(9, $this->em()->find(Saison::class, $id)->getPointsVictoireForte());
 
         $saison = $this->demarrer(['depart[depart]' => 'modele', 'depart[modele]' => 'blvb_actuel']);
         $this->client->request('GET', '/admin/saison/'.$saison->getId().'/wizard/5');

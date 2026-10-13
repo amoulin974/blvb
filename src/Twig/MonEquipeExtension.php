@@ -84,7 +84,7 @@ class MonEquipeExtension extends AbstractExtension
             $session = $this->requestStack->getCurrentRequest()?->hasSession() ? $this->requestStack->getSession() : null;
             $id = $session?->get('idSaisonSelected');
             $this->saison = $this->saisonRepository->findPubliee($id)
-                ?? $this->saisonRepository->findOneBy(['favori' => 1])
+                ?? $this->saisonRepository->findFavoritePubliee()
                 ?? $this->saisonRepository->findPlusRecentePubliee();
         }
 
