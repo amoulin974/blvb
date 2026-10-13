@@ -76,11 +76,12 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Codes : `Phase.code`, `Poule.code` (D20), uniques dans la saison / la phase ;
       `App\Competition\CodesCompetition` (attribue les codes manquants, appelé à la création de saison) ;
       migration `Version20261013120000` (même calcul pour les saisons existantes)
-- [ ] Entité `RegleDePassage` : phase source, ordre, source (notation des places), destination
+- [x] Entité `RegleDePassage` : phase source, ordre, source (notation des places), destination
       (poule d'une phase suivante, ou niveau de la saison suivante, D22), placement, points conservés
-      (D23)
-- [ ] `ReglesParDefaut` : règles du schéma 2025 (D21), utilisées par la migration, la création de
-      saison et la clôture d'une phase sans règles (D26)
+      (D23, enum `PointsConserves`)
+- [x] `ReglesParDefaut` : règles du schéma 2025 (D21), utilisées par la migration
+      `Version20261013130000` et la création de saison (`CompetitionCreator`, qui relie maintenant
+      phases et poules des deux côtés) ; clôture d'une phase sans règles (D26) : étape suivante
 - [ ] `ResultatsPhases` branché sur Doctrine (classements, issues de match) ; `ResolveurPlace` en service
 - [ ] `VerificationPassages` (D5) : notation, phase et poule existantes, chaque équipe une seule
       destination

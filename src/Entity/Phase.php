@@ -61,10 +61,20 @@ class Phase
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $bareme = null;
 
+    /**
+     * Règles de passage des équipes de cette phase vers la suivante (ou la saison suivante), dans l'ordre.
+     *
+     * @var Collection<int, RegleDePassage>
+     */
+    #[ORM\OneToMany(targetEntity: RegleDePassage::class, mappedBy: 'phase', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['ordre' => 'ASC'])]
+    private Collection $reglesDePassage;
+
 
     public function __construct()
     {
         $this->poules = new ArrayCollection();
+        $this->reglesDePassage = new ArrayCollection();
 
     }
 
@@ -190,6 +200,29 @@ class Phase
     public function setClose(int $close): static
     {
         $this->close = $close;
+
+        return $this;
+    }
+
+    /** @return Collection<int, RegleDePassage> */
+    public function getReglesDePassage(): Collection
+    {
+        return $this->reglesDePassage;
+    }
+
+    public function addRegleDePassage(RegleDePassage $regle): static
+    {
+        if (!$this->reglesDePassage->contains($regle)) {
+            $this->reglesDePassage->add($regle);
+            $regle->setPhase($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRegleDePassage(RegleDePassage $regle): static
+    {
+        $this->reglesDePassage->removeElement($regle);
 
         return $this;
     }
