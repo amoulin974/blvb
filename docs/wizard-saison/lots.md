@@ -11,7 +11,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 |---|---|---|
 | 0 | Cadrage : décisions, plan, lots, méthode | ✅ |
 | 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | ✅ |
-| 2 | Classement paramétrable : barème par phase, départage configurable, mini-classement à 3 équipes ou plus, gestion de l'exempt | ⬜ |
+| 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | 🟡 |
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9) | ⬜ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ⬜ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ⬜ |
@@ -54,6 +54,19 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Tests de non-régression : calendriers et classements du format actuel identiques. Couverts
       par les tests existants (`GenerationMatchsTest`, `OptimiseurTest`, `JourneeServiceTest`,
       `ClassementServiceTest`), inchangés et verts ; `FormatsTest` ajouté.
+
+## Lot 2 : classement paramétrable 🟡
+- [x] Branche `formats-competition-lot2` ; décisions D16 à D19
+- [ ] Départage : liste ordonnée de critères enregistrée par saison (colonne JSON, migration, valeur
+      par défaut = départage actuel) ; critères `points`, `difference_sets`, `quotient_sets`,
+      `confrontation_directe`, `mini_classement`, `alphabetique` (toujours appliqué en dernier)
+- [ ] `ClassementService` : tri par la liste de la saison ; mini-classement sur les seuls matchs
+      entre équipes à égalité
+- [ ] Barème surchargeable par phase (colonnes facultatives, migration) ; `Bareme` lu dans la phase,
+      à défaut dans la saison
+- [ ] Tests : départage par défaut identique (tests existants verts), quotient de sets, mini-classement
+      (cas A bat B, B bat C, C bat A), barème de phase ; `tests/SPECIFICATIONS.md` à jour
+- [ ] Pas d'écran (D19)
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;

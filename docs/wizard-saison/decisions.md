@@ -121,6 +121,33 @@ la fin du lot (comme `tests-lot1` à `tests-lot4`). `formats-competition` est fu
 quand un ensemble cohérent est prêt.
 *(2026-10-13)*
 
+## D16. Égalité à 3 équipes ou plus : deux critères distincts
+**Décision** : le critère « confrontation directe » reste tel quel (dernier match joué entre les deux
+équipes, comparaison deux à deux). Un nouveau critère **« mini-classement »** est proposé : points,
+puis différence de sets, calculés sur les seuls matchs joués entre les équipes à égalité.
+L'administrateur choisit l'un ou l'autre dans la liste de départage.
+**Pourquoi** : les saisons existantes gardent exactement leur classement (D9) ; le mini-classement
+règle le cas où la comparaison deux à deux tourne en rond (A bat B, B bat C, C bat A).
+*(2026-10-13, lot 2)*
+
+## D17. Critères de départage proposés
+**Décision** : points, différence de sets, **quotient de sets** (nouveau, règle FFVB),
+confrontation directe, mini-classement (D16), ordre alphabétique. Pas de nombre de victoires, de
+forfaits ni de tirage au sort pour l'instant. Départage par défaut, celui d'aujourd'hui : points,
+différence de sets, confrontation directe, ordre alphabétique. L'ordre alphabétique est toujours
+appliqué en dernier, pour un classement identique d'un calcul à l'autre.
+*(2026-10-13, lot 2)*
+
+## D18. Équipe exempte : aucun point, sans option
+**Décision** : comportement actuel conservé, non paramétrable.
+*(2026-10-13, lot 2)*
+
+## D19. Pas d'écran avant le wizard
+**Décision** : le lot 2 fait le modèle (barème et départage de la saison, barème surchargeable par
+phase) et les calculs, sans écran. Les saisons existantes gardent leurs valeurs ; la saisie se fera
+dans le wizard (lot 4). Pas d'interface, donc pas de relecture ergonome / webdesigner pour ce lot.
+*(2026-10-13, lot 2)*
+
 ---
 
 ## Points ouverts
