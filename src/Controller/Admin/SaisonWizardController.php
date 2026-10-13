@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Competition\Classement\CritereDepartage;
 use App\Competition\CodesCompetition;
 use App\Competition\CopieSaison;
 use App\Competition\EtapePassages;
@@ -131,6 +132,9 @@ class SaisonWizardController extends AbstractController
         if ($etape === 4) {
             return $this->etapePassages($saison, $request, $em, $vue);
         }
+        if ($etape === 5) {
+            return $this->etapeClassement($saison, $request, $em, $vue);
+        }
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
@@ -214,6 +218,117 @@ class SaisonWizardController extends AbstractController
         return $this->render('admin/saisonwizard/passages.html.twig', $vue + [
             'transitions' => EtapePassages::transitions($saison, $detail),
         ]);
+    }
+
+    /** Catégories du barème saisies (volley-ball) : clé enregistrée → [setter de la saison, libellé, aide]. */
+    private const BAREME = [
+        'victoire_forte' => ['setPointsVictoireForte', 'Victoire 3-0 ou 3-1', null],
+        'victoire_faible' => ['setPointsVictoireFaible', 'Victoire 3-2', null],
+        'defaite_forte' => ['setPointsDefaiteForte', 'Défaite 2-3', null],
+        'defaite_faible' => ['setPointsDefaiteFaible', 'Défaite 0-3 ou 1-3', null],
+        'forfait' => ['setPointsForfait', 'Équipe forfait', 'L\'adversaire reçoit les points d\'une victoire 3-0.'],
+    ];
+
+    /**
+     * Étape 5 : barème de la saison, barème propre à certaines phases, ordre du départage (liste réordonnée par les
+     * boutons « action » : monter, descendre, retirer, ajouter un critère).
+     */
+    private function etapeClassement(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
+    {
+        $phases = self::phasesDansLOrdre($saison);
+        $erreurs = [];
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 5]);
+            }
+            $payload = $request->getPayload();
+            $entier = static fn ($v) => \is_string($v) && preg_match('/^-?\d{1,2}$/', trim($v)) ? (int) trim($v) : null;
+
+            $bareme = $payload->all('bareme');
+            $valeurs = [];
+            foreach (self::BAREME as $cle => [, $libelle]) {
+                $valeurs[$cle] = $entier($bareme[$cle] ?? null);
+                if ($valeurs[$cle] === null) {
+                    $erreurs[] = sprintf('%s : indiquez un nombre de points (de -99 à 99).', $libelle);
+                }
+            }
+            $baremesPhases = [];
+            foreach ($phases as $phase) {
+                $champs = $payload->all('phase')[$phase->getId()] ?? [];
+                if (empty($champs['propre'])) {
+                    $baremesPhases[$phase->getId()] = null;
+                } elseif (($champs['mode'] ?? 'aucun') === 'aucun') {
+                    $baremesPhases[$phase->getId()] = array_fill_keys(array_keys(self::BAREME), 0);
+                } else {
+                    $propre = [];
+                    foreach (array_keys(self::BAREME) as $cle) {
+                        if (($champs[$cle] ?? '') !== '') {
+                            $propre[$cle] = $entier($champs[$cle]);
+                            if ($propre[$cle] === null) {
+                                $erreurs[] = sprintf('%s, %s : indiquez un nombre de points (de -99 à 99), ou laissez vide pour reprendre celui de la saison.', $phase->getNom(), self::BAREME[$cle][1]);
+                            }
+                        }
+                    }
+                    $baremesPhases[$phase->getId()] = array_filter($propre, fn ($v) => $v !== null) ?: null;
+                }
+            }
+
+            if ($erreurs === []) {
+                foreach (self::BAREME as $cle => [$setter]) {
+                    $saison->$setter($valeurs[$cle]);
+                }
+                foreach ($phases as $phase) {
+                    $phase->setBareme($baremesPhases[$phase->getId()]);
+                }
+                $saison->setDepartage(self::departage($payload->all('departage'), $payload->getString('action'), $payload->getString('nouveau_critere')));
+                $em->flush();
+                if ($payload->getString('action') !== '') {
+                    return $this->redirect($this->generateUrl('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 5]).'#departage');
+                }
+
+                return $this->naviguer($request, $saison, 5, $em);
+            }
+        }
+
+        $criteres = array_values(array_filter($saison->getDepartage(), fn (CritereDepartage $c) => $c !== CritereDepartage::ALPHABETIQUE));
+
+        return $this->render('admin/saisonwizard/classement.html.twig', $vue + [
+            'erreurs' => $erreurs,
+            'bareme' => self::BAREME,
+            'phases' => $phases,
+            'criteres' => $criteres,
+            'disponibles' => array_values(array_filter(CritereDepartage::cases(), fn (CritereDepartage $c) => $c !== CritereDepartage::ALPHABETIQUE && !\in_array($c, $criteres, true))),
+            'saisie' => $request->isMethod('POST') ? $request->getPayload()->all() : null,
+        ], new Response(status: $erreurs === [] ? 200 : 422));
+    }
+
+    /**
+     * Départage envoyé (codes dans l'ordre), modifié par l'action : monter-critere-i, descendre-critere-i,
+     * retirer-critere-i, ajouter-critere (critère choisi dans nouveau_critere).
+     *
+     * @return list<CritereDepartage>
+     */
+    private static function departage(array $codes, string $action, string $nouveau): array
+    {
+        $criteres = array_values(array_filter(array_map(fn ($c) => \is_string($c) ? CritereDepartage::tryFrom($c) : null, $codes)));
+        if ($action === 'ajouter-critere' && ($critere = CritereDepartage::tryFrom($nouveau)) !== null) {
+            $criteres[] = $critere;
+        } elseif (preg_match('/^(monter|descendre|retirer)-critere-(\d+)$/', $action, $m) && isset($criteres[(int) $m[2]])) {
+            $i = (int) $m[2];
+            if ($m[1] === 'retirer') {
+                array_splice($criteres, $i, 1);
+            } else {
+                $j = $m[1] === 'monter' ? $i - 1 : $i + 1;
+                if (isset($criteres[$j])) {
+                    [$criteres[$i], $criteres[$j]] = [$criteres[$j], $criteres[$i]];
+                }
+            }
+        }
+
+        return $criteres;
     }
 
     /** Applique un bouton de structure de l'étape 3 ; renvoie l'index de la phase à garder ouverte. */

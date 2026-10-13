@@ -218,6 +218,34 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertCount(12, $this->sources($id, 0), 'règles par défaut du modèle (3 par poule)');
     }
 
+    #[TestDox('WIZ-10 Étape 5 : barème de la saison, phase finale sans points, départage réordonné et complété ; valeur non numérique refusée')]
+    public function test_classement(): void
+    {
+        [$id, $url] = $this->brouillonA(5);
+        $this->em()->clear();
+        $finale = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === 2)->first()->getId();
+
+        $this->cliquer($url, 'suivant', ['bareme[victoire_forte]' => '4', "phase[$finale][propre]" => '1', "phase[$finale][mode]" => 'aucun']);
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/6');
+        $this->em()->clear();
+        $saison = $this->em()->find(Saison::class, $id);
+        self::assertSame(4, $saison->getPointsVictoireForte());
+        // (MySQL réordonne les clés d'une colonne JSON)
+        self::assertEqualsCanonicalizing(array_fill_keys(['victoire_forte', 'victoire_faible', 'defaite_forte', 'defaite_faible', 'forfait'], 0),
+            $saison->getPhases()->filter(fn ($p) => $p->getOrdre() === 2)->first()->getBareme());
+
+        $this->cliquer($url, 'descendre-critere-0');
+        $this->cliquer($url, 'ajouter-critere', ['nouveau_critere' => 'mini_classement']);
+        $this->cliquer($url, 'retirer-critere-2');
+        $this->em()->clear();
+        self::assertSame(['difference_sets', 'points', 'mini_classement', 'alphabetique'],
+            array_map(fn ($c) => $c->value, $this->em()->find(Saison::class, $id)->getDepartage()));
+
+        $this->cliquer($url, 'suivant', ['bareme[forfait]' => 'beaucoup']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Équipe forfait : indiquez un nombre de points');
+    }
+
     #[TestDox('WIZ-05 Garde-fous : une saison déjà créée n\'ouvre pas le wizard ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {
