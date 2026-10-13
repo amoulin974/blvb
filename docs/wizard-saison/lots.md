@@ -57,6 +57,8 @@ matchs individuels), qui changent le modèle lui-même (D13).
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;
+- documentation des tests à jour (`tests/SPECIFICATIONS.md`, et `tests/recette/README.md` si la
+  recette change), dans le même commit que les tests ;
 - format BLVB actuel inchangé (calendriers, classements, passages) ;
 - relecture `ergonome` / `webdesigner` pour les écrans, `securite` pour les formulaires ;
 - `lots.md` et le journal de `methode.md` à jour.

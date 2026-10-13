@@ -46,12 +46,17 @@ l'application doit savoir les proposer tous, et l'administrateur choisit au mome
 3. **Tests d'abord pour la logique** (notation des places, règles de passage, départage, générateurs
    de calendrier) : tests unitaires dans `tests/Unitaire`, tests d'intégration dans
    `tests/Integration`. Les tests existants doivent rester verts.
-4. **Relectures** par les agents du projet (`.claude/agents/`) :
+4. **Documentation des tests à jour à chaque modification de test** (ajout, suppression,
+   déplacement, renommage, changement de ce qui est vérifié) : dans le même commit, mettre à jour
+   `tests/SPECIFICATIONS.md` (arborescence §3.1, catalogue §4 avec ses identifiants, plan §7 avec
+   le nombre de tests, vérifié en relançant la suite) et, si les données ou scénarios de recette
+   changent, `tests/recette/README.md`. Consigne de l'utilisateur, sans exception.
+5. **Relectures** par les agents du projet (`.claude/agents/`) :
    - **dès qu'une interface graphique est réalisée ou modifiée** (écran, formulaire, gabarit Twig,
      libellés affichés), l'`ergonome` **et** le `webdesigner` interviennent avant le commit ;
      consigne de l'utilisateur, sans exception ;
    - `securite` pour les formulaires, les API et les droits.
-5. **Fin de session** : mettre à jour l'état du lot dans `lots.md` et ajouter une entrée au journal
+6. **Fin de session** : mettre à jour l'état du lot dans `lots.md` et ajouter une entrée au journal
    ci-dessous (ce qui est fait, ce qui reste, points bloquants).
 
 ### Conventions du projet
@@ -65,7 +70,9 @@ l'application doit savoir les proposer tous, et l'administrateur choisit au mome
 
 - Le dépôt est dans WSL (`~/projects/blvb`). Depuis Windows, git refuse le chemin
   `\\wsl.localhost\…` (« dubious ownership ») : lancer git **dans WSL**, par exemple
-  `wsl.exe -d Ubuntu -- bash -c 'cd ~/projects/blvb && git status'`.
+  `wsl.exe -d Ubuntu -- bash -c 'cd ~/projects/blvb && git status'`. L'identité git de WSL est
+  configurée (`~/.gitconfig` : `amoulin974`) ; `gh` est installé dans WSL : après
+  `gh auth login` et `gh auth setup-git`, il sert au push et à suivre la CI (`gh run list`).
 - Les commandes `docker compose exec` lancées depuis un script lisent l'entrée standard : ajouter
   `-T` et `< /dev/null`, sinon elles avalent la suite du script.
 - Branche de travail : `formats-competition`, créée depuis `main` au commit `12b4fd4` ; une
@@ -81,7 +88,7 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 | Données | fabriquées par les tests (factories, stories) | `app:recette:charger`, scénarios `en-cours`, `phase1-terminee`, `vierge` |
 | Référence | `tests/SPECIFICATIONS.md` | `tests/recette/README.md` |
 
-Tests automatisés, dans le conteneur `php` (300 tests verts au 2026-10-13) :
+Tests automatisés, dans le conteneur `php` (309 tests verts + 2 lents au 2026-10-13, fin du lot 1) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
