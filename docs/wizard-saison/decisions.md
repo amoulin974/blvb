@@ -245,6 +245,25 @@ comme recommandé (13/10/2026) :
     la relecture.
 *(2026-10-13, lot 4)*
 
+## D30. Effectif d'une poule différent du nombre prévu : avertissement
+**Décision** : à la création d'une saison, une poule qui reçoit plus ou moins d'équipes que son
+« nombre d'équipes prévu » produit un avertissement, qui n'empêche pas de valider.
+**Pourquoi** : des poules de 8 et 9 équipes sont courantes au BLVB ; le nombre prévu est indicatif.
+*(2026-10-13, relecture du wireframe)*
+
+## D31. Code d'une phase de barrages : BAR, BAR2…
+**Décision** : complète D20 : une phase de barrages reçoit le code `BAR` (puis `BAR2`, `BAR3`…), comme
+`P1` pour un championnat et `F` pour une phase finale ; notation `BAR.AB.vainqueur`.
+*(2026-10-13, relecture du wireframe)*
+
+## D32. Barrages à l'écran : une carte par match
+**Décision** (ergonome, relecture du wireframe) : à l'étape « Passages », chaque match de barrage est
+saisi sur une seule carte : qui joue (« avant-dernier de la Poule A contre le 2e de la Poule B ») et où
+vont le vainqueur et le perdant. En base, ce sont toujours des règles de passage (vers la phase de
+barrages, puis depuis elle). Pour chaque poule, une ligne par rang rend visibles les équipes qui jouent
+un barrage ; le nombre de montées directes reste un choix. Format réalisé au lot 6.
+*(2026-10-13, relecture du wireframe)*
+
 ---
 
 ## Points ouverts
