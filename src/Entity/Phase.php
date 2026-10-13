@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\PhaseType;
 #[ORM\Entity(repositoryClass: PhaseRepository::class)]
+#[ORM\UniqueConstraint(name: 'phase_code_unique', columns: ['saison_id', 'code'])]
 class Phase
 {
     /** Valeur calculée pour la page de la saison (SaisonController::show), non enregistrée en base. */
@@ -21,6 +22,10 @@ class Phase
 
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
+
+    /** Code de la phase dans sa saison (P1, P2, F…), utilisé par les règles de passage (App\Competition\CodesCompetition). */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $code = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable  $datedebut = null;
@@ -56,10 +61,20 @@ class Phase
     #[ORM\Column(type: Types::JSON, nullable: true)]
     private ?array $bareme = null;
 
+    /**
+     * Règles de passage des équipes de cette phase vers la suivante (ou la saison suivante), dans l'ordre.
+     *
+     * @var Collection<int, RegleDePassage>
+     */
+    #[ORM\OneToMany(targetEntity: RegleDePassage::class, mappedBy: 'phase', cascade: ['persist'], orphanRemoval: true)]
+    #[ORM\OrderBy(['ordre' => 'ASC'])]
+    private Collection $reglesDePassage;
+
 
     public function __construct()
     {
         $this->poules = new ArrayCollection();
+        $this->reglesDePassage = new ArrayCollection();
 
     }
 
@@ -185,6 +200,41 @@ class Phase
     public function setClose(int $close): static
     {
         $this->close = $close;
+
+        return $this;
+    }
+
+    /** @return Collection<int, RegleDePassage> */
+    public function getReglesDePassage(): Collection
+    {
+        return $this->reglesDePassage;
+    }
+
+    public function addRegleDePassage(RegleDePassage $regle): static
+    {
+        if (!$this->reglesDePassage->contains($regle)) {
+            $this->reglesDePassage->add($regle);
+            $regle->setPhase($this);
+        }
+
+        return $this;
+    }
+
+    public function removeRegleDePassage(RegleDePassage $regle): static
+    {
+        $this->reglesDePassage->removeElement($regle);
+
+        return $this;
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(?string $code): static
+    {
+        $this->code = $code;
 
         return $this;
     }

@@ -47,9 +47,20 @@
                 {% for label, messages in app.flashes %}
                     {% set type = {success: 'success', error: 'error', danger: 'error', warning: 'warning'}[label] ?? 'info' %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ type }} alert-soft mb-4" role="{{ type == 'error' ? 'alert' : 'status' }}">
-                            {% if type == 'error' or type == 'warning' %}{{ icone.i('alerte', 'size-5') }}{% endif %}
-                            <span>{{ message }}</span>
+                        <div class="alert alert-{{ type }} alert-soft mb-4 items-start" role="{{ type == 'error' ? 'alert' : 'status' }}">
+                            {% if type == 'error' or type == 'warning' %}<span class="mt-0.5">{{ icone.i('alerte', 'size-5') }}</span>{% endif %}
+                            {# Message simple, ou message à liste : {titre, details, conseil} (ex. clôture d'une phase) #}
+                            {% if message is iterable %}
+                                <div class="min-w-0 break-words">
+                                    <strong class="font-semibold">{{ message.titre }}</strong>
+                                    <ul class="mt-1 list-disc pl-5 space-y-1">
+                                        {% for detail in message.details %}<li>{{ detail }}</li>{% endfor %}
+                                    </ul>
+                                    {% if message.conseil is defined %}<p class="mt-2">{{ message.conseil }}</p>{% endif %}
+                                </div>
+                            {% else %}
+                                <span class="min-w-0 break-words">{{ message }}</span>
+                            {% endif %}
                         </div>
                     {% endfor %}
                 {% endfor %}

@@ -3,6 +3,8 @@
 
 namespace App\Service;
 
+use App\Competition\CodesCompetition;
+use App\Competition\ReglesParDefaut;
 use App\Entity\Saison;
 use App\Entity\Phase;
 use App\Entity\Poule;
@@ -48,7 +50,7 @@ class CompetitionCreator
             $phase->setDateFin(
                 $this->parseYamlDate($phaseData['date_fin'], $saison->getDateDebut())
             );
-            $phase->setSaison($saison);
+            $saison->addPhase($phase);
             $this->em->persist($phase);
 
             // Vérifie s’il y a des poules configurées pour cette phase
@@ -60,11 +62,21 @@ class CompetitionCreator
                     if (isset($pouleData['niveau'])) {
                         $poule->setNiveau((int) $pouleData['niveau']);
                     }
-                    $poule->setPhase($phase);
+                    $phase->addPoule($poule);
                     $poule->setNbMonteeDefaut(2);
                     $poule->setNbDescenteDefaut(2);
                     $this->em->persist($poule);
                 }
+            }
+        }
+
+        // Codes des phases et des poules, puis règles de passage par défaut entre phases consécutives
+        CodesCompetition::attribuer($saison);
+        $phases = $saison->getPhases()->toArray();
+        usort($phases, fn (Phase $a, Phase $b) => $a->getOrdre() <=> $b->getOrdre());
+        foreach ($phases as $i => $phase) {
+            foreach (ReglesParDefaut::pourPhase($phase, $phases[$i + 1] ?? null) as $regle) {
+                $phase->addRegleDePassage($regle);
             }
         }
 

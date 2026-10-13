@@ -8,6 +8,7 @@ use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: PouleRepository::class)]
+#[ORM\UniqueConstraint(name: 'poule_code_unique', columns: ['phase_id', 'code'])]
 class Poule
 {
     #[ORM\Id]
@@ -17,6 +18,10 @@ class Poule
 
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
+
+    /** Code de la poule dans sa phase (A, B…), utilisé par les règles de passage (App\Competition\CodesCompetition). */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $code = null;
 
     #[ORM\ManyToOne(inversedBy: 'poules')]
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
@@ -65,6 +70,18 @@ class Poule
     public function getId(): ?int
     {
         return $this->id;
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(?string $code): static
+    {
+        $this->code = $code;
+
+        return $this;
     }
 
     public function setId(int $id): static

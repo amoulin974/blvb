@@ -56,6 +56,9 @@ l'application doit savoir les proposer tous, et l'administrateur choisit au mome
      libellés affichés), l'`ergonome` **et** le `webdesigner` interviennent avant le commit ;
      consigne de l'utilisateur, sans exception ;
    - `securite` pour les formulaires, les API et les droits.
+   - Si les agents du projet ne sont pas chargés dans la session (cas d'une session ouverte sur le
+     chemin `\\wsl.localhost\…`), lancer un agent général en lui demandant de lire et suivre
+     strictement la fiche `.claude/agents/<agent>.md`.
 6. **Fin de session** : mettre à jour l'état du lot dans `lots.md` et ajouter une entrée au journal
    ci-dessous (ce qui est fait, ce qui reste, points bloquants).
 
@@ -73,6 +76,10 @@ l'application doit savoir les proposer tous, et l'administrateur choisit au mome
   `wsl.exe -d Ubuntu -- bash -c 'cd ~/projects/blvb && git status'`. L'identité git de WSL est
   configurée (`~/.gitconfig` : `amoulin974`) ; `gh` est installé dans WSL : après
   `gh auth login` et `gh auth setup-git`, il sert au push et à suivre la CI (`gh run list`).
+- **Base locale et branches** : après un changement de branche, `bin/base etat` puis `bin/base aligner`
+  (sauvegarde, annulation des migrations d'une autre branche, application de celles de la branche ;
+  voir README, « Changer de branche »). `bin/base rappel` installe un rappel git. Les migrations des
+  lots ne s'appliquent en production qu'au déploiement.
 - Les commandes `docker compose exec` lancées depuis un script lisent l'entrée standard : ajouter
   `-T` et `< /dev/null`, sinon elles avalent la suite du script.
 - Branche de travail : `formats-competition`, créée depuis `main` au commit `12b4fd4` ; une
@@ -157,3 +164,12 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   mini-classement), barème surchargeable par phase, migration `Version20261013100000` (à appliquer
   au déploiement seulement). Sans écran. CLA-12 à CLA-16 ajoutés : 319 tests verts + 2 lents,
   `composer qualite` et `doctrine:schema:validate` (test) OK.
+
+### 2026-10-13 : lot 3, règles de passage
+
+- Décisions D20 à D28. `bin/base` créé (base locale alignée sur la branche) ; `blvb_new` alignée.
+- Codes des phases et poules ; entité `RegleDePassage` ; règles par défaut du schéma 2025 ; clôture
+  par les règles, avec vérification et avertissements ; message relu par l'ergonome et le webdesigner
+  (agents lancés comme agents généraux suivant leur fiche). Migrations `Version20261013120000` et
+  `Version20261013130000` vérifiées sur une copie de la base de développement. 351 tests verts.
+- Reste du lot 3 : voir `lots.md`.

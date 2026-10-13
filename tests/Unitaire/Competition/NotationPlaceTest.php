@@ -5,6 +5,7 @@ namespace App\Tests\Unitaire\Competition;
 use App\Competition\NotationInvalide;
 use App\Competition\NotationPlace;
 use App\Competition\Place;
+use App\Competition\PlageVide;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
@@ -122,6 +123,35 @@ final class NotationPlaceTest extends TestCase
     {
         $this->expectException(NotationInvalide::class);
         NotationPlace::analyser($notation)->rangsPour($nbEquipes);
+    }
+
+    public static function enClair(): iterable
+    {
+        yield '1er' => ['P1.A#1', '1er'];
+        yield '3e' => ['P1.A#3', '3e'];
+        yield 'dernier' => ['P1.A#-1', 'dernier'];
+        yield 'avant-dernier' => ['P1.A#-2', 'avant-dernier'];
+        yield 'rang lointain depuis la fin' => ['P1.A#-5', '5e en partant de la fin'];
+        yield 'deux rangs qui se suivent' => ['P1.A#1..2', '1er et 2e'];
+        yield 'deux derniers' => ['P1.A#-2..-1', 'avant-dernier et dernier'];
+        yield 'plage' => ['P1.A#1..6', 'du 1er au 6e'];
+        yield 'plage jusqu\'à l\'antépénultième' => ['P1.A#3..-3', 'du 3e à l\'antépénultième'];
+        yield 'toute la poule' => ['P1.A#1..-1', 'toutes les équipes'];
+        yield 'vainqueur' => ['BAR1.AB.vainqueur', 'vainqueur du match AB'];
+    }
+
+    #[DataProvider('enClair')]
+    #[TestDox('En clair : $_dataName')]
+    public function test_en_clair(string $notation, string $attendu): void
+    {
+        self::assertSame($attendu, NotationPlace::analyser($notation)->enClair());
+    }
+
+    #[TestDox('Plage vide pour la taille de la poule : erreur particulière (PlageVide), distincte d\'un rang hors de la poule')]
+    public function test_plage_vide(): void
+    {
+        $this->expectException(PlageVide::class);
+        NotationPlace::analyser('P1.A#3..-3')->rangsPour(4);
     }
 
     #[TestDox('Une issue de match n\'a pas de rang')]
