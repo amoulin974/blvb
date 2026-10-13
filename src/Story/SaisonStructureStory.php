@@ -5,7 +5,6 @@ use App\Entity\Saison;
 use App\Entity\Phase;
 use App\Factory\EquipeFactory;
 use App\Factory\SaisonFactory;
-use App\EventListener\SaisonListener;
 use App\Service\ClassementService;
 use App\Factory\LieuFactory;
 use App\Factory\CreneauFactory;
@@ -22,8 +21,6 @@ final class SaisonStructureStory extends Story
     ) {}
 
     public function build(): void {
-        //Désactivation du listener sur les saison qui crée automatiquement les phases et les poules à la création d'une saison
-        SaisonListener::$enabled = false;
 
         //Création des lieux
         $lieuxTest = [];
@@ -87,7 +84,6 @@ final class SaisonStructureStory extends Story
         }
 
         $this->entityManager->flush();
-        SaisonListener::$enabled = true;
         $this->addState('saison', $saison);
     }
 

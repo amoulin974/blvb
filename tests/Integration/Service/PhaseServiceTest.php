@@ -191,7 +191,7 @@ final class PhaseServiceTest extends TestIntegration
         self::assertSame(['N1 a', 'N1 b'], $this->equipes($dest), 'règles applicables appliquées, sans doublon');
         self::assertStringStartsWith('Équipes sans poule dans la phase suivante : N1 c, N1 d.', $avertissements, 'les équipes à replacer d\'abord');
         self::assertStringContainsString('il n\'y a pas de poule Z dans « Phase 1 »', $avertissements);
-        self::assertStringContainsString('le 2e est prévu dans plusieurs poules ; c\'est la première règle qui a été appliquée', $avertissements);
+        self::assertStringContainsString('le 2e est prévu dans plusieurs poules ; seule la première règle compte', $avertissements);
         self::assertStringContainsString('aucune poule prévue pour les 3e et 4e dans la phase suivante', $avertissements);
         self::assertSame(1, self::service('doctrine')->getManager()->find(Phase::class, $phase1->getId())->getClose(), 'phase close malgré tout');
     }

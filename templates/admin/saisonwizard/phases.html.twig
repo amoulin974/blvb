@@ -1,0 +1,112 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block titre_etape %}Les phases{% endblock %}
+
+{% block contenu %}
+    {% form_theme form 'admin/form/erreurs.html.twig' %}
+    {{ form_start(form, {attr: {id: 'wizard-form', novalidate: 'novalidate'}}) }}
+        {% if form.vars.submitted and not form.vars.valid %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}Des points sont à corriger dans les phases ci-dessous. Rien n'a été enregistré.{% endblock %}{% endembed %}
+        {% endif %}
+        <p class="mb-4 text-(--color-base-content)/80">Dans l'ordre de la saison : il doit suivre les dates de début, car chaque phase envoie ses équipes à la suivante. Utilisez Monter / Descendre pour le corriger. Ouvrez une phase pour la modifier.</p>
+
+        {% set nb = form.phases|length %}
+        <ol class="flex flex-col gap-3">
+            {% for i, phaseForm in form.phases %}
+                {% set phase = phaseForm.vars.data %}
+                {% set finale = phase.type.name == 'FINALE' %}
+                {% set nbPoules = phase.poules|length %}
+                {% set unite = finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule') %}
+                {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
+                <li id="phase-{{ i }}" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
+                    <div class="flex flex-wrap items-center gap-2 p-3">
+                        <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 }}.</span> {{ phase.nom }}</span>
+                        <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
+                        <span class="ml-auto">{{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-phase-' ~ i, bas: 'descendre-phase-' ~ i, cible: phase.nom, premier: i == 0, dernier: i == nb - 1}) }}</span>
+                    </div>
+                    <details class="border-t border-base-300" {% if i == ouverte or enErreur %}open{% endif %}>
+                        <summary class="cursor-pointer px-4 py-3 font-semibold min-h-11">Modifier {{ phase.nom }}</summary>
+                        <div class="flex flex-col gap-4 px-4 pb-4">
+                            <div class="max-w-md">
+                                {{ form_label(phaseForm.nom, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                {{ form_widget(phaseForm.nom, {attr: {class: 'input input-bordered w-full'}}) }}
+                                {{ form_errors(phaseForm.nom) }}
+                            </div>
+                            <fieldset class="fieldset border border-base-300 rounded-box p-3">
+                                <legend class="fieldset-legend">Type de phase</legend>
+                                <div class="grid gap-3 md:grid-cols-2">
+                                    {% for choix in phaseForm.type %}
+                                        <label class="choix-carte">
+                                            <span class="flex items-center gap-2 font-semibold">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</span>
+                                            <span class="text-sm text-(--color-base-content)/80">{{ libelles[choix.vars.value][1]|default('') }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés.</p>
+                            </fieldset>
+                            <div class="grid max-w-xl gap-4 sm:grid-cols-2">
+                                <div>
+                                    {{ form_label(phaseForm.datedebut, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                    {{ form_widget(phaseForm.datedebut, {attr: {class: 'input input-bordered w-full'}}) }}
+                                    {{ form_errors(phaseForm.datedebut) }}
+                                </div>
+                                <div>
+                                    {{ form_label(phaseForm.datefin, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                    {{ form_widget(phaseForm.datefin, {attr: {class: 'input input-bordered w-full'}}) }}
+                                    {{ form_errors(phaseForm.datefin) }}
+                                </div>
+                            </div>
+
+                            <fieldset class="fieldset border border-base-300 rounded-box p-3">
+                                <legend class="fieldset-legend">{{ finale ? 'Tableaux' : 'Poules' }}</legend>
+                                {# Tableau sur grand écran, une carte par poule sur téléphone (.table-empilee) #}
+                                <table class="table table-admin table-empilee">
+                                    <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                                    <tbody>
+                                    {% for j, pouleForm in phaseForm.poules %}
+                                        {% set nomPoule = pouleForm.vars.data.nom %}
+                                        <tr>
+                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ' ~ (finale ? 'tableau ' : 'poule ') ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
+                                            <td data-label="Niveau">{{ form_widget(pouleForm.niveau, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Niveau, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.niveau) }}</td>
+                                            <td data-label="Équipes prévues">{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Équipes prévues, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
+                                            <td class="pleine-largeur text-right"><button type="submit" name="action" value="supprimer-poule-{{ i }}-{{ j }}" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer {{ nomPoule }} de {{ phase.nom }}" data-turbo-confirm="Supprimer {{ nomPoule }} de {{ phase.nom }} ? Les passages qui en partent ou y arrivent seront supprimés.">{{ icone.i('poubelle') }} Supprimer</button></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter {{ finale ? 'un tableau' : 'une poule' }}</button></div>
+                            </fieldset>
+
+                            <details class="rounded-box border border-dashed border-base-300 p-3">
+                                <summary class="cursor-pointer font-semibold min-h-11">Options avancées</summary>
+                                <p class="mt-2 text-sm text-(--color-base-content)/80">Codes courts utilisés dans les règles et le règlement. Laissez-les tels quels sauf besoin particulier.</p>
+                                <div class="mt-2 flex flex-wrap gap-4">
+                                    <div class="w-40">
+                                        {{ form_label(phaseForm.code, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                        {{ form_widget(phaseForm.code, {attr: {class: 'input input-bordered w-full'}}) }}
+                                        {{ form_errors(phaseForm.code) }}
+                                    </div>
+                                    {% for pouleForm in phaseForm.poules %}
+                                        <div class="w-40">
+                                            <label class="label font-semibold" for="{{ pouleForm.code.vars.id }}">Code, {{ pouleForm.vars.data.nom }}</label>
+                                            {{ form_widget(pouleForm.code, {attr: {class: 'input input-bordered w-full'}}) }}
+                                            {{ form_errors(pouleForm.code) }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </details>
+
+                            <div class="text-right">
+                                <button type="submit" name="action" value="supprimer-phase-{{ i }}" class="btn btn-ghost btn-error" data-turbo-confirm="Supprimer {{ phase.nom }} et ses {{ nbPoules }} {{ unite }} ? Les passages qui les concernent seront supprimés.">{{ icone.i('poubelle') }} Supprimer la phase</button>
+                            </div>
+                        </div>
+                    </details>
+                </li>
+            {% endfor %}
+        </ol>
+        <button type="submit" name="action" value="ajouter-phase" class="btn btn-ajout mt-3 w-full">{{ icone.i('plus') }} Ajouter une phase</button>
+
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    {{ form_end(form) }}
+{% endblock %}

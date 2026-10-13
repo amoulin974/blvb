@@ -16,13 +16,18 @@ final class VerificationPassages
 {
     /**
      * @param iterable<RegleDePassage> $regles
+     * @param array<string, ?int>|null $tailles nombre d'équipes par code de poule (wizard : nombre prévu) ; à défaut,
+     *                                         les équipes de la poule. Taille inconnue ou nulle : seule l'écriture des
+     *                                         règles est vérifiée pour cette poule.
      * @return list<string>
      */
-    public static function verifier(Phase $phase, iterable $regles): array
+    public static function verifier(Phase $phase, iterable $regles, ?array $tailles = null): array
     {
         $poules = [];
+        $nbEquipes = [];
         foreach ($phase->getPoules() as $poule) {
             $poules[$poule->getCode()] = $poule;
+            $nbEquipes[$poule->getCode()] = $tailles !== null ? (int) ($tailles[$poule->getCode()] ?? 0) : \count($poule->getEquipes());
         }
 
         $erreurs = [];
@@ -33,23 +38,23 @@ final class VerificationPassages
             try {
                 $place = NotationPlace::analyser($regle->getSource());
             } catch (NotationInvalide) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : elle est mal écrite.', $regle);
+                $erreurs[] = sprintf('Règle « %s » ignorée : elle est mal écrite.', self::nom($regle));
                 continue;
             }
             if ($regle->getPouleDestination() === null && $regle->getNiveauSaisonSuivante() === null) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : aucune poule d\'arrivée n\'est indiquée.', $regle);
+                $erreurs[] = sprintf('Règle « %s » ignorée : aucune poule d\'arrivée n\'est indiquée.', self::nom($regle));
                 continue;
             }
             if ($place->phase !== $phase->getCode()) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : elle concerne une autre phase.', $regle);
+                $erreurs[] = sprintf('Règle « %s » ignorée : elle concerne une autre phase.', self::nom($regle));
                 continue;
             }
             if (!$place->estRang()) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : le passage selon le résultat d\'un match n\'est pas encore possible.', $regle);
+                $erreurs[] = sprintf('Règle « %s » ignorée : le passage selon le résultat d\'un match n\'est pas encore possible.', self::nom($regle));
                 continue;
             }
             if (!isset($poules[$place->poule])) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : il n\'y a pas de poule %s dans « %s ».', $regle, $place->poule, $phase->getNom());
+                $erreurs[] = sprintf('Règle « %s » ignorée : il n\'y a pas de poule %s dans « %s ».', self::nom($regle), $place->poule, $phase->getNom());
                 continue;
             }
 
@@ -57,12 +62,15 @@ final class VerificationPassages
             if ($type === 'saison') {
                 $saisonSuivante[$place->poule] = true;
             }
+            if ($nbEquipes[$place->poule] === 0) {
+                continue; // taille inconnue : pas de contrôle des rangs
+            }
             try {
-                $rangs = $place->rangsPour(\count($poules[$place->poule]->getEquipes()));
+                $rangs = $place->rangsPour($nbEquipes[$place->poule]);
             } catch (PlageVide) {
                 $rangs = [];
             } catch (NotationInvalide $e) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : %s', $regle, $e->getMessage());
+                $erreurs[] = sprintf('Règle « %s » ignorée : %s', self::nom($regle), $e->getMessage());
                 continue;
             }
             foreach ($rangs as $rang) {
@@ -71,7 +79,7 @@ final class VerificationPassages
         }
 
         foreach ($poules as $code => $poule) {
-            $nb = \count($poule->getEquipes());
+            $nb = $nbEquipes[$code];
             foreach (['phase', 'saison'] as $type) {
                 if ($type === 'saison' && !isset($saisonSuivante[$code])) {
                     continue; // pas de règle pour la saison suivante dans cette poule : rien à vérifier
@@ -93,8 +101,8 @@ final class VerificationPassages
                 if ($doubles !== []) {
                     $verbe = \count($doubles) > 1 ? 'sont prévus' : 'est prévu';
                     $erreurs[] = $type === 'phase'
-                        ? sprintf('%s : %s %s dans plusieurs poules ; c\'est la première règle qui a été appliquée.', $poule->getNom(), self::rangs($doubles), $verbe)
-                        : sprintf('%s : %s %s à plusieurs niveaux la saison prochaine ; c\'est la première règle qui comptera.', $poule->getNom(), self::rangs($doubles), $verbe);
+                        ? sprintf('%s : %s %s dans plusieurs poules ; seule la première règle compte.', $poule->getNom(), self::rangs($doubles), $verbe)
+                        : sprintf('%s : %s %s à plusieurs niveaux la saison prochaine ; seule la première règle compte.', $poule->getNom(), self::rangs($doubles), $verbe);
                 }
             }
         }
@@ -103,6 +111,12 @@ final class VerificationPassages
     }
 
     /** [3] → « le 3e », [3, 4] → « les 3e et 4e », [1, 2, 3] → « les 1er, 2e et 3e » */
+    /** La règle telle que l'utilisateur la lit : en clair, avec la notation seulement si elle est illisible. */
+    private static function nom(RegleDePassage $regle): string
+    {
+        return $regle->enClair() ?: (string) $regle;
+    }
+
     private static function rangs(array $rangs): string
     {
         $noms = array_map(fn (int $r) => Place::rangEnClair($r), $rangs);

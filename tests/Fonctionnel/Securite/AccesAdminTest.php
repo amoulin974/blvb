@@ -43,7 +43,7 @@ final class AccesAdminTest extends TestFonctionnel
                 'partie' => ChampionnatDeTest::get('match.reference')->getId(),
                 'journee' => ChampionnatDeTest::get('match.reference')->getJournee()->getId(),
                 'membre' => 1,
-                'step' => 1,
+                'etape' => 2, // wizard de saison (la saison de référence n'est pas un brouillon : renvoi vers sa page)
                 default => $this->identifiant($nom),
             };
         }

@@ -4,7 +4,9 @@ namespace App\Controller\Admin;
 use App\Entity\Poule;
 use App\Entity\Saison;
 use App\Form\PouleType;
-use App\Form\SaisonType;
+use App\Competition\Sport\Sports;
+use App\Form\Wizard\SaisonWizardType;
+use Symfony\Component\Form\FormError;
 use App\Repository\SaisonRepository;
 use App\Repository\PouleRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -33,35 +35,11 @@ final class SaisonController extends AbstractController
 
 
 
-    //Ajoute une saison
-    //Attention au EventListener/SaisonListener qui créé les phases et les poules automatiquement
-    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, CacheInterface $cache): Response
+    // Une saison se crée désormais avec le wizard (docs/wizard-saison/decisions.md, D6 et D29) : ancienne adresse conservée
+    #[Route('/new', name: 'new', methods: ['GET'])]
+    public function new(): Response
     {
-        // creates a saison object
-        $saison = new Saison();
-
-        //Créer le formulaire et lui envoyer l'objet saison
-        $form = $this->createForm(SaisonType::class, $saison);
-
-
-        //Si le formulaire est soumis et valide
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            $saison = $form->getData();
-            $em->persist($saison);
-            $em->flush();
-            $cache->delete('saisons_all');
-            return $this->redirectToRoute('admin_saison_show', [
-                'id' => $saison->getId(),
-            ]);
-        }
-
-        return $this->render('admin/saison/new.html.twig', [
-            'form' => $form,
-            'saison' => $saison,
-        ]);
-
+        return $this->redirectToRoute('admin_saison_wizard_nouvelle');
     }
 
 
@@ -83,22 +61,35 @@ final class SaisonController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
+    /**
+     * Nom, dates et périodes de fermeture ; tant que la saison n'est pas lancée, lien vers le wizard pour l'organisation
+     * (phases, passages, classement) (docs/wizard-saison/decisions.md, D29).
+     */
+    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache, SaisonRepository $saisons, Sports $sports): Response
     {
-        $form = $this->createForm(SaisonType::class, $saison);
+        $form = $this->createForm(SaisonWizardType::class, $saison);
         $form->handleRequest($request);
+        if ($form->isSubmitted()) {
+            $homonyme = $saisons->findOneBy(['nom' => $saison->getNom()]);
+            if ($homonyme !== null && $homonyme !== $saison) {
+                $form->get('nom')->addError(new FormError('Une saison porte déjà ce nom.'));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
             $cache->delete('saisons_all');
+            $this->addFlash('success', sprintf('La saison %s a été modifiée.', $saison->getNom()));
 
-            return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('admin/saison/edit.html.twig', [
             'saison' => $saison,
             'form' => $form,
-        ]);
+            'sport' => $sports->pourSaison($saison)->libelle(),
+            'lancee' => $saisons->estLancee($saison),
+        ], new Response(status: $form->isSubmitted() ? 422 : 200));
     }
 
     //défini une saison comme favorite
@@ -111,6 +102,12 @@ final class SaisonController extends AbstractController
             return $this->redirectToRoute('admin_saison_index');
         }
         $saisons=$em->getRepository(Saison::class)->findAll();
+        $choisie = $em->getRepository(Saison::class)->find($id);
+        if ($choisie?->isBrouillon()) {
+            $this->addFlash('error', sprintf('La saison %s est un brouillon : terminez sa création avant de l\'afficher sur le site. Rien n\'a été modifié.', $choisie->getNom()));
+
+            return $this->redirectToRoute('admin_saison_index');
+        }
         foreach ($saisons as $saison) {
             if ($saison->getId() == $id) {
                 $this->addFlash('success', sprintf('La saison %s est maintenant affichée sur le site.', $saison->getNom()));

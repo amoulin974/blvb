@@ -173,3 +173,22 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   (agents lancés comme agents généraux suivant leur fiche). Migrations `Version20261013120000` et
   `Version20261013130000` vérifiées sur une copie de la base de développement. 351 tests verts.
 - Reste du lot 3 : voir `lots.md`.
+
+### 2026-10-13 : lot 3 fusionné, contraste sur main et prod, début du lot 4
+
+- Contraste des alertes de l'admin corrigé sur `main` et `prod` (gabarit `admin/_alerte.html.twig`,
+  relu par l'ergonome, le webdesigner et l'agent `deploiement`) ; `main` ramené dans
+  `formats-competition` (conflit résolu : alerte commune + message à liste).
+- Lot 3 fusionné et poussé. Lot 4 commencé : sport de la saison, modèle « Format BLVB actuel » (fin du
+  YAML), copie d'une saison ; 361 tests verts.
+- Propositions d'écrans de l'ergonome et du webdesigner synthétisées dans `ecrans.md`, avec
+  19 questions à trancher par l'utilisateur. **Suite** : réponses aux questions, puis écrans.
+
+### 2026-10-13 : lot 4, wizard réalisé et relu
+
+- Wireframe cliquable validé (D29 à D33), puis les 6 étapes du wizard, le brouillon et la
+  modification d'une saison créée ; `SaisonListener` supprimé.
+- Relectures ergonome, webdesigner et sécurité des écrans réalisés : retours intégrés (D34, WIZ-14,
+  WIZ-15, détail dans `lots.md`) ; quelques points reportés au lot 5. 383 tests verts + 2 lents.
+  **Suite** : fusion de `formats-competition-lot4` dans `formats-competition`, puis lot 5 (mise en
+  place des poules, journées et matchs).

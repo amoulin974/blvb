@@ -1,0 +1,10 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+
+{% block titre_etape %}La saison{% endblock %}
+
+{% block contenu %}
+    {{ form_start(form, {attr: {id: 'wizard-form', novalidate: 'novalidate'}}) }}
+        {{ include('admin/saisonwizard/_champs_saison.html.twig', {rappel_copie: saison.brouillon}) }}
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    {{ form_end(form) }}
+{% endblock %}

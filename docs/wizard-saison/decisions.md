@@ -218,6 +218,73 @@ icône des messages de succès (modification à part) ; avertissements affichés
 « Clôturer » (avec le wizard).
 *(2026-10-13, lot 3)*
 
+## D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
+**Décision** : `ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
+comme recommandé (13/10/2026) :
+1. brouillon créé dès l'étape 1, enregistré à chaque changement d'étape ;
+2. à la copie, dates et périodes de fermeture décalées d'un an, bandeau « à vérifier » ;
+3. copie d'une saison non terminée permise, avec avertissement, poules non pré-remplies ;
+4. « nombre d'équipes prévu » ajouté aux poules (facultatif, pré-rempli à la copie) ;
+5. passages en mode simple par défaut (montées, descentes, « les autres »), mode détaillé en option ;
+6. notation des places au récapitulatif seulement, masquée par défaut ;
+7. codes des phases et poules dans des « Options avancées » repliées de l'étape 3 ;
+8. « Modifier la saison » ouvre le wizard (étapes 2 à 5) tant qu'aucun match n'est joué, ensuite
+   seulement nom, dates et périodes de fermeture ;
+9. formats pas encore disponibles masqués ;
+10. sport en texte fixe « Volley-ball » tant qu'il n'y en a qu'un ;
+11. à la création, les erreurs de vérification bloquent la validation, les avertissements non
+    (différent de la clôture, D24) ;
+12. brouillon invisible sur le site, ne peut pas être la saison affichée, supprimable ;
+13. nom proposé « Saison AAAA-AAAA+1 » ;
+14. stepper en deux groupes : « Organisation » (1-6) puis « Mise en place » (lot 5) ;
+15. réordonner par boutons Monter / Descendre seulement ;
+16. « points conservés » caché jusqu'au lot 8 ;
+17. schéma : matrice par niveaux sur ordinateur, flux vertical sur téléphone ;
+18. « Valider la saison » visible même avec des erreurs, désactivé avec la raison écrite ;
+19. libellés « Passages » (étape 4) et « Périodes de fermeture » (terme déjà en usage), modifiables à
+    la relecture.
+*(2026-10-13, lot 4)*
+
+## D30. Effectif d'une poule différent du nombre prévu : avertissement
+**Décision** : à la création d'une saison, une poule qui reçoit plus ou moins d'équipes que son
+« nombre d'équipes prévu » produit un avertissement, qui n'empêche pas de valider.
+**Pourquoi** : des poules de 8 et 9 équipes sont courantes au BLVB ; le nombre prévu est indicatif.
+*(2026-10-13, relecture du wireframe)*
+
+## D31. Code d'une phase de barrages : BAR, BAR2…
+**Décision** : complète D20 : une phase de barrages reçoit le code `BAR` (puis `BAR2`, `BAR3`…), comme
+`P1` pour un championnat et `F` pour une phase finale ; notation `BAR.AB.vainqueur`.
+*(2026-10-13, relecture du wireframe)*
+
+## D32. Barrages à l'écran : une carte par match
+**Décision** (ergonome, relecture du wireframe) : à l'étape « Passages », chaque match de barrage est
+saisi sur une seule carte : qui joue (« avant-dernier de la Poule A contre le 2e de la Poule B ») et où
+vont le vainqueur et le perdant. En base, ce sont toujours des règles de passage (vers la phase de
+barrages, puis depuis elle). Pour chaque poule, une ligne par rang rend visibles les équipes qui jouent
+un barrage ; le nombre de montées directes reste un choix. Format réalisé au lot 6.
+*(2026-10-13, relecture du wireframe)*
+
+## D33. Champ `format` de la phase : reporté au lot 6 (modifie D27)
+**Décision** : le wizard du lot 4 ne propose que deux types de phase (championnat, tableau à
+élimination), qui correspondent exactement à `PhaseType` ; `PhaseType` est donc conservé. Son
+remplacement par un champ `format` se fera au lot 6, avec l'arrivée des barrages (D31, D32).
+**Pourquoi** : un seul refactoring, au moment où un troisième format en a réellement besoin.
+*(2026-10-13, lot 4)*
+
+## D34. Modifier une saison créée : jusqu'à son lancement, enregistrement à chaque étape (précise D29)
+**Décision** (relectures ergonome et sécurité du lot 4) :
+- le wizard reste ouvert sur une saison créée tant qu'elle n'est pas **lancée** : aucun match
+  programmé (même sans score), aucune phase clôturée, aucun classement enregistré. Ensuite, seuls le
+  nom, les dates et les périodes de fermeture se modifient ;
+- chaque étape enregistre en la quittant, comme pour un brouillon ; un bandeau le rappelle.
+  « Enregistrer et quitter » renvoie à la vérification tant que la saison contient une erreur ; le
+  bouton final s'appelle « Terminer » ;
+- un brouillon, dans la liste des saisons, ne propose que « Reprendre » et « Supprimer » (D29.12).
+**Pourquoi** : supprimer une poule d'une saison dont le calendrier est généré emportait les matchs
+programmés, les abonnements `.ics` et, après une clôture, provoquait une erreur 500 ; une saison
+visible sur le site ne doit pas rester incohérente.
+*(2026-10-13, lot 4)*
+
 ---
 
 ## Points ouverts

@@ -1,0 +1,23 @@
+{# Barre du bas du wizard, à l'intérieur du formulaire de l'étape. Variables : etape (numéro) ; facultatives :
+   principal (bouton de droite : {valeur, libelle, classe, refus} ; par défaut « Suivant »), sans_quitter (étape 1).
+   Sur téléphone, seule la ligne Précédent / bouton principal reste collée en bas ; les actions secondaires passent
+   au-dessus, sans être collantes. #}
+{% import 'admin/_icones.html.twig' as icone %}
+{% set premiere =saison is defined and saison and not saison.brouillon ? 2 : 1 %}
+{% set principal = principal|default(etape < 6 ? {valeur: 'suivant', libelle: 'Suivant', classe: 'btn-primary'} : null) %}
+{% set secondaires %}
+    {% if not sans_quitter|default(false) %}<button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>{% endif %}
+    {% if etape >= 2 and etape <= 5 %}<button type="submit" name="aller" value="verification" class="btn btn-ghost">Aller à la vérification</button>{% endif %}
+{% endset %}
+{% if secondaires|trim is not empty %}<div class="mt-6 flex flex-wrap justify-end gap-2 lg:hidden">{{ secondaires }}</div>{% endif %}
+{% if principal and principal.refus|default(null) %}<p id="raison-validation" class="mt-4 w-full text-sm lg:text-right">{{ principal.refus }}</p>{% endif %}
+<div class="wizard-navigation mt-2 lg:mt-6 flex items-center gap-2">
+    {% if etape > premiere %}
+        <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent</button>
+    {% endif %}
+    <span class="flex-1 max-lg:hidden"></span>
+    <div class="flex gap-2 max-lg:hidden">{{ secondaires }}</div>
+    {% if principal %}
+        <button type="submit" name="aller" value="{{ principal.valeur }}" class="btn {{ principal.classe }} max-lg:flex-1" {% if principal.refus|default(null) %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>{{ principal.libelle }}{% if principal.valeur == 'suivant' %} {{ icone.i('fleche-droite') }}{% endif %}</button>
+    {% endif %}
+</div>

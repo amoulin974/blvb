@@ -2,6 +2,8 @@
 
 namespace App\Competition\Sport;
 
+use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
+
 /**
  * Règles propres à un sport : forme et validité d'un score, points au classement, statistiques de départage
  * (docs/wizard-saison/decisions.md, D13). Une implémentation par sport ; le volley-ball est la première.
@@ -9,8 +11,11 @@ namespace App\Competition\Sport;
  * Un score est enregistré comme deux entiers (Partie::nbSetGagnantReception / nbSetGagnantDeplacement) : ce que
  * l'équipe a marqué (sets, buts, points selon le sport). Le forfait est encodé par le sport (scoreForfait).
  */
+#[AutoconfigureTag(self::TAG)]
 interface RegleSport
 {
+    public const TAG = 'app.regle_sport';
+
     /** Code enregistré pour la saison, ex. « volley ». */
     public function code(): string;
 
