@@ -73,6 +73,10 @@ l'application doit savoir les proposer tous, et l'administrateur choisit au mome
   `wsl.exe -d Ubuntu -- bash -c 'cd ~/projects/blvb && git status'`. L'identité git de WSL est
   configurée (`~/.gitconfig` : `amoulin974`) ; `gh` est installé dans WSL : après
   `gh auth login` et `gh auth setup-git`, il sert au push et à suivre la CI (`gh run list`).
+- **Base locale et branches** : après un changement de branche, `bin/base etat` puis `bin/base aligner`
+  (sauvegarde, annulation des migrations d'une autre branche, application de celles de la branche ;
+  voir README, « Changer de branche »). `bin/base rappel` installe un rappel git. Les migrations des
+  lots ne s'appliquent en production qu'au déploiement.
 - Les commandes `docker compose exec` lancées depuis un script lisent l'entrée standard : ajouter
   `-T` et `< /dev/null`, sinon elles avalent la suite du script.
 - Branche de travail : `formats-competition`, créée depuis `main` au commit `12b4fd4` ; une
