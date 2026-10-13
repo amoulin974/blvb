@@ -4,11 +4,8 @@ parameters:
     # Images des clubs (logos) envoyées depuis la fiche du club : servies par asset('uploads/clubs/…').
     # En prod, le dossier de l'application est monté depuis le serveur : les images survivent aux reconstructions.
     app.dossier_images_clubs: '%kernel.project_dir%/public/uploads/clubs'
-# Ici tu peux importer ton fichier de config YAML
-# ou définir directement les paramètres
-# Exemple pour la config des phases/poules
-imports:
-    - { resource: app/saison.yaml }
+# La structure d'une saison (phases, poules) ne vient plus de config/app/saison.yaml mais des modèles de saison
+# (App\Competition\Modele, docs/wizard-saison/decisions.md D6 et D10)
 
 services:
     # Valeurs par défaut pour tous les services
@@ -38,6 +35,10 @@ services:
     # Générateurs de calendrier, un par format de compétition (docs/wizard-saison/plan.md)
     App\Competition\Format\:
         resource: '../src/Competition/Format/'
+
+    # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
+    App\Competition\Modele\:
+        resource: '../src/Competition/Modele/'
 
     # --------------------------------------------------------
     # Contrôleurs

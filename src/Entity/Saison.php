@@ -61,6 +61,10 @@ class Saison
     #[ORM\Column(options: ['default' => 0])]
     private ?int $points_defaite_faible = 0;
 
+    /** Sport de la saison (code d'un App\Competition\Sport\RegleSport) : forme du score, barème, départage. */
+    #[ORM\Column(length: 30, options: ['default' => 'volley'])]
+    private string $sport = 'volley';
+
     /**
      * Critères de départage du classement, dans l'ordre (codes de App\Competition\Classement\CritereDepartage).
      *
@@ -91,6 +95,18 @@ class Saison
         $this->indisponibilites = new ArrayCollection();
         $this->membres = new ArrayCollection();
         $this->setDepartage(CritereDepartage::parDefaut());
+    }
+
+    public function getSport(): string
+    {
+        return $this->sport;
+    }
+
+    public function setSport(string $sport): static
+    {
+        $this->sport = $sport;
+
+        return $this;
     }
 
     /** @return list<CritereDepartage> critères dans l'ordre, ordre alphabétique en dernier */

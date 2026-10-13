@@ -3,109 +3,33 @@
 
 namespace App\Service;
 
-use App\Competition\CodesCompetition;
-use App\Competition\ReglesParDefaut;
+use App\Competition\Modele\ModeleBlvbActuel;
+use App\Competition\Modele\ModeleSaison;
 use App\Entity\Saison;
-use App\Entity\Phase;
-use App\Entity\Poule;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
-use DateTimeImmutable;
+
 class CompetitionCreator
 {
     public function __construct(
-        private ParameterBagInterface $params,
         private EntityManagerInterface $em
     ) {}
 
     /**
-     * Crée automatiquement les phases et poules pour une saison
-     * à partir de la configuration YAML (config/app/saison.yaml).
+     * Crée et enregistre les phases et poules d'une saison à partir d'un modèle (App\Competition\Modele), par défaut
+     * le format BLVB actuel (ancien config/app/saison.yaml, D6). Utilisé par la création automatique à
+     * l'enregistrement d'une saison (SaisonListener) et par les jeux de données, en attendant le wizard.
      */
-    public function creerPhasesEtPoules(Saison $saison, bool $isTest = false): void
+    public function creerPhasesEtPoules(Saison $saison, bool $isTest = false, ?ModeleSaison $modele = null): void
     {
-        // On récupère la configuration
-        $config = $this->params->get('saison');
+        $modele ??= new ModeleBlvbActuel($isTest ? 'test_' : '');
+        $modele->appliquer($saison);
 
-        if (!isset($config['phases']) || !is_array($config['phases'])) {
-            throw new \RuntimeException("La configuration des phases est absente ou invalide.");
-        }
-
-        foreach ($config['phases'] as $phaseData) {
-            $phase = new Phase();
-            $nomPhase = $phaseData['nom'] ?? 'Phase sans nom';
-            $phase->setNom($isTest ? "test_" . $nomPhase : $nomPhase);
-
-            // Détermine le type de la phase
-            if (str_contains(strtolower($phaseData['type']), 'finale')) {
-                $phase->setType(\App\Enum\PhaseType::FINALE);
-            } else {
-                $phase->setType(\App\Enum\PhaseType::CHAMPIONNAT);
-            }
-            $phase->setOrdre($phaseData['ordre'] ?? 0);
-            $phase->setClose($phaseData['close'] ?? 0);
-            $phase->setDateDebut(
-                $this->parseYamlDate($phaseData['date_debut'], $saison->getDateDebut())
-            );
-            $phase->setDateFin(
-                $this->parseYamlDate($phaseData['date_fin'], $saison->getDateDebut())
-            );
-            $saison->addPhase($phase);
-            $this->em->persist($phase);
-
-            // Vérifie s’il y a des poules configurées pour cette phase
-            if (isset($phaseData['poules']) && is_array($phaseData['poules'])) {
-                foreach ($phaseData['poules'] as $pouleData) {
-                    $poule = new Poule();
-                    $nomPoule = $pouleData['nom'] ?? 'Poule sans nom';
-                    $poule->setNom($isTest ? "test_" . $nomPoule : $nomPoule);
-                    if (isset($pouleData['niveau'])) {
-                        $poule->setNiveau((int) $pouleData['niveau']);
-                    }
-                    $phase->addPoule($poule);
-                    $poule->setNbMonteeDefaut(2);
-                    $poule->setNbDescenteDefaut(2);
-                    $this->em->persist($poule);
-                }
+        foreach ($saison->getPhases() as $phase) {
+            $this->em->persist($phase); // les règles de passage suivent la phase
+            foreach ($phase->getPoules() as $poule) {
+                $this->em->persist($poule);
             }
         }
-
-        // Codes des phases et des poules, puis règles de passage par défaut entre phases consécutives
-        CodesCompetition::attribuer($saison);
-        $phases = $saison->getPhases()->toArray();
-        usort($phases, fn (Phase $a, Phase $b) => $a->getOrdre() <=> $b->getOrdre());
-        foreach ($phases as $i => $phase) {
-            foreach (ReglesParDefaut::pourPhase($phase, $phases[$i + 1] ?? null) as $regle) {
-                $phase->addRegleDePassage($regle);
-            }
-        }
-
-        // On sauvegarde toutes les entités créées
-
-            $this->em->flush();
-
-    }
-
-    private function parseYamlDate(string $yamlDate, DateTimeImmutable $saisonDebut): DateTimeImmutable
-    {
-        $year = $saisonDebut->format('Y'); // année de début de la saison
-
-        // Remplace "n+1" ou "n" dans le YAML
-        $yearReplaced = preg_replace_callback('/n(\+1)?/', function($matches) use ($year) {
-            if (isset($matches[1]) && $matches[1] === '+1') {
-                return $year + 1;
-            }
-            return $year;
-        }, $yamlDate);
-
-        // Création d'un DateTimeImmutable à partir de la chaîne
-        // On suppose que le format est toujours "d/m/Y"
-        $date = DateTimeImmutable::createFromFormat('d/m/Y', $yearReplaced);
-
-        if (!$date) {
-            throw new \Exception("Impossible de parser la date YAML : $yamlDate");
-        }
-
-        return $date;
+        $this->em->flush();
     }
 }
