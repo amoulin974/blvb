@@ -1,0 +1,128 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block titre_etape %}Passages d'une phase à l'autre{% endblock %}
+
+{# Liste de choix d'une poule de la phase suivante (mode simple). #}
+{% macro choix_poule(nom, poules, choisie, libelle) %}
+    <select name="{{ nom }}" class="select select-bordered w-auto min-w-36" aria-label="{{ libelle }}">
+        {% for p in poules %}<option value="{{ p.id }}" {% if choisie and choisie.id == p.id %}selected{% endif %}>{{ p.nom }}</option>{% endfor %}
+    </select>
+{% endmacro %}
+{% macro choix_nombre(nom, valeur, libelle) %}
+    <select name="{{ nom }}" class="select select-bordered w-20" aria-label="{{ libelle }}">
+        {% for n in 0..max(4, valeur) %}<option value="{{ n }}" {% if n == valeur %}selected{% endif %}>{{ n }}</option>{% endfor %}
+    </select>
+{% endmacro %}
+{% macro choix_niveau(nom, valeur, max, libelle) %}
+    <select name="{{ nom }}" class="select select-bordered w-auto" aria-label="{{ libelle }}">
+        {% for n in 1..max(max, valeur|default(1)) %}<option value="{{ n }}" {% if n == valeur %}selected{% endif %}>Niveau {{ n }} la saison prochaine</option>{% endfor %}
+    </select>
+{% endmacro %}
+
+{% block contenu %}
+    {% import _self as m %}
+    <form id="wizard-form" method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('wizard' ~ saison.id) }}">
+
+        {% for t in transitions %}
+            {% set poulesSuivante = t.suivante.poules|sort((a, b) => a.niveau <=> b.niveau) %}
+            {% set niveauMax = max(poulesSuivante|map(p => p.niveau)|merge([1])) %}
+            <section class="mb-8 flex flex-col gap-3" aria-labelledby="transition-{{ t.phase.id }}">
+                <h3 id="transition-{{ t.phase.id }}" class="border-b-2 border-(--color-primary) pb-1">De la {{ t.phase.nom }} vers la {{ t.suivante.nom }}</h3>
+
+                <ul class="flex flex-wrap gap-2" aria-label="Équipes reçues par chaque poule de la {{ t.suivante.nom }}">
+                    {% for e in t.effectifs %}
+                        {% set ecart = e.prevues is not null and e.recues is not null and e.recues != e.prevues %}
+                        <li class="badge badge-outline h-auto py-1 {{ ecart ? 'border-warning' : '' }}">
+                            {{ e.poule.nom }} :
+                            {% if e.recues is null %}effectif à connaître{% else %}{{ e.recues }} reçue{{ e.recues > 1 ? 's' : '' }}{% endif %}{% if e.prevues is not null %} sur {{ e.prevues }} prévue{{ e.prevues > 1 ? 's' : '' }}{% endif %}
+                            {% if ecart %}<span aria-hidden="true">⚠</span><span class="sr-only">(écart)</span>{% elseif e.prevues is not null and e.recues is not null %}<span aria-hidden="true">✓</span>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                {% if t.problemes is not empty %}
+                    {% embed 'admin/_alerte.html.twig' with {type: 'warning'} %}{% block contenu %}
+                        <strong class="font-semibold">À vérifier pour la {{ t.phase.nom }}</strong>
+                        <ul class="mt-1 list-disc pl-5 space-y-1">{% for p in t.problemes %}<li>{{ p }}</li>{% endfor %}</ul>
+                    {% endblock %}{% endembed %}
+                {% endif %}
+
+                {% for ps in t.poules %}
+                    {% set poule = ps.poule %}
+                    {% set nom = 'p[' ~ poule.id ~ ']' %}
+                    {% set s = ps.simple %}
+                    <div id="poule-{{ poule.id }}" class="rounded-box border border-base-300 p-3 flex flex-col gap-3 scroll-mt-20">
+                        <input type="hidden" name="{{ nom }}[mode]" value="{{ ps.mode }}">
+                        <div class="flex flex-wrap items-baseline gap-2">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ poule.nom }}</strong>
+                            <span class="text-sm text-(--color-base-content)/80">({{ t.phase.nom }}{% if ps.taille %} · {{ ps.taille }} équipes{% endif %})</span>
+                        </div>
+
+                        {% if ps.mode == 'simple' and not t.versFinale %}
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                {% if not loop.first or s.montee > 0 %}
+                                    <span class="inline-flex flex-wrap items-center gap-2">Montent : les {{ m.choix_nombre(nom ~ '[montee]', s.montee, poule.nom ~ ', nombre de montées') }} premiers → {{ m.choix_poule(nom ~ '[versMontee]', poulesSuivante, s.versMontee ?? poulesSuivante|first, poule.nom ~ ', poule où montent les premiers') }}</span>
+                                {% else %}<input type="hidden" name="{{ nom }}[montee]" value="0">{% endif %}
+                                {% if not loop.last or s.descente > 0 %}
+                                    <span class="inline-flex flex-wrap items-center gap-2">· Descendent : les {{ m.choix_nombre(nom ~ '[descente]', s.descente, poule.nom ~ ', nombre de descentes') }} derniers → {{ m.choix_poule(nom ~ '[versDescente]', poulesSuivante, s.versDescente ?? poulesSuivante|last, poule.nom ~ ', poule où descendent les derniers') }}</span>
+                                {% else %}<input type="hidden" name="{{ nom }}[descente]" value="0">{% endif %}
+                                <span class="inline-flex flex-wrap items-center gap-2">· Les autres équipes → {{ m.choix_poule(nom ~ '[versAutres]', poulesSuivante, s.versAutres, poule.nom ~ ', poule des autres équipes') }}</span>
+                            </div>
+                        {% elseif ps.mode == 'simple' %}
+                            <div class="flex flex-wrap items-center gap-2">Tout le classement, dans l'ordre → {{ m.choix_poule(nom ~ '[versAutres]', poulesSuivante, s.versAutres, poule.nom ~ ', tableau') }}</div>
+                            <label class="flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" name="{{ nom }}[saisonSuivante]" value="1" {% if s.saisonSuivante %}checked{% endif %}> Montées et descentes pour la saison suivante</label>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pl-7">
+                                {% set niveau = poule.niveau|default(1) %}
+                                <span class="inline-flex flex-wrap items-center gap-2">Montent : les {{ m.choix_nombre(nom ~ '[montee]', s.montee, poule.nom ~ ', montées pour la saison suivante') }} premiers → {{ m.choix_niveau(nom ~ '[niveauMontee]', s.niveauMontee ?? max(1, niveau - 1), niveauMax, poule.nom ~ ', niveau des montées') }}</span>
+                                <span class="inline-flex flex-wrap items-center gap-2">· Descendent : les {{ m.choix_nombre(nom ~ '[descente]', s.descente, poule.nom ~ ', descentes pour la saison suivante') }} derniers → {{ m.choix_niveau(nom ~ '[niveauDescente]', s.niveauDescente ?? min(niveauMax, niveau + 1), niveauMax, poule.nom ~ ', niveau des descentes') }}</span>
+                                <span class="inline-flex flex-wrap items-center gap-2">· Les autres → {{ m.choix_niveau(nom ~ '[niveauAutres]', s.niveauAutres ?? niveau, niveauMax, poule.nom ~ ', niveau des autres équipes') }}</span>
+                            </div>
+                        {% else %}
+                            <p class="text-sm text-(--color-base-content)/80">Mode détaillé : une ligne par règle, appliquées dans l'ordre (une équipe déjà placée ne l'est pas une seconde fois).</p>
+                            <ol class="flex flex-col gap-2">
+                                {% for k, l in ps.lignes %}
+                                    <li class="flex flex-wrap items-center gap-2">
+                                        <strong>Règle {{ k + 1 }} :</strong> Du
+                                        <select name="{{ nom }}[r][{{ k }}][du]" class="select select-bordered w-auto" aria-label="{{ poule.nom }}, règle {{ k + 1 }}, du rang">
+                                            {% for r in ps.rangs %}<option value="{{ r.valeur }}" {% if r.valeur == l.du %}selected{% endif %}>{{ r.libelle }}</option>{% endfor %}
+                                        </select>
+                                        au
+                                        <select name="{{ nom }}[r][{{ k }}][au]" class="select select-bordered w-auto" aria-label="{{ poule.nom }}, règle {{ k + 1 }}, au rang">
+                                            {% for r in ps.rangs %}<option value="{{ r.valeur }}" {% if r.valeur == l.au %}selected{% endif %}>{{ r.libelle }}</option>{% endfor %}
+                                        </select>
+                                        →
+                                        <select name="{{ nom }}[r][{{ k }}][dest]" class="select select-bordered w-auto" aria-label="{{ poule.nom }}, règle {{ k + 1 }}, destination">
+                                            {% for groupe, options in t.destinations %}
+                                                <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == l.dest %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" name="action" value="monter-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-square" {% if loop.first %}disabled{% endif %} aria-label="Monter la règle {{ k + 1 }} de {{ poule.nom }}">▲</button>
+                                        <button type="submit" name="action" value="descendre-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-square" {% if loop.last %}disabled{% endif %} aria-label="Descendre la règle {{ k + 1 }} de {{ poule.nom }}">▼</button>
+                                        <button type="submit" name="action" value="supprimer-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost text-error" aria-label="Supprimer la règle {{ k + 1 }} de {{ poule.nom }}">{{ icone.i('poubelle') }}</button>
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                            <div><button type="submit" name="action" value="ajouter-regle-{{ poule.id }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter une règle</button></div>
+                        {% endif %}
+
+                        <div>
+                            {% if ps.mode == 'simple' %}
+                                <button type="submit" name="action" value="detail-{{ poule.id }}" class="btn btn-ghost btn-sm">Personnaliser les règles de {{ poule.nom }}</button>
+                            {% else %}
+                                <button type="submit" name="action" value="simple-{{ poule.id }}" class="btn btn-ghost btn-sm">Revenir au mode simple pour {{ poule.nom }}</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                <div><button type="submit" name="action" value="retablir-{{ t.phase.id }}" class="btn btn-ghost" data-turbo-confirm="Remplacer les passages de la {{ t.phase.nom }} par les règles par défaut ?">↺ Rétablir les règles par défaut</button></div>
+            </section>
+        {% else %}
+            <p>Il n'y a qu'une phase : pas de passage à définir.</p>
+        {% endfor %}
+
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    </form>
+{% endblock %}

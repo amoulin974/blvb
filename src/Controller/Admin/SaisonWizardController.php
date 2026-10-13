@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Competition\CodesCompetition;
 use App\Competition\CopieSaison;
+use App\Competition\EtapePassages;
 use App\Competition\Modele\Modeles;
 use App\Competition\Sport\Sports;
 use App\Entity\Phase;
@@ -127,6 +128,9 @@ class SaisonWizardController extends AbstractController
         if ($etape === 3) {
             return $this->etapePhases($saison, $request, $em, $vue);
         }
+        if ($etape === 4) {
+            return $this->etapePassages($saison, $request, $em, $vue);
+        }
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
@@ -174,6 +178,42 @@ class SaisonWizardController extends AbstractController
             'ouverte' => $ouverte,
             'libelles' => PhaseWizardType::LIBELLES,
         ], new Response(status: $form->isSubmitted() ? 422 : 200));
+    }
+
+    /**
+     * Étape 4 : passages d'une phase à l'autre (EtapePassages). Les poules passées en mode détaillé sont mémorisées
+     * en session ; les boutons « action » enregistrent la saisie puis réaffichent l'étape.
+     */
+    private function etapePassages(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
+    {
+        $cleDetail = 'wizard.passages.detail.'.$saison->getId();
+        $detail = $request->getSession()->get($cleDetail, []);
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 4]);
+            }
+            $action = $request->getPayload()->getString('action');
+            $saisie = $request->getPayload()->all('p');
+            foreach (EtapePassages::appliquer($saison, $saisie, $action, $detail) as $probleme) {
+                $this->addFlash('warning', $probleme);
+            }
+            $request->getSession()->set($cleDetail, $detail);
+            $em->flush();
+            if ($action !== '') {
+                $ancre = preg_match('/(\d+)/', $action, $m) ? '#poule-'.$m[1] : '';
+
+                return $this->redirect($this->generateUrl('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 4]).$ancre);
+            }
+
+            return $this->naviguer($request, $saison, 4, $em);
+        }
+
+        return $this->render('admin/saisonwizard/passages.html.twig', $vue + [
+            'transitions' => EtapePassages::transitions($saison, $detail),
+        ]);
     }
 
     /** Applique un bouton de structure de l'étape 3 ; renvoie l'index de la phase à garder ouverte. */

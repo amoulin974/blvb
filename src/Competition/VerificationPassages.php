@@ -16,13 +16,18 @@ final class VerificationPassages
 {
     /**
      * @param iterable<RegleDePassage> $regles
+     * @param array<string, ?int>|null $tailles nombre d'équipes par code de poule (wizard : nombre prévu) ; à défaut,
+     *                                         les équipes de la poule. Taille inconnue ou nulle : seule l'écriture des
+     *                                         règles est vérifiée pour cette poule.
      * @return list<string>
      */
-    public static function verifier(Phase $phase, iterable $regles): array
+    public static function verifier(Phase $phase, iterable $regles, ?array $tailles = null): array
     {
         $poules = [];
+        $nbEquipes = [];
         foreach ($phase->getPoules() as $poule) {
             $poules[$poule->getCode()] = $poule;
+            $nbEquipes[$poule->getCode()] = $tailles !== null ? (int) ($tailles[$poule->getCode()] ?? 0) : \count($poule->getEquipes());
         }
 
         $erreurs = [];
@@ -57,8 +62,11 @@ final class VerificationPassages
             if ($type === 'saison') {
                 $saisonSuivante[$place->poule] = true;
             }
+            if ($nbEquipes[$place->poule] === 0) {
+                continue; // taille inconnue : pas de contrôle des rangs
+            }
             try {
-                $rangs = $place->rangsPour(\count($poules[$place->poule]->getEquipes()));
+                $rangs = $place->rangsPour($nbEquipes[$place->poule]);
             } catch (PlageVide) {
                 $rangs = [];
             } catch (NotationInvalide $e) {
@@ -71,7 +79,7 @@ final class VerificationPassages
         }
 
         foreach ($poules as $code => $poule) {
-            $nb = \count($poule->getEquipes());
+            $nb = $nbEquipes[$code];
             foreach (['phase', 'saison'] as $type) {
                 if ($type === 'saison' && !isset($saisonSuivante[$code])) {
                     continue; // pas de règle pour la saison suivante dans cette poule : rien à vérifier

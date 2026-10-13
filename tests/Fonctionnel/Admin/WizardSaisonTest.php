@@ -154,6 +154,70 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSame(['Brassage', 'Phase 2', 'Phase Finale'], array_column($this->phases($id), 0), 'rien enregistré');
     }
 
+    /** Règles de la phase d'ordre donné : sources dans l'ordre. */
+    private function sources(int $id, int $ordre): array
+    {
+        $this->em()->clear();
+        $phase = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === $ordre)->first();
+
+        return array_map(fn ($r) => $r->getSource(), $phase->getReglesDePassage()->toArray());
+    }
+
+    /** Identifiant d'une poule par phase (ordre) et code. */
+    private function poule(int $id, int $ordre, string $code): int
+    {
+        $this->em()->clear();
+        $phase = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === $ordre)->first();
+
+        return $phase->getPoules()->filter(fn ($p) => $p->getCode() === $code)->first()->getId();
+    }
+
+    #[TestDox('WIZ-08 Étape 4 : passages du modèle en mode simple ; « Suivant » sans changement les conserve ; 1 montée au lieu de 2 réécrit les règles de la poule')]
+    public function test_passages_simple(): void
+    {
+        [$id, $url] = $this->brouillonA(4);
+        $avant = $this->sources($id, 0);
+        $crawler = $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'De la Phase 1 vers la Phase 2');
+        self::assertSelectorTextContains('body', 'De la Phase 2 vers la Phase Finale');
+        self::assertSelectorTextContains('body', 'Montées et descentes pour la saison suivante');
+
+        $this->client->submit($crawler->filter('button[value="suivant"]')->form());
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/5');
+        self::assertSame($avant, $this->sources($id, 0), 'règles inchangées');
+        self::assertCount(16, $this->sources($id, 1));
+
+        $b = $this->poule($id, 0, 'B');
+        $this->cliquer($url, 'suivant', ["p[$b][montee]" => '1']);
+        self::assertSame(['P1.B#1..1', 'P1.B#2..-3', 'P1.B#-2..-1'], array_values(array_filter($this->sources($id, 0), fn ($s) => str_starts_with($s, 'P1.B#'))));
+    }
+
+    #[TestDox('WIZ-09 Étape 4 : mode détaillé (ajouter une règle), retour au mode simple, « Rétablir les règles par défaut »')]
+    public function test_passages_detail(): void
+    {
+        [$id, $url] = $this->brouillonA(4);
+        $a = $this->poule($id, 0, 'A');
+
+        $this->cliquer($url, 'detail-'.$a);
+        self::assertResponseRedirects();
+        $crawler = $this->client->request('GET', $url);
+        self::assertCount(1, $crawler->filter('button[value="simple-'.$a.'"]'), 'Poule A en mode détaillé');
+        self::assertSelectorTextContains('body', 'Règle 1 :');
+
+        $this->cliquer($url, 'ajouter-regle-'.$a);
+        self::assertSame(['P1.A#1..2', 'P1.A#3..-3', 'P1.A#-2..-1', 'P1.A#1..-1'], array_values(array_filter($this->sources($id, 0), fn ($s) => str_starts_with($s, 'P1.A#'))), 'une règle de plus pour la Poule A (toute la poule)');
+
+        $this->cliquer($url, 'simple-'.$a);
+        self::assertSame(['P1.A#1..2', 'P1.A#3..-3', 'P1.A#-2..-1'], array_values(array_filter($this->sources($id, 0), fn ($s) => str_starts_with($s, 'P1.A#'))), 'règles par défaut de la poule');
+
+        $this->cliquer($url, 'detail-'.$a);
+        $this->cliquer($url, 'supprimer-regle-'.$a.'-0');
+        $phase1 = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === 0)->first();
+        $this->cliquer($url, 'retablir-'.$phase1->getId());
+        self::assertCount(12, $this->sources($id, 0), 'règles par défaut du modèle (3 par poule)');
+    }
+
     #[TestDox('WIZ-05 Garde-fous : une saison déjà créée n\'ouvre pas le wizard ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {
