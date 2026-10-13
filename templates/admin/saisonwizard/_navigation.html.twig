@@ -1,6 +1,6 @@
 {# Barre du bas du wizard, à l'intérieur du formulaire de l'étape. Variables : etape (numéro). #}
 <div class="wizard-navigation mt-6 flex flex-wrap items-center gap-2">
-    {% if etape > 1 %}
+    {% if etape > (saison is defined and saison and not saison.brouillon ? 2 : 1) %}
         <button type="submit" name="aller" value="precedent" class="btn btn-ghost">← Précédent</button>
     {% endif %}
     <span class="flex-1"></span>

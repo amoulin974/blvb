@@ -4,7 +4,9 @@ namespace App\Controller\Admin;
 use App\Entity\Poule;
 use App\Entity\Saison;
 use App\Form\PouleType;
-use App\Form\SaisonType;
+use App\Competition\Sport\Sports;
+use App\Form\Wizard\SaisonWizardType;
+use Symfony\Component\Form\FormError;
 use App\Repository\SaisonRepository;
 use App\Repository\PouleRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -59,22 +61,35 @@ final class SaisonController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
+    /**
+     * Nom, dates et périodes de fermeture ; tant qu'aucun match n'est joué, lien vers le wizard pour l'organisation
+     * (phases, passages, classement) (docs/wizard-saison/decisions.md, D29).
+     */
+    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache, SaisonRepository $saisons, Sports $sports): Response
     {
-        $form = $this->createForm(SaisonType::class, $saison);
+        $form = $this->createForm(SaisonWizardType::class, $saison);
         $form->handleRequest($request);
+        if ($form->isSubmitted()) {
+            $homonyme = $saisons->findOneBy(['nom' => $saison->getNom()]);
+            if ($homonyme !== null && $homonyme !== $saison) {
+                $form->get('nom')->addError(new FormError('Une saison porte déjà ce nom.'));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
             $cache->delete('saisons_all');
+            $this->addFlash('success', sprintf('La saison %s a été modifiée.', $saison->getNom()));
 
-            return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('admin/saison/edit.html.twig', [
             'saison' => $saison,
             'form' => $form,
-        ]);
+            'sport' => $sports->pourSaison($saison)->libelle(),
+            'matchs_joues' => $saisons->aDesMatchsJoues($saison),
+        ], new Response(status: $form->isSubmitted() ? 422 : 200));
     }
 
     //défini une saison comme favorite

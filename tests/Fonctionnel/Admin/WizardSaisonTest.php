@@ -289,13 +289,45 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/3');
     }
 
-    #[TestDox('WIZ-05 Garde-fous : une saison déjà créée n\'ouvre pas le wizard ; une étape pas encore atteinte renvoie à la dernière atteinte')]
+    #[TestDox('WIZ-13 Saison créée sans match joué : « Modifier la saison » propose le wizard (étapes 2 à 6, sans le départ), « Enregistrer les modifications » ; nom, dates et fermetures modifiables sur la page')]
+    public function test_modification_saison_creee(): void
+    {
+        [$id, $url] = $this->brouillonA(6);
+        $this->client->submit($this->client->request('GET', $url)->filter('button[value="valider"]')->form());
+
+        $crawler = $this->client->request('GET', '/admin/saison/'.$id.'/edit');
+        self::assertSelectorTextContains('body', 'Aucun match n\'est encore joué');
+        $crawler = $this->client->click($crawler->selectLink('Modifier l\'organisation de la saison')->link());
+        self::assertSelectorTextContains('h1', 'Modifier la saison :');
+        self::assertCount(5, $crawler->filter('.steps li'), 'pas d\'étape « Départ »');
+
+        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/1');
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/2');
+
+        $this->client->submit($this->client->request('GET', '/admin/saison/'.$id.'/wizard/6')->selectButton('Enregistrer les modifications')->form());
+        self::assertResponseRedirects('/admin/saison/'.$id);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'sont enregistrées');
+        $this->em()->clear();
+        self::assertFalse($this->em()->find(Saison::class, $id)->isBrouillon());
+
+        $form = $this->client->request('GET', '/admin/saison/'.$id.'/edit')->selectButton('Enregistrer')->form();
+        $this->client->submit($form, ['saison_wizard[nom]' => 'Saison renommée']);
+        self::assertResponseRedirects('/admin/saison/'.$id);
+        $this->em()->clear();
+        self::assertSame('Saison renommée', $this->em()->find(Saison::class, $id)->getNom());
+    }
+
+    #[TestDox('WIZ-05 Garde-fous : une saison dont des matchs sont joués n\'ouvre pas le wizard (modification simple) ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {
         $this->connecter('admin');
         $id = ChampionnatDeTest::get('saison')->getId();
-        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/2');
-        self::assertResponseRedirects('/admin/saison/'.$id);
+        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/3');
+        self::assertResponseRedirects('/admin/saison/'.$id.'/edit');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'seuls le nom, les dates et les périodes de fermeture se modifient');
+        self::assertSelectorNotExists('a[href$="/wizard/3"]', 'pas de lien vers le wizard');
 
         $saison = $this->demarrer(['depart[depart]' => 'modele', 'depart[modele]' => 'blvb_actuel']);
         $this->client->request('GET', '/admin/saison/'.$saison->getId().'/wizard/5');

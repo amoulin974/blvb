@@ -98,7 +98,7 @@
                     <button type="submit" name="aller" value="5" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier le classement</button>
                 </div>
             </div>
-            <p class="mt-4">Après validation : composition des poules de la {{ (phases|first).nom|default('première phase') }}, puis journées et matchs.</p>
+            {% if saison.brouillon %}<p class="mt-4">Après validation : composition des poules de la {{ (phases|first).nom|default('première phase') }}, puis journées et matchs.</p>{% endif %}
         </section>
 
         <div class="wizard-navigation mt-6 flex flex-wrap items-center gap-2">
@@ -106,7 +106,7 @@
             <span class="flex-1"></span>
             <button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>
             {% if erreurs is not empty %}<span id="raison-validation" class="text-sm">Corrigez {{ erreurs|length > 1 ? 'les ' ~ erreurs|length ~ ' points' : 'le point' }} ci-dessus pour valider.</span>{% endif %}
-            <button type="submit" name="aller" value="valider" class="btn btn-accent" {% if erreurs is not empty %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Valider la saison</button>
+            <button type="submit" name="aller" value="valider" class="btn btn-accent" {% if erreurs is not empty %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>{{ saison.brouillon ? 'Valider la saison' : 'Enregistrer les modifications' }}</button>
         </div>
     </form>
 {% endblock %}

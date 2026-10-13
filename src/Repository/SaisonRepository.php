@@ -35,6 +35,15 @@ class SaisonRepository extends ServiceEntityRepository
         return $id ? $this->findOneBy(['id' => $id, 'brouillon' => false]) : null;
     }
 
+    /** Un match de la saison a-t-il un score ? Ensuite, son organisation ne se modifie plus dans le wizard (D29). */
+    public function aDesMatchsJoues(Saison $saison): bool
+    {
+        return (bool) $this->getEntityManager()->createQuery(
+            'SELECT COUNT(p.id) FROM App\Entity\Partie p JOIN p.poule po JOIN po.phase ph
+             WHERE ph.saison = :saison AND p.nb_set_gagnant_reception IS NOT NULL'
+        )->setParameter('saison', $saison)->getSingleScalarResult();
+    }
+
     public function findPlusRecentePubliee(): ?Saison
     {
         return $this->findOneBy(['brouillon' => false], ['date_debut' => 'DESC']);

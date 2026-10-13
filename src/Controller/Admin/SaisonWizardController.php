@@ -102,16 +102,21 @@ class SaisonWizardController extends AbstractController
     public function etape(Saison $saison, int $etape, Request $request, EntityManagerInterface $em, SaisonRepository $saisons, Sports $sports, CacheInterface $cache): Response
     {
         if (!$saison->isBrouillon()) {
-            $this->addFlash('error', sprintf('La saison %s est déjà créée : modifiez-la depuis sa page.', $saison->getNom()));
+            // Saison créée : son organisation se modifie dans le wizard (étapes 2 à 6) tant qu'aucun match n'est joué (D29)
+            if ($saisons->aDesMatchsJoues($saison)) {
+                $this->addFlash('error', sprintf('Des matchs de la saison %s sont déjà joués : seuls le nom, les dates et les périodes de fermeture se modifient.', $saison->getNom()));
 
-            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
-        }
-        if ($etape > max(2, (int) $saison->getEtapeWizard())) {
+                return $this->redirectToRoute('admin_saison_edit', ['id' => $saison->getId()]);
+            }
+            if ($etape === 1) {
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 2]);
+            }
+        } elseif ($etape > max(2, (int) $saison->getEtapeWizard())) {
             return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => max(2, (int) $saison->getEtapeWizard())]);
         }
 
-        // Vérification déjà atteinte : les étapes à corriger sont signalées dans le stepper
-        $verification = (int) $saison->getEtapeWizard() >= 6 ? VerificationSaison::verifier($saison) : null;
+        // Vérification déjà atteinte (ou saison créée) : les étapes à corriger sont signalées dans le stepper
+        $verification = !$saison->isBrouillon() || (int) $saison->getEtapeWizard() >= 6 ? VerificationSaison::verifier($saison) : null;
         $aCorriger = array_values(array_unique(array_column($verification['erreurs'] ?? [], 'etape')));
         $vue = ['saison' => $saison, 'etape' => $etape, 'etapes' => self::etapes($saison, $etape, $aCorriger)];
 
@@ -247,6 +252,12 @@ class SaisonWizardController extends AbstractController
             }
             if ($request->getPayload()->getString('aller') !== 'valider') {
                 return $this->naviguer($request, $saison, 6, $em);
+            }
+            if ($verification['erreurs'] === [] && !$saison->isBrouillon()) {
+                $em->flush();
+                $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.', $saison->getNom()));
+
+                return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
             }
             if ($verification['erreurs'] === []) {
                 $saison->setBrouillon(false)->setEtapeWizard(null);
@@ -496,6 +507,11 @@ class SaisonWizardController extends AbstractController
     {
         $aller = $request->getPayload()->getString('aller', 'suivant');
         if ($aller === 'quitter') {
+            if (!$saison->isBrouillon()) {
+                $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.', $saison->getNom()));
+
+                return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+            }
             $this->addFlash('success', sprintf('Brouillon « %s » enregistré. Reprenez-le depuis la liste des saisons.', $saison->getNom()));
 
             return $this->redirectToRoute('admin_saison_index');
@@ -506,8 +522,8 @@ class SaisonWizardController extends AbstractController
             ctype_digit($aller) => (int) $aller,
             default => $etape + 1,
         };
-        $cible = max(1, min(6, $cible));
-        if ($cible > $etape) {
+        $cible = max($saison->isBrouillon() ? 1 : 2, min(6, $cible));
+        if ($cible > $etape && $saison->isBrouillon()) {
             $saison->setEtapeWizard(max((int) $saison->getEtapeWizard(), $cible));
             $em->flush();
         }
@@ -525,9 +541,14 @@ class SaisonWizardController extends AbstractController
      */
     private static function etapes(?Saison $saison, int $courante, array $aCorriger = []): array
     {
-        $atteinte = max($courante, (int) $saison?->getEtapeWizard());
+        // Saison déjà créée (modification) : toutes les étapes sauf le départ
+        $edition = $saison !== null && !$saison->isBrouillon();
+        $atteinte = $edition ? 6 : max($courante, (int) $saison?->getEtapeWizard());
         $etapes = [];
         foreach (self::ETAPES as $numero => $libelle) {
+            if ($edition && $numero === 1) {
+                continue;
+            }
             $etapes[] = [
                 'numero' => $numero,
                 'libelle' => $libelle,

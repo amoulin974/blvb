@@ -107,6 +107,8 @@ matchs individuels), qui changent le modèle lui-même (D13).
       (`SaisonRepository::findPubliees`, `findPubliee`, `findPlusRecentePubliee`)
 - [ ] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : reporté au lot 6 (D33)
 - [x] Écrans du wizard : 6 étapes (départ, saison, phases, passages, classement, vérification et validation)
+- [x] « Modifier la saison » (D29, question 8) : wizard en mode édition tant qu'aucun match n'est joué ;
+      la page de modification ne garde que nom, dates et périodes de fermeture
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans réalisés
 - [x] Fin de la création automatique : `SaisonListener` supprimé, « Créer une saison » ouvre le wizard (D6)
 

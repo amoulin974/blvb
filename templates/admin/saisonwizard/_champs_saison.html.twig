@@ -1,0 +1,45 @@
+{# Champs d'identité d'une saison (nom, sport, dates, périodes de fermeture) : étape 2 du wizard et page « Modifier la
+   saison ». Variables : form (SaisonWizardType), saison, sport (libellé), rappel_copie (bandeau des dates copiées). #}
+{% if form.vars.submitted and not form.vars.valid %}
+    {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}Des points sont à corriger ci-dessous.{% endblock %}{% endembed %}
+{% endif %}
+
+<fieldset class="fieldset border border-base-300 rounded-box p-4">
+    <legend class="fieldset-legend">Identité</legend>
+    <div class="grid gap-4 md:grid-cols-2">
+        <div>
+            {{ form_label(form.nom, null, {label_attr: {class: 'label font-semibold'}}) }}
+            {{ form_widget(form.nom, {attr: {class: 'input input-bordered w-full'}}) }}
+            {{ form_help(form.nom) }}
+            {{ form_errors(form.nom) }}
+        </div>
+        <div>
+            <span class="label font-semibold">Sport</span>
+            <p class="min-h-11 flex items-center">{{ sport }} <span class="ml-2 text-sm text-(--color-base-content)/80">(seul sport disponible pour l'instant)</span></p>
+        </div>
+    </div>
+</fieldset>
+
+<fieldset class="fieldset border border-base-300 rounded-box p-4 mt-4">
+    <legend class="fieldset-legend">Dates</legend>
+    <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+            {{ form_label(form.date_debut, null, {label_attr: {class: 'label font-semibold'}}) }}
+            {{ form_widget(form.date_debut, {attr: {class: 'input input-bordered w-full'}}) }}
+            {{ form_errors(form.date_debut) }}
+        </div>
+        <div>
+            {{ form_label(form.date_fin, null, {label_attr: {class: 'label font-semibold'}}) }}
+            {{ form_widget(form.date_fin, {attr: {class: 'input input-bordered w-full'}}) }}
+            {{ form_errors(form.date_fin) }}
+        </div>
+    </div>
+</fieldset>
+
+<fieldset class="fieldset border border-base-300 rounded-box p-4 mt-4">
+    <legend class="fieldset-legend">{{ form.indisponibilites.vars.label }}</legend>
+    {% if rappel_copie|default(false) and saison.indisponibilites|length > 0 %}
+        {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-3'} %}{% block contenu %}Dates reprises de la saison copiée et décalées d'un an : vérifiez les vacances scolaires.{% endblock %}{% endembed %}
+    {% endif %}
+    {{ form_widget(form.indisponibilites) }}
+</fieldset>
