@@ -9,7 +9,7 @@
         {% if form.vars.submitted and not form.vars.valid %}
             {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}Des points sont à corriger dans les phases ci-dessous. Rien n'a été enregistré.{% endblock %}{% endembed %}
         {% endif %}
-        <p class="mb-4 text-(--color-base-content)/80">Dans l'ordre de la saison. Ouvrez une phase pour la modifier.</p>
+        <p class="mb-4 text-(--color-base-content)/80">Dans l'ordre de la saison : il doit suivre les dates de début, car chaque phase envoie ses équipes à la suivante. Utilisez Monter / Descendre pour le corriger. Ouvrez une phase pour la modifier.</p>
 
         {% set nb = form.phases|length %}
         <ol class="flex flex-col gap-3">
@@ -21,10 +21,9 @@
                 {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
                 <li id="phase-{{ i }}" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
                     <div class="flex flex-wrap items-center gap-2 p-3">
-                        <button type="submit" name="action" value="monter-phase-{{ i }}" class="btn btn-ghost btn-square" {% if i == 0 %}disabled{% endif %} aria-label="Monter {{ phase.nom }}">{{ icone.i('fleche-haut') }}</button>
-                        <button type="submit" name="action" value="descendre-phase-{{ i }}" class="btn btn-ghost btn-square" {% if i == nb - 1 %}disabled{% endif %} aria-label="Descendre {{ phase.nom }}">{{ icone.i('fleche-bas') }}</button>
-                        <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }}</span>
+                        <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 }}.</span> {{ phase.nom }}</span>
                         <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
+                        <span class="ml-auto">{{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-phase-' ~ i, bas: 'descendre-phase-' ~ i, cible: phase.nom, premier: i == 0, dernier: i == nb - 1}) }}</span>
                     </div>
                     <details class="border-t border-base-300" {% if i == ouverte or enErreur %}open{% endif %}>
                         <summary class="cursor-pointer px-4 py-3 font-semibold min-h-11">Modifier {{ phase.nom }}</summary>

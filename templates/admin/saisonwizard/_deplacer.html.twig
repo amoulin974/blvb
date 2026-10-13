@@ -1,0 +1,12 @@
+{# Boutons « Monter » / « Descendre » d'un élément ordonné (phase, règle de passage, critère de départage).
+   Variables : haut, bas (valeurs du bouton « action »), cible (ce qui est déplacé, pour les lecteurs d'écran),
+   premier, dernier (booléens : bouton grisé). Texte visible dès 640 px ; info-bulle au survol en complément. #}
+{% import 'admin/_icones.html.twig' as icone %}
+<span class="inline-flex shrink-0 items-center gap-1">
+    <span class="tooltip max-sm:before:hidden max-sm:after:hidden" data-tip="Monter">
+        <button type="submit" name="action" value="{{ haut }}" class="btn btn-ghost btn-deplacer" {% if premier %}disabled{% endif %} aria-label="Monter {{ cible }}">{{ icone.i('fleche-haut') }}<span class="max-sm:hidden">Monter</span></button>
+    </span>
+    <span class="tooltip max-sm:before:hidden max-sm:after:hidden" data-tip="Descendre">
+        <button type="submit" name="action" value="{{ bas }}" class="btn btn-ghost btn-deplacer" {% if dernier %}disabled{% endif %} aria-label="Descendre {{ cible }}">{{ icone.i('fleche-bas') }}<span class="max-sm:hidden">Descendre</span></button>
+    </span>
+</span>

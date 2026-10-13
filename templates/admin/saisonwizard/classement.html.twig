@@ -59,11 +59,10 @@
                 {% for i, c in criteres %}
                     <li class="flex flex-wrap items-center gap-2 rounded-box border border-base-300 px-3 py-1">
                         <input type="hidden" name="departage[]" value="{{ c.value }}">
-                        <strong class="w-6">{{ i + 1 }}.</strong>
+                        <strong class="w-8">{{ i + 1 }}.</strong>
                         <span class="flex-1 min-w-48 font-semibold">{{ c.libelle }}</span>
-                        <button type="submit" name="action" value="monter-critere-{{ i }}" class="btn btn-ghost btn-square" {% if loop.first %}disabled{% endif %} aria-label="Monter {{ c.libelle }}">{{ icone.i('fleche-haut') }}</button>
-                        <button type="submit" name="action" value="descendre-critere-{{ i }}" class="btn btn-ghost btn-square" {% if loop.last %}disabled{% endif %} aria-label="Descendre {{ c.libelle }}">{{ icone.i('fleche-bas') }}</button>
-                        <button type="submit" name="action" value="retirer-critere-{{ i }}" class="btn btn-ghost" aria-label="Retirer {{ c.libelle }}">Retirer</button>
+                        {{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-critere-' ~ i, bas: 'descendre-critere-' ~ i, cible: c.libelle, premier: loop.first, dernier: loop.last}) }}
+                        <button type="submit" name="action" value="retirer-critere-{{ i }}" class="btn btn-ghost min-h-11" aria-label="Retirer {{ c.libelle }}">Retirer</button>
                     </li>
                 {% endfor %}
                 <li class="flex items-center gap-2 rounded-box border border-dashed border-base-300 px-3 py-2 text-(--color-base-content)/80">{{ icone.i('cadenas') }} <strong>Ordre alphabétique</strong> — toujours appliqué en dernier, pour un classement stable.</li>

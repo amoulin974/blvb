@@ -243,3 +243,7 @@ body{
 /* Messages d'erreur des formulaires de l'admin (thème admin/form/erreurs.html.twig) : rouge foncé (contraste AA), champ cerclé */
 .form-erreur { margin: 0.25rem 0 0.5rem; padding: 0; list-style: none; font-size: 0.875rem; font-weight: 600; color: color-mix(in oklab, var(--color-error) 70%, black); }
 .form-erreur + .input, .input:has(+ .form-erreur) { border-color: var(--color-error); }
+/* Boutons Monter / Descendre (wizard) : texte visible dès 640 px, sinon icône seule dans un carré de 44 px.
+   Hors couche : daisyUI n'a pas de variante responsive de btn-square. */
+.btn-deplacer { min-height: 2.75rem; }
+@media (max-width: 39.99rem) { .btn-deplacer { width: 2.75rem; padding: 0; } }

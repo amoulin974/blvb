@@ -98,9 +98,8 @@
                                                 <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == l.dest %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
                                             {% endfor %}
                                         </select>
-                                        <button type="submit" name="action" value="monter-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-square" {% if loop.first %}disabled{% endif %} aria-label="Monter la règle {{ k + 1 }} de {{ poule.nom }}">{{ icone.i('fleche-haut') }}</button>
-                                        <button type="submit" name="action" value="descendre-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-square" {% if loop.last %}disabled{% endif %} aria-label="Descendre la règle {{ k + 1 }} de {{ poule.nom }}">{{ icone.i('fleche-bas') }}</button>
-                                        <button type="submit" name="action" value="supprimer-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-error btn-square" aria-label="Supprimer la règle {{ k + 1 }} de {{ poule.nom }}">{{ icone.i('poubelle') }}</button>
+                                        {{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-regle-' ~ poule.id ~ '-' ~ k, bas: 'descendre-regle-' ~ poule.id ~ '-' ~ k, cible: 'la règle ' ~ (k + 1) ~ ' de ' ~ poule.nom, premier: loop.first, dernier: loop.last}) }}
+                                        <button type="submit" name="action" value="supprimer-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-error btn-square min-h-11 min-w-11" aria-label="Supprimer la règle {{ k + 1 }} de {{ poule.nom }}">{{ icone.i('poubelle') }}</button>
                                     </li>
                                 {% endfor %}
                             </ol>
