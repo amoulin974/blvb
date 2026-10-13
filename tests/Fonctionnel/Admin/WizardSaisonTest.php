@@ -87,6 +87,73 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSelectorTextContains('body', 'Brouillon · étape 3 sur 6');
     }
 
+    /** Brouillon du modèle BLVB, toutes les étapes déjà vues ; renvoie l'URL de l'étape demandée. */
+    private function brouillonA(int $etape): array
+    {
+        $saison = $this->demarrer(['depart[depart]' => 'modele', 'depart[modele]' => 'blvb_actuel']);
+        $this->em()->find(Saison::class, $saison->getId())->setEtapeWizard(6);
+        $this->em()->flush();
+
+        return [$saison->getId(), '/admin/saison/'.$saison->getId().'/wizard/'.$etape];
+    }
+
+    /** Phases du brouillon dans l'ordre : [nom, code, nombre de poules]. */
+    private function phases(int $id): array
+    {
+        $this->em()->clear();
+        $phases = $this->em()->find(Saison::class, $id)->getPhases()->toArray();
+        usort($phases, fn ($a, $b) => $a->getOrdre() <=> $b->getOrdre());
+
+        return array_map(fn ($p) => [$p->getNom(), $p->getCode(), $p->getPoules()->count()], $phases);
+    }
+
+    /** Clique sur le bouton de l'étape dont la valeur est donnée (action ou navigation), avec des valeurs de champs. */
+    private function cliquer(string $url, string $valeur, array $champs = []): void
+    {
+        $crawler = $this->client->request('GET', $url);
+        $this->client->submit($crawler->filter('button[value="'.$valeur.'"]')->form(), $champs);
+    }
+
+    #[TestDox('WIZ-06 Étape 3 : ajouter et supprimer une poule, monter une phase, ajouter et supprimer une phase (codes attribués)')]
+    public function test_phases_structure(): void
+    {
+        [$id, $url] = $this->brouillonA(3);
+
+        $this->cliquer($url, 'ajouter-poule-0');
+        self::assertResponseRedirects();
+        self::assertSame(5, $this->phases($id)[0][2], 'une poule de plus en Phase 1');
+        $this->cliquer($url, 'supprimer-poule-0-4');
+        self::assertSame(4, $this->phases($id)[0][2]);
+
+        $this->cliquer($url, 'monter-phase-1');
+        self::assertSame(['Phase 2', 'Phase 1', 'Phase Finale'], array_column($this->phases($id), 0));
+
+        $this->cliquer($url, 'ajouter-phase');
+        $phases = $this->phases($id);
+        self::assertSame(['Phase 4', 'P3', 1], $phases[3], 'nouvelle phase en dernier, une poule, code attribué');
+        $this->cliquer($url, 'supprimer-phase-3');
+        self::assertCount(3, $this->phases($id));
+    }
+
+    #[TestDox('WIZ-07 Étape 3 : modifications enregistrées par « Suivant » ; nom vide ou code en double refusés sans rien enregistrer')]
+    public function test_phases_saisie(): void
+    {
+        [$id, $url] = $this->brouillonA(3);
+
+        $this->cliquer($url, 'suivant', ['phases_wizard[phases][0][nom]' => 'Brassage', 'phases_wizard[phases][0][poules][0][nbEquipesPrevu]' => '8']);
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/4');
+        self::assertSame('Brassage', $this->phases($id)[0][0]);
+
+        $this->cliquer($url, 'suivant', ['phases_wizard[phases][1][nom]' => '']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Indiquez le nom de la phase.');
+
+        $this->cliquer($url, 'suivant', ['phases_wizard[phases][0][poules][1][code]' => 'A']);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'Le code A est déjà utilisé par une autre poule de cette phase.');
+        self::assertSame(['Brassage', 'Phase 2', 'Phase Finale'], array_column($this->phases($id), 0), 'rien enregistré');
+    }
+
     #[TestDox('WIZ-05 Garde-fous : une saison déjà créée n\'ouvre pas le wizard ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {

@@ -22,18 +22,23 @@ class SaisonWizardType extends AbstractType
             ->add('nom', TextType::class, [
                 'label' => 'Nom de la saison',
                 'help' => 'Proposé à partir de la date de début. Doit être unique.',
+                'empty_data' => '', // champ vidé : message d'erreur, pas d'erreur 500 (setNom(string))
                 'constraints' => [new Assert\NotBlank(message: 'Indiquez le nom de la saison.')],
             ])
             ->add('date_debut', DateType::class, [
                 'label' => 'Date de début',
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',
+                'constraints' => [new Assert\NotNull(message: 'Indiquez la date de début.')],
+                // Date vidée : message d'erreur ; le setter n'accepte pas null
+                'setter' => function (Saison $saison, ?\DateTimeImmutable $date): void { if ($date) { $saison->setDateDebut($date); } },
             ])
             ->add('date_fin', DateType::class, [
                 'label' => 'Date de fin',
                 'widget' => 'single_text',
                 'input' => 'datetime_immutable',
-                'constraints' => [new Assert\Callback(function (?\DateTimeImmutable $fin, ExecutionContextInterface $contexte): void {
+                'setter' => function (Saison $saison, ?\DateTimeImmutable $date): void { if ($date) { $saison->setDateFin($date); } },
+                'constraints' => [new Assert\NotNull(message: 'Indiquez la date de fin.'), new Assert\Callback(function (?\DateTimeImmutable $fin, ExecutionContextInterface $contexte): void {
                     $debut = $contexte->getRoot()->get('date_debut')->getData();
                     if ($fin !== null && $debut !== null && $fin <= $debut) {
                         $contexte->buildViolation('La date de fin doit être après la date de début.')->addViolation();

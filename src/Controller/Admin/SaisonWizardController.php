@@ -2,12 +2,20 @@
 
 namespace App\Controller\Admin;
 
+use App\Competition\CodesCompetition;
 use App\Competition\CopieSaison;
 use App\Competition\Modele\Modeles;
 use App\Competition\Sport\Sports;
+use App\Entity\Phase;
+use App\Entity\Poule;
 use App\Entity\Saison;
+use App\Enum\PhaseType;
 use App\Form\Wizard\DepartType;
+use App\Form\Wizard\PhasesWizardType;
+use App\Form\Wizard\PhaseWizardType;
 use App\Form\Wizard\SaisonWizardType;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use App\Repository\SaisonRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -116,6 +124,10 @@ class SaisonWizardController extends AbstractController
             return $this->render('admin/saisonwizard/saison.html.twig', $vue + ['form' => $form, 'sport' => $sports->pourSaison($saison)->libelle()]);
         }
 
+        if ($etape === 3) {
+            return $this->etapePhases($saison, $request, $em, $vue);
+        }
+
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
                 $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
@@ -127,6 +139,140 @@ class SaisonWizardController extends AbstractController
         }
 
         return $this->render('admin/saisonwizard/a_venir.html.twig', $vue);
+    }
+
+    /**
+     * Étape 3 : les phases et leurs poules. Les boutons « action » (ajouter, supprimer, monter, descendre une phase ;
+     * ajouter, supprimer une poule) enregistrent la saisie en cours, modifient la structure et réaffichent l'étape.
+     */
+    private function etapePhases(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
+    {
+        $phases = self::phasesDansLOrdre($saison);
+        $form = $this->createForm(PhasesWizardType::class, ['phases' => $phases]);
+        $form->handleRequest($request);
+        $ouverte = $request->query->getInt('phase', 0);
+
+        if ($form->isSubmitted()) {
+            self::verifierCodes($form, $phases);
+            if ($form->isValid()) {
+                $action = $request->getPayload()->getString('action');
+                if ($action !== '') {
+                    $ouverte = $this->appliquerAction($action, $saison, $phases, $em);
+                }
+                CodesCompetition::attribuer($saison);
+                $em->flush();
+                if ($action !== '') {
+                    return $this->redirect($this->generateUrl('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 3, 'phase' => $ouverte]).'#phase-'.$ouverte);
+                }
+
+                return $this->naviguer($request, $saison, 3, $em);
+            }
+        }
+
+        return $this->render('admin/saisonwizard/phases.html.twig', $vue + [
+            'form' => $form,
+            'ouverte' => $ouverte,
+            'libelles' => PhaseWizardType::LIBELLES,
+        ], new Response(status: $form->isSubmitted() ? 422 : 200));
+    }
+
+    /** Applique un bouton de structure de l'étape 3 ; renvoie l'index de la phase à garder ouverte. */
+    private function appliquerAction(string $action, Saison $saison, array $phases, EntityManagerInterface $em): int
+    {
+        if ($action === 'ajouter-phase') {
+            $derniere = end($phases) ?: null;
+            $phase = (new Phase())
+                ->setNom('Phase '.(\count($phases) + 1))
+                ->setType(PhaseType::CHAMPIONNAT)
+                ->setOrdre(($derniere?->getOrdre() ?? -1) + 1)
+                ->setClose(0)
+                ->setDateDebut($derniere?->getDateFin() ?? $saison->getDateDebut())
+                ->setDateFin($saison->getDateFin());
+            $saison->addPhase($phase);
+            $phase->addPoule((new Poule())->setNom('Poule A')->setNiveau(1));
+            $em->persist($phase);
+            foreach ($phase->getPoules() as $poule) {
+                $em->persist($poule);
+            }
+
+            return \count($phases);
+        }
+
+        if (preg_match('/^(supprimer|monter|descendre)-phase-(\d+)$/', $action, $m) && isset($phases[(int) $m[2]])) {
+            $i = (int) $m[2];
+            $phase = $phases[$i];
+            if ($m[1] === 'supprimer') {
+                $saison->removePhase($phase);
+                $em->remove($phase);
+
+                return max(0, $i - 1);
+            }
+            $j = $m[1] === 'monter' ? $i - 1 : $i + 1;
+            if (isset($phases[$j])) {
+                [$a, $b] = [$phase->getOrdre(), $phases[$j]->getOrdre()];
+                $phase->setOrdre($b);
+                $phases[$j]->setOrdre($a);
+
+                return $j;
+            }
+
+            return $i;
+        }
+
+        if (preg_match('/^ajouter-poule-(\d+)$/', $action, $m) && isset($phases[(int) $m[1]])) {
+            $phase = $phases[(int) $m[1]];
+            $niveaux = array_map(fn (Poule $p) => (int) $p->getNiveau(), $phase->getPoules()->toArray());
+            $poule = (new Poule())
+                ->setNom('Poule '.\chr(64 + min(26, $phase->getPoules()->count() + 1)))
+                ->setNiveau(($niveaux === [] ? 0 : max($niveaux)) + 1);
+            $phase->addPoule($poule);
+            $em->persist($poule);
+
+            return (int) $m[1];
+        }
+
+        if (preg_match('/^supprimer-poule-(\d+)-(\d+)$/', $action, $m) && isset($phases[(int) $m[1]])) {
+            $phase = $phases[(int) $m[1]];
+            $poule = array_values($phase->getPoules()->toArray())[(int) $m[2]] ?? null;
+            if ($poule !== null) {
+                $phase->removePoule($poule);
+                $em->remove($poule);
+            }
+
+            return (int) $m[1];
+        }
+
+        return 0;
+    }
+
+    /** Codes saisis : uniques dans la saison (phases) et dans la phase (poules), sinon erreur sur le champ. */
+    private static function verifierCodes(FormInterface $form, array $phases): void
+    {
+        $codesPhases = [];
+        foreach ($form->get('phases') as $i => $phaseForm) {
+            $code = (string) $phaseForm->get('code')->getData();
+            if ($code !== '' && isset($codesPhases[$code])) {
+                $phaseForm->get('code')->addError(new FormError(sprintf('Le code %s est déjà utilisé par une autre phase.', $code)));
+            }
+            $codesPhases[$code] = true;
+            $codesPoules = [];
+            foreach ($phaseForm->get('poules') as $pouleForm) {
+                $codePoule = (string) $pouleForm->get('code')->getData();
+                if ($codePoule !== '' && isset($codesPoules[$codePoule])) {
+                    $pouleForm->get('code')->addError(new FormError(sprintf('Le code %s est déjà utilisé par une autre poule de cette phase.', $codePoule)));
+                }
+                $codesPoules[$codePoule] = true;
+            }
+        }
+    }
+
+    /** @return list<Phase> */
+    private static function phasesDansLOrdre(Saison $saison): array
+    {
+        $phases = $saison->getPhases()->toArray();
+        usort($phases, fn (Phase $a, Phase $b) => [$a->getOrdre(), $a->getId()] <=> [$b->getOrdre(), $b->getId()]);
+
+        return array_values($phases);
     }
 
     /**
