@@ -59,18 +59,18 @@ final class Place
      * Rangs désignés (1 = premier) dans une poule de $nbEquipes équipes, dans l'ordre du classement.
      *
      * @return list<int>
-     * @throws NotationInvalide si un rang sort de la poule ou si la plage est vide
+     * @throws NotationInvalide si un rang sort de la poule ; PlageVide si la plage est vide
      */
     public function rangsPour(int $nbEquipes): array
     {
         if (!$this->estRang()) {
-            throw new \LogicException(sprintf('« %s » désigne l\'issue d\'un match, pas un rang.', $this));
+            throw new \LogicException(sprintf('« %s » désigne le résultat d\'un match, pas un rang.', $this));
         }
 
         $debut = $this->rangAbsolu($this->rangDebut, $nbEquipes);
         $fin = $this->rangAbsolu($this->rangFin, $nbEquipes);
         if ($debut > $fin) {
-            throw new NotationInvalide(sprintf('« %s » ne désigne aucune équipe dans une poule de %d (du %de au %de).', $this, $nbEquipes, $debut, $fin));
+            throw new PlageVide(sprintf('aucune équipe concernée dans une poule de %d (du %de au %de).', $nbEquipes, $debut, $fin));
         }
 
         return range($debut, $fin);
@@ -80,10 +80,46 @@ final class Place
     {
         $absolu = $rang > 0 ? $rang : $nbEquipes + $rang + 1;
         if ($absolu < 1 || $absolu > $nbEquipes) {
-            throw new NotationInvalide(sprintf('« %s » : le rang %d n\'existe pas dans une poule de %d équipes.', $this, $rang, $nbEquipes));
+            throw new NotationInvalide(sprintf('la poule n\'a que %d équipe%s : il n\'y a pas de %s.', $nbEquipes, $nbEquipes > 1 ? 's' : '', self::rangEnClair($rang)));
         }
 
         return $absolu;
+    }
+
+    /**
+     * La place en clair, pour l'administrateur : « 1er et 2e », « du 3e à l'antépénultième », « dernier »,
+     * « toutes les équipes », « vainqueur du match AB » (sans la poule ni la phase).
+     */
+    public function enClair(): string
+    {
+        if (!$this->estRang()) {
+            return sprintf('%s du match %s', $this->issue, $this->match);
+        }
+        if (!$this->estPlage()) {
+            return self::rangEnClair($this->rangDebut);
+        }
+        if ($this->rangDebut === 1 && $this->rangFin === -1) {
+            return 'toutes les équipes';
+        }
+        if (($this->rangDebut > 0 && $this->rangFin === $this->rangDebut + 1) || ($this->rangDebut < 0 && $this->rangFin === $this->rangDebut + 1)) {
+            return self::rangEnClair($this->rangDebut).' et '.self::rangEnClair($this->rangFin);
+        }
+        $fin = self::rangEnClair($this->rangFin);
+
+        return 'du '.self::rangEnClair($this->rangDebut).(preg_match('/^[aeiouyéèê]/u', $fin) ? ' à l\'' : ' au ').$fin;
+    }
+
+    /** 1 → « 1er », 3 → « 3e », -1 → « dernier », -2 → « avant-dernier », -3 → « antépénultième », -5 → « 5e en partant de la fin » */
+    public static function rangEnClair(int $rang): string
+    {
+        return match (true) {
+            $rang === 1 => '1er',
+            $rang > 1 => $rang.'e',
+            $rang === -1 => 'dernier',
+            $rang === -2 => 'avant-dernier',
+            $rang === -3 => 'antépénultième',
+            default => (-$rang).'e en partant de la fin',
+        };
     }
 
     public function __toString(): string

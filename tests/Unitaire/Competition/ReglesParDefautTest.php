@@ -60,6 +60,18 @@ final class ReglesParDefautTest extends TestCase
         self::assertSame([1], array_column($regles, 'ordre'));
     }
 
+    #[TestDox('Petite poule (3 équipes, 2 montées, 2 descentes) : la montée l\'emporte, pas de chevauchement')]
+    public function test_petite_poule(): void
+    {
+        $source = self::phase('P1', poules: 'AB');
+        $source['poules'][1]['nbEquipes'] = 3;
+
+        self::assertSame(
+            ['P1.A#1..2 → A', 'P1.A#3..-3 → A', 'P1.A#-2..-1 → B', 'P1.B#1..2 → A', 'P1.B#3..-2 → B', 'P1.B#-1..-1 → B'],
+            self::lisibles(ReglesParDefaut::calculer($source, self::phase('P2', poules: 'AB'))),
+        );
+    }
+
     #[TestDox('Niveau absent de la phase suivante : première poule ; pas de phase suivante : aucune règle')]
     public function test_cas_limites(): void
     {

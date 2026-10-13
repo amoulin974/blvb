@@ -82,14 +82,24 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] `ReglesParDefaut` : règles du schéma 2025 (D21), utilisées par la migration
       `Version20261013130000` et la création de saison (`CompetitionCreator`, qui relie maintenant
       phases et poules des deux côtés) ; clôture d'une phase sans règles (D26) : étape suivante
-- [ ] `ResultatsPhases` branché sur Doctrine (classements, issues de match) ; `ResolveurPlace` en service
-- [ ] `VerificationPassages` (D5) : notation, phase et poule existantes, chaque équipe une seule
-      destination
-- [ ] `PhaseService::cloturerEtBasculer` applique les règles (D24 : avertir et continuer) ;
-      avertissements affichés à la clôture (texte relu par l'ergonome)
+- [x] `ResultatsSaison` : `ResultatsPhases` branché sur Doctrine (classements ; issues de match au
+      lot 6)
+- [x] `VerificationPassages` (D5) : notation, phase et poule existantes, chaque rang une seule
+      destination ; messages en clair (`Place::enClair`, `RegleDePassage::__toString`)
+- [x] `PhaseService::cloturerEtBasculer` applique les règles (D24 : avertir et continuer ; D26 :
+      règles par défaut si la phase n'en a pas) et rend les avertissements ; message de clôture relu
+      par l'ergonome et le webdesigner (D28), alerte à liste dans `base_admin.html.twig`
+- [x] Règles par défaut des petites poules : la montée l'emporte (nombre d'équipes connu)
 - [ ] Migration : colonnes de codes, table des règles, règles générées pour les saisons existantes
       (D21). **À appliquer au déploiement seulement**
 - [ ] Tests (PHA-*, nouvelles règles, vérification, migration) ; `tests/SPECIFICATIONS.md` à jour
+
+## À faire hors lots (relevé en relecture)
+- [ ] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
+      (webdesigner, D28) : modification à part, toutes les alertes de l'admin
+- [ ] Avertissements des règles de passage affichés avant de cliquer sur « Clôturer » (ergonome,
+      D28) : avec le wizard (lots 4-5)
+- [ ] Autres messages joints par « ; » (surcharges des gymnases, `optimiserTout`) : liste comme D28
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;

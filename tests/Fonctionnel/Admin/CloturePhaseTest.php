@@ -5,12 +5,14 @@ namespace App\Tests\Fonctionnel\Admin;
 use App\Entity\Journee;
 use App\Entity\Partie;
 use App\Entity\Phase;
+use App\Entity\Poule;
+use App\Entity\RegleDePassage;
 use App\Factory\PouleFactory;
 use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
 
-/** PHA-03 à PHA-05 : bouton « Clôturer la phase » de la fiche saison. */
+/** PHA-03 à PHA-05, PHA-09 : bouton « Clôturer la phase » de la fiche saison. */
 final class CloturePhaseTest extends TestFonctionnel
 {
     private function phase(string $nom): Phase
@@ -65,7 +67,8 @@ final class CloturePhaseTest extends TestFonctionnel
         $this->connecter('admin');
 
         $texte = $this->cloturer($this->phase('Phase 1'));
-        self::assertStringContainsString('Équipes basculées avec succès', $texte);
+        self::assertStringContainsString('Phase clôturée : les équipes ont été réparties dans la phase suivante.', $texte);
+        self::assertStringNotContainsString('n\'ont peut-être pas été réparties', $texte, 'règles par défaut complètes : aucun avertissement');
 
         $em = self::getContainer()->get('doctrine')->getManager();
         $em->clear();
@@ -77,6 +80,31 @@ final class CloturePhaseTest extends TestFonctionnel
             self::assertNotSame(0, $em->getRepository(Journee::class)->count(['poule' => $poule]), $poule->getNom().' : journées');
             self::assertNotSame(0, $em->getRepository(Partie::class)->count(['poule' => $poule]), $poule->getNom().' : matchs');
         }
+    }
+
+    #[TestDox('PHA-09 Règles de passage incomplètes : clôture faite, avertissement en liste (règles en clair) et conseil pour corriger')]
+    public function test_cloture_avec_avertissements(): void
+    {
+        $this->preparerPhase2();
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $phase1 = $this->phase('Phase 1');
+        $haute = $em->getRepository(Poule::class)->findOneBy(['nom' => 'Poule haute']);
+        // Seule la poule A a une règle : les équipes de la poule B restent sans destination
+        $phase1->addRegleDePassage((new RegleDePassage())->setOrdre(1)->setSource('P1.A#1..-1')->setPouleDestination($haute));
+        $em->flush();
+        $this->connecter('admin');
+
+        $this->cloturer($this->phase('Phase 1'));
+        $alerte = $this->client->getCrawler()->filter('.alert-warning');
+
+        self::assertStringContainsString('Phase clôturée, mais certaines équipes n\'ont peut-être pas été réparties comme prévu.', $alerte->text());
+        self::assertSame([
+            'Équipes sans poule dans la phase suivante : EQUIPE B1 (CTA), EQUIPE B2, EQUIPE B3.',
+            'Poule B : aucune poule prévue pour les 1er, 2e et 3e dans la phase suivante.',
+        ], $alerte->filter('li')->each(fn ($li) => $li->text()));
+        self::assertStringContainsString('Pour corriger : ajoutez ou déplacez les équipes avec « Modifier la poule »', $alerte->text());
+        $em->clear();
+        self::assertSame(1, $this->phase('Phase 1')->getClose(), 'phase close malgré tout');
     }
 
     #[TestDox('PHA-04 Dernière phase de la saison : message d\'erreur, la phase n\'est pas clôturée')]

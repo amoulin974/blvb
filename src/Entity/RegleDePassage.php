@@ -2,6 +2,8 @@
 
 namespace App\Entity;
 
+use App\Competition\NotationInvalide;
+use App\Competition\NotationPlace;
 use App\Enum\PointsConserves;
 use App\Repository\RegleDePassageRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -142,13 +144,45 @@ class RegleDePassage
         return $this;
     }
 
-    /** Texte lisible pour les messages : « P1.A#1..2 → Poule A (Phase 2) » ou « … → niveau 1 de la saison suivante ». */
+    /**
+     * La règle en clair, pour l'administrateur, avec sa notation entre crochets pour le responsable du site :
+     * « 1er et 2e de la Poule A (Phase 1) vers la Poule A (Phase 2) [P1.A#1..2] »,
+     * « … vers le niveau 1 la saison prochaine [P2.A#1..2] ».
+     */
     public function __toString(): string
     {
-        $destination = $this->pouleDestination !== null
-            ? sprintf('%s (%s)', $this->pouleDestination->getNom(), $this->pouleDestination->getPhase()?->getNom())
-            : sprintf('niveau %d de la saison suivante', $this->niveauSaisonSuivante);
+        try {
+            $place = NotationPlace::analyser($this->source);
+        } catch (NotationInvalide) {
+            return sprintf('[%s]', $this->source);
+        }
 
-        return $this->source.' → '.$destination;
+        $texte = $place->enClair();
+        if ($place->estRang()) {
+            $poule = null;
+            foreach ($this->phase?->getPoules() ?? [] as $p) {
+                if ($p->getCode() === $place->poule) {
+                    $poule = $p;
+                }
+            }
+            $texte .= ' de '.($poule !== null ? self::poule($poule) : 'la poule '.$place->poule);
+        }
+
+        if ($this->pouleDestination !== null) {
+            $texte .= ' vers '.self::poule($this->pouleDestination);
+        } elseif ($this->niveauSaisonSuivante !== null) {
+            $texte .= sprintf(' vers le niveau %d la saison prochaine', $this->niveauSaisonSuivante);
+        }
+
+        return sprintf('%s [%s]', $texte, $this->source);
+    }
+
+    /** « la Poule A (Phase 1) », « « Tableau 1 » (Phase finale) » */
+    private static function poule(Poule $poule): string
+    {
+        $nom = (string) $poule->getNom();
+        $phase = $poule->getPhase()?->getNom();
+
+        return (str_starts_with(mb_strtolower($nom), 'poule ') ? 'la '.$nom : '« '.$nom.' »').($phase ? " ($phase)" : '');
     }
 }

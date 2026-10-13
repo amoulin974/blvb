@@ -187,7 +187,8 @@ final class PhaseController extends AbstractController
             $this->addFlash('error', 'Il n’y a pas de phase suivante pour clôturer celle-ci.');
             return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
         }else{
-            $phaseService->cloturerEtBasculer($phase);
+            // Règles de passage : la clôture se fait toujours, les problèmes reviennent en avertissements (D24)
+            $avertissements = $phaseService->cloturerEtBasculer($phase);
             foreach($phaseSuivante->getPoules() as $poule){
                 $journeeService->creerJournees($poule);
             }
@@ -196,10 +197,19 @@ final class PhaseController extends AbstractController
             $rapport = $partieService->creerCalendrierOptimise($phaseSuivante);
 
             $surcharges = array_merge(...array_column($rapport, 'surcharges'));
-            $this->addFlash(
-                $surcharges === [] ? 'success' : 'warning',
-                'Équipes basculées avec succès.' . ($surcharges !== [] ? ' Attention : ' . implode(' ; ', $surcharges) : '')
-            );
+            if ($avertissements === []) {
+                $this->addFlash(
+                    $surcharges === [] ? 'success' : 'warning',
+                    'Phase clôturée : les équipes ont été réparties dans la phase suivante.' . ($surcharges !== [] ? ' Attention : ' . implode(' ; ', $surcharges) : '')
+                );
+            } else {
+                // Message à liste (titre, détails, conseil), rendu par base_admin.html.twig
+                $this->addFlash('warning', [
+                    'titre' => 'Phase clôturée, mais certaines équipes n\'ont peut-être pas été réparties comme prévu. Vérifiez les poules de la phase suivante.',
+                    'details' => array_merge($avertissements, $surcharges !== [] ? ['Gymnases : ' . implode(' ; ', $surcharges)] : []),
+                    'conseil' => 'Pour corriger : ajoutez ou déplacez les équipes avec « Modifier la poule », puis régénérez les matchs de la poule. Signalez aussi le problème au responsable du site : il est le seul à pouvoir corriger les règles de passage pour l\'instant.',
+                ]);
+            }
         }
 
 

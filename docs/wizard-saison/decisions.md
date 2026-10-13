@@ -205,6 +205,19 @@ remplacement par un champ `format` se fera avec le wizard, car il touche le form
 l'admin.
 *(2026-10-13, lot 3)*
 
+## D28. Message de clôture : relu par l'ergonome et le webdesigner
+**Décision** : sans problème, « Phase clôturée : les équipes ont été réparties dans la phase
+suivante. » ; avec des avertissements, une seule alerte orange : un titre (« Phase clôturée, mais
+certaines équipes n'ont peut-être pas été réparties comme prévu. Vérifiez les poules de la phase
+suivante. »), une ligne par problème (liste à puces, les équipes sans poule en premier), puis un
+conseil (corriger avec « Modifier la poule », régénérer les matchs, signaler au « responsable du
+site »). Les règles sont écrites en clair, la notation entre crochets pour le responsable du site
+(« 1er et 2e de la Poule A (Phase 1) vers la Poule A (Phase 2) [P1.A#1..2] »).
+**Reporté** (choix de l'utilisateur) : contraste insuffisant de toutes les alertes de l'admin et
+icône des messages de succès (modification à part) ; avertissements affichés avant de cliquer sur
+« Clôturer » (avec le wizard).
+*(2026-10-13, lot 3)*
+
 ---
 
 ## Points ouverts

@@ -44,7 +44,7 @@ final class ReglesParDefaut
     }
 
     /**
-     * @param array{code: string, finale: bool, poules: list<array{cle: int|string, code: string, niveau: ?int, montee: ?int, descente: ?int}>} $source
+     * @param array{code: string, finale: bool, poules: list<array{cle: int|string, code: string, niveau: ?int, montee: ?int, descente: ?int, nbEquipes?: ?int}>} $source
      * @param array{code: string, finale: bool, poules: list<array{cle: int|string, code: string, niveau: ?int, montee: ?int, descente: ?int}>}|null $suivante
      * @return list<array{ordre: int, source: string, poule: int|string|null, niveauSaisonSuivante: ?int}>
      */
@@ -74,6 +74,12 @@ final class ReglesParDefaut
             $niveau = $poule['niveau'];
             $montee = max(0, (int) $poule['montee']);
             $descente = max(0, (int) $poule['descente']);
+            // Nombre d'équipes connu (clôture, migration) : une petite poule ne descend pas une équipe qui monte (la
+            // montée l'emporte, comme le calcul d'avant les règles), pour des règles sans chevauchement
+            if (($poule['nbEquipes'] ?? null) !== null) {
+                $montee = min($montee, $poule['nbEquipes']);
+                $descente = min($descente, $poule['nbEquipes'] - $montee);
+            }
             $milieu = $prefixe.($montee + 1).'..'.(-$descente - 1);
 
             if ($suivante['finale']) {
@@ -105,13 +111,14 @@ final class ReglesParDefaut
         return $regles;
     }
 
-    /** @return array{code: string, finale: bool, poules: list<array{cle: int, code: string, niveau: ?int, montee: ?int, descente: ?int}>} */
+    /** @return array{code: string, finale: bool, poules: list<array{cle: int, code: string, niveau: ?int, montee: ?int, descente: ?int, nbEquipes: ?int}>} */
     private static function donnees(Phase $phase): array
     {
         $poules = [];
         foreach ($phase->getPoules() as $i => $poule) {
+            $nb = $poule->getEquipes()->count();
             $poules[] = ['cle' => $i, 'code' => (string) $poule->getCode(), 'niveau' => $poule->getNiveau(),
-                'montee' => $poule->getNbMonteeDefaut(), 'descente' => $poule->getNbDescenteDefaut()];
+                'montee' => $poule->getNbMonteeDefaut(), 'descente' => $poule->getNbDescenteDefaut(), 'nbEquipes' => $nb > 0 ? $nb : null];
         }
 
         return ['code' => (string) $phase->getCode(), 'finale' => $phase->getType() === PhaseType::FINALE, 'poules' => $poules];
