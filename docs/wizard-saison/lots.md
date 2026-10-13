@@ -12,7 +12,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 0 | Cadrage : décisions, plan, lots, méthode | ✅ |
 | 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | ✅ |
 | 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | ✅ |
-| 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D27) | 🟡 |
+| 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D28) | ✅ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ⬜ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ⬜ |
 | 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ⬜ |
@@ -71,7 +71,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       départage) ; tests existants verts ; `tests/SPECIFICATIONS.md` à jour
 - [x] Pas d'écran (D19)
 
-## Lot 3 : règles de passage en données 🟡
+## Lot 3 : règles de passage en données ✅
 - [x] Branche `formats-competition-lot3` ; décisions D20 à D27
 - [x] Codes : `Phase.code`, `Poule.code` (D20), uniques dans la saison / la phase ;
       `App\Competition\CodesCompetition` (attribue les codes manquants, appelé à la création de saison) ;
@@ -90,13 +90,13 @@ matchs individuels), qui changent le modèle lui-même (D13).
       règles par défaut si la phase n'en a pas) et rend les avertissements ; message de clôture relu
       par l'ergonome et le webdesigner (D28), alerte à liste dans `base_admin.html.twig`
 - [x] Règles par défaut des petites poules : la montée l'emporte (nombre d'équipes connu)
-- [ ] Migration : colonnes de codes, table des règles, règles générées pour les saisons existantes
+- [x] Migration : colonnes de codes, table des règles, règles générées pour les saisons existantes
       (D21). **À appliquer au déploiement seulement**
-- [ ] Tests (PHA-*, nouvelles règles, vérification, migration) ; `tests/SPECIFICATIONS.md` à jour
+- [x] Tests (PHA-*, nouvelles règles, vérification, migration) ; `tests/SPECIFICATIONS.md` à jour
 
 ## À faire hors lots (relevé en relecture)
-- [ ] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
-      (webdesigner, D28) : modification à part, toutes les alertes de l'admin
+- [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
+      (webdesigner, D28) : fait sur `main` et `prod` (`af97240`), gabarit commun `admin/_alerte.html.twig`
 - [ ] Avertissements des règles de passage affichés avant de cliquer sur « Clôturer » (ergonome,
       D28) : avec le wizard (lots 4-5)
 - [ ] Autres messages joints par « ; » (surcharges des gymnases, `optimiserTout`) : liste comme D28
