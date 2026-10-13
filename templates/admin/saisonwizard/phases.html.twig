@@ -4,6 +4,7 @@
 {% block titre_etape %}Les phases{% endblock %}
 
 {% block contenu %}
+    {% form_theme form 'admin/form/erreurs.html.twig' %}
     {{ form_start(form, {attr: {id: 'wizard-form', novalidate: 'novalidate'}}) }}
         {% if form.vars.submitted and not form.vars.valid %}
             {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}Des points sont à corriger dans les phases ci-dessous. Rien n'a été enregistré.{% endblock %}{% endembed %}

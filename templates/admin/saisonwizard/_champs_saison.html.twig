@@ -1,3 +1,4 @@
+{% form_theme form 'admin/form/erreurs.html.twig' %}
 {# Champs d'identité d'une saison (nom, sport, dates, périodes de fermeture) : étape 2 du wizard et page « Modifier la
    saison ». Variables : form (SaisonWizardType), saison, sport (libellé), rappel_copie (bandeau des dates copiées). #}
 {% if form.vars.submitted and not form.vars.valid %}
@@ -38,7 +39,7 @@
 
 <fieldset class="fieldset border border-base-300 rounded-box p-4 mt-4">
     <legend class="fieldset-legend">{{ form.indisponibilites.vars.label }}</legend>
-    {% if rappel_copie|default(false) and saison.indisponibilites|length > 0 %}
+    {% if rappel_copie|default(false) and saison.indisponibilites|length > 0 and not form.vars.submitted %}
         {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-3'} %}{% block contenu %}Dates reprises de la saison copiée et décalées d'un an : vérifiez les vacances scolaires.{% endblock %}{% endembed %}
     {% endif %}
     {{ form_widget(form.indisponibilites) }}

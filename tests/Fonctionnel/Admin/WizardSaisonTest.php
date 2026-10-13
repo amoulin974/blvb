@@ -100,7 +100,8 @@ final class WizardSaisonTest extends TestFonctionnel
         $valeurs['saison_wizard']['indisponibilites'] = [['nom' => '', 'dateDebut' => '', 'dateFin' => '']];
         $this->client->request('POST', $url, $valeurs + ['aller' => 'suivant']);
         self::assertResponseStatusCodeSame(422);
-        self::assertSelectorTextContains('body', 'Indiquez le motif de la fermeture.');
+        self::assertSelectorTextContains('.form-erreur', 'Indiquez le motif de la fermeture.');
+        self::assertSelectorTextNotContains('body', 'vérifiez les vacances scolaires', 'le rappel de copie ne masque pas les erreurs');
         self::assertSelectorTextContains('body', 'Indiquez le premier jour de la fermeture.');
         self::assertSelectorTextContains('body', 'Indiquez le dernier jour de la fermeture.');
 

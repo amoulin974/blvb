@@ -1,0 +1,11 @@
+{# Thème de formulaire de l'admin : les messages d'erreur sous le champ, lisibles (contraste AA) et annoncés.
+   Usage : {% form_theme form 'admin/form/erreurs.html.twig' %} #}
+{% extends 'form_div_layout.html.twig' %}
+
+{% block form_errors -%}
+    {%- if errors|length > 0 -%}
+        <ul class="form-erreur" role="alert">
+            {%- for error in errors -%}<li>{{ error.message }}</li>{%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endblock form_errors %}

@@ -240,3 +240,6 @@ body{
 .admin-nav .menu-active { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); font-weight: 600; }
 /* En-tête des tableaux de l'admin visible pendant le défilement des longues listes (sans pagination) */
 .table-admin thead th { position: sticky; top: 0; z-index: 1; background-color: var(--color-base-100); box-shadow: inset 0 -2px 0 var(--color-primary); }
+/* Messages d'erreur des formulaires de l'admin (thème admin/form/erreurs.html.twig) : rouge foncé (contraste AA), champ cerclé */
+.form-erreur { margin: 0.25rem 0 0.5rem; padding: 0; list-style: none; font-size: 0.875rem; font-weight: 600; color: color-mix(in oklab, var(--color-error) 70%, black); }
+.form-erreur + .input, .input:has(+ .form-erreur) { border-color: var(--color-error); }
