@@ -11,7 +11,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 |---|---|---|
 | 0 | Cadrage : décisions, plan, lots, méthode | ✅ |
 | 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | ✅ |
-| 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | 🟡 |
+| 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | ✅ |
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9) | ⬜ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ⬜ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ⬜ |
@@ -55,7 +55,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       par les tests existants (`GenerationMatchsTest`, `OptimiseurTest`, `JourneeServiceTest`,
       `ClassementServiceTest`), inchangés et verts ; `FormatsTest` ajouté.
 
-## Lot 2 : classement paramétrable 🟡
+## Lot 2 : classement paramétrable ✅
 - [x] Branche `formats-competition-lot2` ; décisions D16 à D19
 - [x] Départage : liste ordonnée de critères enregistrée par saison (`Saison.departage`, JSON) ;
       enum `App\Competition\Classement\CritereDepartage` (`points`, `difference_sets`,
