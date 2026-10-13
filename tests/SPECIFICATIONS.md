@@ -221,7 +221,7 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 
 **SCO-04 — Scores valides** ✅ (data provider) : 3–0, 3–1, 3–2, 2–3, 1–3, 0–3 (en texte ou en nombres JSON, espaces tolérés) → 200, valeurs enregistrées, réponse `newScore` = « 3 - 1 ».
 **SCO-05 — Scores invalides** ✅ → 400, score inchangé : 4–0, −1–3 (en chiffres), « a »–3, 2.5–3 (texte et nombre), champ absent, deux forfaits.
-**SCO-06 — Scores impossibles** ✅ → 400 : 3–3, 0–0, 2–0, 0–2. Règle (A2, décidé, `App\Service\RegleScore`) : match complet (une équipe à 3 sets, l'autre de 0 à 2), match **interrompu** selon la règle 1R du règlement (2–1, 2–2, 1–1, 1–0, dans un sens ou dans l'autre) ou forfait.
+**SCO-06 — Scores impossibles** ✅ → 400 : 3–3, 0–0, 2–0, 0–2. Règle (A2, décidé, `App\Competition\Sport\Volley`, ex-`RegleScore`) : match complet (une équipe à 3 sets, l'autre de 0 à 2), match **interrompu** selon la règle 1R du règlement (2–1, 2–2, 1–1, 1–0, dans un sens ou dans l'autre) ou forfait.
 **SCO-07 — Forfait** ✅ : `F` + vide → réception −1 / déplacement 3, `newScore` = « F - 3 » ; vide + `F` → symétrique ; `F` + `F` → 400.
 **SCO-08 — Effacement** ✅ : deux champs vides → les deux valeurs à `null`, `newScore` = null, le classement est recalculé (l'équipe perd les points de ce match).
 **SCO-09 — Classement mis à jour** ✅ après chaque saisie (vérifie la ligne `Classement` des deux équipes).
@@ -230,7 +230,7 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 **SCO-16 — Match interrompu (règle 1R)** ✅ : saisi par le capitaine comme par le responsable de club ou l'admin (décidé) ; points du règlement, quel que soit le barème de la saison : 2–1 → 2 et 1 point, 2–2 → 1 point chacun (set-average inchangé), 1–1 et 1–0 → aucun point. La fenêtre de saisie propose l'option « Match interrompu (règle 1R) » avec un rappel de la règle et le résumé des points (vérifié avec Node, à couvrir par E2E-01).
 **SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
 
-### 4.3 Calcul du classement — `Unitaire/Service/ClassementServicePointsTest`, `Unitaire/Service/RegleScoreTest`, `Integration/Service/ClassementServiceTest` (P0) ✅ lot 2
+### 4.3 Calcul du classement — `Unitaire/Service/ClassementServicePointsTest`, `Unitaire/Competition/Sport/VolleyTest`, `Integration/Service/ClassementServiceTest` (P0) ✅ lot 2
 
 Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/−3) pour qu'une inversion de règle soit visible.
 

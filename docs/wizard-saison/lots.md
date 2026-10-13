@@ -39,7 +39,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
       tests unitaires. Code dans `src/Competition/` (`Place`, `NotationPlace`, `ResolveurPlace`,
       interface `ResultatsPhases`, sans implémentation Doctrine avant le lot 3, donc pas encore
       déclaré dans `config/services.yaml`) ; tests dans `tests/Unitaire/Competition/`.
-- [ ] `RegleSport` + `Volley` ; `RegleScore` et ses appelants passent par elle ; tests existants verts
+- [x] `RegleSport` + `Volley` ; `RegleScore` et ses appelants passent par elle ; tests existants verts.
+      `src/Competition/Sport/` : `RegleSport`, `Volley` (ex-`RegleScore` + points de
+      `ClassementService` + encodage du forfait), `Bareme` (lu dans la saison), `Sports` (toujours
+      le volley tant que `Saison.sport` n'existe pas, lot 4). `RegleScore` supprimé ; test déplacé
+      dans `tests/Unitaire/Competition/Sport/VolleyTest.php`.
 - [ ] `GenerateurFormat` ; championnat et finale actuels branchés dessus ; `JourneeService` et
       `PartieService` ne testent plus `PhaseType`
 - [ ] Tests de non-régression : calendriers et classements du format actuel identiques

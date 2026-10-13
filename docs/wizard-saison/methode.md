@@ -129,4 +129,7 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   ne tournaient pas en local faute de droits de `symfony` sur `blvb_new_test`, réglé par le `GRANT`
   de la partie « Tests ». Résultat : 300 tests verts (85 unitaires, 50 intégration, 163
   fonctionnels, 2 lents).
-- **Suite** : `RegleSport` + `Volley`, puis `GenerateurFormat`.
+- `RegleSport` + `Volley` : `ClassementService` (points, sets) et l'API de saisie
+  (`FrontController::api_score_update` : validation, forfait) passent par le sport de la saison ;
+  `RegleScore` supprimé. Aucun changement de comportement : 306 tests verts.
+- **Suite** : `GenerateurFormat`.

@@ -3,6 +3,7 @@
 namespace App\Controller\Front;
 
 
+use App\Competition\Sport\Sports;
 use App\Entity\Equipe;
 use App\Enum\PhaseType;
 use App\Entity\Partie;
@@ -19,9 +20,9 @@ use App\Repository\SaisonRepository;
 use App\Service\CalendrierAnalyseService;
 use App\Security\ScoreVoter;
 use App\Service\ClassementService;
-use App\Service\RegleScore;
 use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
+use App\Twig\ScoreExtension;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -442,7 +443,7 @@ final class FrontController extends AbstractController
 
     //Route appelé quand un admin ou un capitaine change le score d'une partie
     #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
-    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
+    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService, Sports $sports): JsonResponse
     {
 
     // Jeton CSRF envoyé par score-modal-controller.js (balise <meta name="csrf-token"> de base_front)
@@ -464,32 +465,29 @@ final class FrontController extends AbstractController
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
 
+        $sport = $sports->pourSaison($partie->getPoule()?->getPhase()?->getSaison());
+
         if (trim($data['scoreReception']) === '' && trim($data['scoreDeplacement']) === ''){
             //Les deux champs vides : on efface le score (ex. score saisi par erreur sur un match non joué)
             $partie->setNbSetGagnantReception(null);
             $partie->setNbSetGagnantDeplacement(null);
             $newScore = null;
         } elseif ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
-            //Cas d'une forfait
+            //Cas d'une forfait : score enregistré selon le sport (volley : -1 set pour l'équipe forfait, 3 pour l'autre)
             if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
-            if ($data['scoreReception'] === 'F'){
-                $partie->setNbSetGagnantReception(-1);
-                $partie->setNbSetGagnantDeplacement(3);
-                $newScore = 'F - 3';
-            } else{
-                $partie->setNbSetGagnantReception(3);
-                $partie->setNbSetGagnantDeplacement(-1);
-                $newScore = '3 - F';
-            }
+            [$scoreReception, $scoreDeplacement] = $sport->scoreForfait($data['scoreReception'] === 'F');
+            $partie->setNbSetGagnantReception($scoreReception);
+            $partie->setNbSetGagnantDeplacement($scoreDeplacement);
+            $newScore = ScoreExtension::sets($scoreReception) . ' - ' . ScoreExtension::sets($scoreDeplacement);
 
 
         }else{
-            //Cas normal : nombres entiers de sets, match complet ou interrompu (règle 1R) — App\Service\RegleScore
+            //Cas normal : nombres entiers de sets, match complet ou interrompu (règle 1R) — App\Competition\Sport\Volley
             $entier = static fn ($v) => \is_int($v) || (\is_string($v) && ctype_digit(trim($v)));
             if (!$entier($data['scoreReception']) || !$entier($data['scoreDeplacement'])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
             $scoreReception = (int) $data['scoreReception'];
             $scoreDeplacement = (int) $data['scoreDeplacement'];
-            if (!RegleScore::estValide($scoreReception, $scoreDeplacement)) throw new Exception("Score impossible : une équipe doit avoir 3 sets et l'autre de 0 à 2, ou, pour un match interrompu (règle 1R), 2-1, 2-2, 1-1 ou 1-0.");
+            if (!$sport->estValide($scoreReception, $scoreDeplacement)) throw new Exception($sport->messageScoreInvalide());
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);
