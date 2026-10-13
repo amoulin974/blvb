@@ -88,7 +88,7 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 | Données | fabriquées par les tests (factories, stories) | `app:recette:charger`, scénarios `en-cours`, `phase1-terminee`, `vierge` |
 | Référence | `tests/SPECIFICATIONS.md` | `tests/recette/README.md` |
 
-Tests automatisés, dans le conteneur `php` (309 tests verts + 2 lents au 2026-10-13, fin du lot 1) :
+Tests automatisés, dans le conteneur `php` (319 tests verts + 2 lents au 2026-10-13, fin du lot 2) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
@@ -147,3 +147,13 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - Lot 1 terminé, sans interface graphique (pas de relecture ergonome / webdesigner nécessaire).
 - **Suite** : fusionner `formats-competition-lot1` dans `formats-competition`, puis lot 2
   (classement paramétrable) sur `formats-competition-lot2`.
+
+### 2026-10-13 : lot 1 fusionné, lot 2
+
+- `tests/SPECIFICATIONS.md` mis à jour (§4.16), lot 1 fusionné dans `formats-competition` et poussé ;
+  CI verte. `gh` connecté dans WSL (`gh auth setup-git`) : push et suivi de la CI depuis WSL.
+- Règle ajoutée à la méthode : doc des tests à jour à chaque modification de test.
+- Lot 2 : décisions D16 à D19 ; départage par saison (`CritereDepartage`, quotient de sets,
+  mini-classement), barème surchargeable par phase, migration `Version20261013100000` (à appliquer
+  au déploiement seulement). Sans écran. CLA-12 à CLA-16 ajoutés : 319 tests verts + 2 lents,
+  `composer qualite` et `doctrine:schema:validate` (test) OK.

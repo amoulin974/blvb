@@ -61,7 +61,8 @@ tests/
 ├── bootstrap.php
 ├── SPECIFICATIONS.md              ← ce document
 ├── Unitaire/                      ← classes isolées, sans noyau ni base (millisecondes)
-│   ├── Competition/                  notation des places, règles du sport (Sport/), choix du format (Format/) — §4.16
+│   ├── Competition/                  notation des places, règles du sport et barème (Sport/), choix du format (Format/),
+│   │                                 critères de départage (Classement/) — §4.3 et §4.16
 │   ├── Service/                      CalendrierAnalyseService, calculs purs extraits…
 │   └── Twig/
 ├── Integration/                   ← KernelTestCase + base de test (services réels, Doctrine réel)
@@ -234,7 +235,7 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 **SCO-16 — Match interrompu (règle 1R)** ✅ : saisi par le capitaine comme par le responsable de club ou l'admin (décidé) ; points du règlement, quel que soit le barème de la saison : 2–1 → 2 et 1 point, 2–2 → 1 point chacun (set-average inchangé), 1–1 et 1–0 → aucun point. La fenêtre de saisie propose l'option « Match interrompu (règle 1R) » avec un rappel de la règle et le résumé des points (vérifié avec Node, à couvrir par E2E-01).
 **SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
 
-### 4.3 Calcul du classement — `Unitaire/Service/ClassementServicePointsTest`, `Unitaire/Competition/Sport/VolleyTest`, `Integration/Service/ClassementServiceTest` (P0) ✅ lot 2
+### 4.3 Calcul du classement — `Unitaire/Service/ClassementServicePointsTest`, `Unitaire/Competition/Sport/VolleyTest`, `Unitaire/Competition/Sport/BaremeTest`, `Unitaire/Competition/Classement/CritereDepartageTest`, `Integration/Service/ClassementServiceTest` (P0) ✅ lot 2
 
 Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/−3) pour qu'une inversion de règle soit visible.
 
@@ -261,6 +262,14 @@ Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/
 **CLA-09 — Aller-retour** ✅ : seul le **dernier match joué** entre les deux équipes départage (décidé en octobre 2026).
 **CLA-10 — Positions** ✅ : 1 à n sans trou ni doublon ; recalcul **idempotent** (deux appels successifs → même résultat, pas de doublon de lignes `Classement`).
 **CLA-11 — Nouvelle équipe ajoutée** ✅ à la poule → apparaît au classement avec 0 point au prochain recalcul.
+
+Classement paramétrable (chantier des formats de compétition, lot 2 ; `docs/wizard-saison/decisions.md` D16 à D19). Le départage est une liste ordonnée de critères enregistrée par saison ; la liste par défaut (points, différence de sets, confrontation directe, ordre alphabétique) reproduit CLA-06 à CLA-09, qui servent de non-régression.
+
+**CLA-12 — Quotient de sets** ✅ : à égalité de points et de différence de sets, 3 sets gagnés pour 1 perdu passe devant 4 pour 2 si le quotient est dans le départage ; sinon, ordre alphabétique.
+**CLA-13 — Mini-classement** ✅ : trois équipes à égalité de points sont départagées par les points puis la différence de sets de leurs seuls matchs entre elles ; l'ordre obtenu diffère de celui du départage par défaut (différence de sets sur toute la poule).
+**CLA-14 — Barème propre à la phase** ✅ : une valeur surchargée par la phase remplace celle de la saison, les autres restent celles de la saison.
+**CLA-15 — Liste de départage** ✅ *`CritereDepartageTest`* : par défaut le départage d'avant le paramétrage (nouvelle saison, valeur absente, liste vide) ; codes inconnus ignorés, doublons retirés, ordre alphabétique toujours en dernier ; seuls points, différence et quotient de sets se calculent par équipe.
+**CLA-16 — Barème de phase** ✅ *`BaremeTest`* : sans surcharge, barème de la saison ; surcharge partielle ; clés inconnues et valeurs non entières ignorées ; phase sans points (toutes les valeurs à 0).
 
 ### 4.4 Visibilité des coordonnées — `Fonctionnel/Front/CoordonneesTest` (P0, RGPD) ✅ lot 3
 
@@ -501,6 +510,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
 | **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
 | **Formats de compétition, lot 1** ✅ | NOT-*, SPT-01, FMT-01 (§4.16) ; `RegleScoreTest` devenu `VolleyTest` ; génération des calendriers déplacée dans `App\Competition\Format` sans changement de comportement | 309 tests verts + 2 lents (branche `formats-competition-lot1`) | fait le 13/10/2026 |
+| **Formats de compétition, lot 2** ✅ | CLA-12 à CLA-16 (§4.3) : départage paramétrable par saison (quotient de sets, mini-classement), barème surchargeable par phase ; migration `Version20261013100000` | 319 tests verts + 2 lents (branche `formats-competition-lot2`) | fait le 13/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

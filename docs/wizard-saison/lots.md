@@ -57,16 +57,19 @@ matchs individuels), qui changent le modèle lui-même (D13).
 
 ## Lot 2 : classement paramétrable 🟡
 - [x] Branche `formats-competition-lot2` ; décisions D16 à D19
-- [ ] Départage : liste ordonnée de critères enregistrée par saison (colonne JSON, migration, valeur
-      par défaut = départage actuel) ; critères `points`, `difference_sets`, `quotient_sets`,
-      `confrontation_directe`, `mini_classement`, `alphabetique` (toujours appliqué en dernier)
-- [ ] `ClassementService` : tri par la liste de la saison ; mini-classement sur les seuls matchs
-      entre équipes à égalité
-- [ ] Barème surchargeable par phase (colonnes facultatives, migration) ; `Bareme` lu dans la phase,
-      à défaut dans la saison
-- [ ] Tests : départage par défaut identique (tests existants verts), quotient de sets, mini-classement
-      (cas A bat B, B bat C, C bat A), barème de phase ; `tests/SPECIFICATIONS.md` à jour
-- [ ] Pas d'écran (D19)
+- [x] Départage : liste ordonnée de critères enregistrée par saison (`Saison.departage`, JSON) ;
+      enum `App\Competition\Classement\CritereDepartage` (`points`, `difference_sets`,
+      `quotient_sets`, `confrontation_directe`, `mini_classement`, `alphabetique` toujours en dernier)
+- [x] `ClassementService` : un seul comparateur construit à partir de la liste de la saison (identique
+      à l'ancien avec la liste par défaut) ; mini-classement précalculé pour chaque groupe d'équipes à
+      égalité sur les critères par équipe qui le précèdent
+- [x] Barème surchargeable par phase (`Phase.bareme`, JSON, valeur par valeur) ; `Bareme::dePhase`
+- [x] Migration `Version20261013100000` : colonnes `saison.departage` (départage actuel inscrit dans
+      les saisons existantes, D9) et `phase.bareme`. **À appliquer au déploiement seulement** ; en
+      local, `doctrine:migrations:migrate` avant de lancer le site sur cette branche
+- [x] Tests : CLA-12 à CLA-16 (quotient de sets, mini-classement, barème de phase, liste de
+      départage) ; tests existants verts ; `tests/SPECIFICATIONS.md` à jour
+- [x] Pas d'écran (D19)
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;
