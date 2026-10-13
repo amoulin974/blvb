@@ -61,6 +61,7 @@ tests/
 ├── bootstrap.php
 ├── SPECIFICATIONS.md              ← ce document
 ├── Unitaire/                      ← classes isolées, sans noyau ni base (millisecondes)
+│   ├── Competition/                  notation des places, règles du sport (Sport/), choix du format (Format/) — §4.16
 │   ├── Service/                      CalendrierAnalyseService, calculs purs extraits…
 │   └── Twig/
 ├── Integration/                   ← KernelTestCase + base de test (services réels, Doctrine réel)
@@ -93,6 +94,9 @@ tests/
 
 - Nom : `blvb_new_test` (dérivé automatiquement de `DATABASE_URL` + suffixe). En parallèle (ParaTest), `TEST_TOKEN` donne une base par processus.
 - Schéma : `php bin/console doctrine:database:create --env=test --if-not-exists` puis `doctrine:migrations:migrate --env=test -n`. **Les migrations sont la source de vérité** : la CI vérifie aussi `doctrine:schema:validate` (le mapping et le schéma migré concordent).
+- En local (Docker), l'utilisateur MySQL `symfony` n'a de droits que sur `blvb_new` : Foundry ne peut pas créer la base de test et arrête la suite au premier test d'intégration (« could not reset the database »). À faire une fois par environnement (la CI, elle, utilise `root`) :
+  `docker compose exec -T database mysql -uroot -prootpassword -e "GRANT ALL PRIVILEGES ON \`blvb\_new\_test%\`.* TO 'symfony'@'%';"`
+- Après un `git pull` qui modifie `composer.lock` : `docker compose exec php composer install`, sinon le `vendor` du conteneur est en retard (symptôme : « Cannot bootstrap extension … DAMA\DoctrineTestBundle »).
 - Isolation : `dama/doctrine-test-bundle` ouvre une transaction avant chaque test et l'annule après. Foundry (`ResetDatabase`) ne recrée le schéma qu'une fois par exécution.
 - Exception : les tests qui vérifient un **rollback** (ex. suppression refusée par une clé étrangère, §4.6) fonctionnent aussi sous transaction (savepoints DBAL) ; à confirmer au lot 0, sinon les marquer `#[Group('sans-transaction')]` et réinitialiser la base pour eux.
 - `SaisonListener` (création automatique de phases et poules à la création d'une saison) est **désactivé par défaut** dans les tests (`SaisonListener::$enabled = false`, comme dans la commande de recette) et réactivé uniquement dans le test qui le couvre.
@@ -311,6 +315,8 @@ Pour chaque entité : la suppression n'est plus proposée dans les listes ; elle
 
 ### 4.7 Génération des journées et des matchs — `Integration/Service/JourneeServiceTest`, `GenerationMatchsTest`, `OptimiseurTest` (P1, en partie `lent`)
 
+Depuis le chantier des formats de compétition (§4.16), les journées et les matchs simples sont créés par le générateur du format de la phase (`App\Competition\Format\Championnat`, `Elimination`) ; `JourneeService` et `PartieService` gardent la même interface et l'optimiseur reste dans `PartieService`. Ces tests, inchangés, servent de non-régression.
+
 **JOU-01** ✅ — `JourneeService::creerJournees` sur une poule de n équipes : n−1 journées si n pair, n si n impair (équipe exempte) ; numéros 1..k consécutifs.
 **JOU-02** ✅ — Les journées tombent dans les dates de la phase et **sautent les semaines indisponibles** (indisponibilités de la saison).
 **JOU-03** ✅ — Phase de finales : journées nommées selon `getNomJournee` (demi-finales, finale, barrage le cas échéant).
@@ -405,6 +411,16 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **REP-03** ✅ — Sans `--force` : rien n'est enregistré ; relancée après application : aucun changement, aucun avertissement.
 **REP-04** ✅ *`ImportEquipesTest`* — Import Excel des équipes : « NOM (SIGLE) » rattaché au club du sigle (club existant réutilisé, club inconnu créé), sigle retiré du nom ; équipe sans sigle et parenthèses ordinaires : pas de club.
 
+### 4.16 Formats de compétition (socle du wizard de saison) — `Unitaire/Competition/` (P1) ✅ lot 1 du chantier
+
+Chantier décrit dans `docs/wizard-saison/` (méthode, décisions, plan, lots) ; catalogue des formats dans `docs/formats-competition.md`.
+
+**NOT-01 — Notation des places** ✅ *`NotationPlaceTest`* : `P1.A#2`, `P1.A#-1` (rang compté depuis la fin), `P1.A#1..-3` (plage), `BAR1.AB.vainqueur` / `.perdant` sont lues, puis réécrites à l'identique ; notations mal formées refusées (rang 0, zéro initial, issue inconnue, espace dans un code…).
+**NOT-02 — Rangs selon la taille de la poule** ✅ : l'avant-dernier est le 7e d'une poule de 8 et le 8e d'une poule de 9 ; « 1er à antépénultième » = 1–6 sur 8, 1–7 sur 9 ; rang hors de la poule ou plage vide refusés.
+**NOT-03 — Résolution en équipes** ✅ *`ResolveurPlaceTest`* (résultats en mémoire) : plage dans l'ordre du classement, vainqueur et perdant d'un barrage joué ; barrage non joué, poule ou match inconnus refusés ; règles de la proposition du bureau (`docs/formats-competition.md` F2) : chaque équipe des poules A et B a exactement une destination.
+**SPT-01 — Règles du volley** ✅ *`Sport/VolleyTest`* (ex-`RegleScoreTest`) : scores acceptés et refusés (§4.2 SCO-06), forfait encodé −1 / 3, points d'un match interrompu fixés quel que soit le barème, sets comptés pour le set-average (2–2 non compté, forfait : aucun set pour l'équipe forfait ni perdu par l'adversaire).
+**FMT-01 — Choix du format** ✅ *`Format/FormatsTest`* : phase de championnat → `Championnat`, optimisé ; phase finale → `Elimination`, hors optimiseur ; aucun générateur → aucun format.
+
 ---
 
 ## 5. Analyse statique et qualité du code
@@ -484,6 +500,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **2 — Scores et classement** ✅ | SCO-*, CLA-* ; anomalies A1–A7 arbitrées et corrigées | 181 tests verts ; le départage et le set-average échouent avec l'ancien code (vérifié) | fait le 13/10/2026 |
 | **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
 | **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
+| **Formats de compétition, lot 1** ✅ | NOT-*, SPT-01, FMT-01 (§4.16) ; `RegleScoreTest` devenu `VolleyTest` ; génération des calendriers déplacée dans `App\Competition\Format` sans changement de comportement | 309 tests verts + 2 lents (branche `formats-competition-lot1`) | fait le 13/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

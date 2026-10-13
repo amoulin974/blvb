@@ -136,7 +136,7 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   `RegleScore` supprimé. Aucun changement de comportement : 306 tests verts.
 - `GenerateurFormat` : `Championnat` et `Elimination` reprennent à l'identique le code de
   `JourneeService` et `PartieService`, qui passent par `Formats` et ne testent plus `PhaseType`.
-  309 tests verts, tests lents compris (`composer tests:tout`).
+  311 tests verts, tests lents compris (`composer tests:tout`).
 - Lot 1 terminé, sans interface graphique (pas de relecture ergonome / webdesigner nécessaire).
 - **Suite** : fusionner `formats-competition-lot1` dans `formats-competition`, puis lot 2
   (classement paramétrable) sur `formats-competition-lot2`.
