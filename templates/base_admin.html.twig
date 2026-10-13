@@ -47,10 +47,7 @@
                 {% for label, messages in app.flashes %}
                     {% set type = {success: 'success', error: 'error', danger: 'error', warning: 'warning'}[label] ?? 'info' %}
                     {% for message in messages %}
-                        <div class="alert alert-{{ type }} alert-soft mb-4" role="{{ type == 'error' ? 'alert' : 'status' }}">
-                            {% if type == 'error' or type == 'warning' %}{{ icone.i('alerte', 'size-5') }}{% endif %}
-                            <span>{{ message }}</span>
-                        </div>
+                        {% embed 'admin/_alerte.html.twig' with {type: type, classe: 'mb-4'} %}{% block contenu %}{{ message }}{% endblock %}{% endembed %}
                     {% endfor %}
                 {% endfor %}
                 {% block body %}{% endblock %}
