@@ -13,7 +13,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | ✅ |
 | 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | ✅ |
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D28) | ✅ |
-| 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | 🟡 |
+| 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ✅ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ⬜ |
 | 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ⬜ |
 | 7 | Autres championnats : brassage puis niveau (A4), serpentin (A5), géographique (A6) | ⬜ |
@@ -94,7 +94,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       (D21). **À appliquer au déploiement seulement**
 - [x] Tests (PHA-*, nouvelles règles, vérification, migration) ; `tests/SPECIFICATIONS.md` à jour
 
-## Lot 4 : wizard, architecture 🟡
+## Lot 4 : wizard, architecture ✅
 - [x] Branche `formats-competition-lot4`
 - [x] Sport de la saison : `Saison.sport` (migration `Version20261013140000`), registre `Sports` (D13)
 - [x] Modèles de saison : `App\Competition\Modele`, modèle « Format BLVB actuel » ;

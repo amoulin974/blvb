@@ -95,7 +95,7 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 | Données | fabriquées par les tests (factories, stories) | `app:recette:charger`, scénarios `en-cours`, `phase1-terminee`, `vierge` |
 | Référence | `tests/SPECIFICATIONS.md` | `tests/recette/README.md` |
 
-Tests automatisés, dans le conteneur `php` (319 tests verts + 2 lents au 2026-10-13, fin du lot 2) :
+Tests automatisés, dans le conteneur `php` (385 tests verts + 2 lents au 2026-10-13, fin du lot 4) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
@@ -192,3 +192,40 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   WIZ-15, détail dans `lots.md`) ; quelques points reportés au lot 5. 383 tests verts + 2 lents.
   **Suite** : fusion de `formats-competition-lot4` dans `formats-competition`, puis lot 5 (mise en
   place des poules, journées et matchs).
+
+### 2026-10-13 : lot 4 fusionné, reprise sur un autre ordinateur
+
+- Lot 4 fusionné dans `formats-competition` et poussé. Derniers ajouts après les relectures : thème
+  d'erreurs de formulaire (`templates/admin/form/erreurs.html.twig`), ordre des phases contrôlé par les
+  dates de début (WIZ-17), boutons Monter / Descendre explicites (`_deplacer.html.twig`), période de
+  fermeture vide refusée (WIZ-16). 385 tests verts + 2 lents.
+- **Suite** : lot 5 (mise en place : composition des poules, journées, génération des matchs,
+  enchaînement des phases), voir `lots.md`. Reporté au lot 5 par les relectures : carte « Point de
+  départ » du récapitulatif, « Brouillon enregistré à 14 h 32 », écarts d'effectif dans le schéma,
+  aide courte sous chaque critère de départage, liens de l'alerte d'erreur vers les champs. Hors lots :
+  avertissements avant « Clôturer », messages joints par « ; » (voir `lots.md`).
+
+## 5. Reprendre le travail sur un autre ordinateur
+
+1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Pour un nouveau
+   lot, créer `git checkout -b formats-competition-lot5` depuis `formats-competition`.
+2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,
+   `docker compose exec php composer install`, droits MySQL des bases de test, `gh auth login` puis
+   `gh auth setup-git` pour pousser et suivre la CI (`gh run list`).
+3. **Base locale** : `bin/base etat` puis `bin/base aligner` (applique les migrations de la branche ;
+   les migrations du chantier, `Version202610131*`, ne vont en production qu'au déploiement).
+4. **CSS et assets** : `docker compose exec php php bin/console tailwind:build` après chaque
+   changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
+   en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
+   manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
+5. **Vérifier l'état** : `docker compose exec php composer tests` (385 tests verts attendus) et
+   `docker compose exec php composer qualite`.
+6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D34), `lots.md`
+   (lot 5) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à
+   jour dans le même commit, ergonome et webdesigner avant tout commit d'interface, sécurité pour les
+   formulaires, agent `deploiement` avant tout passage en production, pas de décision de conception
+   sans l'avoir consignée). Les agents `.claude/agents/*.md` se lancent comme agents généraux qui lisent
+   leur fiche si la session ne les charge pas.
+7. **Déploiement** (quand le chantier est livré, pas avant) : `git pull`, `docker compose up -d
+   --build`, `importmap:install`, `tailwind:build --minify`, `asset-map:compile`, `cache:clear`,
+   migrations ; l'agent `deploiement` relit avant la fusion dans `prod`.
