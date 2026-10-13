@@ -46,9 +46,11 @@ l'application doit savoir les proposer tous, et l'administrateur choisit au mome
 3. **Tests d'abord pour la logique** (notation des places, règles de passage, départage, générateurs
    de calendrier) : tests unitaires dans `tests/Unitaire`, tests d'intégration dans
    `tests/Integration`. Les tests existants doivent rester verts.
-4. **Relectures** par les agents du projet (`.claude/agents/`) avant de clore un lot :
-   `ergonome` pour les écrans du wizard et les libellés, `webdesigner` pour la charte,
-   `securite` pour les formulaires et les droits.
+4. **Relectures** par les agents du projet (`.claude/agents/`) :
+   - **dès qu'une interface graphique est réalisée ou modifiée** (écran, formulaire, gabarit Twig,
+     libellés affichés), l'`ergonome` **et** le `webdesigner` interviennent avant le commit ;
+     consigne de l'utilisateur, sans exception ;
+   - `securite` pour les formulaires, les API et les droits.
 5. **Fin de session** : mettre à jour l'état du lot dans `lots.md` et ajouter une entrée au journal
    ci-dessous (ce qui est fait, ce qui reste, points bloquants).
 
@@ -132,4 +134,9 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - `RegleSport` + `Volley` : `ClassementService` (points, sets) et l'API de saisie
   (`FrontController::api_score_update` : validation, forfait) passent par le sport de la saison ;
   `RegleScore` supprimé. Aucun changement de comportement : 306 tests verts.
-- **Suite** : `GenerateurFormat`.
+- `GenerateurFormat` : `Championnat` et `Elimination` reprennent à l'identique le code de
+  `JourneeService` et `PartieService`, qui passent par `Formats` et ne testent plus `PhaseType`.
+  309 tests verts, tests lents compris (`composer tests:tout`).
+- Lot 1 terminé, sans interface graphique (pas de relecture ergonome / webdesigner nécessaire).
+- **Suite** : fusionner `formats-competition-lot1` dans `formats-competition`, puis lot 2
+  (classement paramétrable) sur `formats-competition-lot2`.

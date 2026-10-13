@@ -10,7 +10,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | Lot | Contenu | État |
 |---|---|---|
 | 0 | Cadrage : décisions, plan, lots, méthode | ✅ |
-| 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | 🟡 |
+| 1 | Socle : notation des places ; `RegleSport` avec l'implémentation `Volley` (reprend `RegleScore`) ; interface `GenerateurFormat` avec les formats actuels branchés dessus. **Aucun changement de comportement.** | ✅ |
 | 2 | Classement paramétrable : barème par phase, départage configurable, mini-classement à 3 équipes ou plus, gestion de l'exempt | ⬜ |
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9) | ⬜ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ⬜ |
@@ -33,7 +33,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] `methode.md`, `decisions.md`, `plan.md`, `lots.md`
 - [x] Réponses aux questions de conception, reportées dans `decisions.md` (D7 à D15)
 
-## Lot 1 : socle 🟡
+## Lot 1 : socle ✅
 - [x] Créer la branche `formats-competition-lot1`
 - [x] `NotationPlace` : analyse et résolution (`P1.A#-2`, `#1..-3`, `.vainqueur`, `.perdant`),
       tests unitaires. Code dans `src/Competition/` (`Place`, `NotationPlace`, `ResolveurPlace`,
@@ -44,9 +44,16 @@ matchs individuels), qui changent le modèle lui-même (D13).
       `ClassementService` + encodage du forfait), `Bareme` (lu dans la saison), `Sports` (toujours
       le volley tant que `Saison.sport` n'existe pas, lot 4). `RegleScore` supprimé ; test déplacé
       dans `tests/Unitaire/Competition/Sport/VolleyTest.php`.
-- [ ] `GenerateurFormat` ; championnat et finale actuels branchés dessus ; `JourneeService` et
-      `PartieService` ne testent plus `PhaseType`
-- [ ] Tests de non-régression : calendriers et classements du format actuel identiques
+- [x] `GenerateurFormat` ; championnat et finale actuels branchés dessus ; `JourneeService` et
+      `PartieService` ne testent plus `PhaseType`. `src/Competition/Format/` : interface
+      `GenerateurFormat` (journées, matchs simples, `estOptimisable`), `Championnat` (A1) et
+      `Elimination` (B1) qui reprennent le code existant à l'identique, `Formats` (choix du
+      générateur, services tagués `app.generateur_format`), `DateMatch` (ex-`calculerDateMatch`,
+      toujours exposé par `PartieService`). L'optimiseur reste dans `PartieService` pour les formats
+      optimisables. `PhaseType` reste utilisé par `supporte()` jusqu'au champ `format` (lot 3).
+- [x] Tests de non-régression : calendriers et classements du format actuel identiques. Couverts
+      par les tests existants (`GenerationMatchsTest`, `OptimiseurTest`, `JourneeServiceTest`,
+      `ClassementServiceTest`), inchangés et verts ; `FormatsTest` ajouté.
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;

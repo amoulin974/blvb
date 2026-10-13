@@ -1,12 +1,14 @@
 <?php
 
 namespace App\Service;
+use App\Competition\Format\DateMatch;
+use App\Competition\Format\Formats;
+use App\Competition\Format\GenerateurFormat;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Partie;
 use App\Entity\Lieu;
 use App\Entity\Creneau;
-use App\Enum\PhaseType;
 use App\Entity\Journee;
 use App\Repository\LieuRepository;
 use App\Entity\Equipe;
@@ -16,49 +18,30 @@ use Doctrine\ORM\EntityManagerInterface;
 
 class PartieService
 {
-    private const JOURS_MAP = [
-        'lundi'     => 'monday',
-        'mardi'     => 'tuesday',
-        'mercredi'  => 'wednesday',
-        'jeudi'     => 'thursday',
-        'vendredi'  => 'friday',
-        'samedi'    => 'saturday',
-        'dimanche'  => 'sunday',
-        // Support des index numériques (si 1 = Lundi)
-        '1' => 'monday',
-        '2' => 'tuesday',
-        '3' => 'wednesday',
-        '4' => 'thursday',
-        '5' => 'friday',
-        '6' => 'saturday',
-        '7' => 'sunday',
-    ];
-
-
     public function __construct(
         private EntityManagerInterface $em,
-        private OptimisationService $optimisationService
+        private OptimisationService $optimisationService,
+        private Formats $formats,
     ) {}
 
 
-    //Crée les matchs pour une poule
+    //Crée les matchs pour une poule, sans optimisation, selon le format de sa phase (App\Competition\Format)
     public function createCalendar(Poule $poule): ?string
     {
         // 1. Nettoyage des anciens matchs
         $this->deleteMatches($poule);
 
-        // 2. Choix de l'algorithme selon le type de poule
-        // On imagine que tu as un champ 'type' ou 'isFinale' dans ton entité Poule
-        if ($poule->getPhase()->getType() === PhaseType::CHAMPIONNAT) {
+        // 2. Algorithme du format de la phase
+        $this->generateur($poule)->genererMatchs($poule);
 
-            $this->generateMatchJourneePhaseChampionnat($poule);
-
-        }else{
-
-            $this->generateMatchJourneePhaseFinale($poule);
-        }
         return null;
 
+    }
+
+    private function generateur(Poule $poule): GenerateurFormat
+    {
+        return $this->formats->pourPhase($poule->getPhase())
+            ?? throw new \LogicException(sprintf('Aucun format ne prend en charge la phase « %s ».', $poule->getPhase()->getNom()));
     }
 
     // Poids qui garantit qu'aucun nombre de breaks ne peut jamais valoir la peine d'accepter
@@ -84,7 +67,7 @@ class PartieService
      * partager des lieux : décider qui est à domicile dans une poule peut désaturer ou saturer un
      * lieu utilisé par une autre poule de la même phase. Les poules de phase finale (non
      * round-robin) ne sont pas concernées par cette recherche : elles sont générées avec
-     * l'algorithme existant (generateMatchJourneePhaseFinale), et leurs matchs déjà placés sont
+     * le générateur de leur format (GenerateurFormat::genererMatchs), et leurs matchs déjà placés sont
      * pris en compte comme occupation fixe pour les poules de championnat.
      *
      * @return array<int, array{poule: string, type: string, scoreContrainte: ?float, nbBreaks: ?int, surcharges: string[]}>
@@ -101,8 +84,8 @@ class PartieService
         foreach ($phase->getPoules() as $poule) {
             $this->deleteMatches($poule);
 
-            if ($poule->getPhase()->getType() !== PhaseType::CHAMPIONNAT) {
-                $this->generateMatchJourneePhaseFinale($poule);
+            if (!$this->generateur($poule)->estOptimisable()) {
+                $this->generateur($poule)->genererMatchs($poule);
                 $rapportParPouleId[$poule->getId()] = [
                     'poule' => $poule->getNom(),
                     'type' => 'finale',
@@ -173,8 +156,8 @@ class PartieService
 
         $this->deleteMatches($poule);
 
-        if ($poule->getPhase()->getType() !== PhaseType::CHAMPIONNAT) {
-            $this->generateMatchJourneePhaseFinale($poule);
+        if (!$this->generateur($poule)->estOptimisable()) {
+            $this->generateur($poule)->genererMatchs($poule);
 
             return ['poule' => $poule->getNom(), 'type' => 'finale', 'nbBreaks' => null, 'surcharges' => []];
         }
@@ -627,242 +610,6 @@ class PartieService
         return $this->creneauPrioritaire($lieu)->getCapacite();
     }
 
-    private function generateMatchJourneePhaseChampionnat(Poule $poule)
-    {
-        $equipes = $poule->getEquipes()->toArray();
-        $nbEquipe = count($equipes);
-
-        if ($nbEquipe < 2) {
-            // Idéalement, lever une exception ou gérer l'erreur via un retour
-            return;
-        }
-
-        // 1. Préparation du tableau d'équipes (Gestion du BYE)
-        $equipeArray = $equipes;
-        if ($nbEquipe % 2 != 0) {
-            $equipeBye = new Equipe();
-            $equipeBye->setNom("BYE");
-            $equipeArray[] = $equipeBye;
-            $nbEquipe++;
-        }
-
-        $rounds = $nbEquipe - 1;
-        $matchesPerRound = $nbEquipe / 2;
-        $journees = $poule->getJournees()->toArray();
-
-        usort($journees, function($j1, $j2){
-            return $j1->getNumero() <=> $j2->getNumero();
-        });
-
-        // 2. Algorithme de la Ronde (Circle Method)
-        for ($round = 0; $round < $rounds; $round++) {
-            $journee = $journees[$round];
-
-            for ($match = 0; $match < $matchesPerRound; $match++) {
-                // Calcul des indices théoriques
-                $idx1 = ($round + $match) % ($nbEquipe - 1);
-                $idx2 = ($nbEquipe - 1 - $match + $round) % ($nbEquipe - 1);
-
-                // Cas particulier de l'équipe Pivot (la dernière du tableau)
-                if ($match == 0) {
-                    $idx2 = $nbEquipe - 1;
-                }
-
-                // LOGIQUE D'ALTERNANCE DOMICILE/EXTÉRIEUR
-                // On détermine qui est 'home' et qui est 'away'
-                if ($match == 0) {
-                    // Pour le pivot : il reçoit lors des rounds pairs, se déplace les rounds impairs
-                    if ($round % 2 == 0) {
-                        $homeIdx = $idx2;
-                        $awayIdx = $idx1;
-                    } else {
-                        $homeIdx = $idx1;
-                        $awayIdx = $idx2;
-                    }
-                } else {
-                    // Pour les autres matchs : on alterne selon la parité du round
-                    if ($round % 2 == 1) {
-                        $homeIdx = $idx1;
-                        $awayIdx = $idx2;
-                    } else {
-                        $homeIdx = $idx2;
-                        $awayIdx = $idx1;
-                    }
-                }
-
-                $equipeHome = $equipeArray[$homeIdx];
-                $equipeAway = $equipeArray[$awayIdx];
-
-                // 3. Exclusion du match si c'est un BYE
-                if ($equipeHome->getNomSansClub() === "BYE" || $equipeAway->getNomSansClub() === "BYE") {
-                    continue;
-                }
-
-                // 4. Création de la partie
-                $partie = new \App\Entity\Partie();
-
-                // Calcul de la date selon les préférences de l'équipe qui REÇOIT
-                $lieuMatch = $equipeHome->getLieu();
-                $creneau = $lieuMatch->getCreneaux()[0]; // On suppose qu'il y a au moins un créneau
-
-                $dateMatch = $this->calculerDateMatch(
-                    $journee->getDateDebut(),
-                    $creneau->getJourSemaine(),
-                    $creneau->getHeureDebut(),
-                );
-
-                $partie->setDate($dateMatch);
-                $partie->setLieu($lieuMatch);
-                $partie->setIdEquipeRecoit($equipeHome);
-                $partie->setIdEquipeDeplace($equipeAway);
-                $partie->setJournee($journee);
-                $partie->setPoule($poule);
-
-                $this->em->persist($partie);
-            }
-        }
-        $this->em->flush();
-    }
-    private function generateMatchJourneePhaseFinale(Poule $poule ){
-        $lieuRepository = $this->em->getRepository(Lieu::class);
-        $equipes = $poule->getEquipes()->toArray();
-        $nbEquipes = count($equipes);
-        $journees = $poule->getJournees()->toArray();
-        usort($journees, fn($j1, $j2) => $j1->getNumero() <=> $j2->getNumero());
-
-        // 1. Calculer la structure
-        // puissance de 2 inférieure (ex: pour 12 c'est 8)
-        $p = pow(2, floor(log($nbEquipes, 2)));
-        $nbBarrages = $nbEquipes - $p;
-        $nbExemptes = $p - $nbBarrages;
-
-        $matchsParTour = [];
-
-        // 2. Création de tous les matchs "vides" par tour
-        foreach ($journees as $indexJournee => $journee) {
-            $tourMatchs = [];
-
-            // Déterminer combien de matchs dans ce tour
-            if ($indexJournee === 0 && $nbBarrages > 0) {
-                $nbMatchsAcreer = $nbBarrages; // Tour de barrages
-            } else {
-                // Pour les tours suivants, on divise par 2 à chaque fois
-                // Le premier tour complet a $p/2$ matchs (ex: 8 équipes -> 4 matchs)
-                $distanceFinale = count($journees) - 1 - $indexJournee;
-                $nbMatchsAcreer = pow(2, $distanceFinale);
-            }
-
-            for ($i = 0; $i < $nbMatchsAcreer; $i++) {
-                $match = new Partie();
-                $match->setJournee($journee);
-                $match->setPoule($poule);
-                $match->setNom($journee->getNom() . ' - Match ' . ($i + 1));
-
-
-
-
-                $this->em->persist($match);
-                $tourMatchs[] = $match;
-            }
-            $matchsParTour[$indexJournee] = $tourMatchs;
-        }
-
-// ... (Sections 1 et 2 inchangées) ...
-
-// 3 & 4. Liaison et Remplissage des équipes de départ
-        $equipeIndex = 0;
-        $tourCible = ($nbBarrages > 0) ? 1 : 0;
-        $matchsDuTourSuivant = $matchsParTour[$tourCible];
-
-// A. On place d'abord les EXEMPTÉS (Têtes de série)
-// On les répartit : d'abord tous les "Recoit", puis si on en a encore, les "Deplace"
-        foreach ($matchsDuTourSuivant as $match) {
-            if ($equipeIndex < $nbExemptes) {
-                $match->setIdEquipeRecoit($equipes[$equipeIndex++]);
-            }
-        }
-        foreach ($matchsDuTourSuivant as $match) {
-            if ($equipeIndex < $nbExemptes && $match->getIdEquipeDeplace() === null) {
-                $match->setIdEquipeDeplace($equipes[$equipeIndex++]);
-            }
-        }
-
-// B. On remplit les BARRAGES (Round 0) et on les lie aux places LIBRES du tour suivant
-        if ($nbBarrages > 0) {
-            $barrageIndex = 0;
-            $matchsBarrage = $matchsParTour[0];
-
-            // 1. Remplissage des matchs de barrage avec les équipes restantes
-            foreach ($matchsBarrage as $matchB) {
-                $matchB->setIdEquipeRecoit($equipes[$equipeIndex++]);
-                $matchB->setIdEquipeDeplace($equipes[$equipeIndex++]);
-            }
-
-            // 2. LIAISON : On lie chaque match de barrage à une place vide (null) dans le tour suivant
-            foreach ($matchsDuTourSuivant as $matchS) {
-                // Si le slot Recoit est vide, on y lie un barrage
-                if ($matchS->getIdEquipeRecoit() === null && $barrageIndex < $nbBarrages) {
-                    $matchS->setParentMatch1($matchsBarrage[$barrageIndex++]);
-                }
-                // Si le slot Deplace est vide, on y lie un barrage
-                if ($matchS->getIdEquipeDeplace() === null && $barrageIndex < $nbBarrages) {
-                    $matchS->setParentMatch2($matchsBarrage[$barrageIndex++]);
-                }
-            }
-        }
-
-// C. Liaison des tours suivants (Quarts vers Demis, Demis vers Finale)
-// On commence après le tour de barrage ou le premier tour
-        $startTour = $tourCible;
-        for ($t = $startTour; $t < count($matchsParTour) - 1; $t++) {
-            foreach ($matchsParTour[$t] as $indexMatch => $matchActuel) {
-                $prochainTour = $matchsParTour[$t + 1];
-                $targetMatch = $prochainTour[floor($indexMatch / 2)];
-
-                if ($indexMatch % 2 === 0) {
-                    $targetMatch->setParentMatch1($matchActuel);
-                } else {
-                    $targetMatch->setParentMatch2($matchActuel);
-                }
-            }
-        }
-
-        // 5. Remplissage deu lieu et de la date
-        foreach ($matchsParTour as $tourMatchs) {
-            /** @var Partie $match */
-            foreach ($tourMatchs as $match) {
-                //Soit on sait qui reçoit donc on peut fixer le lieu et calculer la date
-                if ($match->getIdEquipeRecoit() !== null) {
-                    $match->setLieu($match->getIdEquipeRecoit()->getLieu());
-                    $dateMatch = $this->calculerDateMatch(
-                        $match->getJournee()->getDateDebut(),
-                        $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getHeureDebut(),
-                    );
-                    $match->setDate($dateMatch);
-
-                }else{
-                    //On fixe la date au premier jour de la semaine à 20h
-
-
-                    $match->setLieu($lieuRepository->getLieuByDefaut());
-                    $dateMatch = $this->calculerDateMatch(
-                        $match->getJournee()->getDateDebut(),
-                        $match->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $match->getLieu()->getCreneaux()[0]->getHeureDebut(),
-                    );
-                    $match->setDate($dateMatch);
-
-                }
-
-            }
-        }
-
-        $this->em->flush();
-        return null;
-
-
-    }
     private function deleteMatches(Poule $poule): void
     {
         foreach ($poule->getJournees() as $journee) {
@@ -880,25 +627,6 @@ class PartieService
      */
     public function calculerDateMatch(DateTimeImmutable $dateDebut, string $jourFr, DateTimeInterface $heure): DateTimeImmutable
     {
-        $jourFr = strtolower(trim($jourFr));
-
-        if (!isset(self::JOURS_MAP[$jourFr])) {
-            throw new \InvalidArgumentException("Jour invalide : $jourFr");
-        }
-
-        $jourEn = self::JOURS_MAP[$jourFr];
-
-        // Si la date de début tombe déjà ce jour
-        if (strtolower($dateDebut->format('l')) === $jourEn) {
-            $dateMatch = $dateDebut;
-        } else {
-            $dateMatch = $dateDebut->modify("next $jourEn");
-        }
-
-        // Applique l'heure
-        return $dateMatch->setTime(
-            (int) $heure->format('H'),
-            (int) $heure->format('i')
-        );
+        return DateMatch::calculer($dateDebut, $jourFr, $heure);
     }
 }

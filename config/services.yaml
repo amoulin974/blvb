@@ -35,6 +35,10 @@ services:
     App\Competition\Sport\:
         resource: '../src/Competition/Sport/'
 
+    # Générateurs de calendrier, un par format de compétition (docs/wizard-saison/plan.md)
+    App\Competition\Format\:
+        resource: '../src/Competition/Format/'
+
     # --------------------------------------------------------
     # Contrôleurs
     App\Controller\:
