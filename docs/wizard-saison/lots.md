@@ -73,7 +73,9 @@ matchs individuels), qui changent le modèle lui-même (D13).
 
 ## Lot 3 : règles de passage en données 🟡
 - [x] Branche `formats-competition-lot3` ; décisions D20 à D27
-- [ ] Codes : `Phase.code`, `Poule.code` (D20), calcul automatique (création, migration)
+- [x] Codes : `Phase.code`, `Poule.code` (D20), uniques dans la saison / la phase ;
+      `App\Competition\CodesCompetition` (attribue les codes manquants, appelé à la création de saison) ;
+      migration `Version20261013120000` (même calcul pour les saisons existantes)
 - [ ] Entité `RegleDePassage` : phase source, ordre, source (notation des places), destination
       (poule d'une phase suivante, ou niveau de la saison suivante, D22), placement, points conservés
       (D23)

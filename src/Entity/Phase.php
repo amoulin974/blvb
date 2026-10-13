@@ -9,6 +9,7 @@ use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 use App\Enum\PhaseType;
 #[ORM\Entity(repositoryClass: PhaseRepository::class)]
+#[ORM\UniqueConstraint(name: 'phase_code_unique', columns: ['saison_id', 'code'])]
 class Phase
 {
     /** Valeur calculée pour la page de la saison (SaisonController::show), non enregistrée en base. */
@@ -21,6 +22,10 @@ class Phase
 
     #[ORM\Column(length: 255)]
     private ?string $nom = null;
+
+    /** Code de la phase dans sa saison (P1, P2, F…), utilisé par les règles de passage (App\Competition\CodesCompetition). */
+    #[ORM\Column(length: 20, nullable: true)]
+    private ?string $code = null;
 
     #[ORM\Column(type: Types::DATETIME_IMMUTABLE)]
     private ?\DateTimeImmutable  $datedebut = null;
@@ -185,6 +190,18 @@ class Phase
     public function setClose(int $close): static
     {
         $this->close = $close;
+
+        return $this;
+    }
+
+    public function getCode(): ?string
+    {
+        return $this->code;
+    }
+
+    public function setCode(?string $code): static
+    {
+        $this->code = $code;
 
         return $this;
     }

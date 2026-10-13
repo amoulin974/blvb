@@ -3,6 +3,7 @@
 
 namespace App\Service;
 
+use App\Competition\CodesCompetition;
 use App\Entity\Saison;
 use App\Entity\Phase;
 use App\Entity\Poule;
@@ -67,6 +68,9 @@ class CompetitionCreator
                 }
             }
         }
+
+        // Codes des phases et des poules, pour les règles de passage
+        CodesCompetition::attribuer($saison);
 
         // On sauvegarde toutes les entités créées
 

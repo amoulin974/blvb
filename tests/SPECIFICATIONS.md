@@ -429,6 +429,7 @@ Chantier décrit dans `docs/wizard-saison/` (méthode, décisions, plan, lots) ;
 **NOT-03 — Résolution en équipes** ✅ *`ResolveurPlaceTest`* (résultats en mémoire) : plage dans l'ordre du classement, vainqueur et perdant d'un barrage joué ; barrage non joué, poule ou match inconnus refusés ; règles de la proposition du bureau (`docs/formats-competition.md` F2) : chaque équipe des poules A et B a exactement une destination.
 **SPT-01 — Règles du volley** ✅ *`Sport/VolleyTest`* (ex-`RegleScoreTest`) : scores acceptés et refusés (§4.2 SCO-06), forfait encodé −1 / 3, points d'un match interrompu fixés quel que soit le barème, sets comptés pour le set-average (2–2 non compté, forfait : aucun set pour l'équipe forfait ni perdu par l'adversaire).
 **FMT-01 — Choix du format** ✅ *`Format/FormatsTest`* : phase de championnat → `Championnat`, optimisé ; phase finale → `Elimination`, hors optimiseur ; aucun générateur → aucun format.
+**COD-01 — Codes des phases et des poules** ✅ *`CodesCompetitionTest`* (lot 3, D20) : saison BLVB → `P1`, `P2`, `F`, poules `A` à `D` tirées des noms ; noms sans lettre finale → première lettre libre dans l'ordre des niveaux ; un code déjà saisi n'est jamais changé et les codes calculés évitent les codes pris ; plusieurs phases finales → `F`, `F2`. La migration `Version20261013120000` utilise le même calcul (vérifié sur une copie de la base de développement).
 
 ---
 
@@ -511,6 +512,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
 | **Formats de compétition, lot 1** ✅ | NOT-*, SPT-01, FMT-01 (§4.16) ; `RegleScoreTest` devenu `VolleyTest` ; génération des calendriers déplacée dans `App\Competition\Format` sans changement de comportement | 309 tests verts + 2 lents (branche `formats-competition-lot1`) | fait le 13/10/2026 |
 | **Formats de compétition, lot 2** ✅ | CLA-12 à CLA-16 (§4.3) : départage paramétrable par saison (quotient de sets, mini-classement), barème surchargeable par phase ; migration `Version20261013100000` | 319 tests verts + 2 lents (branche `formats-competition-lot2`) | fait le 13/10/2026 |
+| **Formats de compétition, lot 3** (en cours) | COD-01 (§4.16) : codes des phases et des poules | 323 tests verts + 2 lents (branche `formats-competition-lot3`) | en cours |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.
