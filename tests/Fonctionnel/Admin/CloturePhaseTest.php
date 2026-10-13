@@ -66,6 +66,13 @@ final class CloturePhaseTest extends TestFonctionnel
 
         $texte = $this->cloturer($this->phase('Phase 1'));
         self::assertStringContainsString('Équipes basculées avec succès', $texte);
+        // ADM-02 : alerte lisible (texte en couleur de base, .admin-alerte), état dit par une icône et un préfixe lu
+        // (message de succès, ou avertissement si un gymnase de la saison de test est surchargé)
+        $alerte = $this->client->getCrawler()->filter('.admin-alerte');
+        self::assertSame('status', $alerte->attr('role'));
+        $attendu = str_contains($alerte->attr('class'), 'alert-success') ? 'Succès : ' : 'Attention : ';
+        self::assertSame($attendu, $alerte->filter('.sr-only')->text(normalizeWhitespace: false), 'préfixe conforme à la couleur');
+        self::assertCount(1, $alerte->filter('svg'), 'icône');
 
         $em = self::getContainer()->get('doctrine')->getManager();
         $em->clear();
@@ -86,6 +93,9 @@ final class CloturePhaseTest extends TestFonctionnel
 
         $texte = $this->cloturer($this->phase('Phase 2'));
         self::assertStringContainsString('Il n’y a pas de phase suivante', $texte);
+        $alerte = $this->client->getCrawler()->filter('.admin-alerte');
+        self::assertSame('alert', $alerte->attr('role'), 'ADM-02 : une erreur est annoncée immédiatement');
+        self::assertSame('Erreur : ', $alerte->filter('.sr-only')->text(normalizeWhitespace: false));
 
         self::getContainer()->get('doctrine')->getManager()->clear();
         self::assertSame(0, $this->phase('Phase 2')->getClose());

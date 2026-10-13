@@ -283,7 +283,8 @@ final class UserController extends AbstractController
                 // . C'est pour cela que le rapport d'erreur est mis en session
                 if (empty($rapportErreurs)) {
                     // Tout est parfait, on redirige
-                    $this->addFlash('success', "Succès ! $countImported utilisateurs importés ($detailJoueurs).");
+                    // Pas de « Succès ! » : l'alerte l'annonce déjà (icône, préfixe lu par les lecteurs d'écran)
+                    $this->addFlash('success', sprintf('%d %s (%s).', $countImported, $countImported > 1 ? 'utilisateurs importés' : 'utilisateur importé', $detailJoueurs));
                     return $this->redirectToRoute('admin_user_index');
                 } else {
                     // Il y a eu des soucis, on ajoute un message d'avertissement
