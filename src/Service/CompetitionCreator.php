@@ -16,8 +16,8 @@ class CompetitionCreator
 
     /**
      * Crée et enregistre les phases et poules d'une saison à partir d'un modèle (App\Competition\Modele), par défaut
-     * le format BLVB actuel (ancien config/app/saison.yaml, D6). Utilisé par la création automatique à
-     * l'enregistrement d'une saison (SaisonListener) et par les jeux de données, en attendant le wizard.
+     * le format BLVB actuel (ancien config/app/saison.yaml, D6). Utilisé par les jeux de données ; dans l'admin, une
+     * saison se crée avec le wizard (SaisonWizardController).
      */
     public function creerPhasesEtPoules(Saison $saison, bool $isTest = false, ?ModeleSaison $modele = null): void
     {

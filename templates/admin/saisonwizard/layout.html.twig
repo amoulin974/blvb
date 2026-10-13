@@ -19,8 +19,8 @@
         <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Organisation</p>
         <ol class="steps w-full">
             {% for e in etapes %}
-                {% set classe = e.etat == 'à venir' ? 'step' : 'step step-primary' %}
-                <li class="{{ classe }}" data-content="{{ e.etat == 'faite' ? '✓' : e.numero }}" {% if e.etat == 'en cours' %}aria-current="step"{% endif %}>
+                {% set classe = e.etat == 'à venir' ? 'step' : (e.etat == 'à corriger' ? 'step step-warning' : 'step step-primary') %}
+                <li class="{{ classe }}" data-content="{{ e.etat == 'faite' ? '✓' : (e.etat == 'à corriger' ? '!' : e.numero) }}" {% if e.etat == 'en cours' %}aria-current="step"{% endif %}>
                     {% if e.accessible and e.etat != 'en cours' %}
                         <button type="submit" form="wizard-form" name="aller" value="{{ e.numero }}" class="max-md:sr-only hover:underline">{{ e.libelle }}<span class="sr-only"> ({{ e.etat }})</span></button>
                     {% else %}

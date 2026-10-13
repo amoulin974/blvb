@@ -15,7 +15,6 @@ use App\Entity\Poule;
 use App\Entity\Saison;
 use App\Entity\User;
 use App\Enum\PhaseType;
-use App\EventListener\SaisonListener;
 use App\Service\ClassementService;
 use App\Service\ClubImageService;
 use App\Service\JourneeService;
@@ -218,7 +217,6 @@ class ChargerBaseRecetteCommand extends Command
         // et des journées à venir dans les poules de 5 à 8 équipes (la poule D de 4 équipes est presque terminée)
         $debut = $maintenant->modify('monday this week')->modify('-2 weeks')->setTime(0, 0);
 
-        SaisonListener::$enabled = false; // les phases et poules sont créées ici, pas par l'écouteur
         $io->title(sprintf('Chargement de « %s » dans %s (scénario : %s)', self::SAISON, $base, $scenario));
 
         $io->section('Structure : gymnases, saisons, phases, poules, équipes');

@@ -151,10 +151,18 @@ class RegleDePassage
      */
     public function __toString(): string
     {
+        $texte = $this->enClair();
+
+        return $texte === '' ? sprintf('[%s]', $this->source) : sprintf('%s [%s]', $texte, $this->source);
+    }
+
+    /** La règle en clair, sans la notation (récapitulatif du wizard) ; vide si la notation est illisible. */
+    public function enClair(): string
+    {
         try {
             $place = NotationPlace::analyser($this->source);
         } catch (NotationInvalide) {
-            return sprintf('[%s]', $this->source);
+            return '';
         }
 
         $texte = $place->enClair();
@@ -174,7 +182,7 @@ class RegleDePassage
             $texte .= sprintf(' vers le niveau %d la saison prochaine', $this->niveauSaisonSuivante);
         }
 
-        return sprintf('%s [%s]', $texte, $this->source);
+        return $texte;
     }
 
     /** « la Poule A (Phase 1) », « « Tableau 1 » (Phase finale) » */

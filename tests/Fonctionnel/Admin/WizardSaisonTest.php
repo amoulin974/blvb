@@ -246,6 +246,49 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSelectorTextContains('body', 'Équipe forfait : indiquez un nombre de points');
     }
 
+    #[TestDox('WIZ-11 Étape 6 : saison du modèle prête (avertissement : nombres d\'équipes non indiqués), schéma, passages en clair ; « Valider la saison » la publie dans l\'admin')]
+    public function test_verification_et_validation(): void
+    {
+        [$id, $url] = $this->brouillonA(6);
+        $crawler = $this->client->request('GET', $url);
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'La saison est prête à être validée.');
+        self::assertSelectorTextContains('body', 'Nombre d\'équipes prévu non indiqué pour 12 poules');
+        self::assertSelectorTextContains('table caption', 'Lignes : niveaux');
+        self::assertSelectorTextContains('body', '1er et 2e de la Poule B (Phase 1) vers la Poule A (Phase 2)');
+
+        $this->client->submit($crawler->filter('button[value="valider"]')->form());
+        self::assertResponseRedirects('/admin/saison/'.$id);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'Prochaine étape : composer les poules de la Phase 1.');
+        $this->em()->clear();
+        $saison = $this->em()->find(Saison::class, $id);
+        self::assertFalse($saison->isBrouillon());
+        self::assertNull($saison->getEtapeWizard());
+    }
+
+    #[TestDox('WIZ-12 Étape 6 : une erreur (dates de phase incohérentes) bloque la validation, avec un lien « Corriger » et l\'étape signalée dans le stepper')]
+    public function test_validation_bloquee(): void
+    {
+        [$id, $url] = $this->brouillonA(6);
+        $phase2 = $this->em()->find(Saison::class, $id)->getPhases()->filter(fn ($p) => $p->getOrdre() === 1)->first();
+        $phase2->setDatefin($phase2->getDateDebut()->modify('-1 day'));
+        $this->em()->flush();
+
+        $crawler = $this->client->request('GET', $url);
+        self::assertSelectorTextContains('body', 'Phase 2 : la date de fin est avant la date de début.');
+        self::assertSame('true', $crawler->filter('button[value="valider"]')->attr('aria-disabled'));
+        self::assertSame('!', $crawler->filter('.steps li')->eq(2)->attr('data-content'), 'étape « Phases » à corriger');
+
+        $this->client->submit($crawler->filter('button[value="valider"]')->form());
+        self::assertResponseStatusCodeSame(422);
+        $this->em()->clear();
+        self::assertTrue($this->em()->find(Saison::class, $id)->isBrouillon(), 'toujours un brouillon');
+
+        $this->client->submit($this->client->getCrawler()->filter('button[value="3"]')->first()->form());
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/3');
+    }
+
     #[TestDox('WIZ-05 Garde-fous : une saison déjà créée n\'ouvre pas le wizard ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {

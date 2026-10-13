@@ -6,6 +6,7 @@ use App\Competition\Classement\CritereDepartage;
 use App\Competition\CodesCompetition;
 use App\Competition\CopieSaison;
 use App\Competition\EtapePassages;
+use App\Competition\VerificationSaison;
 use App\Competition\Modele\Modeles;
 use App\Competition\Sport\Sports;
 use App\Entity\Phase;
@@ -35,6 +36,10 @@ use Symfony\Contracts\Cache\CacheInterface;
 #[Route('/admin/saison', name: 'admin_saison_wizard_')]
 class SaisonWizardController extends AbstractController
 {
+    public function __construct(private Sports $sports)
+    {
+    }
+
     public const ETAPES = [1 => 'Départ', 2 => 'Saison', 3 => 'Phases', 4 => 'Passages', 5 => 'Classement', 6 => 'Vérification'];
 
     /** Étape 1 : copier une saison ou partir d'un modèle ; crée le brouillon. */
@@ -105,7 +110,10 @@ class SaisonWizardController extends AbstractController
             return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => max(2, (int) $saison->getEtapeWizard())]);
         }
 
-        $vue = ['saison' => $saison, 'etape' => $etape, 'etapes' => self::etapes($saison, $etape)];
+        // Vérification déjà atteinte : les étapes à corriger sont signalées dans le stepper
+        $verification = (int) $saison->getEtapeWizard() >= 6 ? VerificationSaison::verifier($saison) : null;
+        $aCorriger = array_values(array_unique(array_column($verification['erreurs'] ?? [], 'etape')));
+        $vue = ['saison' => $saison, 'etape' => $etape, 'etapes' => self::etapes($saison, $etape, $aCorriger)];
 
         if ($etape === 2) {
             $form = $this->createForm(SaisonWizardType::class, $saison);
@@ -135,6 +143,9 @@ class SaisonWizardController extends AbstractController
         if ($etape === 5) {
             return $this->etapeClassement($saison, $request, $em, $vue);
         }
+        if ($etape === 6) {
+            return $this->etapeVerification($saison, $request, $em, $cache, $vue);
+        }
 
         if ($request->isMethod('POST')) {
             if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
@@ -146,7 +157,7 @@ class SaisonWizardController extends AbstractController
             return $this->naviguer($request, $saison, $etape, $em);
         }
 
-        return $this->render('admin/saisonwizard/a_venir.html.twig', $vue);
+        return $this->render('admin/saisonwizard/depart_resume.html.twig', $vue);
     }
 
     /**
@@ -218,6 +229,53 @@ class SaisonWizardController extends AbstractController
         return $this->render('admin/saisonwizard/passages.html.twig', $vue + [
             'transitions' => EtapePassages::transitions($saison, $detail),
         ]);
+    }
+
+    /**
+     * Étape 6 : vérification, schéma de la saison, récapitulatif ; « Valider la saison » (aller = valider) n'aboutit
+     * que sans erreur : la saison cesse d'être un brouillon (D29).
+     */
+    private function etapeVerification(Saison $saison, Request $request, EntityManagerInterface $em, CacheInterface $cache, array $vue): Response
+    {
+        $verification = VerificationSaison::verifier($saison);
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 6]);
+            }
+            if ($request->getPayload()->getString('aller') !== 'valider') {
+                return $this->naviguer($request, $saison, 6, $em);
+            }
+            if ($verification['erreurs'] === []) {
+                $saison->setBrouillon(false)->setEtapeWizard(null);
+                $em->flush();
+                $cache->delete('saisons_all');
+                $premiere = self::phasesDansLOrdre($saison)[0] ?? null;
+                $this->addFlash('success', sprintf('Organisation de la saison %s enregistrée.%s', $saison->getNom(),
+                    $premiere ? sprintf(' Prochaine étape : composer les poules de la %s.', $premiere->getNom()) : ''));
+
+                return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+            }
+        }
+
+        $phases = self::phasesDansLOrdre($saison);
+        $transitions = [];
+        foreach ($phases as $i => $phase) {
+            if (isset($phases[$i + 1])) {
+                $transitions[] = ['phase' => $phase, 'suivante' => $phases[$i + 1], 'regles' => $phase->getReglesDePassage()->toArray()];
+            }
+        }
+
+        return $this->render('admin/saisonwizard/verification.html.twig', $vue + [
+            'verification' => $verification,
+            'schema' => VerificationSaison::schema($saison),
+            'phases' => $phases,
+            'transitions' => $transitions,
+            'libelles' => PhaseWizardType::LIBELLES,
+            'sport' => $this->sports->pourSaison($saison)->libelle(),
+        ], new Response(status: $request->isMethod('POST') ? 422 : 200));
     }
 
     /** Catégories du barème saisies (volley-ball) : clé enregistrée → [setter de la saison, libellé, aide]. */
@@ -465,7 +523,7 @@ class SaisonWizardController extends AbstractController
      *
      * @return list<array{numero: int, libelle: string, etat: string, accessible: bool}>
      */
-    private static function etapes(?Saison $saison, int $courante): array
+    private static function etapes(?Saison $saison, int $courante, array $aCorriger = []): array
     {
         $atteinte = max($courante, (int) $saison?->getEtapeWizard());
         $etapes = [];
@@ -473,7 +531,7 @@ class SaisonWizardController extends AbstractController
             $etapes[] = [
                 'numero' => $numero,
                 'libelle' => $libelle,
-                'etat' => $numero === $courante ? 'en cours' : ($numero <= $atteinte ? 'faite' : 'à venir'),
+                'etat' => $numero === $courante ? 'en cours' : (\in_array($numero, $aCorriger, true) ? 'à corriger' : ($numero <= $atteinte ? 'faite' : 'à venir')),
                 // L'étape 1 d'un brouillon n'est qu'un rappel (le point de départ est appliqué) ; pas de lien sans brouillon
                 'accessible' => $saison !== null && $numero <= $atteinte,
             ];

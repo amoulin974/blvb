@@ -326,7 +326,7 @@ final class EtapePassages
      *
      * @return list<array{poule: Poule, recues: ?int, prevues: ?int}>
      */
-    private static function effectifs(Phase $phase, Phase $suivante): array
+    public static function effectifs(Phase $phase, Phase $suivante): array
     {
         $recues = [];
         $inconnu = [];

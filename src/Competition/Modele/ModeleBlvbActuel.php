@@ -24,7 +24,8 @@ final class ModeleBlvbActuel implements ModeleSaison
     private const PHASES = [
         ['Phase 1', PhaseType::CHAMPIONNAT, '01/09/n', '01/02/n+1'],
         ['Phase 2', PhaseType::CHAMPIONNAT, '01/02/n+1', '01/06/n+1'],
-        ['Phase Finale', PhaseType::FINALE, '01/06/n+1', '01/08/n+1'],
+        // Fin au 31 juillet, comme la saison (l'ancien YAML disait 1er août, hors de la saison)
+        ['Phase Finale', PhaseType::FINALE, '01/06/n+1', '31/07/n+1'],
     ];
     private const POULES = ['Poule A' => 1, 'Poule B' => 2, 'Poule C' => 3, 'Poule D' => 4];
 
@@ -81,7 +82,7 @@ final class ModeleBlvbActuel implements ModeleSaison
         $annee = (int) $saison->getDateDebut()->format('Y');
         $date = str_replace(['n+1', 'n'], [(string) ($annee + 1), (string) $annee], $date);
 
-        return DateTimeImmutable::createFromFormat('d/m/Y', $date)
+        return DateTimeImmutable::createFromFormat('!d/m/Y', $date) // « ! » : à minuit, comme les dates de la saison
             ?: throw new \LogicException("Date de modèle invalide : $date");
     }
 }
