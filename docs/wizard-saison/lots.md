@@ -151,6 +151,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [ ] Avertissements des règles de passage affichés avant de cliquer sur « Clôturer » (ergonome,
       D28) : avec le wizard (lots 4-5)
 - [ ] Autres messages joints par « ; » (surcharges des gymnases, `optimiserTout`) : liste comme D28
+- [ ] Page d'une saison hors wizard : la recentrer sur le suivi (liste avec colonne « État » et bouton principal unique,\n      suppressions en masse masquées une fois la saison lancée, show renvoyant un brouillon vers le wizard,\n      « Créer la saison suivante ») : avis de l'ergonome et décisions à prendre dans decisions.md, PO1\n- [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)\n- [x] Avertissements des règles de passage avant « Clôturer » : fait (D37, PHA-10)
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;
