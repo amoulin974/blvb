@@ -273,7 +273,9 @@ class SaisonWizardController extends AbstractController
                 $this->addFlash('success', sprintf('Saison %s validée.%s', $saison->getNom(),
                     $premiere ? sprintf(' Prochaine étape : composer les poules de « %s ».', $premiere->getNom()) : ''));
 
-                return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+                return $premiere
+                    ? $this->redirectToRoute('admin_saison_miseenplace_poules', ['id' => $saison->getId()])
+                    : $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
             }
         }
 

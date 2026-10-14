@@ -11,7 +11,10 @@
         titre: saison.nom,
         sous_titre: saison.favori ? 'Saison affichée sur le site' : 'Saison non affichée sur le site',
         retour: {url: path('admin_saison_index'), label: 'Saisons'},
-        actions: [{url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'}],
+        actions: [
+            {url: path('admin_saison_miseenplace_poules', {id: saison.id}), label: 'Composer les poules', icone: 'crayon'},
+            {url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'},
+        ],
     }) }}
 
     <div class="space-y-4">

@@ -1,0 +1,175 @@
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{# Mise en place, étape « Poules » (docs/wizard-saison/ecrans-mise-en-place.md, §7). Variables : saison, phase, phases,
+   etat (CompositionPoules::etat). Chaque action est un envoi du formulaire unique qui enregistre et réaffiche l'étape. #}
+{% set nb_a_placer = etat.aPlacer|length %}
+{% block title %}Étape 7 sur 9 : Poules · {{ saison.nom }}{% endblock %}
+
+{% macro origine(o) %}
+    <span class="badge badge-outline h-auto py-0.5 text-xs">
+        {% if o.type == 'montee' %}{{ _self.fleche('fleche-haut') }}{% elseif o.type == 'descente' %}{{ _self.fleche('fleche-bas') }}{% endif %}
+        {{ o.texte }}
+    </span>
+{% endmacro %}
+{% macro fleche(nom) %}{% import 'admin/_icones.html.twig' as icone %}{{ icone.i(nom, 'size-3') }}{% endmacro %}
+
+{# Une ligne d'équipe, dans une poule (poule renseignée) ou dans « Équipes à placer » (poule nulle). #}
+{% macro ligne(l, poule, poules, verrouillee) %}
+    {% set e = l.equipe %}
+    <li class="flex flex-col gap-2 py-2 sm:flex-row sm:items-center sm:justify-between">
+        <div class="min-w-0">
+            <strong class="block break-words font-semibold uppercase">{{ e.nom }}</strong>
+            {{ _self.origine(l.origine) }}
+        </div>
+        {% if not verrouillee %}
+            <div class="flex w-full flex-wrap items-start gap-2 sm:w-auto">
+                <details class="w-full sm:w-auto">
+                    <summary class="btn btn-ghost btn-sm min-h-11" aria-label="{{ poule ? 'Déplacer : ' ~ e.nom : 'Placer : ' ~ e.nom }}">{{ poule ? 'Déplacer' : 'Placer' }}</summary>
+                    <div class="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+                        <select name="vers[{{ e.id }}]" class="select select-bordered w-full sm:w-auto" aria-label="{{ poule ? 'Vers la poule, pour ' ~ e.nom : 'Placer ' ~ e.nom ~ ' dans' }}">
+                            {% for p in poules %}{% if not poule or p.id != poule.id %}<option value="{{ p.id }}">{{ p.nom }}</option>{% endif %}{% endfor %}
+                        </select>
+                        <button type="submit" name="action" value="{{ poule ? 'deplacer' : 'placer' }}-{{ e.id }}" class="btn {{ poule ? 'btn-ghost' : 'btn-primary' }} btn-sm min-h-11" aria-label="Valider : {{ poule ? 'déplacer' : 'placer' }} {{ e.nom }}">Valider</button>
+                    </div>
+                </details>
+                {% if poule %}
+                    <button type="submit" name="action" value="retirer-{{ e.id }}" class="btn btn-ghost btn-sm min-h-11" aria-describedby="aide-retirer" aria-label="Retirer de la poule : {{ e.nom }} ({{ poule.nom }})">Retirer de la poule</button>
+                {% endif %}
+            </div>
+        {% endif %}
+    </li>
+{% endmacro %}
+
+{% block body %}
+    {% import _self as m %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Composer les poules : ' ~ saison.nom,
+        sous_titre: phase.nom ~ ' · chaque changement est enregistré tout de suite.',
+        retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom},
+    }) }}
+
+    <nav aria-label="Étapes de la saison" class="mb-6">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Mise en place</p>
+        <ol class="steps steps-wizard w-full">
+            <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 6}) }}"><span class="max-md:sr-only">Organisation</span><span class="sr-only"> (étapes 1 à 6, faites)</span></a></li>
+            <li class="step step-primary" data-content="7" aria-current="step"><span class="max-md:sr-only font-semibold">Poules</span></li>
+            <li class="step" data-content="8"><span class="max-md:sr-only">Journées</span><span class="sr-only"> (à venir)</span></li>
+            <li class="step" data-content="9"><span class="max-md:sr-only">Matchs</span><span class="sr-only"> (à venir)</span></li>
+        </ol>
+        <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape 7 sur 9 · Poules</p>
+    </nav>
+
+    {% if phases|length > 1 %}
+        <nav aria-label="Phase à composer" class="mb-4">
+            <ul class="flex flex-wrap gap-2">
+                {% for p in phases %}
+                    <li><a href="{{ path('admin_saison_miseenplace_poules', {id: saison.id, phase: p.id}) }}" class="btn btn-sm {{ p.id == phase.id ? 'btn-primary' : 'btn-ghost' }} min-h-11" {% if p.id == phase.id %}aria-current="page"{% endif %}>{{ p.nom }}{% if p.close %} <span class="sr-only">(clôturée)</span>{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+    {% endif %}
+
+    <div class="admin-carte">
+        <h2 id="titre-etape" class="mb-2" tabindex="-1">Poules de {{ phase.nom }}</h2>
+        <p class="mb-4">
+            {{ etat.placees }} équipe{{ etat.placees > 1 ? 's' : '' }} placée{{ etat.placees > 1 ? 's' : '' }}{% if etat.prevues is not null %} sur {{ etat.prevues }} prévue{{ etat.prevues > 1 ? 's' : '' }}{% endif %}.
+            {% if nb_a_placer > 0 %}{{ nb_a_placer }} équipe{{ nb_a_placer > 1 ? 's ne sont' : ' n\'est' }} dans aucune poule.{% endif %}
+        </p>
+
+        {% if etat.verrouillee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est lancée (matchs programmés ou clôturée) : sa composition ne se modifie plus ici.{% endblock %}{% endembed %}
+        {% endif %}
+
+        {% if etat.copie and not etat.verrouillee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Les équipes ont été placées d'après leur poule précédente (montées, descentes, même niveau). Vérifiez ce placement.{% endblock %}{% endembed %}
+        {% endif %}
+
+        {% if etat.problemes is not empty %}
+            {% embed 'admin/_alerte.html.twig' with {type: etat.bloquant ? 'error' : 'warning', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">À vérifier : {{ phase.nom }}</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for p in etat.problemes %}<li>{% if p.ancre %}<a class="underline" href="#{{ p.ancre }}">{{ p.texte }}</a>{% else %}{{ p.texte }}{% endif %}</li>{% endfor %}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+
+        {% if etat.poules|length > 4 %}
+            <table class="table-admin table-empilee mb-4">
+                <caption class="sr-only">Effectifs des poules de {{ phase.nom }}</caption>
+                <thead><tr><th scope="col">Poule</th><th scope="col">Niveau</th><th scope="col">Prévu</th><th scope="col">Réel</th><th scope="col">État</th></tr></thead>
+                <tbody>
+                    {% for p in etat.poules %}
+                        <tr>
+                            <th scope="row" data-label="Poule"><a class="underline" href="#poule-{{ p.poule.id }}">{{ p.poule.nom }}</a></th>
+                            <td data-label="Niveau">{{ p.poule.niveau }}</td>
+                            <td data-label="Prévu">{{ p.prevu ?? 'non indiqué' }}</td>
+                            <td data-label="Réel">{{ p.effectif }}</td>
+                            <td data-label="État">{% if p.effectif == 0 %}{{ icone.i('erreur', 'size-3.5') }} Vide{% elseif p.ecart %}{{ icone.i('alerte', 'size-3.5') }} Écart à vérifier{% elseif p.prevu is not null %}{{ icone.i('coche', 'size-3.5') }} Conforme{% else %}–{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <form id="wizard-form" method="post" data-controller="poules-pliables">
+            <input type="hidden" name="_token" value="{{ csrf_token('miseenplace' ~ saison.id) }}">
+            {% if not etat.verrouillee %}<p id="aide-retirer" class="mb-4 text-sm text-(--color-base-content)/80">« Retirer de la poule » : l'équipe revient dans « Équipes à placer ».</p>{% endif %}
+
+            {# Avant les poules dans le DOM : l'ordre de tabulation suit l'ordre visuel #}
+            {% if nb_a_placer > 0 %}
+                <section id="a-placer" class="mb-6 rounded-box border-2 border-(--color-primary) p-3 scroll-mt-20" aria-labelledby="titre-a-placer">
+                    <h3 id="titre-a-placer" class="font-display text-lg uppercase tracking-wide text-(--color-primary)">Équipes à placer ({{ nb_a_placer }})</h3>
+                    <p class="text-sm text-(--color-base-content)/80">Une équipe laissée ici ne jouera pas cette phase.</p>
+                    <ul class="divide-y divide-base-300">
+                        {% for l in etat.aPlacer %}{{ m.ligne(l, null, etat.poules|map(p => p.poule), etat.verrouillee) }}{% endfor %}
+                    </ul>
+                </section>
+            {% endif %}
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                {% for p in etat.poules %}
+                    {% set poule = p.poule %}
+                    <details id="poule-{{ poule.id }}" name="poules" data-poule class="group rounded-box border border-base-300 p-3 scroll-mt-20" {% if loop.first %}open{% endif %}>
+                        <summary class="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-2 gap-y-1">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ poule.nom }}</strong>
+                            <span class="text-sm text-(--color-base-content)/80">niveau {{ poule.niveau }}</span>
+                            <span class="badge badge-outline h-auto py-1 {{ p.ecart or p.effectif == 0 ? 'badge-ecart' : '' }}">
+                                {% if p.prevu is not null %}{{ p.effectif }} sur {{ p.prevu }} prévue{{ p.prevu > 1 ? 's' : '' }}{% else %}{{ p.effectif }} équipe{{ p.effectif > 1 ? 's' : '' }}{% endif %}
+                                {% if p.effectif == 0 %}{{ icone.i('erreur', 'size-3.5') }}<span class="sr-only">(vide)</span>{% elseif p.ecart %}{{ icone.i('alerte', 'size-3.5') }}<span class="sr-only">(écart)</span>{% elseif p.prevu is not null %}{{ icone.i('coche', 'size-3.5') }}<span class="sr-only">(conforme)</span>{% endif %}
+                            </span>
+                            <span class="ml-auto text-(--color-primary) lg:hidden">{{ icone.i('fleche-bas', 'size-5 transition-transform group-open:rotate-180') }}<span class="sr-only">Afficher ou masquer les équipes</span></span>
+                        </summary>
+                        {% if p.equipes is empty %}
+                            <p class="mt-2 text-sm">Aucune équipe dans cette poule.</p>
+                        {% else %}
+                            <ul class="mt-2 divide-y divide-base-300">
+                                {% for l in p.equipes %}{{ m.ligne(l, poule, etat.poules|map(q => q.poule), etat.verrouillee) }}{% endfor %}
+                            </ul>
+                        {% endif %}
+                        {% if not etat.verrouillee %}
+                            <div class="mt-3 flex flex-col gap-2 border-t border-base-300 pt-3 sm:flex-row sm:items-center">
+                                <label class="sr-only" for="ajout-{{ poule.id }}">Équipe à ajouter à la {{ poule.nom }}</label>
+                                <select id="ajout-{{ poule.id }}" name="ajout[{{ poule.id }}]" class="select select-bordered w-full sm:w-auto">
+                                    <option value="">Ajouter une équipe…</option>
+                                    {% if nb_a_placer > 0 %}<optgroup label="Équipes à placer">{% for l in etat.aPlacer %}<option value="{{ l.equipe.id }}">{{ l.equipe.nom }}</option>{% endfor %}</optgroup>{% endif %}
+                                    {% if etat.autres is not empty %}<optgroup label="Toutes les autres équipes">{% for e in etat.autres %}<option value="{{ e.id }}">{{ e.nom }}</option>{% endfor %}</optgroup>{% endif %}
+                                </select>
+                                <button type="submit" name="action" value="ajouter-{{ poule.id }}" class="btn btn-ghost btn-sm min-h-11" aria-label="Ajouter l'équipe choisie à {{ poule.nom }}">{{ icone.i('plus') }} Ajouter</button>
+                            </div>
+                        {% endif %}
+                    </details>
+                {% endfor %}
+            </div>
+
+            <p class="mt-4 text-sm">Une équipe manque ? <a class="underline" href="{{ path('admin_equipe_new') }}">Créez-la dans les équipes</a>, puis revenez ici : elle sera proposée dans « Ajouter une équipe ».</p>
+
+            {% if etat.raison %}<p id="raison-validation" class="mt-4 w-full text-sm lg:text-right">{{ etat.raison }}</p>{% endif %}
+            <div class="wizard-navigation mt-6 flex items-center gap-2">
+                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent</button>
+                <span class="flex-1 max-lg:hidden"></span>
+                <button type="submit" name="aller" value="terminer" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Terminer</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

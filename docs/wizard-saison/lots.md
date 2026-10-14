@@ -123,7 +123,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
 
 ## Lot 5 : wizard, mise en place 🟡
 - [x] Branche `formats-competition-lot5` ; décisions D35 à D37
-- [ ] Étape Poules : composition de la phase 1, pré-remplie d'après les montées et descentes (D36)
+- [x] Étape Poules : composition d'une phase (`CompositionPoules`, `SaisonMiseEnPlaceController`, gabarit
+      `miseenplace/poules.html.twig`), origine des équipes déduite de la poule précédente (le départ de la
+      copie n'est pas enregistré), pré-remplissage déjà fait à la copie (D36) ; wireframe relu (D38), écran
+      relu par l'ergonome, le webdesigner et la sécurité ; MEP-01 à MEP-08. « Terminer » renvoie à la saison
+      en attendant l'étape Journées
 - [ ] Étape Journées : création et calendrier des journées de la phase
 - [ ] Étape Matchs : génération et optimisation (services existants)
 - [ ] Enchaînement : après clôture, retour aux trois étapes de la phase suivante (D37) ;
