@@ -50,6 +50,40 @@ class PhaseService
     }
 
     /**
+     * Une phase se clôture si elle a au moins une poule, que chaque poule a ses journées (sans quoi son classement n'a
+     * pas de sens) et que les phases qui la précèdent sont clôturées.
+     */
+    public function estCloturable(Phase $phase): bool
+    {
+        if ($phase->getClose() || $phase->getPoules()->isEmpty()) {
+            return false;
+        }
+        foreach ($phase->getPoules() as $poule) {
+            if ($poule->getJournees()->isEmpty()) {
+                return false;
+            }
+        }
+        foreach ($phase->getSaison()->getPhases() as $autre) {
+            if ($autre !== $phase && $autre->getOrdre() < $phase->getOrdre() && !$autre->getClose()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    /**
+     * Problèmes que les règles de passage de la phase poseraient à la clôture (règles par défaut comprises), à afficher
+     * AVANT de cliquer sur « Clôturer » (D37). Ne modifie rien.
+     *
+     * @return list<string>
+     */
+    public function problemesAvantCloture(Phase $phase): array
+    {
+        return array_values(VerificationPassages::verifier($phase, $this->reglesDePassage($phase)));
+    }
+
+    /**
      * Clôture la phase : les équipes passent dans les poules de la phase suivante selon les règles de passage, puis la
      * phase est marquée close. Sans effet sur une phase déjà close ou sans phase suivante.
      *

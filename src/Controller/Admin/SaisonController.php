@@ -9,6 +9,7 @@ use App\Form\Wizard\SaisonWizardType;
 use Symfony\Component\Form\FormError;
 use App\Repository\SaisonRepository;
 use App\Repository\PouleRepository;
+use App\Service\PhaseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -130,12 +131,15 @@ final class SaisonController extends AbstractController
     //Affiche une saison
 
     #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository): Response
+    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository, PhaseService $phaseService): Response
     {
 
         // 1. Déterminer la poule à ouvrir (via paramètre d'URL si présent)
         $openPouleId = $request->query->get('openPoule');
         $pouleOuverte = $openPouleId ? $pouleRepository->find($openPouleId) : null;
+        if ($pouleOuverte !== null && $pouleOuverte->getPhase()->getSaison() !== $saison) {
+            $pouleOuverte = null; // poule d'une autre saison : ignorée
+        }
 
         // 2. Déterminer la phase à ouvrir
         // Si une poule est spécifiée, on ouvre sa phase parente
@@ -153,16 +157,20 @@ final class SaisonController extends AbstractController
         // ont déjà des journées (sinon leur classement n'a pas de sens et basculer les
         // équipes vers la phase suivante serait prématuré).
         foreach($saison->getPhases() as $phase){
-            $phase->cloturable = count($phase->getPoules()) > 0;
-            foreach($phase->getPoules() as $poule){
-                if ($poule->getJournees()->count()==0){
-                    $phase->cloturable=false;
-                    break;
-                }
+            $phase->cloturable = $phaseService->estCloturable($phase);
+        }
+
+        // Problèmes des règles de passage, montrés dans la fenêtre « Clôturer la phase » avant le clic (D37)
+        $avertissementsCloture = [];
+        foreach ($saison->getPhases() as $phase) {
+            if (!$phase->getClose() && $phase->cloturable) {
+                $avertissementsCloture[$phase->getId()] = $phaseService->problemesAvantCloture($phase);
             }
         }
+
         return $this->render('admin/saison/show.html.twig', [
             'saison' => $saison,
+            'avertissementsCloture' => $avertissementsCloture,
             'phaseOuverteId' => $phaseOuverteId,
             'pouleOuverteId' => $pouleOuverteId,
         ]);

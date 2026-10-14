@@ -110,7 +110,7 @@ final class MiseEnPlaceJourneesTest extends TestFonctionnel
         self::assertSame([1, 2, 3], $this->numeros($s['poules']['B']));
 
         $this->cliquer($s['url'], 'suivant');
-        self::assertResponseRedirects('/admin/saison/'.$s['saison']);
+        self::assertResponseRedirects('/admin/saison/'.$s['saison'].'/mise-en-place/matchs?phase='.$s['phase']);
     }
 
     #[TestDox('MEP-11 Régénérer les journées d\'une poule : les journées sont recréées, les matchs et scores de la poule supprimés, les équipes conservées')]

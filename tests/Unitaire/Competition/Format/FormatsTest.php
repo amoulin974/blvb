@@ -58,9 +58,11 @@ final class FormatsTest extends TestCase
 
         foreach ([0 => 0, 1 => 0, 2 => 1, 4 => 3, 8 => 7, 9 => 9] as $equipes => $attendu) {
             self::assertSame($attendu, $championnat->nombreJournees($poule($equipes)), "championnat à $equipes équipes");
+            self::assertSame(intdiv($equipes * ($equipes - 1), 2), $championnat->nombreMatchs($poule($equipes)), "matchs du championnat à $equipes équipes");
         }
         foreach ([0 => 0, 1 => 0, 2 => 1, 4 => 2, 8 => 3, 9 => 4, 12 => 4] as $equipes => $attendu) {
             self::assertSame($attendu, $elimination->nombreJournees($poule($equipes)), "élimination à $equipes équipes");
+            self::assertSame(max(0, $equipes - 1), $elimination->nombreMatchs($poule($equipes)), "matchs de l'élimination à $equipes équipes");
         }
     }
 

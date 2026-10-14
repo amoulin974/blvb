@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 use App\Competition\CompositionPoules;
 use App\Competition\MiseEnPlaceJournees;
+use App\Competition\MiseEnPlaceMatchs;
 use App\Entity\Phase;
 use App\Entity\Saison;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -20,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[Route('/admin/saison/{id}/mise-en-place', name: 'admin_saison_miseenplace_', requirements: ['id' => '\d+'])]
 class SaisonMiseEnPlaceController extends AbstractController
 {
-    public function __construct(private CompositionPoules $composition, private MiseEnPlaceJournees $journees)
+    public function __construct(private CompositionPoules $composition, private MiseEnPlaceJournees $journees, private MiseEnPlaceMatchs $matchs)
     {
     }
 
@@ -118,6 +119,52 @@ class SaisonMiseEnPlaceController extends AbstractController
         return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
     }
 
+    #[Route('/matchs', name: 'matchs', methods: ['GET', 'POST'])]
+    public function matchs(Saison $saison, Request $request): Response
+    {
+        if ($refus = $this->refuser($saison, 'créer les matchs')) {
+            return $refus;
+        }
+        $phase = $this->phase($saison, $request->query->getInt('phase'));
+        if ($phase === null) {
+            return $this->toutesCloturees($saison, 'de matchs à créer');
+        }
+        $adresse = fn (array $extra = []) => $this->generateUrl('admin_saison_miseenplace_matchs', ['id' => $saison->getId(), 'phase' => $phase->getId()] + $extra);
+
+        if ($request->isMethod('POST')) {
+            $payload = $request->getPayload();
+            if (!$this->isCsrfTokenValid('miseenplace'.$saison->getId(), $payload->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+
+                return $this->redirect($adresse());
+            }
+            $action = $payload->getString('action');
+            if ($action !== '') {
+                $resultat = $this->matchs->appliquer($phase, $action);
+                $this->addFlash($resultat['ok'] ? 'success' : 'error', $resultat['message']);
+                if ($resultat['avertissement'] !== null) {
+                    $this->addFlash('warning', $resultat['avertissement']);
+                }
+
+                return $this->redirect($adresse().($resultat['ancre'] ? '#'.$resultat['ancre'] : ''));
+            }
+
+            return match ($payload->getString('aller')) {
+                'quitter' => $this->quitter($saison, 'Matchs'),
+                'precedent' => $this->redirectToRoute('admin_saison_miseenplace_journees', ['id' => $saison->getId(), 'phase' => $phase->getId()]),
+                'terminer' => $this->terminerMatchs($saison, $phase, $adresse),
+                default => $this->redirect($adresse()),
+            };
+        }
+
+        return $this->render('admin/saisonwizard/miseenplace/matchs.html.twig', [
+            'saison' => $saison,
+            'phase' => $phase,
+            'phases' => CompositionPoules::phases($saison),
+            'etat' => $this->matchs->etat($phase),
+        ]);
+    }
+
     /** Une saison en brouillon n'a pas de mise en place : retour à son wizard. */
     private function refuser(Saison $saison, string $action): ?Response
     {
@@ -148,7 +195,6 @@ class SaisonMiseEnPlaceController extends AbstractController
         return $this->redirectToRoute('admin_saison_miseenplace_journees', ['id' => $saison->getId(), 'phase' => $phase->getId()]);
     }
 
-    /** L'étape Matchs n'existe pas encore : retour à la saison. */
     private function suivantJournees(Saison $saison, Phase $phase, callable $adresse): Response
     {
         $etat = $this->journees->etat($phase);
@@ -157,7 +203,20 @@ class SaisonMiseEnPlaceController extends AbstractController
 
             return $this->redirect($adresse());
         }
-        $this->addFlash('success', sprintf('Journées de « %s » prêtes. L\'étape Matchs n\'est pas encore disponible.', $phase->getNom()));
+
+        return $this->redirectToRoute('admin_saison_miseenplace_matchs', ['id' => $saison->getId(), 'phase' => $phase->getId()]);
+    }
+
+    /** Dernière étape : la phase est prête, retour à la saison. */
+    private function terminerMatchs(Saison $saison, Phase $phase, callable $adresse): Response
+    {
+        $etat = $this->matchs->etat($phase);
+        if ($etat['bloquant']) {
+            $this->addFlash('error', (string) $etat['raison']);
+
+            return $this->redirect($adresse());
+        }
+        $this->addFlash('success', sprintf('Mise en place terminée pour %s : poules, journées et matchs sont en place.', $phase->getNom()));
 
         return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
     }

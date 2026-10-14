@@ -28,7 +28,7 @@
             <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 6}) }}"><span class="max-md:sr-only">Organisation</span><span class="sr-only"> (étapes 1 à 6, faites)</span></a></li>
             <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_miseenplace_poules', {id: saison.id, phase: phase.id}) }}"><span class="max-md:sr-only">Poules</span><span class="sr-only"> (étape 7, faite)</span></a></li>
             <li class="step step-primary" data-content="8" aria-current="step"><span class="max-md:sr-only font-semibold">Journées</span></li>
-            <li class="step" data-content="9"><span class="max-md:sr-only">Matchs</span><span class="sr-only"> (à venir)</span></li>
+            <li class="step" data-content="9"><span class="max-md:sr-only">Matchs</span><span class="sr-only"> (étape suivante)</span></li>
         </ol>
         <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape 8 sur 9 · Journées</p>
     </nav>
@@ -142,11 +142,12 @@
                         {% if not etat.verrouillee %}
                             <div class="mt-3 flex flex-col gap-2 border-t border-base-300 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
                                 {% if p.statut == 'aucune' %}
-                                    <button type="submit" name="action" value="generer-{{ poule.id }}" class="btn btn-primary btn-sm min-h-11 w-full sm:w-auto" aria-label="Générer les journées de {{ poule.nom }}">Générer les journées</button>
+                                    <button type="submit" name="action" value="generer-{{ poule.id }}" class="btn btn-primary btn-sm min-h-11 w-full sm:w-auto">Générer les journées<span class="sr-only"> de {{ poule.nom }}</span></button>
                                 {% elseif not vide %}
                                     <a class="btn btn-ghost btn-sm min-h-11 w-full sm:w-auto" href="{{ path('admin_journee_getjourneecalendar', {id: poule.id}) }}">{{ icone.i('calendrier') }} Ajuster dans le calendrier<span class="sr-only"> de {{ poule.nom }}</span></a>
                                     {{ include('admin/_confirmation.html.twig', {
                                         declencheur: 'Régénérer les journées',
+                                        declencheur_sr: 'de ' ~ poule.nom,
                                         declencheur_classe: 'btn btn-ghost btn-sm min-h-11 w-full sm:w-auto',
                                         declencheur_icone: false,
                                         titre: 'Régénérer les journées de ' ~ poule.nom ~ ' ?',

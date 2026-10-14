@@ -130,7 +130,7 @@
     </div>
 </div>
 {# Fenêtre de confirmation partagée : remplie par confirmation_controller.js depuis les boutons admin/_confirmation.html.twig #}
-<dialog class="modal" data-confirmation-target="dialogue" aria-labelledby="confirmation-titre">
+<dialog class="modal" data-confirmation-target="dialogue" data-action="cancel->confirmation#echap" aria-labelledby="confirmation-titre">
     <div class="modal-box max-w-lg">
         <h3 id="confirmation-titre" class="flex items-start gap-2 text-xl">
             <span class="mt-0.5 text-error"><span data-confirmation-target="iconeAlerte">{{ icone.i('alerte', 'size-6') }}</span><span data-confirmation-target="iconeBlocage" class="hidden">{{ icone.i('cadenas', 'size-6') }}</span></span>
@@ -139,9 +139,10 @@
         <ul class="mt-4 list-disc pl-5 space-y-1" data-confirmation-target="consequences"></ul>
         <p class="mt-4 hidden" data-confirmation-target="blocage"></p>
         <p class="mt-4 font-semibold" data-confirmation-target="definitive">Cette action est définitive.</p>
+        <p class="mt-4 hidden" role="status" data-confirmation-target="statut"></p>
         <div class="modal-action">
             <form method="dialog"><button class="btn btn-ghost" data-confirmation-target="annuler">Annuler</button></form>
-            <form method="post" data-confirmation-target="formulaire">
+            <form method="post" data-confirmation-target="formulaire" data-action="submit->confirmation#envoyer">
                 <input type="hidden" name="_token" data-confirmation-target="token">
                 <span data-confirmation-target="champs"></span>
                 <button type="submit" class="btn btn-error" data-confirmation-target="bouton">Supprimer définitivement</button>

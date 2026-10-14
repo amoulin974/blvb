@@ -46,7 +46,7 @@ final class CloturePhaseTest extends TestFonctionnel
     {
         $jeton ??= $this->jeton($phase);
         $this->client->request('POST', '/admin/phase/'.$phase->getId().'/cloturer', ['_token' => $jeton]);
-        self::assertResponseRedirects('/admin/saison/'.ChampionnatDeTest::get('saison')->getId());
+        self::assertResponseRedirects();
 
         return $this->client->followRedirect()->filter('body')->text();
     }
@@ -60,20 +60,21 @@ final class CloturePhaseTest extends TestFonctionnel
         return $phase2;
     }
 
-    #[TestDox('PHA-03 Après clôture : phase close, équipes réparties, journées et matchs de la phase suivante créés')]
+    #[TestDox('PHA-03 Après clôture : phase close, équipes réparties, retour à l\'étape Poules de la phase suivante ; ni journées ni matchs créés (D40)')]
     public function test_cloture(): void
     {
         $phase2 = $this->preparerPhase2();
         $this->connecter('admin');
 
         $texte = $this->cloturer($this->phase('Phase 1'));
-        self::assertStringContainsString('Phase clôturée : les équipes ont été réparties dans la phase suivante.', $texte);
+        self::assertStringContainsString('Phase clôturée : les équipes ont été réparties dans « Phase 2 ». Vérifiez les poules, puis créez les journées et les matchs.', $texte);
+        self::assertStringContainsString('/mise-en-place/poules', $this->client->getRequest()->getUri(), 'retour à la mise en place de la phase suivante');
         self::assertStringNotContainsString('n\'ont peut-être pas été réparties', $texte, 'règles par défaut complètes : aucun avertissement');
         // ADM-02 : alerte lisible (texte en couleur de base, .admin-alerte), état dit par une icône et un préfixe lu
-        // (message de succès, ou avertissement si un gymnase de la saison de test est surchargé)
-        $alerte = $this->client->getCrawler()->filter('.admin-alerte');
+        // (message de succès)
+        $alerte = $this->client->getCrawler()->filter('.admin-alerte')->first();
         self::assertSame('status', $alerte->attr('role'));
-        $attendu = str_contains($alerte->attr('class'), 'alert-success') ? 'Succès : ' : 'Attention : ';
+        $attendu = 'Succès : ';
         self::assertSame($attendu, $alerte->filter('.sr-only')->text(normalizeWhitespace: false), 'préfixe conforme à la couleur');
         self::assertCount(1, $alerte->filter('svg'), 'icône');
 
@@ -84,8 +85,8 @@ final class CloturePhaseTest extends TestFonctionnel
         $nbEquipes = array_sum(array_map(fn ($p) => $p->getEquipes()->count(), $phase2->getPoules()->toArray()));
         self::assertSame(7, $nbEquipes, 'les 7 équipes de la phase 1 sont réparties');
         foreach ($phase2->getPoules() as $poule) {
-            self::assertNotSame(0, $em->getRepository(Journee::class)->count(['poule' => $poule]), $poule->getNom().' : journées');
-            self::assertNotSame(0, $em->getRepository(Partie::class)->count(['poule' => $poule]), $poule->getNom().' : matchs');
+            self::assertSame(0, $em->getRepository(Journee::class)->count(['poule' => $poule]), $poule->getNom().' : pas de journées créées');
+            self::assertSame(0, $em->getRepository(Partie::class)->count(['poule' => $poule]), $poule->getNom().' : pas de matchs créés');
         }
     }
 
@@ -104,14 +105,53 @@ final class CloturePhaseTest extends TestFonctionnel
         $this->cloturer($this->phase('Phase 1'));
         $alerte = $this->client->getCrawler()->filter('.alert-warning');
 
-        self::assertStringContainsString('Phase clôturée, mais certaines équipes n\'ont peut-être pas été réparties comme prévu.', $alerte->text());
+        self::assertStringContainsString('Phase clôturée, mais certaines équipes n\'ont peut-être pas été réparties comme prévu dans « Phase 2 ».', $alerte->text());
         self::assertSame([
             'Équipes sans poule dans la phase suivante : EQUIPE B1 (CTA), EQUIPE B2, EQUIPE B3.',
             'Poule B : aucune poule prévue pour les 1er, 2e et 3e dans la phase suivante.',
         ], $alerte->filter('li')->each(fn ($li) => $li->text()));
-        self::assertStringContainsString('Pour corriger : ajoutez ou déplacez les équipes avec « Modifier la poule »', $alerte->text());
+        self::assertStringContainsString('Pour corriger : placez les équipes depuis cet écran', $alerte->text());
         $em->clear();
         self::assertSame(1, $this->phase('Phase 1')->getClose(), 'phase close malgré tout');
+    }
+
+    #[TestDox('PHA-10 Règles de passage incomplètes : les problèmes sont listés dans la fenêtre « Clôturer la phase », avant le clic (D37) ; rien n\'est modifié')]
+    public function test_avertissements_avant_cloture(): void
+    {
+        $this->preparerPhase2();
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $phase1 = $this->phase('Phase 1');
+        $haute = $em->getRepository(Poule::class)->findOneBy(['nom' => 'Poule haute']);
+        $phase1->addRegleDePassage((new RegleDePassage())->setOrdre(1)->setSource('P1.A#1..-1')->setPouleDestination($haute));
+        $em->flush();
+        $this->connecter('admin');
+
+        $crawler = $this->client->request('GET', '/admin/saison/'.ChampionnatDeTest::get('saison')->getId());
+        $bouton = $crawler->filter('[data-confirmation-action-param$="/admin/phase/'.$phase1->getId().'/cloturer"]');
+        $consequences = json_decode($bouton->attr('data-confirmation-consequences-param'), true);
+
+        self::assertContains('À vérifier avant de clôturer : Poule B : aucune poule prévue pour les 1er, 2e et 3e dans la phase suivante.', $consequences);
+        $em->clear();
+        self::assertSame(0, (int) $this->phase('Phase 1')->getClose(), 'la phase n\'est pas clôturée');
+    }
+
+    #[TestDox('PHA-11 Clôture refusée côté serveur : une poule sans journées empêche la clôture, même avec un jeton valide ; rien n\'est modifié')]
+    public function test_cloture_refusee_sans_journees(): void
+    {
+        $phase2 = $this->preparerPhase2();
+        $phase1 = $this->phase('Phase 1');
+        $jeton = $this->jeton($phase1);
+        PouleFactory::createOne(['phase' => $phase1, 'nom' => 'Poule sans journées', 'niveau' => 9]);
+        $this->connecter('admin');
+
+        $texte = $this->cloturer($phase1, $jeton);
+
+        self::assertStringContainsString('ne peut pas être clôturée', $texte);
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $em->clear();
+        self::assertSame(0, (int) $this->phase('Phase 1')->getClose());
+        $phase2 = $em->find(Phase::class, $phase2->getId());
+        self::assertSame(0, array_sum(array_map(fn ($p) => $p->getEquipes()->count(), $phase2->getPoules()->toArray())), 'aucune équipe déplacée');
     }
 
     #[TestDox('PHA-04 Dernière phase de la saison : message d\'erreur, la phase n\'est pas clôturée')]
@@ -121,7 +161,7 @@ final class CloturePhaseTest extends TestFonctionnel
 
         $texte = $this->cloturer($this->phase('Phase 2'));
         self::assertStringContainsString('Il n’y a pas de phase suivante', $texte);
-        $alerte = $this->client->getCrawler()->filter('.admin-alerte');
+        $alerte = $this->client->getCrawler()->filter('.admin-alerte')->first();
         self::assertSame('alert', $alerte->attr('role'), 'ADM-02 : une erreur est annoncée immédiatement');
         self::assertSame('Erreur : ', $alerte->filter('.sr-only')->text(normalizeWhitespace: false));
 

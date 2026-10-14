@@ -45,6 +45,9 @@ services:
     # Journées d'une phase, étape « Journées » de la mise en place (D35 à D39)
     App\Competition\MiseEnPlaceJournees: ~
 
+    # Matchs d'une phase, étape « Matchs » de la mise en place (D35 à D40)
+    App\Competition\MiseEnPlaceMatchs: ~
+
     # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
     App\Competition\Modele\:
         resource: '../src/Competition/Modele/'

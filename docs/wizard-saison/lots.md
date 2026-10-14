@@ -132,9 +132,12 @@ matchs individuels), qui changent le modèle lui-même (D13).
       verrou de phase (`MiseEnPlaceJournees`, `Semaines`, `GenerateurFormat::nombreJournees`) ; wireframe relu
       (D39), écran relu par l'ergonome, le webdesigner et la sécurité ; MEP-09 à MEP-14. « Suivant : Matchs »
       renvoie à la saison en attendant l'étape Matchs
-- [ ] Étape Matchs : génération et optimisation (services existants)
-- [ ] Enchaînement : après clôture, retour aux trois étapes de la phase suivante (D37) ;
-      avertissements des règles de passage avant « Clôturer »
+- [x] Étape Matchs : bilan recalculé à l'affichage, génération de la phase (optimiseur) ou d'une poule, régénération
+      confirmée avec attente annoncée, transaction, verrou de phase (aussi sur l'ancienne page « Optimiser »),
+      équipes sans gymnase ; wireframe relu (D40) ; MEP-16 à MEP-20
+- [x] Enchaînement : la clôture renvoie à l'étape Poules de la phase suivante et ne crée plus journées ni matchs
+      (D37, D40) ; avertissements des règles de passage dans la fenêtre « Clôturer » ; conditions de clôture
+      vérifiées côté serveur (PHA-10, PHA-11)
 - [ ] Reportés du lot 4 : carte « Point de départ » du récapitulatif, « Brouillon enregistré à 14 h 32 »,
       écarts d'effectif dans le schéma, aide courte des critères de départage, liens de l'alerte d'erreur
       de l'étape 3 vers les champs

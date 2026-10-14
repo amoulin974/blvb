@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 
+use App\Competition\MiseEnPlaceJournees;
 use App\Entity\Equipe;
 use App\Entity\Journee;
 use App\Entity\Partie;
@@ -141,10 +142,12 @@ final class PartieController extends AbstractController
 
     //Supprime et recrée les matchs d'une poule, utilisé depuis la page d'optimisation
     #[Route('/{id}/optimiser', name: 'optimiser', methods: ['POST'])]
-    public function optimiser(Request $request, Poule $poule, PartieService $partieService): Response
+    public function optimiser(Request $request, Poule $poule, PartieService $partieService, MiseEnPlaceJournees $verrou): Response
     {
         if (!($this->isCsrfTokenValid('optimiser'.$poule->getId(), $request->getPayload()->getString('_token')))) {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } elseif ($verrou->verrouillee($poule->getPhase())) {
+            $this->addFlash('error', 'Cette phase est lancée (scores saisis ou clôturée) : ses matchs ne peuvent plus être refaits. Rien n\'a été modifié.');
         } else {
             $resultat = $partieService->creerCalendrierOptimisePourPoule($poule);
 

@@ -31,6 +31,13 @@ final class Championnat implements GenerateurFormat
         return true;
     }
 
+    public function nombreMatchs(Poule $poule): int
+    {
+        $n = count($poule->getEquipes());
+
+        return $n < 2 ? 0 : intdiv($n * ($n - 1), 2);
+    }
+
     public function nombreJournees(Poule $poule): int
     {
         $n = count($poule->getEquipes());

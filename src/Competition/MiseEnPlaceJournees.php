@@ -32,7 +32,7 @@ final class MiseEnPlaceJournees
         if ($phase->getClose()) {
             return true;
         }
-        $classements = $this->em->createQuery('SELECT COUNT(c.id) FROM App\Entity\Classement c JOIN c.poule po WHERE po.phase = :phase')
+        $classements = $this->em->createQuery('SELECT COUNT(c.id) FROM App\Entity\Classement c JOIN c.poule po WHERE po.phase = :phase AND (c.points <> 0 OR c.setGagnes > 0 OR c.setPerdus > 0)')
             ->setParameter('phase', $phase)->getSingleScalarResult();
         $scores = $this->em->createQuery('SELECT COUNT(p.id) FROM App\Entity\Partie p JOIN p.poule po WHERE po.phase = :phase AND p.nb_set_gagnant_reception IS NOT NULL')
             ->setParameter('phase', $phase)->getSingleScalarResult();

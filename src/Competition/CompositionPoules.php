@@ -52,7 +52,7 @@ final class CompositionPoules
         }
         $parties = $this->em->createQuery('SELECT COUNT(p.id) FROM App\Entity\Partie p JOIN p.poule po WHERE po.phase = :phase')
             ->setParameter('phase', $phase)->getSingleScalarResult();
-        $classements = $this->em->createQuery('SELECT COUNT(c.id) FROM App\Entity\Classement c JOIN c.poule po WHERE po.phase = :phase')
+        $classements = $this->em->createQuery('SELECT COUNT(c.id) FROM App\Entity\Classement c JOIN c.poule po WHERE po.phase = :phase AND (c.points <> 0 OR c.setGagnes > 0 OR c.setPerdus > 0)')
             ->setParameter('phase', $phase)->getSingleScalarResult();
 
         return $parties > 0 || $classements > 0;

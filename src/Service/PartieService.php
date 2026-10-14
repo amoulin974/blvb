@@ -612,12 +612,9 @@ class PartieService
 
     private function deleteMatches(Poule $poule): void
     {
-        foreach ($poule->getJournees() as $journee) {
-            //On supprime les matchs de cette journée
-            $oldParties = $journee->getParties();
-            foreach ($oldParties as $partie) {
-                $this->em->remove($partie);
-            }
+        // Tous les matchs de la poule, y compris ceux qui ne seraient rattachés à aucune journée
+        foreach ($poule->getParties()->toArray() as $partie) {
+            $this->em->remove($partie);
         }
         $this->em->flush();
     }

@@ -42,8 +42,8 @@
                                 consequences: [
                                     'Le classement final de chaque poule est figé et la phase est marquée « Clôturée ».',
                                     'Les équipes sont réparties dans les poules de la phase suivante selon leur classement (montées et descentes).',
-                                    'Les journées et les matchs de la phase suivante sont générés automatiquement.',
-                                ],
+                                    'Vous composez ensuite les poules, les journées et les matchs de la phase suivante depuis la mise en place.',
+                                ]|merge((avertissementsCloture[phase.id]|default([]))|map(p => 'À vérifier avant de clôturer : ' ~ p)),
                                 bouton: 'Clôturer la phase',
                                 ton: 'warning',
                                 action: path('admin_phase_cloturer', {id: phase.id}),
