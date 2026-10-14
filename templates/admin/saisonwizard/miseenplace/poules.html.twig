@@ -165,10 +165,14 @@
             <p class="mt-4 text-sm">Une équipe manque ? <a class="underline" href="{{ path('admin_equipe_new') }}">Créez-la dans les équipes</a>, puis revenez ici : elle sera proposée dans « Ajouter une équipe ».</p>
 
             {% if etat.raison %}<p id="raison-validation" class="mt-4 w-full text-sm lg:text-right">{{ etat.raison }}</p>{% endif %}
-            <div class="wizard-navigation mt-6 flex items-center gap-2">
-                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent</button>
+            <div class="mt-6 flex justify-end gap-2 lg:hidden">
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>
+            </div>
+            <div class="wizard-navigation mt-2 lg:mt-6 flex items-center gap-2">
+                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent<span class="max-sm:hidden"> : Organisation</span></button>
                 <span class="flex-1 max-lg:hidden"></span>
-                <button type="submit" name="aller" value="suivant" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Suivant : Journées</button>
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost max-lg:hidden">Enregistrer et quitter</button>
+                <button type="submit" name="aller" value="suivant" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Suivant<span class="max-sm:hidden"> : Journées</span> {{ icone.i('fleche-droite') }}</button>
             </div>
         </form>
     </div>

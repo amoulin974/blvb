@@ -171,10 +171,14 @@
             </div>
 
             {% if etat.raison %}<p id="raison-validation" class="mt-4 w-full text-sm lg:text-right">{{ etat.raison }}</p>{% endif %}
-            <div class="wizard-navigation mt-6 flex flex-wrap items-center gap-2">
-                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent : Poules</button>
+            <div class="mt-6 flex justify-end gap-2 lg:hidden">
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>
+            </div>
+            <div class="wizard-navigation mt-2 lg:mt-6 flex items-center gap-2">
+                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent<span class="max-sm:hidden"> : Poules</span></button>
                 <span class="flex-1 max-lg:hidden"></span>
-                <button type="submit" name="aller" value="suivant" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Suivant : Matchs</button>
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost max-lg:hidden">Enregistrer et quitter</button>
+                <button type="submit" name="aller" value="suivant" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Suivant<span class="max-sm:hidden"> : Matchs</span> {{ icone.i('fleche-droite') }}</button>
             </div>
         </form>
     </div>

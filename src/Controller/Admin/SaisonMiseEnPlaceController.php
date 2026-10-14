@@ -52,6 +52,7 @@ class SaisonMiseEnPlaceController extends AbstractController
             }
 
             return match ($payload->getString('aller')) {
+                'quitter' => $this->quitter($saison, 'Poules'),
                 'precedent' => $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 6]),
                 'suivant' => $this->suivantPoules($saison, $phase, $adresse),
                 default => $this->redirect($adresse()),
@@ -94,6 +95,7 @@ class SaisonMiseEnPlaceController extends AbstractController
             }
 
             return match ($payload->getString('aller')) {
+                'quitter' => $this->quitter($saison, 'Journées'),
                 'precedent' => $this->redirectToRoute('admin_saison_miseenplace_poules', ['id' => $saison->getId(), 'phase' => $phase->getId()]),
                 'suivant' => $this->suivantJournees($saison, $phase, $adresse),
                 default => $this->redirect($adresse()),
@@ -106,6 +108,14 @@ class SaisonMiseEnPlaceController extends AbstractController
             'phases' => CompositionPoules::phases($saison),
             'etat' => $this->journees->etat($phase),
         ]);
+    }
+
+    /** Chaque action est déjà enregistrée : « Enregistrer et quitter » ne fait que revenir à la saison. */
+    private function quitter(Saison $saison, string $etape): Response
+    {
+        $this->addFlash('success', sprintf('Étape %s enregistrée. Reprenez la mise en place depuis la page de la saison.', $etape));
+
+        return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
     }
 
     /** Une saison en brouillon n'a pas de mise en place : retour à son wizard. */

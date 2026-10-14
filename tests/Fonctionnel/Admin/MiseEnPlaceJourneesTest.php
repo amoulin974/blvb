@@ -200,6 +200,20 @@ final class MiseEnPlaceJourneesTest extends TestFonctionnel
         self::assertSelectorTextNotContains('body', 'tombe pendant la fermeture');
     }
 
+    #[TestDox('MEP-15 « Enregistrer et quitter » sur les étapes Poules et Journées : retour à la saison avec message, rien d\'autre n\'est modifié')]
+    public function test_enregistrer_et_quitter(): void
+    {
+        $s = $this->saison();
+        $this->connecter('admin');
+        foreach (['poules' => 'Étape Poules enregistrée', 'journees' => 'Étape Journées enregistrée'] as $etape => $message) {
+            $this->cliquer('/admin/saison/'.$s['saison'].'/mise-en-place/'.$etape, 'quitter');
+            self::assertResponseRedirects('/admin/saison/'.$s['saison']);
+            $this->client->followRedirect();
+            self::assertSelectorTextContains('.admin-alerte', $message);
+        }
+        self::assertSame([], $this->numeros($s['poules']['A']));
+    }
+
     #[TestDox('MEP-14 Sécurité et verrou : jeton absent, poule d\'une autre phase, action inconnue, brouillon, phase avec scores saisis, non-administrateur')]
     public function test_securite(): void
     {
