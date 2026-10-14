@@ -134,7 +134,8 @@ matchs individuels), qui changent le modèle lui-même (D13).
       renvoie à la saison en attendant l'étape Matchs
 - [x] Étape Matchs : bilan recalculé à l'affichage, génération de la phase (optimiseur) ou d'une poule, régénération
       confirmée avec attente annoncée, transaction, verrou de phase (aussi sur l'ancienne page « Optimiser »),
-      équipes sans gymnase ; wireframe relu (D40) ; MEP-16 à MEP-20
+      équipes sans gymnase ; wireframe relu (D40) ; MEP-16 à MEP-20 ; replacement des matchs à venir
+      (phase ou poule, matchs joués conservés, case de confirmation) et régénération poule par poule (D41) ; MEP-21, MEP-22
 - [x] Enchaînement : la clôture renvoie à l'étape Poules de la phase suivante et ne crée plus journées ni matchs
       (D37, D40) ; avertissements des règles de passage dans la fenêtre « Clôturer » ; conditions de clôture
       vérifiées côté serveur (PHA-10, PHA-11)

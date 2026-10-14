@@ -6,7 +6,37 @@
    l'étape ; la génération passe par la fenêtre de confirmation partagée (qui annonce l'attente du calcul). #}
 {% block title %}Étape 9 sur 9 : Matchs · {{ saison.nom }}{% endblock %}
 
+{# « Replacer les matchs à venir » : ne touche pas aux matchs joués. La case est lue côté serveur (confirme-{cible}) ;
+   le bloc reste ouvert après un refus (ouvert). cadre : bordure propre (hors carte de poule, déjà cadrée). #}
+{% macro replacer(cible, nom, aVenir, joues, passes, ouvert, cadre) %}
+    {% import 'admin/_icones.html.twig' as icone %}
+    {% if aVenir == 0 %}
+        <p class="text-sm text-(--color-base-content)/80">Aucun match à venir à replacer.</p>
+    {% else %}
+        <details class="w-full sm:w-auto open:sm:w-full {{ cadre ? 'rounded-box border border-base-300 p-3' : '' }}" {% if ouvert %}open{% endif %}>
+            <summary class="btn btn-ghost btn-sm min-h-11 w-full sm:w-auto">{{ icone.i('calendrier') }} Replacer les matchs à venir<span class="sr-only"> {{ nom }}</span></summary>
+            <div class="mt-3 space-y-3 text-sm">
+                <p id="replacer-aide-{{ cible }}">Seuls les matchs sans score sont refaits ; les matchs joués ne changent pas.</p>
+                <ul class="list-disc space-y-1 pl-5">
+                    <li>{{ aVenir }} match{{ aVenir > 1 ? 's' : '' }} à venir {{ aVenir > 1 ? 'seront supprimés' : 'sera supprimé' }}, puis {{ aVenir > 1 ? 'replacés' : 'replacé' }} dans la même journée.</li>
+                    <li>{{ joues }} match{{ joues > 1 ? 's' : '' }} déjà joué{{ joues > 1 ? 's' : '' }} ne {{ joues > 1 ? 'changent' : 'change' }} pas.</li>
+                    <li>Les dates et les gymnases modifiés à la main seront perdus.</li>
+                </ul>
+                {% if passes > 0 %}
+                    <p><strong class="font-semibold">{{ passes }} match{{ passes > 1 ? 's' : '' }} sans score {{ passes > 1 ? 'ont' : 'a' }} une date déjà passée.</strong> Vérifiez {{ passes > 1 ? 'qu\'ils n\'ont' : 'qu\'il n\'a' }} pas été joué{{ passes > 1 ? 's' : '' }} sans que le score soit saisi.</p>
+                {% endif %}
+                <label class="flex min-h-11 cursor-pointer items-center gap-3">
+                    <input type="checkbox" class="checkbox" name="confirme-{{ cible }}" value="1" aria-describedby="replacer-aide-{{ cible }}">
+                    <span>J'ai saisi tous les scores des matchs déjà joués.</span>
+                </label>
+                <button type="submit" name="action" value="replacer-{{ cible }}" class="btn btn-warning btn-sm min-h-11 w-full sm:w-auto">Confirmer le replacement<span class="sr-only"> {{ nom }}</span></button>
+            </div>
+        </details>
+    {% endif %}
+{% endmacro %}
+
 {% block body %}
+    {% import _self as m %}
     {% set url = path('admin_saison_miseenplace_matchs', {id: saison.id, phase: phase.id}) %}
     {% set nb_poules = etat.poules|length %}
     {% set des_matchs = etat.crees > 0 %}
@@ -48,8 +78,10 @@
             </p>
         {% endif %}
 
-        {% if etat.verrouillee %}
-            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est lancée (scores saisis ou clôturée) : ses matchs ne peuvent plus être refaits ici.{% endblock %}{% endembed %}
+        {% if etat.cloturee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est clôturée : ses matchs ne peuvent plus être modifiés ici.{% endblock %}{% endembed %}
+        {% elseif etat.verrouillee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est lancée : les matchs joués sont figés. Vous pouvez replacer les matchs à venir.{% endblock %}{% endembed %}
         {% elseif nb_poules > 0 and not des_matchs and not etat.journeesManquantes %}
             {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Les matchs ne sont pas encore créés.{% endblock %}{% endembed %}
         {% endif %}
@@ -113,9 +145,11 @@
                         consequences: des_matchs ? [
                             etat.crees ~ ' match' ~ (etat.crees > 1 ? 's' : '') ~ ' de toutes les poules ' ~ (etat.crees > 1 ? 'seront supprimés' : 'sera supprimé') ~ ', puis recréés.',
                             'Les dates et les gymnases modifiés à la main seront perdus.',
+                            'Priorités du calcul : aucun gymnase surchargé, puis alternance domicile / extérieur, puis moins de déplacements de suite.',
                             'Le calcul peut prendre une dizaine de secondes : patientez sans recharger la page.',
                         ] : [
                             'Les poules sont calculées ensemble pour partager au mieux les gymnases.',
+                            'Priorités du calcul : aucun gymnase surchargé, puis alternance domicile / extérieur, puis moins de déplacements de suite.',
                             'Le calcul peut prendre une dizaine de secondes : patientez sans recharger la page.',
                         ],
                         action: url,
@@ -127,6 +161,9 @@
                         attente: 'Calcul en cours',
                     }) }}
                 </div>
+            {% endif %}
+            {% if not etat.cloturee and etat.verrouillee and etat.joues > 0 %}
+                <div class="mb-3">{{ m.replacer('phase', 'de la phase', etat.aVenir, etat.joues, etat.poules|map(q => q.aVenirPasses)|reduce((a, b) => a + b, 0), app.request.query.get('replacer') == 'phase', true) }}</div>
             {% endif %}
             {% if nb_poules > 0 %}
                 <p class="mb-1 min-h-11 text-sm">
@@ -162,7 +199,7 @@
                             </p>
                         {% endif %}
 
-                        {% if not etat.verrouillee and (not vide or (des_matchs and p.statut == 'aucun')) %}
+                        {% if not etat.cloturee and (not vide or (des_matchs and p.statut == 'aucun')) %}
                             <div class="mt-3 flex flex-col gap-2 border-t border-base-300 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
                                 {% if vide %}
                                     {{ include('admin/_confirmation.html.twig', {
@@ -185,6 +222,9 @@
                                     }) }}
                                 {% else %}
                                     <a class="btn btn-ghost btn-sm min-h-11 w-full sm:w-auto" href="{{ path('admin_partie_getpartiecalendarall', {id: poule.id}) }}">{{ icone.i('calendrier') }} Ajuster dans le calendrier<span class="sr-only"> de {{ poule.nom }}</span></a>
+                                    {% if p.joues > 0 %}
+                                        {{ m.replacer(poule.id, 'de ' ~ poule.nom, p.aVenir, p.joues, p.aVenirPasses, app.request.query.get('replacer') == (poule.id ~ ''), false) }}
+                                    {% else %}
                                     {{ include('admin/_confirmation.html.twig', {
                                         declencheur: 'Régénérer les matchs de la poule',
                                         declencheur_sr: poule.nom,
@@ -193,7 +233,7 @@
                                         titre: 'Régénérer les matchs de ' ~ poule.nom ~ ' ?',
                                         consequences: [
                                             p.crees ~ ' match' ~ (p.crees > 1 ? 's' : '') ~ ' de la poule ' ~ (p.crees > 1 ? 'seront supprimés' : 'sera supprimé') ~ ', puis recréés.',
-                                            'Les autres poules ne bougent pas : la répartition des gymnases peut être moins bonne qu\'avec un calcul de toute la phase.',
+                                            'Les autres poules ne sont pas recalculées : le résultat d\'ensemble sera au mieux égal, souvent moins bon qu\'avec « Régénérer les matchs de la phase ».',
                                             'Le calcul peut prendre quelques secondes : patientez sans recharger la page.',
                                         ],
                                         action: url,
@@ -204,6 +244,7 @@
                                         ton: 'warning',
                                         attente: 'Calcul en cours',
                                     }) }}
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         {% endif %}

@@ -333,6 +333,26 @@ renvoie à l'étape Poules de la phase suivante ; elle **ne crée plus** les jou
 choix de l'utilisateur après relecture de l'ergonome.
 *(2026-10-14, lot 5)*
 
+## D41. Optimisation des matchs : priorités fixes, replacement des matchs à venir, poule par poule
+**Décision** (après avis de l'ergonome) :
+- **Pas de pondération** des critères : les priorités restent fixes (aucun gymnase surchargé, puis alternance
+  domicile / extérieur, puis moins de déplacements de suite) et sont **expliquées à l'écran**, dans la fenêtre de
+  génération.
+- **« Replacer les matchs à venir »**, pour la phase entière comme pour une poule, dès que des matchs sont joués.
+  Les matchs avec un score saisi sont conservés tels quels (adversaires, journée, domicile ou extérieur, gymnase,
+  date) et comptent dans l'occupation des gymnases ; les autres sont supprimés puis recréés dans leur journée, sans
+  jamais rejouer une rencontre. L'administrateur doit **cocher** « Je confirme qu'aucun match déjà joué n'attend
+  la saisie de son score » (contrôle côté serveur) ; le nombre de matchs sans score à date passée est signalé.
+- **Régénération d'une poule** non réservée aux phases sans match joué : elle reste possible pour une poule qui
+  n'a aucun match joué, même quand d'autres poules de la phase en ont. Une poule ou une phase avec des matchs joués
+  ne se régénère plus en entier (scores et classement perdus) : on y replace les matchs à venir. Le message de
+  régénération d'une poule dit que le résultat d'ensemble sera au mieux égal à un calcul de toute la phase.
+- **Équipe qui se retire, forfait général** : sujets traités à part (règle de forfait), pas dans l'optimisation.
+**Pourquoi** : les besoins réels apparaissent après le début de la saison (gymnase indisponible, erreur de
+composition, report) et ne doivent pas détruire les scores ; une pondération n'a pas de sens concret pour le bureau
+et permettrait des calendriers injouables.
+*(2026-10-14, lot 5)*
+
 ---
 
 ## Points ouverts

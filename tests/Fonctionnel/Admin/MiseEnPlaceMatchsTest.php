@@ -193,6 +193,123 @@ final class MiseEnPlaceMatchsTest extends TestFonctionnel
         self::assertSame(6, $this->nbMatchs($s['poules']['A']), 'les matchs existants sont conservés');
     }
 
+    #[TestDox('MEP-21 Replacer les matchs à venir d\'une poule : refusé sans la confirmation « aucun match joué sans score » ; les matchs joués sont conservés, les autres recréés, aucune rencontre dupliquée')]
+    public function test_replacer_poule(): void
+    {
+        $saison = ChampionnatDeTest::get('saison');
+        $phase = ChampionnatDeTest::get('phase.1');
+        $poule = ChampionnatDeTest::get('poule.A')->getId();
+        $url = '/admin/saison/'.$saison->getId().'/mise-en-place/matchs';
+        $this->connecter('admin');
+        $cle = fn (Partie $p) => implode('-', [min($p->getIdEquipeRecoit()->getId(), $p->getIdEquipeDeplace()->getId()), max($p->getIdEquipeRecoit()->getId(), $p->getIdEquipeDeplace()->getId())]);
+
+        $this->em()->clear();
+        $avant = $this->em()->getRepository(Partie::class)->findBy(['poule' => $poule]);
+        $joues = array_map(fn (Partie $p) => $p->getId(), array_filter($avant, fn (Partie $p) => $p->getNbSetGagnantReception() !== null));
+        $rencontres = array_map($cle, $avant);
+        sort($rencontres);
+        self::assertCount(6, $avant);
+        self::assertCount(3, $joues);
+
+        // Écran : bloc de confirmation, avertissement sur le match sans score à date passée
+        $this->client->request('GET', $url.'?phase='.$phase->getId());
+        self::assertSelectorTextContains('.admin-alerte', 'les matchs joués sont figés');
+        self::assertSelectorExists('input[name="confirme-'.$poule.'"]');
+        self::assertSelectorTextContains('#poule-'.$poule, 'a une date déjà passée');
+        self::assertSelectorNotExists('[data-confirmation-champs-param*="regenerer-'.$poule.'"]');
+
+        // Sans la case cochée : rien n'est modifié
+        $token = $this->jeton($url.'?phase='.$phase->getId());
+        $this->client->request('POST', $url.'?phase='.$phase->getId(), ['_token' => $token, 'action' => 'replacer-'.$poule]);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', 'Cochez la case de confirmation');
+        self::assertCount(6, $this->em()->getRepository(Partie::class)->findBy(['poule' => $poule]));
+        self::assertSelectorExists('#poule-'.$poule.' details[open] input[name="confirme-'.$poule.'"]', 'le bloc reste ouvert après un refus');
+
+        // Avec la case cochée
+        $this->client->request('POST', $url.'?phase='.$phase->getId(), ['_token' => $token, 'action' => 'replacer-'.$poule, 'confirme-'.$poule => '1']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', '3 matchs à venir replacés ; 3 matchs joués conservés.');
+
+        $this->em()->clear();
+        $apres = $this->em()->getRepository(Partie::class)->findBy(['poule' => $poule]);
+        self::assertCount(6, $apres);
+        $idsApres = array_map(fn (Partie $p) => $p->getId(), $apres);
+        self::assertSame([], array_diff($joues, $idsApres), 'les matchs joués sont conservés');
+        $rencontresApres = array_map($cle, $apres);
+        sort($rencontresApres);
+        self::assertSame($rencontres, $rencontresApres, 'qui rencontre qui ne change pas');
+        $nouveaux = array_filter($apres, fn (Partie $p) => !in_array($p->getId(), $joues, true));
+        self::assertCount(3, $nouveaux);
+        foreach ($nouveaux as $partie) {
+            self::assertNull($partie->getNbSetGagnantReception());
+        }
+    }
+
+    #[TestDox('MEP-22 Poule sans match joué dans une phase lancée : régénérée en entier ; poule avec matchs joués et phase entière : régénération refusée, replacer accepté')]
+    public function test_phase_lancee_poule_par_poule(): void
+    {
+        $s = $this->saison();
+        $this->connecter('admin');
+        $this->creerJournees($s);
+        $this->envoyer($s, 'generer-phase');
+
+        // Un score saisi dans la poule A : la phase est lancée, la poule A aussi, pas la poule B
+        $this->em()->clear();
+        $partie = $this->em()->getRepository(Partie::class)->findOneBy(['poule' => $s['poules']['A']]);
+        $partie->setNbSetGagnantReception(3);
+        $partie->setNbSetGagnantDeplacement(1);
+        $joue = $partie->getId();
+        $this->em()->flush();
+        $this->em()->clear();
+
+        $this->envoyer($s, 'generer-phase');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', 'ses matchs joués sont figés');
+
+        $this->envoyer($s, 'regenerer-'.$s['poules']['A']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', 'La Poule A a des matchs joués');
+
+        $this->envoyer($s, 'regenerer-'.$s['poules']['B']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', '3 matchs créés pour Poule B.');
+
+        // Replacer toute la phase : avec la case, le match joué est conservé
+        $token = $this->jeton($s['url']);
+        $this->client->request('POST', $s['url'].'?phase='.$s['phase'], ['_token' => $token, 'action' => 'replacer-phase', 'confirme-phase' => '1']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', '1 match joué conservé');
+        $this->em()->clear();
+        self::assertNotNull($this->em()->find(Partie::class, $joue));
+        self::assertSame(6, $this->nbMatchs($s['poules']['A']));
+        self::assertSame(3, $this->nbMatchs($s['poules']['B']));
+    }
+
+    #[TestDox('MEP-23 Un score saisi seulement côté extérieur compte comme match joué : la phase est lancée, la génération complète refusée')]
+    public function test_score_exterieur_seul(): void
+    {
+        $s = $this->saison();
+        $this->connecter('admin');
+        $this->creerJournees($s);
+        $this->envoyer($s, 'generer-phase');
+        $this->client->followRedirect(); // consomme le message de succès
+
+        $this->em()->clear();
+        $partie = $this->em()->getRepository(Partie::class)->findOneBy(['poule' => $s['poules']['A']]);
+        $partie->setNbSetGagnantDeplacement(3);
+        $partie->setNbSetGagnantReception(null);
+        $this->em()->flush();
+        $this->em()->clear();
+
+        $this->client->request('GET', $s['url']);
+        self::assertSelectorTextContains('.admin-alerte', 'les matchs joués sont figés');
+        $this->envoyer($s, 'generer-phase');
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('.admin-alerte', 'ses matchs joués sont figés');
+        self::assertSame(6, $this->nbMatchs($s['poules']['A']));
+    }
+
     #[TestDox('MEP-20 Sécurité et verrou : jeton absent, poule d\'une autre phase, action inconnue, phase avec scores saisis, brouillon, non-administrateur')]
     public function test_securite(): void
     {
@@ -224,7 +341,7 @@ final class MiseEnPlaceMatchsTest extends TestFonctionnel
         $avant = $this->em()->getRepository(Partie::class)->count([]);
         $this->client->request('POST', $url, ['_token' => $crawler->filter('input[name="_token"]')->attr('value'), 'action' => 'generer-phase']);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.admin-alerte', 'ses matchs ne peuvent plus être refaits ici');
+        self::assertSelectorTextContains('.admin-alerte', 'ses matchs joués sont figés');
         self::assertSame($avant, $this->em()->getRepository(Partie::class)->count([]));
 
         // L'ancienne page d'optimisation respecte le même verrou : rien n'est supprimé

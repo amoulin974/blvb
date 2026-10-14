@@ -140,13 +140,19 @@ class SaisonMiseEnPlaceController extends AbstractController
             }
             $action = $payload->getString('action');
             if ($action !== '') {
-                $resultat = $this->matchs->appliquer($phase, $action);
+                // Case « aucun match joué n'attend son score » : une case par cible (phase ou poule), lue côté serveur
+                $cible = str_starts_with($action, 'replacer-') ? substr($action, \strlen('replacer-')) : '';
+                $confirme = $cible !== '' && $payload->getString('confirme-'.$cible) === '1';
+                $resultat = $this->matchs->appliquer($phase, $action, $confirme);
                 $this->addFlash($resultat['ok'] ? 'success' : 'error', $resultat['message']);
                 if ($resultat['avertissement'] !== null) {
                     $this->addFlash('warning', $resultat['avertissement']);
                 }
 
-                return $this->redirect($adresse().($resultat['ancre'] ? '#'.$resultat['ancre'] : ''));
+                // Après un refus de confirmation, le bloc « Replacer » reste ouvert (paramètre replacer)
+                $extra = isset($resultat['ouvrir']) ? ['replacer' => $resultat['ouvrir']] : [];
+
+                return $this->redirect($adresse($extra).($resultat['ancre'] ? '#'.$resultat['ancre'] : ''));
             }
 
             return match ($payload->getString('aller')) {
