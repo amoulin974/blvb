@@ -56,7 +56,7 @@ final class ClubsDepuisNomsEquipesCommand extends Command
             'description' => 'Club de volley-ball de Bayonne créé en 2019 pour proposer du volley de compétition, à côté du loisir et du beach-volley.'."\n".'Il compte des équipes jeunes, féminines, masculines et loisir.'],
         ['court' => 'Léo', 'nom' => 'Léo Lagrange Bayonne', 'gymnases' => ['Bayonne'], 'equipes' => ['LEO LAGRANGE'], 'url' => 'https://www.leolagrangebayonne.fr/',
             'description' => 'Association loi 1901 fondée en 1962, qui propose des activités sportives, culturelles et de bien-être.'."\n".'Sa section volley-ball loisir réunit des équipes mixtes d\'adultes de tout âge, dans un esprit convivial.'],
-        ['court' => 'Tosse', 'nom' => 'Tosse Volley Club', 'gymnases' => ['Tosse'], 'equipes' => ['les Tamalous', 'TOSSE 2', 'SAMOUSSAS'], 'url' => 'https://www.tosse.fr/Culture-Loisirs-et-Vie-Associative/Vie-Associative/Les-Associations-de-Tosse/Tosse-Volley-Club',
+        ['court' => 'Tosse', 'nom' => 'Tosse Volley Club', 'gymnases' => ['Tosse'], 'sigles' => ['TOSSE'], 'equipes' => ['les Tamalous', 'TOSSE 2', 'SAMOUSSAS'], 'url' => 'https://www.tosse.fr/Culture-Loisirs-et-Vie-Associative/Vie-Associative/Les-Associations-de-Tosse/Tosse-Volley-Club',
             'description' => 'Association de Tosse créée en 2022 pour faire découvrir et pratiquer le volley-ball.'."\n".'Sa section loisir, ouverte à tous les adultes, privilégie le volley mixte. Son équipe loisir compétition joue dans le championnat Basco-Landais.'],
     ];
 
@@ -73,7 +73,7 @@ final class ClubsDepuisNomsEquipesCommand extends Command
         'ASPATATAK' => 'Aspatatak',
         'BAIONAKO PIKOLA' => 'Baionako pikola',
         'BAYONNE VOLLEY BOULES' => 'Bayonne volley boules',
-        'BLOCK AND TXOTX' => 'Block and txotx',
+        'BLOCK & TXOTX' => 'BLOCK & TXOTX',
         'CAP2' => 'Cap2',
         'CAPOUT' => 'Capout',
         'CHAOUCHTADOR' => 'Chaouchtador',
@@ -105,7 +105,7 @@ final class ClubsDepuisNomsEquipesCommand extends Command
         'PERLEMPACK' => 'Perlempack',
         'SAMOUSSAS' => 'Samoussas',
         'STRAPATTACK' => 'Strapattack',
-        'TAKABLOQUER' => 'Takabloquer',
+        'TAKABLOKÉ' => 'TAKABLOKÉ',
         'TITI ET SES GROS MINETS' => 'Titi et ses gros minets',
         'TOSSE 2' => 'Tosse 2',
         'TXULETAK' => 'Txuletak',
