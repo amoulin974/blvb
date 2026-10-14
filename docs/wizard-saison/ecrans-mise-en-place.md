@@ -164,3 +164,158 @@ Les corrections ci-dessous **remplacent** ce qui les contredit plus haut (voir D
 **À créer** : partial `admin/saisonwizard/_poule_carte.html.twig` ; icône de retrait (« croix ») si
 aucune icône proche n'existe ; classe `.badge-origine` seulement si le motif revient aux étapes
 Journées et Matchs.
+
+---
+
+# Étape « Journées » (lot 5) : proposition à relire
+
+Cahier des charges : D35, D37. Réutilise `JourneeService::creerJournees` (qui délègue au générateur du
+format de la phase) et le calendrier existant (`admin_journee_getjourneecalendar`) pour les retouches.
+
+## 8. Contexte technique
+
+- Une journée appartient à **une poule**. Championnat (A1) : une journée par semaine, du lundi au
+  dimanche, en sautant les semaines d'indisponibilité de la saison ; nombre = `n-1` (n pair) ou `n`
+  (n impair). Si la première poule a le même effectif et des journées, ses dates sont recopiées.
+  Élimination (B1) : une journée par tour (barrage, quarts, demies, finale), nommées.
+- Erreurs déjà détectées par les générateurs : « phase trop courte » (avec ou sans indisponibilités),
+  « moins de deux équipes ».
+- `creerJournees` **supprime** les journées existantes et, par cascade, leurs matchs et scores :
+  l'écran doit prévenir quand des matchs existent.
+- Ordre des poules : générer d'abord la plus grande évite que la copie de dates de la première poule
+  donne un nombre de journées faux ; à vérifier (le générateur ne copie que si l'effectif est égal).
+
+## 9. Place dans le parcours
+
+```
+Mise en place   ✓ Poules  ● Journées  ○ Matchs
+```
+- Accessible quand la composition des poules est enregistrée (aucune poule vide).
+- Boutons du bas : « Précédent : Poules », « Enregistrer et quitter », « Suivant : Matchs » (désactivé
+  avec la raison écrite tant qu'une poule n'a aucune journée).
+- Si les poules changent après coup (équipe ajoutée ou retirée), le bilan signale les poules dont le
+  nombre de journées ne correspond plus à l'effectif.
+
+## 10. Écran : ordinateur
+
+```
+┌ Journées de la Phase 1 ────────────────────────────────────────────────────────────┐
+│ Du 14/09/2026 au 31/01/2027 · 20 semaines, dont 3 d'indisponibilité (Toussaint,    │
+│ Noël, ...).  4 poules : 3 avec leurs journées, 1 sans journée.                      │
+│                                                                                    │
+│ ⚠ Poule D : aucune journée pour l'instant.                                         │
+│ ⚠ Poule C : 9 journées créées, 9 attendues, mais la dernière tombe le 24/01 …      │
+│                                                                                    │
+│ [Générer les journées manquantes]   (une action pour toutes les poules sans journée)│
+│                                                                                    │
+│ ┌ Poule A · 8 équipes ──── 7 / 7 journées ✓ ┐ ┌ Poule B · 8 équipes ── 7 / 7 ✓ ┐   │
+│ │ J1  14/09 → 20/09                         │ │ J1 …                          │   │
+│ │ J2  21/09 → 27/09                         │ │                               │   │
+│ │ …                                         │ │                               │   │
+│ │ [Ajuster dans le calendrier] [Regénérer]  │ │ [Ajuster…] [Regénérer]        │   │
+│ └───────────────────────────────────────────┘ └───────────────────────────────┘   │
+│ ┌ Poule C · 9 équipes ─── 9 / 9 ✓ ┐ ┌ Poule D · 9 équipes ─── 0 / 9 ⚠ ┐            │
+│ │ …                              │ │ Aucune journée. [Générer]        │            │
+│ └────────────────────────────────┘ └──────────────────────────────────┘            │
+│                                                                                    │
+│ [Précédent : Poules]        [Enregistrer et quitter]        [Suivant : Matchs]     │
+└────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Blocs
+1. **Bilan** : période de la phase, nombre de semaines utilisables (indisponibilités retirées), nombre
+   de poules avec / sans journées. Lien vers les périodes de fermeture de la saison (étape 2 du wizard).
+2. **Alertes** (une seule alerte à liste, `admin/_alerte.html.twig`) : poule sans journée (bloquant pour
+   « Suivant »), nombre de journées ≠ attendu pour l'effectif actuel, journée en dehors des dates de la
+   phase, journée sur une semaine d'indisponibilité (avertissements, non bloquants).
+3. **Une carte par poule** : titre (nom, effectif, « créées / attendues » avec icône d'état), liste des
+   journées (numéro, nom pour les phases à élimination, dates), actions :
+   - « Générer les journées » si aucune ;
+   - « Ajuster dans le calendrier » : page existante, retour au wizard ensuite ;
+   - « Régénérer » : confirmation (`admin/_confirmation.html.twig`) qui dit ce qui sera perdu (journées,
+     et matchs et scores s'il y en a). Les équipes sont conservées.
+4. **« Générer les journées manquantes »** : une action pour toutes les poules sans journée ; ne touche
+   jamais aux poules qui en ont déjà.
+5. Phase à élimination : même écran, journées nommées (« Barrage », « Quarts de finale », …), tableau
+   de dates simplifié ; pas de « semaines d'indisponibilité » dans le bilan si le format ne les saute pas.
+
+## 11. Écran : téléphone
+- Cartes repliées (`<details name="poules">`), comme l'étape Poules ; effectif « 7 sur 7 journées » en
+  toutes lettres dans l'en-tête ; alerte des poules sans journée en haut.
+- Dates affichées « lun. 14 sept. → dim. 20 sept. » ; une ligne par journée, pas de tableau.
+- « Ajuster dans le calendrier » : le calendrier plein écran n'est pas adapté au téléphone ; l'action
+  reste disponible mais l'écran propose en premier « Régénérer » et la liste.
+
+## 12. États et messages
+| Situation | Affichage |
+|---|---|
+| Aucune poule n'a de journée | Info : « Les journées ne sont pas encore créées. » + bouton « Générer les journées manquantes » |
+| Génération réussie | Succès : « 7 journées créées pour la Poule A. » (une ligne par poule) |
+| Phase trop courte | Erreur de la poule concernée, texte du générateur reformulé : « La phase est trop courte : il faut 9 semaines, il n'y en a que 7 une fois les fermetures retirées. Allongez la phase (étape Phases) ou réduisez les fermetures. » |
+| Poule avec matchs | « Régénérer » affiche le nombre de matchs et scores perdus ; sinon texte court |
+| Saison lancée (matchs saisis) | Lecture seule, comme l'étape Poules (D34) |
+
+## 13. Questions pour les relecteurs
+1. **Génération groupée ou par poule** : un seul bouton « Générer les journées manquantes » suffit-il, ou
+   faut-il aussi un bouton par poule ? Faut-il générer à l'ouverture de l'écran sans clic ?
+2. **Calendrier existant** : le renvoyer tel quel (page hors wizard) ou l'embarquer dans l'étape ?
+3. **Des journées identiques pour toutes les poules** : la copie de dates entre poules de même effectif
+   est invisible aujourd'hui. Faut-il l'expliquer à l'écran (« Les poules de 8 équipes ont les mêmes
+   dates ») ?
+4. **Libellés** : « Générer », « Régénérer », « Ajuster dans le calendrier », « journées attendues ».
+5. **Alertes** : les semaines d'indisponibilité chevauchées sont-elles un avertissement ou une erreur ?
+6. **Accessibilité** : liste de dates en `ul` ou tableau ; annonces après génération.
+
+## 14. Relecture de l'étape Journées (ergonome et webdesigner, 14/10/2026)
+
+Verdict des deux : cohérent avec l'étape Poules, à réaliser avec les corrections ci-dessous.
+Les points marqués **À trancher** divergent entre les relecteurs.
+
+**Parcours et mécanique (accord)**
+- Boutons : « Générer les journées manquantes » (groupé, `btn-primary`, sous l'alerte, absent quand plus
+  aucune poule n'est sans journée) **et** « Générer » par poule sans journée. Rien n'est généré à
+  l'ouverture de l'écran.
+- Le calendrier existant est renvoyé tel quel, avec un lien « Retour à l'étape Journées ».
+- Refaire les journées : bouton `btn-ghost`, jamais `btn-error` ; la confirmation (`admin/_confirmation.html.twig`)
+  chiffre ce qui est perdu (« 7 journées et 28 matchs, avec leurs scores »), texte court s'il n'y a pas de
+  matchs ; bouton de confirmation « Supprimer et refaire ».
+- Chevauchement d'une semaine de fermeture : avertissement non bloquant, qui nomme la journée et la fermeture.
+- Alerte de poule sans journée : bloquante pour « Suivant : Matchs », raison écrite à côté (« La Poule D
+  n'a aucune journée. Générez-les pour continuer. »). En saison vierge : alerte `info` seule + bouton,
+  pas d'erreur en plus.
+- Effectif : « 7 journées sur 9 prévues » (même tournure que « 34 sur 36 prévues »), accords calculés.
+- Mot « fermeture » comme à l'étape 2 (pas « indisponibilité »). Une phrase d'introduction relie
+  « journée » et « semaine » (une journée = une semaine de matchs).
+- Alertes : phrases entières (« La Poule C se termine le 24/01, après la fin de la phase (17/01). »),
+  « phase trop courte » : poule nommée, lien « Modifier la phase » dans l'alerte, message repris dans la carte.
+- Dates identiques : une aide courte « Mêmes dates que la Poule A. » **seulement** quand la copie a eu lieu
+  (effectif égal) ; ne rien promettre sinon.
+- Après un changement de composition des poules : alerte visible dès l'arrivée, aucun écrasement automatique.
+- Phase à élimination : une phrase d'aide sur le sens des noms de tour.
+- Après action : message `role="status"` et focus sur la carte (`#poule-N`), pas d'`aria-live`.
+- Lecture seule (saison lancée) : alerte `info` en haut, boutons masqués.
+
+**Apparence (accord)**
+- Partial `_journees_carte.html.twig` calqué sur la carte de poule ; `<details id="poule-N" name="poules">`
+  avec le contrôleur `poules-pliables` existant ; toutes ouvertes à partir de `lg`.
+- Carte sans journée : ouverte, `border-2 border-(--color-primary)`, « Générer » en `btn-primary btn-sm min-h-11`.
+- Badge `badge-outline`, `badge-ecart` si écart, icône + texte caché (« conforme », « incomplète »,
+  « aucune journée »).
+- Liste de dates en `ul divide-y`, numéro en `font-display`, nom de tour sans largeur fixe ; pas de
+  hauteur maximale. Tableau de synthèse seulement au-delà de 4 poules.
+- Mobile : actions `flex-col`, boutons pleine largeur, « Enregistrer et quitter » sur une seconde ligne ;
+  stepper à 9 éléments sans défilement horizontal.
+
+**Tranché par l'utilisateur (14/10/2026, D39)** : libellés « Régénérer les journées » et « Ajuster dans le
+calendrier » (webdesigner) ; dates « 14/09 → 20/09 » sur tout l'écran (année si elle change) ; lien du
+calendrier conservé sur téléphone avec la phrase d'aide. Reste à trancher : le point 4.
+
+**Options étudiées**
+1. **Libellés** : « Refaire les journées » (ergonome) ou « Régénérer les journées » (webdesigner) ;
+   « Modifier les dates » (ergonome) ou « Ajuster dans le calendrier » (webdesigner).
+2. **Format des dates** : « 14/09/2026 » partout (ergonome) ou « 14 sept. → 20 sept. » avec `<time>`
+   (webdesigner) ; le jour de la semaine est inutile pour une journée lundi-dimanche.
+3. **Calendrier sur téléphone** : lien relégué ou masqué (ergonome) ou conservé avec la phrase « Le calendrier
+   s'utilise mieux sur un grand écran. » (webdesigner).
+4. **Ordre de génération** (§8, dernier point) : à vérifier dans le code avant de développer, avec un test
+   sur des poules de tailles différentes.

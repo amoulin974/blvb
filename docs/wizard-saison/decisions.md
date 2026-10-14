@@ -315,6 +315,15 @@ saison copiée proposées d'abord.
 l'utilisateur.
 *(2026-10-14, lot 5)*
 
+## D39. Étape Journées : version relue du wireframe retenue
+**Décision** : `ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
+« Régénérer les journées » (confirmation chiffrée, `btn-ghost`) et « Ajuster dans le calendrier » ; dates
+« 14/09 → 20/09 » ; calendrier existant renvoyé tel quel, lien conservé sur téléphone avec une aide ;
+aucune génération à l'ouverture de l'écran.
+**Pourquoi** : relecture de l'ergonome et du webdesigner ; les divergences ont été tranchées par
+l'utilisateur.
+*(2026-10-14, lot 5)*
+
 ---
 
 ## Points ouverts
