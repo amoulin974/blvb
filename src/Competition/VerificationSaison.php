@@ -82,7 +82,7 @@ final class VerificationSaison
      * sont prévues), une ligne par niveau ; chaque case : poule, équipes prévues, montées (▲) et descentes (▼) en mode
      * simple.
      *
-     * @return array{colonnes: list<string>, lignes: array<int, list<?array{nom: string, code: string, prevues: ?int, montee: int, descente: int}>>}
+     * @return array{colonnes: list<string>, lignes: array<int, list<?array{nom: string, code: string, prevues: ?int, recues: ?int, montee: int, descente: int}>>}
      */
     public static function schema(Saison $saison): array
     {
@@ -90,6 +90,15 @@ final class VerificationSaison
         $colonnes = array_map(fn ($p) => (string) $p->getNom(), $phases);
         $lignes = [];
         $saisonSuivante = [];
+        // Équipes que chaque poule recevra d'après les passages, pour signaler l'écart avec le nombre prévu
+        $recues = [];
+        foreach ($phases as $i => $phase) {
+            if (isset($phases[$i + 1])) {
+                foreach (EtapePassages::effectifs($phase, $phases[$i + 1]) as $e) {
+                    $recues[spl_object_id($e['poule'])] = $e['recues'];
+                }
+            }
+        }
         foreach ($phases as $i => $phase) {
             $suivante = $phases[$i + 1] ?? null;
             $versFinale = $suivante?->getType() === PhaseType::FINALE;
@@ -98,10 +107,11 @@ final class VerificationSaison
                 $niveau = (int) $poule->getNiveau();
                 $lignes[$niveau][$i] = [
                     'nom' => $poule->getNom(), 'code' => (string) $poule->getCode(), 'prevues' => $poule->getNbEquipesPrevu(),
+                    'recues' => $recues[spl_object_id($poule)] ?? null,
                     'montee' => $simple && !$versFinale ? $simple['montee'] : 0, 'descente' => $simple && !$versFinale ? $simple['descente'] : 0,
                 ];
                 if ($simple && $versFinale && $simple['saisonSuivante']) {
-                    $saisonSuivante[$niveau] = ['nom' => 'Niveau '.$niveau, 'code' => '', 'prevues' => null, 'montee' => $simple['montee'], 'descente' => $simple['descente']];
+                    $saisonSuivante[$niveau] = ['nom' => 'Niveau '.$niveau, 'code' => '', 'prevues' => null, 'recues' => null, 'montee' => $simple['montee'], 'descente' => $simple['descente']];
                 }
             }
         }

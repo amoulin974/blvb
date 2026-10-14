@@ -72,6 +72,14 @@ class Saison
     #[ORM\Column(nullable: true)]
     private ?int $etapeWizard = null;
 
+    /** Point de départ du wizard, en clair (« Copie de la saison X », « Modèle … ») ; null hors wizard. */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $departLibelle = null;
+
+    /** Dernier enregistrement d'une étape du wizard (« Brouillon enregistré à 14 h 32 ») ; null hors wizard. */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $modifieLe = null;
+
     /** Sport de la saison (code d'un App\Competition\Sport\RegleSport) : forme du score, barème, départage. */
     #[ORM\Column(length: 30, options: ['default' => 'volley'])]
     private string $sport = 'volley';
@@ -128,6 +136,30 @@ class Saison
     public function setEtapeWizard(?int $etapeWizard): static
     {
         $this->etapeWizard = $etapeWizard;
+
+        return $this;
+    }
+
+    public function getDepartLibelle(): ?string
+    {
+        return $this->departLibelle;
+    }
+
+    public function setDepartLibelle(?string $departLibelle): static
+    {
+        $this->departLibelle = $departLibelle;
+
+        return $this;
+    }
+
+    public function getModifieLe(): ?\DateTimeImmutable
+    {
+        return $this->modifieLe;
+    }
+
+    public function setModifieLe(?\DateTimeImmutable $modifieLe): static
+    {
+        $this->modifieLe = $modifieLe;
 
         return $this;
     }

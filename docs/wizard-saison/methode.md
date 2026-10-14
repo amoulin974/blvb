@@ -205,6 +205,34 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   aide courte sous chaque critère de départage, liens de l'alerte d'erreur vers les champs. Hors lots :
   avertissements avant « Clôturer », messages joints par « ; » (voir `lots.md`).
 
+### 2026-10-14 : lot 5, mise en place
+
+- Branche `formats-competition-lot5` ; décisions D35 à D41, écrans dessinés puis relus par l'ergonome et le
+  webdesigner avant réalisation (`ecrans-mise-en-place.md`, §1 à §22).
+- **Trois étapes de la mise en place** (stepper « Mise en place », après la validation de la saison) : Poules
+  (`CompositionPoules`), Journées (`MiseEnPlaceJournees`, `Semaines`, `GenerateurFormat::nombreJournees`) et Matchs
+  (`MiseEnPlaceMatchs`, `GenerateurFormat::nombreMatchs`), toutes dans `SaisonMiseEnPlaceController`. Chaque action
+  enregistre tout de suite ; « Enregistrer et quitter » sur les trois.
+- **Matchs** : génération de la phase (optimiseur, poules calculées ensemble) ou d'une poule ; régénération confirmée ;
+  « Replacer les matchs à venir » (phase ou poule) qui conserve les matchs joués et exige la case « J'ai saisi tous les
+  scores des matchs déjà joués » ; transaction (un échec ne fait perdre aucun match, MEP-24) ; priorités fixes
+  expliquées, pas de pondération (D41) ; verrou par poule et par phase (score saisi d'un côté ou de l'autre).
+- **Clôture d'une phase (D37, D40)** : applique les règles de passage puis renvoie à l'étape Poules de la phase suivante ;
+  ne crée plus journées ni matchs ; avertissements des règles dans la fenêtre « Clôturer » ; conditions vérifiées côté
+  serveur (saison validée, phases précédentes clôturées, journées présentes).
+- **Fenêtre de confirmation partagée** : ton `primary`, attente annoncée (bouton, « Annuler » et Échap bloqués,
+  `role="status"`), complément lu par les lecteurs d'écran.
+- **Reports du lot 4 réalisés** : point de départ enregistré (`Saison.depart_libelle`) et rappelé au récapitulatif,
+  « Brouillon enregistré à H h mm » (`Saison.modifie_le`), écarts d'effectif dans le schéma, aide sous chaque critère de
+  départage, alerte de l'étape 3 avec liens vers les champs. Migration `Version20261014180000` (**à appliquer au
+  déploiement seulement**, comme les précédentes du chantier).
+- Relectures ergonome, webdesigner et sécurité de chaque écran, retours intégrés (verrou contourné par l'ancienne page
+  « Optimiser », classements à zéro verrouillant la phase suivante, clôture sans condition côté serveur…). 418 tests
+  verts + 2 lents.
+- **Suite** : lot 6 (formats BLVB : aller-retour, format de match par phase, élimination complète avec barrages,
+  petite finale, journée des finales, barrages de montée et descente), voir `lots.md`. À traiter à part : équipe qui se
+  retire et forfait général (règle de forfait, D41) ; page « Optimiser » (tableaux colorés, hors motif `table-admin`).
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Pour un nouveau
@@ -218,7 +246,7 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
    en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
    manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
-5. **Vérifier l'état** : `docker compose exec php composer tests` (385 tests verts attendus) et
+5. **Vérifier l'état** : `docker compose exec php composer tests` (418 tests verts attendus) et
    `docker compose exec php composer qualite`.
 6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D34), `lots.md`
    (lot 5) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à

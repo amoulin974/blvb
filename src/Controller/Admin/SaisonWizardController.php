@@ -56,7 +56,9 @@ class SaisonWizardController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $donnees = $form->getData();
             $source = $donnees['saison'] ?? null;
+            $departLibelle = null;
             if ($donnees['depart'] === 'copie' && $source instanceof Saison) {
+                $departLibelle = sprintf('Copie de la saison %s', $source->getNom());
                 $debut = $source->getDateDebut()->modify('+1 year');
                 $resultat = $copie->copier($source, self::nomPropose($debut, $saisons), $debut, $source->getDateFin()->modify('+1 year'));
                 $saison = $resultat['saison'];
@@ -64,6 +66,7 @@ class SaisonWizardController extends AbstractController
                     $this->addFlash('warning', $avertissement);
                 }
             } elseif ($donnees['depart'] === 'modele' && ($modele = $modeles->parCode((string) ($donnees['modele'] ?? ''))) !== null) {
+                $departLibelle = sprintf('Modèle « %s »', $modele->libelle());
                 $annee = (int) date('Y') + ((int) date('n') >= 7 ? 1 : 0);
                 $saison = (new Saison())
                     ->setDateDebut(new \DateTimeImmutable("$annee-09-01"))
@@ -83,7 +86,7 @@ class SaisonWizardController extends AbstractController
                 return $this->redirectToRoute('admin_saison_wizard_nouvelle');
             }
 
-            $saison->setBrouillon(true)->setEtapeWizard(2)->setFavori(0);
+            $saison->setBrouillon(true)->setEtapeWizard(2)->setFavori(0)->setDepartLibelle($departLibelle)->setModifieLe(new \DateTimeImmutable());
             $em->flush();
             $cache->delete('saisons_all');
 
@@ -119,6 +122,11 @@ class SaisonWizardController extends AbstractController
             }
         } elseif ($etape > max(2, (int) $saison->getEtapeWizard())) {
             return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => max(2, (int) $saison->getEtapeWizard())]);
+        }
+
+        // Date du dernier enregistrement d'un brouillon (« Brouillon enregistré à 14 h 32 ») ; persistée par les flush de l'étape
+        if ($request->isMethod('POST') && $saison->isBrouillon()) {
+            $saison->setModifieLe(new \DateTimeImmutable());
         }
 
         // Vérification déjà atteinte (ou saison créée) : les étapes à corriger sont signalées dans le stepper
