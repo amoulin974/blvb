@@ -95,7 +95,7 @@ final class MiseEnPlacePoulesTest extends TestFonctionnel
         self::assertSelectorTextContains('body', 'Poule A : 3 équipes pour 4 prévues.');
         self::assertSelectorTextContains('body', 'La poule « Poule C » n\'a aucune équipe. Ajoutez-en une pour continuer.');
         self::assertSelectorTextContains('body', 'Vérifiez ce placement.');
-        self::assertSelectorExists('button[value="terminer"][aria-disabled="true"]');
+        self::assertSelectorExists('button[value="suivant"][aria-disabled="true"]');
     }
 
     #[TestDox('MEP-02 Placer une équipe à placer dans une poule : enregistré, message de statut, l\'équipe quitte « Équipes à placer »')]
@@ -144,20 +144,20 @@ final class MiseEnPlacePoulesTest extends TestFonctionnel
         self::assertSelectorTextContains('.admin-alerte', 'est dans « Poule C »');
     }
 
-    #[TestDox('MEP-05 « Terminer » : refusé tant qu\'une poule est vide, accepté sinon (retour à la saison)')]
-    public function test_terminer(): void
+    #[TestDox('MEP-05 « Suivant : Journées » : refusé tant qu\'une poule est vide, accepté sinon (étape Journées)')]
+    public function test_suivant(): void
     {
         $s = $this->saison();
         $this->connecter('admin');
-        $this->cliquer($s['url'], 'terminer');
+        $this->cliquer($s['url'], 'suivant');
         self::assertResponseRedirects($s['url'].'?phase='.$s['phase']);
         $this->client->followRedirect();
         self::assertSelectorTextContains('.admin-alerte', 'La poule « Poule C » n\'a aucune équipe');
 
         $this->em()->clear();
         $avec = $this->saison(false);
-        $this->cliquer($avec['url'], 'terminer');
-        self::assertResponseRedirects('/admin/saison/'.$avec['saison']);
+        $this->cliquer($avec['url'], 'suivant');
+        self::assertResponseRedirects('/admin/saison/'.$avec['saison'].'/mise-en-place/journees?phase='.$avec['phase']);
     }
 
     #[TestDox('MEP-06 Phase lancée (matchs programmés) : composition en lecture seule, modification refusée sans rien changer')]

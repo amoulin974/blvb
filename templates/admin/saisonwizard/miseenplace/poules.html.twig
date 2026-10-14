@@ -54,7 +54,7 @@
         <ol class="steps steps-wizard w-full">
             <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 6}) }}"><span class="max-md:sr-only">Organisation</span><span class="sr-only"> (étapes 1 à 6, faites)</span></a></li>
             <li class="step step-primary" data-content="7" aria-current="step"><span class="max-md:sr-only font-semibold">Poules</span></li>
-            <li class="step" data-content="8"><span class="max-md:sr-only">Journées</span><span class="sr-only"> (à venir)</span></li>
+            <li class="step" data-content="8"><span class="max-md:sr-only">Journées</span><span class="sr-only"> (étape suivante)</span></li>
             <li class="step" data-content="9"><span class="max-md:sr-only">Matchs</span><span class="sr-only"> (à venir)</span></li>
         </ol>
         <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape 7 sur 9 · Poules</p>
@@ -168,7 +168,7 @@
             <div class="wizard-navigation mt-6 flex items-center gap-2">
                 <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent</button>
                 <span class="flex-1 max-lg:hidden"></span>
-                <button type="submit" name="aller" value="terminer" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Terminer</button>
+                <button type="submit" name="aller" value="suivant" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Suivant : Journées</button>
             </div>
         </form>
     </div>

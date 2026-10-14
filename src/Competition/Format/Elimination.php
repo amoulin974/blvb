@@ -32,6 +32,18 @@ final class Elimination implements GenerateurFormat
     }
 
     //Méthode utilisée pour crééer les journée d'une phase du type finale
+    public function nombreJournees(Poule $poule): int
+    {
+        $n = count($poule->getEquipes());
+        if ($n < 2) {
+            return 0;
+        }
+        $puissance = (int) pow(2, floor(log($n, 2)));
+        $tours = (int) log($puissance, 2);
+
+        return $n === $puissance ? $tours : $tours + 1;
+    }
+
     public function creerJournees(Poule $poule): ?string
     {
         $equipes = $poule->getEquipes();

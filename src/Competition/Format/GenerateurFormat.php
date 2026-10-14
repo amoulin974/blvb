@@ -17,6 +17,9 @@ interface GenerateurFormat
 
     public function supporte(Phase $phase): bool;
 
+    /** Nombre de journées que ce format crée pour l'effectif actuel de la poule (0 s'il y a moins de deux équipes). */
+    public function nombreJournees(Poule $poule): int;
+
     /** Crée les journées de la poule (les anciennes sont déjà supprimées) ; message d'erreur, ou null si tout va bien. */
     public function creerJournees(Poule $poule): ?string;
 

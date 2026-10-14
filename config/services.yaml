@@ -42,6 +42,9 @@ services:
     # Composition des poules d'une phase, étape « Poules » de la mise en place (D35 à D38)
     App\Competition\CompositionPoules: ~
 
+    # Journées d'une phase, étape « Journées » de la mise en place (D35 à D39)
+    App\Competition\MiseEnPlaceJournees: ~
+
     # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
     App\Competition\Modele\:
         resource: '../src/Competition/Modele/'

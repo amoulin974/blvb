@@ -128,7 +128,10 @@ matchs individuels), qui changent le modèle lui-même (D13).
       copie n'est pas enregistré), pré-remplissage déjà fait à la copie (D36) ; wireframe relu (D38), écran
       relu par l'ergonome, le webdesigner et la sécurité ; MEP-01 à MEP-08. « Terminer » renvoie à la saison
       en attendant l'étape Journées
-- [ ] Étape Journées : création et calendrier des journées de la phase
+- [x] Étape Journées : bilan, génération groupée ou par poule, régénération confirmée, semaines de fermeture,
+      verrou de phase (`MiseEnPlaceJournees`, `Semaines`, `GenerateurFormat::nombreJournees`) ; wireframe relu
+      (D39), écran relu par l'ergonome, le webdesigner et la sécurité ; MEP-09 à MEP-14. « Suivant : Matchs »
+      renvoie à la saison en attendant l'étape Matchs
 - [ ] Étape Matchs : génération et optimisation (services existants)
 - [ ] Enchaînement : après clôture, retour aux trois étapes de la phase suivante (D37) ;
       avertissements des règles de passage avant « Clôturer »
