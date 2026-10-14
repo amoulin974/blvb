@@ -233,7 +233,7 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   petite finale, journée des finales, barrages de montée et descente), voir `lots.md`. Points ouverts à reprendre (`decisions.md`, PO1 à PO3) :
   recentrer la page d'une saison hors wizard sur le suivi (avis de l'ergonome du 14/10/2026, 5 décisions à prendre,
   dont vérifier où se saisissent les scores) ; équipe qui se retire et forfait général (règle de forfait, D41) ;
-  page « Optimiser » (tableaux colorés, hors motif 	able-admin).
+  page « Optimiser » (tableaux colorés, hors motif `table-admin`).
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
