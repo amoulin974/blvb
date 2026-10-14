@@ -404,6 +404,7 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 **REP-01** ✅ — Séparation nom / sigle (« EROAK (AOVB) », espaces, chiffres, parenthèses ordinaires laissées dans le nom).
 **REP-02** ✅ — Clubs du référentiel créés (nom long, gymnases, description et lien) ; club existant réutilisé, son nom long et sa fiche **jamais écrasés** ; anciens sigles traduits (SJDL → VBLC) ; équipes sans sigle rattachées d'après le référentiel ; écriture des noms corrigée (table `NOMS_EQUIPES`).
 **REP-03** ✅ — Sans `--force` : rien n'est enregistré ; relancée après application : aucun changement, aucun avertissement.
+**REP-05** ✅ — Sigle ne différant du nom court du club que par la casse (« LES TAMALOUS (TOSSE) » pour le club « Tosse ») : un seul club, pas de doublon (régression : violation d'unicité en production, 13/10/2026) ; « BLOCK & TXOTX » et « TAKABLOKÉ » connus de la table d'écriture, écrits tels quels, sans avertissement.
 **REP-04** ✅ *`ImportEquipesTest`* — Import Excel des équipes : « NOM (SIGLE) » rattaché au club du sigle (club existant réutilisé, club inconnu créé), sigle retiré du nom ; équipe sans sigle et parenthèses ordinaires : pas de club.
 
 ---
