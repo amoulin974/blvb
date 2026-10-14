@@ -306,6 +306,15 @@ suivante. Les avertissements des règles de passage s'affichent **avant** de cli
 (point reporté de D28).
 *(2026-10-14, lot 5)*
 
+## D38. Étape Poules : version relue du wireframe retenue
+**Décision** : `ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
+déplie une liste et un bouton « Valider » (ergonome), tableau de synthèse des effectifs au-delà de
+4 poules (webdesigner), « Retirer de la poule », pas d'action « Ne participe plus », équipes de la
+saison copiée proposées d'abord.
+**Pourquoi** : relecture de l'ergonome et du webdesigner ; les deux divergences ont été tranchées par
+l'utilisateur.
+*(2026-10-14, lot 5)*
+
 ---
 
 ## Points ouverts
