@@ -324,6 +324,15 @@ aucune génération à l'ouverture de l'écran.
 l'utilisateur.
 *(2026-10-14, lot 5)*
 
+## D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
+**Décision** : `ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
+traitement en arrière-plan, rapport recalculé à l'affichage, génération par poule limitée aux poules sans
+match, équipe sans gymnase en avertissement). La clôture d'une phase applique les règles de passage puis
+renvoie à l'étape Poules de la phase suivante ; elle **ne crée plus** les journées ni les matchs (D37).
+**Pourquoi** : la création automatique se faisait sans que personne ne relise la répartition des équipes ;
+choix de l'utilisateur après relecture de l'ergonome.
+*(2026-10-14, lot 5)*
+
 ---
 
 ## Points ouverts

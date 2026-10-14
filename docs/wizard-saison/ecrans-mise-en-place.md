@@ -319,3 +319,134 @@ calendrier conservé sur téléphone avec la phrase d'aide. Reste à trancher : 
    s'utilise mieux sur un grand écran. » (webdesigner).
 4. **Ordre de génération** (§8, dernier point) : à vérifier dans le code avant de développer, avec un test
    sur des poules de tailles différentes.
+
+---
+
+# Étape « Matchs » (lot 5) : proposition à relire
+
+Cahier des charges : D35, D37. Réutilise `PartieService` (`creerCalendrierOptimise` pour la phase,
+`creerCalendrierOptimisePourPoule` pour une poule, `createCalendar` sans optimisation), la page d'optimisation
+(`admin_phase_optimiser`) et le calendrier des matchs (`admin_partie_getpartiecalendar`).
+
+## 15. Contexte technique
+
+- Championnat : l'optimiseur traite **toutes les poules de la phase ensemble** (gymnases partagés), choisit qui
+  reçoit pour éviter les surcharges de gymnase puis limiter les « breaks » ; il peut durer une dizaine de
+  secondes. Élimination : matchs générés par le format, hors optimiseur, placés comme occupation fixe.
+- Chaque génération **supprime les matchs existants** de la poule (ou de la phase), scores et réglages manuels compris.
+- Matchs prévus pour une poule de `n` équipes : championnat `n(n-1)/2`, élimination `n-1`.
+- Le rapport renvoyé donne, par poule, le nombre de breaks et la liste des surcharges de gymnase.
+- Aujourd'hui, la **clôture d'une phase** crée aussitôt les journées et les matchs de la phase suivante
+  (`PhaseController::cloturer`). Cela contredit D37 (retour au wizard Poules → Journées → Matchs) : voir question 4.
+
+## 16. Place dans le parcours
+
+```
+Mise en place   ✓ Poules  ✓ Journées  ● Matchs
+```
+- Accessible quand chaque poule a ses journées. Boutons du bas : « Précédent : Journées », « Enregistrer et
+  quitter », « Terminer » (principal) qui renvoie à la saison avec « La Phase 1 est prête. ».
+- « Terminer » est désactivé, raison écrite, tant qu'une poule n'a aucun match.
+
+## 17. Écran : ordinateur
+
+```
+┌ Matchs de la Phase 1 ──────────────────────────────────────────────────────────────┐
+│ 4 poules, 118 matchs prévus. 90 matchs créés. 1 poule sans match.                   │
+│                                                                                    │
+│ ⚠ Poule D : aucun match pour l'instant.                                            │
+│ ⚠ Gymnase G1 surchargé le 21/09 (3 matchs pour 2 prévus).                          │
+│ ⚠ 2 équipes n'ont pas de gymnase : Samoussas (TOSSE), Tosse 2 (TOSSE).             │
+│                                                                                    │
+│ [Générer les matchs de la phase]  (optimisation de toutes les poules ; ≈ 10 s)     │
+│ Voir l'alternance domicile / extérieur et la charge des gymnases                   │
+│                                                                                    │
+│ ┌ Poule A · 8 équipes ── 28 sur 28 matchs ✓ ┐ ┌ Poule B · 8 équipes ── 28 / 28 ✓ ┐ │
+│ │ 3 breaks · aucune surcharge               │ │ …                                │ │
+│ │ [Modifier dans le calendrier]             │ │                                  │ │
+│ │ [Régénérer les matchs de la poule]        │ │                                  │ │
+│ └───────────────────────────────────────────┘ └──────────────────────────────────┘ │
+│ ┌ Poule D · 9 équipes ── aucun match ⚠ ┐                                           │
+│ │ [Générer les matchs de la poule]     │                                           │
+│ └──────────────────────────────────────┘                                           │
+│ [Précédent : Journées]   [Enregistrer et quitter]   [Terminer]                      │
+└────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+### Blocs
+1. **Bilan** : matchs créés sur matchs prévus, poules sans match.
+2. **Alertes** (une seule alerte à liste) : poule sans match (bloquant pour « Terminer »), surcharges de
+   gymnase du dernier calcul, équipes sans gymnase (leurs matchs à domicile n'ont pas de lieu), nombre de
+   matchs différent du prévu.
+3. **Action principale** « Générer les matchs de la phase » : pour toutes les poules à la fois (obligatoire
+   pour partager les gymnases). Confirmation chiffrée si des matchs existent (nombre de matchs et de scores
+   perdus). Mention « patientez sans recharger la page » pendant le calcul.
+4. **Cartes de poule** : effectif, « 28 sur 28 matchs », breaks et surcharges de la poule, « Modifier dans le
+   calendrier » (calendrier existant), « Régénérer les matchs de la poule » (confirmation chiffrée), ou
+   « Générer les matchs de la poule » si elle n'en a aucun.
+5. **Lien** vers la page d'optimisation existante (alternance et charge des gymnases) pour l'analyse fine.
+6. Phase à élimination : même écran ; une phrase explique que le tableau est placé dans l'ordre du
+   classement de la phase précédente (têtes de série) ; pas de breaks.
+
+## 18. Téléphone
+- Cartes repliées, effectif en toutes lettres ; alertes avant les cartes ; boutons pleine largeur ; le lien
+  d'analyse et le calendrier gardent l'aide « s'utilise mieux sur un grand écran ».
+
+## 19. États et messages
+| Situation | Affichage |
+|---|---|
+| Aucun match | Info « Les matchs ne sont pas encore créés. » + bouton « Générer les matchs de la phase » |
+| Génération réussie | Succès : « 90 matchs créés pour 4 poules. » ; surcharges en avertissement |
+| Poule à moins de deux équipes | « La Poule E n'a pas assez d'équipes pour avoir des matchs. » |
+| Journées absentes ou en nombre inattendu | Renvoi vers l'étape Journées (lien dans l'alerte) |
+| Phase lancée (scores saisis, clôturée) | Lecture seule comme les étapes Poules et Journées |
+
+## 20. Questions pour les relecteurs et pour l'utilisateur
+1. **Durée du calcul** : suffit-il de prévenir (« patientez ») comme la page d'optimisation actuelle, ou faut-il
+   un traitement en arrière-plan avec écran d'attente ?
+2. **Génération groupée seule ou aussi par poule** : par poule, l'optimiseur ne regarde plus que les autres
+   poules déjà placées ; est-ce acceptable à ce niveau de l'écran ?
+3. **Rapport** : afficher breaks et surcharges de la dernière génération (non conservés en base) ou les
+   recalculer à l'affichage à partir des matchs existants (déjà fait par `OptimisationService`) ?
+4. **Clôture d'une phase** : faut-il retirer la création automatique des journées et des matchs de la phase
+   suivante (D37) pour renvoyer au wizard Poules → Journées → Matchs, ou garder l'automatique et n'ouvrir le
+   wizard que pour les retouches ?
+5. **Équipe sans gymnase** : avertissement seul, ou blocage de « Terminer » ?
+6. **Libellés** : « Générer les matchs de la phase », « Régénérer les matchs de la poule », « Modifier dans le
+   calendrier », « Terminer ».
+
+## 21. Relecture de l'étape Matchs (ergonome et webdesigner, 14/10/2026)
+
+Verdict des deux : cohérent avec les étapes Poules et Journées, réutilise leurs composants (`journees.html.twig`).
+
+**Parcours et mécanique (accord)**
+- **Attente du calcul** : prévenir, sans traitement en arrière-plan. La confirmation annonce « une dizaine de
+  secondes » ; au clic, le bouton passe en « Calcul en cours… » (désactivé, `loading-spinner`) avec une zone
+  `role="status"` visible, pour éviter le double envoi. À revoir si le calcul dépasse 20 à 30 s.
+- **Transaction** : suppression puis création des matchs dans une transaction, avec un message d'échec
+  « Le calcul n'a pas abouti. Aucun match n'a été modifié. » (à vérifier dans le code).
+- **Rapport** : breaks et surcharges **recalculés à l'affichage** (`OptimisationService`), pas conservés.
+- **Génération par poule** : « Générer les matchs de la poule » seulement pour une poule sans match, avec
+  l'aide « Ce calcul tient compte des matchs déjà créés dans les autres poules. » ; « Régénérer » reste
+  possible, la confirmation précise que les autres poules ne bougent pas.
+- **Équipe sans gymnase** : avertissement qui nomme l'équipe (« Nom (ABRÉV) ») et la conséquence (« ses
+  matchs à domicile n'ont pas de lieu »), avec lien ; ne bloque pas « Terminer ». Seule une poule sans match bloque.
+- **Alertes** : au plus deux alertes `_alerte` (erreur : poules sans match, journées absentes ; avertissement :
+  surcharges, équipes sans gymnase, écart de nombre), lignes en ancres `#poule-N`.
+- **Libellés** : « Générer les matchs de la phase » (« Régénérer… » quand des matchs existent, en
+  `btn-ghost` via confirmation), « Régénérer les matchs de la poule », « Ajuster dans le calendrier »
+  (comme l'étape Journées), « Terminer la mise en place » (« Terminer » sur téléphone), « déplacements de
+  suite » au lieu de « breaks », lien « Analyser l'alternance et la charge des gymnases ».
+- **Messages** : bilan « 90 matchs créés sur 118 prévus. 1 poule sans match. » ; confirmation chiffrée
+  (matchs, et scores seulement s'il y en a ; `irreversible` si des scores sont saisis) ; surcharge en phrase
+  entière (« 3 matchs pour 2 possibles », date JJ/MM) ; succès « 90 matchs créés pour 4 poules. ».
+- **Apparence** : cartes `<details name="poules">` comme Journées (bordure primaire si aucun match) ;
+  tableau de synthèse au-delà de 4 poules ; « Générer la phase » juste après le bilan sur téléphone ;
+  état par icône + texte caché, jamais la couleur seule ; ne pas recopier les tableaux colorés de la page
+  d'optimisation ; lien d'analyse avec « s'utilise mieux sur un grand écran » sur téléphone.
+- **Élimination** : si le classement de la phase précédente n'est pas calculé, avertir « Les têtes de série
+  ne sont pas connues. »
+
+**Tranché (D40)** : la clôture ne crée plus journées ni matchs. Avis : ergonome : retirer la création
+automatique des journées et des matchs de la phase suivante (D37) et renvoyer vers l'étape Poules ;
+webdesigner : si l'automatique est gardé, afficher un bandeau d'information à l'entrée de l'étape.
