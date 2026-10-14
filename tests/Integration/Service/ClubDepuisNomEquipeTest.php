@@ -112,6 +112,27 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
         self::assertStringContainsString('Gymnase « Biarritz » introuvable', $affichage);
     }
 
+    #[TestDox('Un sigle qui ne diffère du nom court du club que par la casse (« TOSSE » / « Tosse ») ne crée pas un second club')]
+    public function test_sigle_en_majuscules_du_club_du_referentiel(): void
+    {
+        EquipeFactory::createOne(['nom' => 'LES TAMALOUS (TOSSE)']);
+        EquipeFactory::createOne(['nom' => 'TOSSE 2']);
+        EquipeFactory::createOne(['nom' => 'BLOCK & TXOTX (ASPTT)']);
+        EquipeFactory::createOne(['nom' => 'TAKABLOKÉ (ASPTT)']);
+
+        $affichage = $this->lancer(true);
+
+        self::assertStringNotContainsString('Noms absents de la table d\'écriture', $affichage, 'noms réels connus de la table, écrits tels quels');
+        self::assertSame('BLOCK & TXOTX', $this->equipe('BLOCK & TXOTX')->getNomSansClub());
+        self::assertSame('TAKABLOKÉ', $this->equipe('TAKABLOKÉ')->getNomSansClub());
+
+        $clubs = self::service(ClubRepository::class)->findBy(['nomCourt' => 'Tosse']);
+        self::assertCount(1, $clubs);
+        self::assertSame('Tosse Volley Club', $clubs[0]->getNom());
+        self::assertSame('Les Tamalous (TOSSE)', $this->equipe('Les Tamalous')->getNom());
+        self::assertSame($clubs[0]->getId(), $this->equipe('Tosse 2')->getClub()->getId());
+    }
+
     #[TestDox('Sans --force, la commande ne modifie rien ; relancée après application, elle ne change plus rien')]
     public function test_simulation_puis_relance(): void
     {
