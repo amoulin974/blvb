@@ -23,7 +23,7 @@ final class ClubDepuisNomEquipeService
     /** Sigle inconnu accepté pour créer un club : majuscules et chiffres, 2 à 10 caractères. */
     private const SIGLE_NOUVEAU_CLUB = '/^[A-Z0-9]{2,10}$/';
 
-    /** @var array<string, Club> clubs créés pendant ce traitement, pas encore en base (clé : nom court) */
+    /** @var array<string, Club> clubs créés pendant ce traitement, pas encore en base (clé : nom court en majuscules, la base ne distingue pas la casse) */
     private array $nouveaux = [];
 
     public function __construct(
@@ -56,7 +56,7 @@ final class ClubDepuisNomEquipeService
      */
     public function club(string $nomCourt, ?string $nomLong = null): array
     {
-        $club = $this->nouveaux[$nomCourt] ?? $this->clubRepository->findOneBy(['nomCourt' => $nomCourt]);
+        $club = $this->nouveaux[mb_strtoupper($nomCourt)] ?? $this->clubRepository->findOneBy(['nomCourt' => $nomCourt]);
         if ($club !== null) {
             return ['club' => $club, 'cree' => false];
         }
@@ -64,7 +64,7 @@ final class ClubDepuisNomEquipeService
         $club = (new Club())->setNomCourt($nomCourt)->setNom($nomLong ?? $nomCourt);
         $this->em->persist($club);
 
-        return ['club' => $this->nouveaux[$nomCourt] = $club, 'cree' => true];
+        return ['club' => $this->nouveaux[mb_strtoupper($nomCourt)] = $club, 'cree' => true];
     }
 
     /**
@@ -82,7 +82,7 @@ final class ClubDepuisNomEquipeService
         $nomCourt = $sigle === null ? null : ($alias[$sigle] ?? $sigle);
 
         // Sigle qui ne désigne aucun club connu et n'a pas la forme d'un sigle : parenthèses ordinaires du nom
-        if ($nomCourt !== null && !isset($alias[$sigle]) && !isset($this->nouveaux[$nomCourt])
+        if ($nomCourt !== null && !isset($alias[$sigle]) && !isset($this->nouveaux[mb_strtoupper($nomCourt)])
             && $this->clubRepository->findOneBy(['nomCourt' => $nomCourt]) === null
             && !preg_match(self::SIGLE_NOUVEAU_CLUB, $nomCourt)) {
             $nomCourt = null;
