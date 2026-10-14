@@ -285,6 +285,27 @@ programmés, les abonnements `.ics` et, après une clôture, provoquait une erre
 visible sur le site ne doit pas rester incohérente.
 *(2026-10-13, lot 4)*
 
+## D35. Mise en place : écrans dédiés dans le wizard
+**Décision** : les étapes Poules, Journées et Matchs (groupe « Mise en place », D29.14) sont de
+nouveaux écrans du wizard, qui réutilisent les services existants (`JourneeService`, `PartieService`,
+optimiseur) avec un parcours guidé et un bilan par étape. Les écrans d'administration actuels
+(poule, journée, partie) restent disponibles pour les retouches.
+**Pourquoi** : un parcours continu avec vérification globale, plutôt qu'un renvoi vers des pages éclatées.
+*(2026-10-14, lot 5)*
+
+## D36. Composition des poules : pré-remplie, ajustable
+**Décision** : pour une saison copiée d'une saison terminée, les équipes de la phase 1 sont placées
+d'après les montées et descentes enregistrées pour la saison suivante (D22) ; l'administrateur ajuste
+(équipes nouvelles, retraits). L'écart entre effectif réel et « nombre d'équipes prévu » reste un
+avertissement (D30).
+*(2026-10-14, lot 5)*
+
+## D37. Enchaînement des phases : retour au wizard
+**Décision** : après la clôture d'une phase, le wizard rouvre Poules → Journées → Matchs pour la phase
+suivante. Les avertissements des règles de passage s'affichent **avant** de cliquer sur « Clôturer »
+(point reporté de D28).
+*(2026-10-14, lot 5)*
+
 ---
 
 ## Points ouverts
