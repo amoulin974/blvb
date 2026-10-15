@@ -257,6 +257,7 @@ Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/
 **CLA-09 — Aller-retour** ✅ : seul le **dernier match joué** entre les deux équipes départage (décidé en octobre 2026).
 **CLA-10 — Positions** ✅ : 1 à n sans trou ni doublon ; recalcul **idempotent** (deux appels successifs → même résultat, pas de doublon de lignes `Classement`).
 **CLA-11 — Nouvelle équipe ajoutée** ✅ à la poule → apparaît au classement avec 0 point au prochain recalcul.
+**CLA-17 — Zones de montée et de descente** ✅ (`Integration/Twig/ZonesClassementTest`) : dans le classement d'une poule, la zone de descente n'apparaît (lignes et légende) que s'il existe une poule de niveau inférieur dans la phase, la zone de montée que s'il existe une poule de niveau supérieur (niveaux 1, 2, 3 : pas de descente au 3, pas de montée au 1).
 
 ### 4.4 Visibilité des coordonnées — `Fonctionnel/Front/CoordonneesTest` (P0, RGPD) ✅ lot 3
 
@@ -487,6 +488,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
 | **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
 | **Contraste des alertes de l'admin** ✅ | ADM-02 : relecture du webdesigner (contraste, icônes, lecteurs d'écran) | 256 tests verts + 2 lents (`main`) | fait le 13/10/2026 |
+| **Zones de montée / descente du classement** ✅ | CLA-17 : pas de zone de descente sans poule de niveau inférieur (ni de montée sans niveau supérieur) | 258 tests verts + 2 lents (`main`) | fait le 15/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.
