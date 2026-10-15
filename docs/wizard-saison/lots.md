@@ -147,7 +147,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 
 ## Lot 6 : formats BLVB 🟡
 - [x] Branche `formats-competition-lot6` ; décisions D42 à D44
-- [ ] 6a. Phase de barrages : `PhaseType::BARRAGE`, `Phase.options` (JSON, migration), générateur `Barrage`
+- [x] 6a. Phase de barrages : `PhaseType::BARRAGE`, `Phase.options` (JSON, migration), générateur `Barrage`
       (une poule de deux équipes par match, réception selon l'option), vainqueur / perdant résolus par
       `ResultatsSaison`, règles de passage depuis une phase de barrages ; clôture d'une phase sans classement
 - [ ] 6b. Modèle « BLVB avec barrages » (D44) et vérification (D5) des passages par barrage

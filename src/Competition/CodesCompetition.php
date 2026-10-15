@@ -28,7 +28,7 @@ final class CodesCompetition
                 $poules[] = ['cle' => $j, 'code' => $poule->getCode(), 'nom' => $poule->getNom(), 'niveau' => $poule->getNiveau()];
                 $entites["$i/$j"] = $poule;
             }
-            $phases[] = ['cle' => $i, 'code' => $phase->getCode(), 'finale' => $phase->getType() === PhaseType::FINALE, 'ordre' => $phase->getOrdre(), 'poules' => $poules];
+            $phases[] = ['cle' => $i, 'code' => $phase->getCode(), 'finale' => $phase->getType() === PhaseType::FINALE, 'barrage' => $phase->getType() === PhaseType::BARRAGE, 'ordre' => $phase->getOrdre(), 'poules' => $poules];
             $entites[$i] = $phase;
         }
 
@@ -50,16 +50,18 @@ final class CodesCompetition
 
         $pris = array_filter(array_column($phases, 'code'));
         $resultat = [];
-        $championnat = $finale = 0;
+        $championnat = $finale = $barrage = 0;
         foreach ($phases as $phase) {
-            if ($phase['finale']) {
+            if ($phase['barrage'] ?? false) {
+                ++$barrage;
+            } elseif ($phase['finale']) {
                 ++$finale;
             } else {
                 ++$championnat;
             }
             $code = $phase['code'];
             if ($code === null || $code === '') {
-                $code = $phase['finale'] ? 'F'.($finale > 1 ? $finale : '') : 'P'.$championnat;
+                $code = ($phase['barrage'] ?? false) ? 'BAR'.($barrage > 1 ? $barrage : '') : ($phase['finale'] ? 'F'.($finale > 1 ? $finale : '') : 'P'.$championnat);
                 while (\in_array($code, $pris, true)) {
                     $code .= '_';
                 }

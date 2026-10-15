@@ -49,32 +49,34 @@ final class VerificationPassages
                 $erreurs[] = sprintf('Règle « %s » ignorée : elle concerne une autre phase.', self::nom($regle));
                 continue;
             }
-            if (!$place->estRang()) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : le passage selon le résultat d\'un match n\'est pas encore possible.', self::nom($regle));
-                continue;
-            }
-            if (!isset($poules[$place->poule])) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : il n\'y a pas de poule %s dans « %s ».', self::nom($regle), $place->poule, $phase->getNom());
+            // Issue d'un match (D42) : le match est la poule de deux équipes de même code ; vainqueur = rang 1, perdant = rang 2
+            $codePoule = $place->estRang() ? $place->poule : $place->match;
+            if (!isset($poules[$codePoule])) {
+                $erreurs[] = sprintf('Règle « %s » ignorée : il n\'y a pas de %s %s dans « %s ».', self::nom($regle), $place->estRang() ? 'poule' : 'match', $codePoule, $phase->getNom());
                 continue;
             }
 
             $type = $regle->versSaisonSuivante() ? 'saison' : 'phase';
             if ($type === 'saison') {
-                $saisonSuivante[$place->poule] = true;
+                $saisonSuivante[$codePoule] = true;
             }
-            if ($nbEquipes[$place->poule] === 0) {
+            if ($nbEquipes[$codePoule] === 0) {
                 continue; // taille inconnue : pas de contrôle des rangs
             }
-            try {
-                $rangs = $place->rangsPour($nbEquipes[$place->poule]);
-            } catch (PlageVide) {
-                $rangs = [];
-            } catch (NotationInvalide $e) {
-                $erreurs[] = sprintf('Règle « %s » ignorée : %s', self::nom($regle), $e->getMessage());
-                continue;
+            if (!$place->estRang()) {
+                $rangs = [$place->issue === Place::VAINQUEUR ? 1 : 2];
+            } else {
+                try {
+                    $rangs = $place->rangsPour($nbEquipes[$codePoule]);
+                } catch (PlageVide) {
+                    $rangs = [];
+                } catch (NotationInvalide $e) {
+                    $erreurs[] = sprintf('Règle « %s » ignorée : %s', self::nom($regle), $e->getMessage());
+                    continue;
+                }
             }
             foreach ($rangs as $rang) {
-                $couverture[$type][$place->poule][$rang] = ($couverture[$type][$place->poule][$rang] ?? 0) + 1;
+                $couverture[$type][$codePoule][$rang] = ($couverture[$type][$codePoule][$rang] ?? 0) + 1;
             }
         }
 

@@ -22,6 +22,7 @@ class PhaseWizardType extends AbstractType
     public const LIBELLES = [
         'CHAMPIONNAT' => ['Championnat', 'Toutes les équipes de la poule se rencontrent.'],
         'FINALE' => ['Tableau à élimination', 'Le perdant est éliminé.'],
+        'BARRAGE' => ['Barrages', 'Un match sec entre deux équipes, le vainqueur passe.'],
     ];
 
     public function buildForm(FormBuilderInterface $builder, array $options): void
@@ -35,6 +36,7 @@ class PhaseWizardType extends AbstractType
             ->add('type', EnumType::class, [
                 'label' => 'Type de phase',
                 'class' => PhaseType::class,
+                'choices' => [PhaseType::CHAMPIONNAT, PhaseType::FINALE], // barrages : proposés avec l'étape 6c (D29.9, formats pas encore disponibles masqués)
                 'expanded' => true,
                 'choice_label' => fn (PhaseType $type) => self::LIBELLES[$type->name][0],
             ])

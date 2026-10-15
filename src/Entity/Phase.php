@@ -62,6 +62,19 @@ class Phase
     private ?array $bareme = null;
 
     /**
+     * Options propres au format de la phase (D8, D42), ex. `reception` d'un barrage : voir OPTION_*.
+     *
+     * @var array<string, mixed>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $options = null;
+
+    /** Réception d'un barrage (D43) : équipe de la poule supérieure (défaut), mieux classée, ou terrain neutre. */
+    public const RECEPTION_NIVEAU_SUPERIEUR = 'niveau_superieur';
+    public const RECEPTION_MIEUX_CLASSE = 'mieux_classe';
+    public const RECEPTION_NEUTRE = 'neutre';
+
+    /**
      * Règles de passage des équipes de cette phase vers la suivante (ou la saison suivante), dans l'ordre.
      *
      * @var Collection<int, RegleDePassage>
@@ -178,6 +191,28 @@ class Phase
         $this->type = $type;
 
         return $this;
+    }
+
+    /** @return array<string, mixed> */
+    public function getOptions(): array
+    {
+        return $this->options ?? [];
+    }
+
+    /** @param array<string, mixed>|null $options */
+    public function setOptions(?array $options): static
+    {
+        $this->options = $options === [] ? null : $options;
+
+        return $this;
+    }
+
+    /** Option d'un barrage : où se joue le match ; valeur inconnue = équipe de la poule supérieure. */
+    public function getReception(): string
+    {
+        $valeur = $this->getOptions()['reception'] ?? null;
+
+        return \in_array($valeur, [self::RECEPTION_MIEUX_CLASSE, self::RECEPTION_NEUTRE], true) ? $valeur : self::RECEPTION_NIVEAU_SUPERIEUR;
     }
 
     public function getOrdre(): ?int

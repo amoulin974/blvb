@@ -85,6 +85,19 @@ final class CodesCompetitionTest extends TestCase
         self::assertSame(['Brassage' => ['P2', ['Poule A' => 'B', 'Poule B' => 'A']], 'Niveaux' => ['P2_', ['Poule A' => 'A']]], self::codes($saison));
     }
 
+    #[TestDox('Phases de barrages (D31, D42) : BAR, BAR2, sans changer les codes P et F')]
+    public function test_phases_de_barrages(): void
+    {
+        $phases = [];
+        foreach ([[0, 'champ', false], [1, 'bar1', true], [2, 'champ2', false], [3, 'bar2', true]] as [$ordre, $cle, $barrage]) {
+            $phases[] = ['cle' => $cle, 'code' => null, 'finale' => false, 'barrage' => $barrage, 'ordre' => $ordre, 'poules' => []];
+        }
+
+        $codes = array_column(CodesCompetition::calculer($phases), 'code', 'cle');
+
+        self::assertSame(['champ' => 'P1', 'bar1' => 'BAR', 'champ2' => 'P2', 'bar2' => 'BAR2'], $codes);
+    }
+
     #[TestDox('Plusieurs phases finales : F, F2')]
     public function test_plusieurs_finales(): void
     {

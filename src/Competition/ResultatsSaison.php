@@ -8,7 +8,7 @@ use App\Repository\ClassementRepository;
 
 /**
  * Résultats d'une saison pour ResolveurPlace, lus en base : classements des poules, désignées par les codes de phase et
- * de poule (CodesCompetition). Les issues de match (BAR1.AB.vainqueur) arriveront avec les barrages (lot 6).
+ * de poule (CodesCompetition), et issues des matchs de barrage (BAR.AB.vainqueur, D42).
  */
 final class ResultatsSaison implements ResultatsPhases
 {
@@ -38,8 +38,33 @@ final class ResultatsSaison implements ResultatsPhases
         throw new NotationInvalide(sprintf('La saison n\'a pas de phase %s.', $phase));
     }
 
+    /**
+     * Un match est la poule de deux équipes de même code d'une phase de barrages (D42). Null tant que son score n'est
+     * pas saisi ; un forfait (-1 set) donne la victoire à l'autre équipe.
+     */
     public function issue(string $phase, string $match, string $issue): ?Equipe
     {
-        throw new NotationInvalide(sprintf('« %s.%s.%s » : les vainqueurs et perdants de match ne sont pas encore pris en charge.', $phase, $match, $issue));
+        foreach ($this->saison->getPhases() as $p) {
+            if ($p->getCode() !== $phase) {
+                continue;
+            }
+            foreach ($p->getPoules() as $poule) {
+                if ($poule->getCode() !== $match) {
+                    continue;
+                }
+                $partie = $poule->getParties()->first() ?: null;
+                $recus = $partie?->getNbSetGagnantReception();
+                $deplaces = $partie?->getNbSetGagnantDeplacement();
+                if ($partie === null || $recus === null || $deplaces === null || $recus === $deplaces) {
+                    return null;
+                }
+                $recoitGagne = $recus > $deplaces;
+
+                return ($issue === Place::VAINQUEUR) === $recoitGagne ? $partie->getIdEquipeRecoit() : $partie->getIdEquipeDeplace();
+            }
+            throw new NotationInvalide(sprintf('La phase %s n\'a pas de match %s.', $phase, $match));
+        }
+
+        throw new NotationInvalide(sprintf('La saison n\'a pas de phase %s.', $phase));
     }
 }

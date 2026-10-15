@@ -84,7 +84,23 @@ final class VerificationPassagesTest extends TestCase
         );
     }
 
-    #[TestDox('Notation invalide, autre phase, poule inconnue, issue de match, sans destination : erreurs nommant la règle')]
+    #[TestDox('Phase de barrages (D42) : vainqueur et perdant d\'un match sont les rangs 1 et 2 de la poule de deux équipes')]
+    public function test_issues_de_match(): void
+    {
+        $barrage = (new Phase())->setNom('Barrages')->setCode('BAR')->setType(PhaseType::BARRAGE);
+        $match = (new Poule())->setNom('Barrage AB')->setCode('AB')->setNiveau(1);
+        $match->addEquipe((new Equipe())->setNom('a'))->addEquipe((new Equipe())->setNom('b'));
+        $barrage->addPoule($match);
+        $verifier = fn (array $sources) => VerificationPassages::verifier($barrage, array_map(
+            fn (string $s) => (new RegleDePassage())->setSource($s)->setPouleDestination($this->destination),
+            $sources,
+        ));
+
+        self::assertSame([], $verifier(['BAR.AB.vainqueur', 'BAR.AB.perdant']));
+        self::assertSame(['Barrage AB : aucune poule prévue pour le 2e dans la phase suivante.'], $verifier(['BAR.AB.vainqueur']), 'le perdant n\'a pas de destination');
+    }
+
+    #[TestDox('Notation invalide, autre phase, poule inconnue, match inconnu, sans destination : erreurs nommant la règle')]
     public function test_regles_invalides(): void
     {
         $erreurs = $this->verifier([['P1.A#1..-1'], ['P1.A#0'], ['P2.A#1'], ['P1.Z#1'], ['P1.AB.vainqueur']]);
@@ -95,7 +111,7 @@ final class VerificationPassagesTest extends TestCase
         self::assertStringEndsWith('ignorée : elle concerne une autre phase.', $erreurs[1]);
         self::assertStringEndsWith('ignorée : il n\'y a pas de poule Z dans « Phase 1 ».', $erreurs[2]);
         self::assertStringContainsString('vainqueur du match AB', $erreurs[3]);
-        self::assertStringEndsWith('le passage selon le résultat d\'un match n\'est pas encore possible.', $erreurs[3]);
+        self::assertStringEndsWith('ignorée : il n\'y a pas de match AB dans « Phase 1 ».', $erreurs[3]);
         self::assertStringEndsWith('ignorée : aucune poule d\'arrivée n\'est indiquée.', $sansDestination[0]);
     }
 
