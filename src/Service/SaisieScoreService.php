@@ -11,7 +11,7 @@ use App\Repository\MembreEquipeRepository;
 
 /**
  * Qui peut saisir le score d'un match, hors administrateur :
- *  - le capitaine de l'équipe qui reçoit, pour la saison du match ;
+ *  - le capitaine de l'une ou l'autre des deux équipes (qui reçoit ou se déplace), pour la saison du match ;
  *  - les responsables du club de l'une ou l'autre équipe, désignés pour la saison du match (tous les résultats de leur club).
  *
  * Source unique de la règle : utilisée par ScoreVoter (API de saisie) et par les pages du calendrier, qui
@@ -19,7 +19,7 @@ use App\Repository\MembreEquipeRepository;
  */
 final class SaisieScoreService
 {
-    /** @var array<string, array{recoit: int[], club: int[]}> mémoïsation par utilisateur et saison, le temps d'une requête */
+    /** @var array<string, array{capitaine: int[], club: int[]}> mémoïsation par utilisateur et saison, le temps d'une requête */
     private array $cache = [];
 
     public function __construct(
@@ -30,21 +30,21 @@ final class SaisieScoreService
 
     /**
      * Droits de saisie d'un utilisateur pour une saison :
-     *  recoit : équipes dont il est capitaine (matchs qu'elles reçoivent) ;
+     *  capitaine : équipes dont il est capitaine (tous leurs matchs, à domicile comme à l'extérieur) ;
      *  club   : équipes des clubs dont il est responsable pour cette saison (tous leurs matchs).
      *
-     * @return array{recoit: int[], club: int[]}
+     * @return array{capitaine: int[], club: int[]}
      */
     public function droits(?User $user, ?Saison $saison): array
     {
         if ($user === null || $user->getId() === null) {
-            return ['recoit' => [], 'club' => []];
+            return ['capitaine' => [], 'club' => []];
         }
 
         $cle = $user->getId().'-'.($saison?->getId() ?? 'toutes');
 
         return $this->cache[$cle] ??= [
-            'recoit' => array_map(static fn (Equipe $e) => $e->getId(), $this->membreEquipeRepository->findEquipesOuCapitaine($user, $saison)),
+            'capitaine' => array_map(static fn (Equipe $e) => $e->getId(), $this->membreEquipeRepository->findEquipesOuCapitaine($user, $saison)),
             'club' => $saison === null ? [] : $this->equipeRepository->findIdsDesClubsDe($user, $saison),
         ];
     }
@@ -61,7 +61,8 @@ final class SaisieScoreService
 
         $droits = $this->droits($user, $saison);
 
-        return \in_array($recoit, $droits['recoit'], true)
+        return \in_array($recoit, $droits['capitaine'], true)
+            || ($deplace !== null && \in_array($deplace, $droits['capitaine'], true))
             || \in_array($recoit, $droits['club'], true)
             || ($deplace !== null && \in_array($deplace, $droits['club'], true));
     }
