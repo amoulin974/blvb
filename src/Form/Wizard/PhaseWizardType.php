@@ -5,6 +5,7 @@ namespace App\Form\Wizard;
 use App\Entity\Phase;
 use App\Enum\PhaseType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
@@ -52,6 +53,17 @@ class PhaseWizardType extends AbstractType
                 'setter' => function (Phase $phase, ?string $valeur): void {
                     if ($phase->getType() === PhaseType::BARRAGE && $valeur !== null) {
                         $phase->setOptions(array_merge($phase->getOptions(), ['reception' => $valeur]));
+                    }
+                },
+            ])
+            // Tableau à élimination : match pour la 3e place (B2) ; enregistré dans les options, seulement pour un tableau
+            ->add('petiteFinale', CheckboxType::class, [
+                'label' => 'Jouer un match pour la 3e place',
+                'required' => false,
+                'getter' => fn (Phase $phase): bool => $phase->aPetiteFinale(),
+                'setter' => function (Phase $phase, ?bool $valeur): void {
+                    if ($phase->getType() === PhaseType::FINALE) {
+                        $phase->setOptions(array_merge($phase->getOptions(), ['petite_finale' => (bool) $valeur]));
                     }
                 },
             ])

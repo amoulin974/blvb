@@ -2,6 +2,7 @@
 
 namespace App\Competition\Format;
 
+use App\Entity\Equipe;
 use App\Entity\Journee;
 use App\Entity\Lieu;
 use App\Entity\Partie;
@@ -11,9 +12,14 @@ use App\Enum\PhaseType;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Élimination directe (format B1 de docs/formats-competition.md), la phase finale actuelle : tableau ramené à la
- * puissance de 2 inférieure par un tour de barrages, une journée par tour, matchs reliés par Partie::parentMatch1/2.
- * Les équipes sont placées dans l'ordre de la poule (les premières sont exemptées du barrage).
+ * Élimination directe (format B1 de docs/formats-competition.md), la phase finale : tableau à placement standard
+ * (1-8, 4-5, 3-6, 2-7 pour 8 équipes : le 1er et le 2e ne se rencontrent qu'en finale), une journée par tour, matchs
+ * reliés par Partie::parentMatch1/2. Quand le nombre d'équipes n'est pas une puissance de 2, le tableau est complété
+ * par des exemptions : les meilleures têtes de série passent directement au tour suivant et un tour de barrages oppose
+ * les moins bien classées (12 équipes : 5-12, 6-11, 7-10, 8-9, les 4 premières sont exemptées).
+ * Option de la phase `petite_finale` (B2) : match pour la 3e place entre les perdants des demi-finales.
+ *
+ * Les têtes de série suivent le classement de la phase précédente (rang dans sa poule, puis niveau de sa poule).
  */
 final class Elimination implements GenerateurFormat
 {
@@ -31,12 +37,14 @@ final class Elimination implements GenerateurFormat
         return false;
     }
 
-    //Méthode utilisée pour crééer les journée d'une phase du type finale
     public function nombreMatchs(Poule $poule): int
     {
         $n = count($poule->getEquipes());
+        if ($n < 2) {
+            return 0;
+        }
 
-        return $n < 2 ? 0 : $n - 1;
+        return $n - 1 + ($this->petiteFinale($poule, $n) ? 1 : 0);
     }
 
     public function nombreJournees(Poule $poule): int
@@ -115,133 +123,153 @@ final class Elimination implements GenerateurFormat
         };
     }
 
+    /**
+     * Ordre des têtes de série d'un tableau de $taille places (puissance de 2) : la position i et i+1 se rencontrent au
+     * premier tour. 8 → 1, 8, 4, 5, 2, 7, 3, 6 (1-8, 4-5, 2-7, 3-6) ; le 1er et le 2e sont dans des moitiés opposées.
+     *
+     * @return list<int>
+     */
+    public static function placementStandard(int $taille): array
+    {
+        $tetes = [1];
+        for ($n = 1; $n < $taille; $n *= 2) {
+            $suite = [];
+            foreach ($tetes as $tete) {
+                $suite[] = $tete;
+                $suite[] = 2 * $n + 1 - $tete;
+            }
+            $tetes = $suite;
+        }
+
+        return $tetes;
+    }
+
+    /**
+     * Équipes de la poule dans l'ordre des têtes de série : rang dans la poule de la phase précédente, puis niveau de
+     * cette poule, puis nom (ordre stable quand le classement n'est pas connu).
+     *
+     * @return list<Equipe>
+     */
+    private function ordreDeTete(Poule $poule): array
+    {
+        $phase = $poule->getPhase();
+        $precedentes = [];
+        foreach ($phase->getSaison()->getPhases() as $autre) {
+            if ($autre->getOrdre() < $phase->getOrdre()) {
+                $precedentes[] = $autre;
+            }
+        }
+        usort($precedentes, fn (Phase $x, Phase $y) => $y->getOrdre() <=> $x->getOrdre());
+
+        $cle = function (Equipe $equipe) use ($precedentes): array {
+            foreach ($precedentes as $autre) {
+                foreach ($autre->getPoules() as $source) {
+                    if (!$source->getEquipes()->contains($equipe)) {
+                        continue;
+                    }
+                    foreach ($source->getClassements() as $classement) {
+                        if ($classement->getEquipe() === $equipe && $classement->getPosition() !== null) {
+                            return [$classement->getPosition(), $source->getNiveau() ?? PHP_INT_MAX, (string) $equipe->getNom()];
+                        }
+                    }
+
+                    return [PHP_INT_MAX, $source->getNiveau() ?? PHP_INT_MAX, (string) $equipe->getNom()];
+                }
+            }
+
+            return [PHP_INT_MAX, PHP_INT_MAX, (string) $equipe->getNom()];
+        };
+
+        $equipes = $poule->getEquipes()->toArray();
+        usort($equipes, fn (Equipe $a, Equipe $b) => $cle($a) <=> $cle($b));
+
+        return array_values($equipes);
+    }
+
+    private function petiteFinale(Poule $poule, int $nbEquipes): bool
+    {
+        return $nbEquipes >= 4 && $poule->getPhase()?->aPetiteFinale() === true;
+    }
+
     public function genererMatchs(Poule $poule): void
     {
-        $lieuRepository = $this->em->getRepository(Lieu::class);
-        $equipes = $poule->getEquipes()->toArray();
-        $nbEquipes = count($equipes);
+        $equipes = $this->ordreDeTete($poule);
+        $n = \count($equipes);
         $journees = $poule->getJournees()->toArray();
-        usort($journees, fn($j1, $j2) => $j1->getNumero() <=> $j2->getNumero());
-
-        // 1. Calculer la structure
-        // puissance de 2 inférieure (ex: pour 12 c'est 8)
-        $p = pow(2, floor(log($nbEquipes, 2)));
-        $nbBarrages = $nbEquipes - $p;
-        $nbExemptes = $p - $nbBarrages;
-
-        $matchsParTour = [];
-
-        // 2. Création de tous les matchs "vides" par tour
-        foreach ($journees as $indexJournee => $journee) {
-            $tourMatchs = [];
-
-            // Déterminer combien de matchs dans ce tour
-            if ($indexJournee === 0 && $nbBarrages > 0) {
-                $nbMatchsAcreer = $nbBarrages; // Tour de barrages
-            } else {
-                // Pour les tours suivants, on divise par 2 à chaque fois
-                // Le premier tour complet a $p/2$ matchs (ex: 8 équipes -> 4 matchs)
-                $distanceFinale = count($journees) - 1 - $indexJournee;
-                $nbMatchsAcreer = pow(2, $distanceFinale);
-            }
-
-            for ($i = 0; $i < $nbMatchsAcreer; $i++) {
-                $match = new Partie();
-                $match->setJournee($journee);
-                $match->setPoule($poule);
-                $match->setNom($journee->getNom() . ' - Match ' . ($i + 1));
-
-                $this->em->persist($match);
-                $tourMatchs[] = $match;
-            }
-            $matchsParTour[$indexJournee] = $tourMatchs;
+        usort($journees, fn (Journee $j1, Journee $j2) => $j1->getNumero() <=> $j2->getNumero());
+        if ($n < 2 || $journees === []) {
+            return;
         }
 
-        // 3 & 4. Liaison et Remplissage des équipes de départ
-        $equipeIndex = 0;
-        $tourCible = ($nbBarrages > 0) ? 1 : 0;
-        $matchsDuTourSuivant = $matchsParTour[$tourCible];
+        // Tableau complet de $taille places (puissance de 2 ≥ n) ; une place vide donne une exemption
+        $taille = (int) pow(2, ceil(log($n, 2)));
+        $tetes = self::placementStandard($taille);
+        $tours = (int) log($taille, 2);
 
-        // A. On place d'abord les EXEMPTÉS (Têtes de série)
-        // On les répartit : d'abord tous les "Recoit", puis si on en a encore, les "Deplace"
-        foreach ($matchsDuTourSuivant as $match) {
-            if ($equipeIndex < $nbExemptes) {
-                $match->setIdEquipeRecoit($equipes[$equipeIndex++]);
+        // Nœud du tableau : ['equipe' => Equipe] (exemptée) ou ['match' => Partie]
+        $creer = function (int $tour, int $rang) use ($poule, $journees, $tours): Partie {
+            $journee = $journees[min($tour - 1, \count($journees) - 1)];
+            $match = (new Partie())->setJournee($journee)->setPoule($poule)->setNom($journee->getNom().' - Match '.$rang);
+            $this->em->persist($match);
+
+            return $match;
+        };
+
+        $noeuds = [];
+        $rang = 0;
+        for ($i = 0; $i < $taille / 2; ++$i) {
+            [$a, $b] = [$tetes[2 * $i], $tetes[2 * $i + 1]];
+            if ($b > $n) {
+                $noeuds[] = ['equipe' => $equipes[$a - 1]]; // exemptée du premier tour
+                continue;
             }
+            $match = $creer(1, ++$rang)->setIdEquipeRecoit($equipes[$a - 1])->setIdEquipeDeplace($equipes[$b - 1]);
+            $noeuds[] = ['match' => $match];
         }
-        foreach ($matchsDuTourSuivant as $match) {
-            if ($equipeIndex < $nbExemptes && $match->getIdEquipeDeplace() === null) {
-                $match->setIdEquipeDeplace($equipes[$equipeIndex++]);
-            }
-        }
 
-        // B. On remplit les BARRAGES (Round 0) et on les lie aux places LIBRES du tour suivant
-        if ($nbBarrages > 0) {
-            $barrageIndex = 0;
-            $matchsBarrage = $matchsParTour[0];
-
-            // 1. Remplissage des matchs de barrage avec les équipes restantes
-            foreach ($matchsBarrage as $matchB) {
-                $matchB->setIdEquipeRecoit($equipes[$equipeIndex++]);
-                $matchB->setIdEquipeDeplace($equipes[$equipeIndex++]);
-            }
-
-            // 2. LIAISON : On lie chaque match de barrage à une place vide (null) dans le tour suivant
-            foreach ($matchsDuTourSuivant as $matchS) {
-                // Si le slot Recoit est vide, on y lie un barrage
-                if ($matchS->getIdEquipeRecoit() === null && $barrageIndex < $nbBarrages) {
-                    $matchS->setParentMatch1($matchsBarrage[$barrageIndex++]);
+        $matchs = array_filter(array_column($noeuds, 'match'));
+        $demis = []; // demi-finales, pour la petite finale
+        for ($tour = 2; $tour <= $tours; ++$tour) {
+            $suivants = [];
+            $rang = 0;
+            for ($j = 0; $j < \count($noeuds); $j += 2) {
+                $match = $creer($tour, ++$rang);
+                foreach ([$noeuds[$j], $noeuds[$j + 1]] as $cote => $noeud) {
+                    if (isset($noeud['equipe'])) {
+                        $cote === 0 ? $match->setIdEquipeRecoit($noeud['equipe']) : $match->setIdEquipeDeplace($noeud['equipe']);
+                    } else {
+                        $cote === 0 ? $match->setParentMatch1($noeud['match']) : $match->setParentMatch2($noeud['match']);
+                    }
                 }
-                // Si le slot Deplace est vide, on y lie un barrage
-                if ($matchS->getIdEquipeDeplace() === null && $barrageIndex < $nbBarrages) {
-                    $matchS->setParentMatch2($matchsBarrage[$barrageIndex++]);
-                }
+                $suivants[] = ['match' => $match];
+                $matchs[] = $match;
             }
+            if ($tour === $tours - 1) {
+                $demis = array_column($suivants, 'match');
+            }
+            $noeuds = $suivants;
         }
 
-        // C. Liaison des tours suivants (Quarts vers Demis, Demis vers Finale)
-        // On commence après le tour de barrage ou le premier tour
-        $startTour = $tourCible;
-        for ($t = $startTour; $t < count($matchsParTour) - 1; $t++) {
-            foreach ($matchsParTour[$t] as $indexMatch => $matchActuel) {
-                $prochainTour = $matchsParTour[$t + 1];
-                $targetMatch = $prochainTour[floor($indexMatch / 2)];
-
-                if ($indexMatch % 2 === 0) {
-                    $targetMatch->setParentMatch1($matchActuel);
-                } else {
-                    $targetMatch->setParentMatch2($matchActuel);
-                }
-            }
+        // Petite finale (B2) : perdants des deux demi-finales, jouée le jour de la finale
+        if ($this->petiteFinale($poule, $n) && \count($demis) === 2) {
+            $petite = $creer($tours, 1)->setParentMatch1($demis[0])->setParentMatch2($demis[1])->setParentPerdants(true);
+            $petite->setNom('Petite finale');
+            $matchs[] = $petite;
         }
 
-        // 5. Remplissage deu lieu et de la date
-        foreach ($matchsParTour as $tourMatchs) {
-            /** @var Partie $match */
-            foreach ($tourMatchs as $match) {
-                //Soit on sait qui reçoit donc on peut fixer le lieu et calculer la date
-                if ($match->getIdEquipeRecoit() !== null) {
-                    $match->setLieu($match->getIdEquipeRecoit()->getLieu());
-                    $dateMatch = DateMatch::calculer(
-                        $match->getJournee()->getDateDebut(),
-                        $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $match->getIdEquipeRecoit()->getLieu()->getCreneaux()[0]->getHeureDebut(),
-                    );
-                    $match->setDate($dateMatch);
-
-                }else{
-                    //On fixe la date au premier jour de la semaine à 20h
-                    $match->setLieu($lieuRepository->getLieuByDefaut());
-                    $dateMatch = DateMatch::calculer(
-                        $match->getJournee()->getDateDebut(),
-                        $match->getLieu()->getCreneaux()[0]->getJourSemaine(),
-                        $match->getLieu()->getCreneaux()[0]->getHeureDebut(),
-                    );
-                    $match->setDate($dateMatch);
-
-                }
-
+        // Lieu et date : chez l'équipe qui reçoit si elle est connue, sinon lieu par défaut, au premier créneau du lieu
+        $lieuRepository = $this->em->getRepository(Lieu::class);
+        /** @var Partie $match */
+        foreach ($matchs as $match) {
+            $lieu = $match->getIdEquipeRecoit()?->getLieu() ?? $lieuRepository->getLieuByDefaut();
+            if ($lieu !== null) {
+                $match->setLieu($lieu);
             }
+            $creneau = $lieu?->getCreneaux()->first() ?: null;
+            $debut = $match->getJournee()->getDateDebut();
+            $match->setDate($creneau
+                ? DateMatch::calculer($debut, $creneau->getJourSemaine(), $creneau->getHeureDebut())
+                : $debut->setTime(20, 0));
         }
 
         $this->em->flush();

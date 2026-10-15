@@ -60,6 +60,17 @@
                                 </div>
                                 <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés.</p>
                             </fieldset>
+                            {% if finale %}
+                                <div>
+                                    <label class="flex min-h-11 items-start gap-2 py-2">
+                                        {{ form_widget(phaseForm.petiteFinale, {attr: {class: 'checkbox mt-0.5', 'aria-describedby': 'aide-petite-finale-' ~ i}}) }}
+                                        <span>Jouer un match pour la troisième place (petite finale)</span>
+                                    </label>
+                                    <p id="aide-petite-finale-{{ i }}" class="pl-8 text-sm text-(--color-base-content)/80">Entre les deux perdants des demi-finales, le jour de la finale. Sans effet s'il y a moins de 4 équipes.</p>
+                                </div>
+                            {% else %}
+                                <div hidden>{{ form_widget(phaseForm.petiteFinale) }}</div>
+                            {% endif %}
                             {% if barrage %}
                                 <fieldset class="fieldset border border-base-300 rounded-box p-3">
                                     <legend class="fieldset-legend">Qui reçoit le match ?</legend>

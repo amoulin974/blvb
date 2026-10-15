@@ -215,6 +215,12 @@ class Phase
         return \in_array($valeur, [self::RECEPTION_MIEUX_CLASSE, self::RECEPTION_NEUTRE], true) ? $valeur : self::RECEPTION_NIVEAU_SUPERIEUR;
     }
 
+    /** Option d'un tableau à élimination : un match pour la 3e place entre les perdants des demi-finales (B2). */
+    public function aPetiteFinale(): bool
+    {
+        return ($this->getOptions()['petite_finale'] ?? false) === true;
+    }
+
     public function getOrdre(): ?int
     {
         return $this->ordre;

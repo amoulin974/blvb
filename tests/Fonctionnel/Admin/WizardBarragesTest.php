@@ -93,6 +93,30 @@ final class WizardBarragesTest extends TestFonctionnel
         self::assertArrayNotHasKey('reception', $this->phase($saison, 'P1')->getOptions());
     }
 
+    #[TestDox('WIZ-27 Étape 3 : « Jouer un match pour la troisième place » pour un tableau ; enregistré dans les options de la phase finale seulement')]
+    public function test_petite_finale(): void
+    {
+        $saison = $this->brouillon();
+        $url = '/admin/saison/'.$saison->getId().'/wizard/3';
+        $crawler = $this->client->request('GET', $url);
+        self::assertSelectorTextContains('body', 'Jouer un match pour la troisième place');
+
+        $valeurs = $crawler->filter('#wizard-form')->form()->getPhpValues();
+        foreach ($valeurs['phases_wizard']['phases'] as $i => $phase) {
+            if (($phase['nom'] ?? '') === 'Phase Finale') {
+                $valeurs['phases_wizard']['phases'][$i]['petiteFinale'] = '1';
+            }
+        }
+        $this->client->request('POST', $url, $valeurs + ['aller' => 'suivant']);
+        self::assertResponseRedirects('/admin/saison/'.$saison->getId().'/wizard/4');
+
+        $this->em()->clear();
+        $saison = $this->em()->find(Saison::class, $saison->getId());
+        self::assertTrue($this->phase($saison, 'F')->aPetiteFinale());
+        self::assertFalse($this->phase($saison, 'P1')->aPetiteFinale());
+        self::assertArrayNotHasKey('petite_finale', $this->phase($saison, 'P1')->getOptions());
+    }
+
     #[TestDox('WIZ-24 Étape 4 : une carte par match de barrage (vainqueur, perdant) ; les passages vers les barrages restent en mode détaillé')]
     public function test_etape_passages(): void
     {

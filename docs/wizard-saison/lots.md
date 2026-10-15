@@ -153,7 +153,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] 6b. Modèle « BLVB avec barrages » (D44) et vérification (D5) des passages par barrage
 - [x] 6c. Wizard : phase de barrages (étape Phases), carte par match à l'étape Passages (D32), mise en place
       (Poules, Journées, Matchs) d'une phase de barrages
-- [ ] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
+- [x] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
       1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
 - [ ] 6e. Journée des finales (C3) : tableaux de tous les niveaux sur une date
 - [ ] 6f. Aller-retour (A2) et format de match par phase (3 ou 2 sets gagnants)
