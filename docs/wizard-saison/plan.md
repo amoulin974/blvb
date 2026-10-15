@@ -72,9 +72,11 @@ lors de l'arrivée du deuxième sport, pas avant.
 - Gestion de l'exempt (aucun point / victoire fictive).
 
 ### Phase
-- `format` : remplace `type`. Valeurs : `championnat`, `elimination`, `barrage`, `suisse`,
-  `plateaux`, `echelle` (toutes prévues dans le modèle, implémentées dans l'ordre de D7).
-- `options` (JSON) : propres au format. Exemples : `aller_retour`, `retour` (miroir/décalé),
+- `type` (`PhaseType`) **est** le format de la phase (D42, qui modifie D33 : pas de renommage en `format`).
+  Valeurs réalisées : `CHAMPIONNAT`, `FINALE` (élimination), `BARRAGE` ; prévues, dans l'ordre de D7 :
+  suisse, plateaux, échelle.
+- `options` (JSON, `Phase.options`, réalisé au lot 6) : propres au format. Réalisées : `reception` (barrage),
+  `petite_finale` (tableau). Exemples : `aller_retour`, `retour` (miroir/décalé),
   `taille_tableau`, `placement` (standard/serpentin/tirage), `petite_finale`, `classement_integral`,
   `consolante`, `double_elimination`, `confrontation` (sec/aller-retour + set en or), `reception`
   (mieux classé/niveau supérieur/neutre), `nb_rondes` (suisse), `taille_plateau`.

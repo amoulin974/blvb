@@ -235,6 +235,23 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   dont vérifier où se saisissent les scores) ; équipe qui se retire et forfait général (règle de forfait, D41) ;
   page « Optimiser » (tableaux colorés, hors motif `table-admin`).
 
+### 2026-10-15 : corrections sur main, lot 6 (barrages, tableau complet)
+
+- **Sur `main`, déployées en `prod`** (`2c67e9d`) : pas de zone de montée / descente sans poule voisine
+  (CLA-17) ; les capitaines des deux équipes peuvent saisir le score (SCO-03 : sans journal ni verrou, choix de
+  l'utilisateur) ; `main` ramenée dans `formats-competition-lot5`, lot 5 fusionné dans `formats-competition`.
+- **Lot 6** (`formats-competition-lot6`, décisions D42 à D44) :
+  - 6a : `PhaseType::BARRAGE`, `Phase.options`, générateur `Barrage` (une poule de deux équipes par match),
+    vainqueur / perdant (`ResultatsSaison::issue`), codes `BAR` (migration `Version20261015100000`) ;
+  - 6b : modèle « BLVB avec barrages » (1 montée directe, barrage avant-dernier / 2e du dessous, 1 descente) ;
+  - 6c : barrages dans le wizard (étapes Phases, Passages, vérification), relu ergonome, webdesigner, sécurité ;
+  - 6d : tableau complet : têtes de série selon le classement, placement standard, exemptions, petite finale
+    (migration `Version20261015110000`, `partie.parent_perdants`).
+  444 tests verts + 2 lents.
+- **Reste du lot 6** : 6e journée des finales (C3), 6f aller-retour (A2) et format de match par phase ; vérifier
+  dans le navigateur la mise en place (Poules, Journées, Matchs) d'une phase de barrages ; barrages aussi en
+  fin de saison (point 6 de F2, à décider). Les deux migrations du lot ne vont en production qu'au déploiement.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Pour un nouveau
@@ -248,10 +265,10 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
    en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
    manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
-5. **Vérifier l'état** : `docker compose exec php composer tests` (418 tests verts attendus) et
+5. **Vérifier l'état** : `docker compose exec php composer tests` (444 tests verts attendus) et
    `docker compose exec php composer qualite`.
-6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D34), `lots.md`
-   (lot 5) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à
+6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D44), `lots.md`
+   (lot 6) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à
    jour dans le même commit, ergonome et webdesigner avant tout commit d'interface, sécurité pour les
    formulaires, agent `deploiement` avant tout passage en production, pas de décision de conception
    sans l'avoir consignée). Les agents `.claude/agents/*.md` se lancent comme agents généraux qui lisent

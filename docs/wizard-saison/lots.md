@@ -151,8 +151,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
       (une poule de deux équipes par match, réception selon l'option), vainqueur / perdant résolus par
       `ResultatsSaison`, règles de passage depuis une phase de barrages ; clôture d'une phase sans classement
 - [x] 6b. Modèle « BLVB avec barrages » (D44) et vérification (D5) des passages par barrage
-- [x] 6c. Wizard : phase de barrages (étape Phases), carte par match à l'étape Passages (D32), mise en place
-      (Poules, Journées, Matchs) d'une phase de barrages
+- [x] 6c. Wizard : phase de barrages (étape Phases), carte par match à l'étape Passages (D32), modèle proposé
+      au départ ; relu par l'ergonome, le webdesigner et la sécurité
+- [ ] 6c bis. Mise en place (Poules, Journées, Matchs) d'une phase de barrages : fonctionne par les générateurs
+      (BAR-01 à BAR-06) mais n'a pas été relue écran par écran dans le navigateur (« Barrage 1 » à 2 équipes,
+      textes des bilans)
 - [x] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
       1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
 - [ ] 6e. Journée des finales (C3) : tableaux de tous les niveaux sur une date
