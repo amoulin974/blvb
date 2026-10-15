@@ -6,6 +6,11 @@
 {% if poule.classements|length > 0 %}
     {% set nbEquipes = poule.classements|length %}
     {% set zonesActives = poule.parties|length > 0 %}
+    {# Pas de zone de descente sans poule de niveau inférieur dans la phase, ni de zone de montée sans poule de niveau supérieur (niveau 1 = le plus haut).
+       Poule sans niveau : zones conservées comme avant. #}
+    {% set niveaux = poule.phase ? poule.phase.poules|map(p => p.niveau)|filter(n => n is not null) : [] %}
+    {% set montePossible = poule.niveau is null or niveaux|filter(n => n < poule.niveau)|length > 0 %}
+    {% set descendPossible = poule.niveau is null or niveaux|filter(n => n > poule.niveau)|length > 0 %}
 
     {# Ordinateur : tableau #}
     <div class="hidden md:block">
@@ -32,8 +37,8 @@
             </thead>
             <tbody>
             {% for classement in poule.classements %}
-                {% set montee = zonesActives and classement.position <= poule.NbMonteeDefaut %}
-                {% set descente = zonesActives and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
+                {% set montee = zonesActives and montePossible and classement.position <= poule.NbMonteeDefaut %}
+                {% set descente = zonesActives and descendPossible and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
                 {% set courante = equipeid is defined and classement.equipe.id == equipeid %}
                 {% set matchsJoues = poule.parties|filter(p => (p.idEquipeRecoit.id == classement.equipe.id or p.idEquipeDeplace.id == classement.equipe.id) and p.nbSetGagnantReception is not null and p.nbSetGagnantDeplacement is not null) %}
                 {% set joues = matchsJoues|length %}
@@ -62,8 +67,8 @@
     {# Mobile : cartes compactes, rang à gauche, points à droite #}
     <div class="md:hidden flex flex-col gap-2">
         {% for classement in poule.classements %}
-            {% set montee = zonesActives and classement.position <= poule.NbMonteeDefaut %}
-            {% set descente = zonesActives and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
+            {% set montee = zonesActives and montePossible and classement.position <= poule.NbMonteeDefaut %}
+            {% set descente = zonesActives and descendPossible and classement.position > (nbEquipes - poule.NbDescenteDefaut) %}
             {% set courante = equipeid is defined and classement.equipe.id == equipeid %}
             {% set matchsJoues = poule.parties|filter(p => (p.idEquipeRecoit.id == classement.equipe.id or p.idEquipeDeplace.id == classement.equipe.id) and p.nbSetGagnantReception is not null and p.nbSetGagnantDeplacement is not null) %}
             {% set joues = matchsJoues|length %}
@@ -91,10 +96,10 @@
         {% endfor %}
     </div>
 
-    {% if zonesActives and (poule.NbMonteeDefaut > 0 or poule.NbDescenteDefaut > 0) %}
+    {% if zonesActives and ((montePossible and poule.NbMonteeDefaut > 0) or (descendPossible and poule.NbDescenteDefaut > 0)) %}
         <p class="mt-3 text-sm flex flex-wrap gap-x-4 gap-y-1">
-            {% if poule.NbMonteeDefaut > 0 %}<span><span class="text-(--color-success)" aria-hidden="true">▲</span> Zone de montée</span>{% endif %}
-            {% if poule.NbDescenteDefaut > 0 %}<span><span class="text-(--color-warning)" aria-hidden="true">▼</span> Zone de descente</span>{% endif %}
+            {% if montePossible and poule.NbMonteeDefaut > 0 %}<span><span class="text-(--color-success)" aria-hidden="true">▲</span> Zone de montée</span>{% endif %}
+            {% if descendPossible and poule.NbDescenteDefaut > 0 %}<span><span class="text-(--color-warning)" aria-hidden="true">▼</span> Zone de descente</span>{% endif %}
         </p>
     {% endif %}
 {% else %}

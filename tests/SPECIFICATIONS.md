@@ -208,13 +208,13 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 
 **SCO-01** ✅ — Sans en-tête CSRF ou jeton faux → 403, score inchangé.
 **SCO-02** ✅ — Anonyme → refus 403, score inchangé. Tout refus de droits renvoie **403** « Modification interdite » (A4, décidé).
-**SCO-03** — Matrice des droits sur le match de référence (A1 reçoit A2). Règle unique : `SaisieScoreService::peutSaisir` (API via `ScoreVoter`, interface via `droitsSaisie`) :
+**SCO-03** — Matrice des droits sur le match de référence (A1 reçoit A2) ; les capitaines des deux équipes peuvent saisir (décidé le 15/10/2026). Règle unique : `SaisieScoreService::peutSaisir` (API via `ScoreVoter`, interface via `droitsSaisie`) :
 
 | Profil | Attendu |
 |---|---|
 | `cap.a1` (capitaine de l'équipe qui reçoit, saison du match) | 200 ✅ |
-| `cap.a2` (capitaine de l'équipe qui se déplace) | refus ✅ |
-| `cap.b1` (autre poule) | refus |
+| `cap.a2` (capitaine de l'équipe qui se déplace, saison du match) | 200 ✅ (les deux capitaines du match peuvent saisir) |
+| `cap.b1` (autre poule) | refus ✅ |
 | `joueur.a1` (membre non capitaine de A1) | refus ✅ |
 | `cap.a1.precedente` | refus |
 | `resp.club` (responsable du club de A1) | 200 ✅ |
@@ -233,7 +233,7 @@ Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreD
 **SCO-10 — Match à venir** ✅ : refusé (403, « Ce match n'a pas encore eu lieu… ») au capitaine et au responsable de club, accepté pour l'admin (A5, décidé). Un match sans date est traité comme à venir.
 **SCO-11** ✅ — Match inexistant → 404.
 **SCO-16 — Match interrompu (règle 1R)** ✅ : saisi par le capitaine comme par le responsable de club ou l'admin (décidé) ; points du règlement, quel que soit le barème de la saison : 2–1 → 2 et 1 point, 2–2 → 1 point chacun (set-average inchangé), 1–1 et 1–0 → aucun point. La fenêtre de saisie propose l'option « Match interrompu (règle 1R) » avec un rappel de la règle et le résumé des points (vérifié avec Node, à couvrir par E2E-01).
-**SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour `cap.a2` et anonyme → jamais de bouton ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
+**SCO-12 — Interface** (rendu HTML du calendrier) : pour `cap.a1`, match passé sans score → bouton « Saisir » à la place du tiret ; match futur → tiret, pas de bouton ; match avec score → score + crayon ; pour anonyme et `cap.b1` (autre poule) → jamais de bouton ; `cap.a2` voit le bouton sur le match de référence (il s'y déplace) ; pour `resp.club` → boutons sur les matchs des équipes de son club, à domicile comme à l'extérieur (crayon sur A2–A1, où A1 se déplace, que le capitaine de A1 n'a pas), aucun sur les autres, sur le calendrier comme sur l'accueil ✅ ; la balise `<meta name="csrf-token">` n'est présente que pour un utilisateur connecté. Chaque bouton porte l'URL de l'API générée par le routeur (`data-url-score`, préfixe /blvb en prod) ✅ *`UrlsGenereesTest`*.
 
 ### 4.3 Calcul du classement — `Unitaire/Service/ClassementServicePointsTest`, `Unitaire/Competition/Sport/VolleyTest`, `Unitaire/Competition/Sport/BaremeTest`, `Unitaire/Competition/Classement/CritereDepartageTest`, `Integration/Service/ClassementServiceTest` (P0) ✅ lot 2
 
@@ -262,6 +262,7 @@ Tous ces tests utilisent le barème « tous différents » de la story (5/4/2/1/
 **CLA-09 — Aller-retour** ✅ : seul le **dernier match joué** entre les deux équipes départage (décidé en octobre 2026).
 **CLA-10 — Positions** ✅ : 1 à n sans trou ni doublon ; recalcul **idempotent** (deux appels successifs → même résultat, pas de doublon de lignes `Classement`).
 **CLA-11 — Nouvelle équipe ajoutée** ✅ à la poule → apparaît au classement avec 0 point au prochain recalcul.
+**CLA-17 — Zones de montée et de descente** ✅ (`Integration/Twig/ZonesClassementTest`) : dans le classement d'une poule, la zone de descente n'apparaît (lignes et légende) que s'il existe une poule de niveau inférieur dans la phase, la zone de montée que s'il existe une poule de niveau supérieur (niveaux 1, 2, 3 : pas de descente au 3, pas de montée au 1).
 
 Classement paramétrable (chantier des formats de compétition, lot 2 ; `docs/wizard-saison/decisions.md` D16 à D19). Le départage est une liste ordonnée de critères enregistrée par saison ; la liste par défaut (points, différence de sets, confrontation directe, ordre alphabétique) reproduit CLA-06 à CLA-09, qui servent de non-régression.
 
@@ -543,6 +544,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **3 — Données personnelles et admin** ✅ | CON-*, COM-*, SUP-* | Matrice de visibilité figée par les tests ; 210 tests verts | fait le 13/10/2026 (seuils de couverture : reportés) |
 | **4 — Calculs et fonctions annexes** ✅ | JOU-*, MAT-*, PHA-*, ICS-*, IMP-*, GYM-*, MEQ-*, ADM-01 ; job de nuit (tests `lent`) | Génération de calendrier couverte ; 249 tests verts + 2 lents | fait le 12/10/2026 |
 | **Contraste des alertes de l'admin** ✅ | ADM-02 : relecture du webdesigner (contraste, icônes, lecteurs d'écran) | 256 tests verts + 2 lents (`main`) | fait le 13/10/2026 |
+| **Zones de montée / descente du classement** ✅ | CLA-17 : pas de zone de descente sans poule de niveau inférieur (ni de montée sans niveau supérieur) | 258 tests verts + 2 lents (`main`) | fait le 15/10/2026 |
 | **Formats de compétition, lot 1** ✅ | NOT-*, SPT-01, FMT-01 (§4.16) ; `RegleScoreTest` devenu `VolleyTest` ; génération des calendriers déplacée dans `App\Competition\Format` sans changement de comportement | 309 tests verts + 2 lents (branche `formats-competition-lot1`) | fait le 13/10/2026 |
 | **Formats de compétition, lot 2** ✅ | CLA-12 à CLA-16 (§4.3) : départage paramétrable par saison (quotient de sets, mini-classement), barème surchargeable par phase ; migration `Version20261013100000` | 319 tests verts + 2 lents (branche `formats-competition-lot2`) | fait le 13/10/2026 |
 | **Formats de compétition, lot 3** ✅ | COD-01, REG-01 (§4.16) : codes des phases et des poules, règles de passage par défaut ; PHA-06 à PHA-09, VER-01 (§4.8) : clôture par les règles de passage, message relu par l'ergonome et le webdesigner ; fusion de `main` (ADM-02) | 351 tests verts + 2 lents (branche `formats-competition`) | fait le 13/10/2026 |
