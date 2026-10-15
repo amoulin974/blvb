@@ -452,7 +452,7 @@ final class FrontController extends AbstractController
 
     $data = json_decode($request->getContent(), true);
     try{
-        // Admin, capitaine de l'équipe qui reçoit ou responsable de son club (App\Security\ScoreVoter) : sinon 403
+        // Admin, capitaine de l'une ou l'autre équipe ou responsable de leur club (App\Security\ScoreVoter) : sinon 403
         if (!$this->isGranted(ScoreVoter::SAISIR, $partie)) {
             return $this->json(['error' => 'Modification interdite'], 403);
         }

@@ -11,7 +11,7 @@ use Symfony\Component\Security\Core\Authorization\Voter\Vote;
 use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 
 /**
- * is_granted('SAISIR_SCORE', partie) : l'administrateur, le capitaine de l'équipe qui reçoit
+ * is_granted('SAISIR_SCORE', partie) : l'administrateur, le capitaine de l'une ou l'autre équipe
  * (saison du match) et les responsables du club de l'une ou l'autre équipe (SaisieScoreService).
  *
  * @extends Voter<string, Partie>
