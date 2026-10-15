@@ -15,7 +15,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D28) | ✅ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ✅ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ✅ |
-| 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ⬜ |
+| 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | 🟡 |
 | 7 | Autres championnats : brassage puis niveau (A4), serpentin (A5), géographique (A6) | ⬜ |
 | 8 | Autres éliminations et hybrides : classement intégral (B3), consolante (B4), aller-retour et set en or (B6), play-offs et play-downs (C2), meilleurs Xe (C5) | ⬜ |
 | 9 | Formats particuliers : plateaux (A7), suisse (A8), échelle (A9), double élimination (B5), handicap (C6) | ⬜ |
@@ -144,6 +144,20 @@ matchs individuels), qui changent le modèle lui-même (D13).
       de l'étape 3 vers les champs
 - [x] Tests (MEP-01 à MEP-24, WIZ-18 à WIZ-21, PHA-10, PHA-11), `tests/SPECIFICATIONS.md`, relecture ergonome + webdesigner + sécurité de chaque écran
       Point à traiter à part (hors lot) : équipe qui se retire et forfait général (règle de forfait, D41).
+
+## Lot 6 : formats BLVB 🟡
+- [x] Branche `formats-competition-lot6` ; décisions D42 à D44
+- [ ] 6a. Phase de barrages : `PhaseType::BARRAGE`, `Phase.options` (JSON, migration), générateur `Barrage`
+      (une poule de deux équipes par match, réception selon l'option), vainqueur / perdant résolus par
+      `ResultatsSaison`, règles de passage depuis une phase de barrages ; clôture d'une phase sans classement
+- [ ] 6b. Modèle « BLVB avec barrages » (D44) et vérification (D5) des passages par barrage
+- [ ] 6c. Wizard : phase de barrages (étape Phases), carte par match à l'étape Passages (D32), mise en place
+      (Poules, Journées, Matchs) d'une phase de barrages
+- [ ] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
+      1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
+- [ ] 6e. Journée des finales (C3) : tableaux de tous les niveaux sur une date
+- [ ] 6f. Aller-retour (A2) et format de match par phase (3 ou 2 sets gagnants)
+- [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 
 ## À faire hors lots (relevé en relecture)
 - [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info

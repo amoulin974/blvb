@@ -353,6 +353,30 @@ composition, report) et ne doivent pas détruire les scores ; une pondération n
 et permettrait des calendriers injouables.
 *(2026-10-14, lot 5)*
 
+## D42. Lot 6 : le type de la phase est son format ; barrage = une poule de deux équipes par match (modifie D33)
+**Décision** : le champ `Phase.type` (`PhaseType`) **est** le format de la phase. Plutôt que de le renommer en
+`format` (une soixantaine d'usages, aucun gain fonctionnel), on lui ajoute la valeur `BARRAGE` (3e format, ce qui
+déclenchait le refactoring de D33) et une colonne `options` (JSON, D8) pour les options propres au format
+(`reception`, `aller_retour`, `petite_finale`…). Une phase de barrages comporte **une poule de deux équipes par
+match** (codes `AB`, `BC`…) : le match, la journée et le score réutilisent `Poule`, `Journee` et `Partie` ;
+le vainqueur et le perdant sont résolus par `.vainqueur` / `.perdant` (D4, D31) et alimentent les règles de
+passage vers la phase suivante.
+**Pourquoi** : un seul chemin de code pour les matchs, les droits de saisie du score et le calendrier ; pas de
+nouvelle entité de rencontre.
+*(2026-10-15, lot 6)*
+
+## D43. Barrage de montée et descente : réception par la poule supérieure
+**Décision** : match sec en 3 sets gagnants, reçu par l'équipe de la poule supérieure (option `reception` :
+`niveau_superieur` par défaut, `mieux_classe`, `neutre`). Pas de prolongation (pas de nul au volley).
+*(2026-10-15, lot 6)*
+
+## D44. Modèle « BLVB avec barrages » : 1 montée directe, 1 barrage, 1 descente directe
+**Décision** : dans chaque poule, le 1er monte directement, le dernier descend directement, et l'avant-dernier de la
+poule N joue contre le 2e de la poule N+1 (proposition du bureau, F2) ; le vainqueur joue dans la poule supérieure à
+la phase suivante. Le calendrier de la phase suivante se génère après les barrages (D12). Le nombre de montées
+directes reste une option du wizard (D1).
+*(2026-10-15, lot 6)*
+
 ---
 
 ## Points ouverts
