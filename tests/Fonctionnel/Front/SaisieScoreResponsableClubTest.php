@@ -90,14 +90,14 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
     }
 
-    #[TestDox('Le capitaine de l\'équipe qui se déplace ne peut pas saisir le score')]
+    #[TestDox('Le capitaine de l\'équipe qui se déplace peut saisir le score, comme celui de l\'équipe qui reçoit')]
     public function test_capitaine_qui_se_deplace(): void
     {
         $this->connecter('cap.a2');
 
         $this->saisir(ChampionnatDeTest::get('match.reference'));
 
-        self::assertResponseStatusCodeSame(403);
+        self::assertResponseIsSuccessful();
     }
 
     #[TestDox('Un simple joueur de l\'équipe qui reçoit ne peut pas saisir le score')]
@@ -220,7 +220,7 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
         return $crawler->filter(sprintf('[data-partie-id="%d"][data-score-action="%s"]', ChampionnatDeTest::get($match)->getId(), $action))->count();
     }
 
-    #[TestDox('Calendrier : crayon de modification pour le responsable sur un match joué à l\'extérieur par une équipe de son club ; pas pour le capitaine qui se déplace')]
+    #[TestDox('Calendrier : crayon de modification sur un match joué à l\'extérieur pour le responsable de club et pour le capitaine de l\'équipe qui se déplace ; pas pour le capitaine d\'une autre poule')]
     public function test_crayon_match_a_l_exterieur(): void
     {
         $this->connecter('resp.club');
@@ -233,7 +233,11 @@ final class SaisieScoreResponsableClubTest extends TestFonctionnel
 
         $this->connecter('cap.a1');
         $crawler = $this->client->request('GET', '/calendrier');
-        self::assertSame(0, $this->boutons($crawler, 'match.A2-A1', 'modifier'), 'capitaine de A1, qui se déplace : pas de crayon');
+        self::assertGreaterThan(0, $this->boutons($crawler, 'match.A2-A1', 'modifier'), 'capitaine de A1, qui se déplace');
+
+        $this->connecter('cap.b1');
+        $crawler = $this->client->request('GET', '/calendrier');
+        self::assertSame(0, $this->boutons($crawler, 'match.A2-A1', 'modifier'), 'capitaine d\'une autre poule : pas de crayon');
 
         // Et l'enregistrement correspondant est accepté pour le responsable
         $this->connecter('resp.club');
