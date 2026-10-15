@@ -3,13 +3,26 @@
 
 {% block titre_etape %}Les phases{% endblock %}
 
+{# Erreurs d'un champ et de ses enfants, une ligne chacune, avec un lien vers le champ (récursif) #}
+{% macro lister(champ, nom, ancre) %}{% for err in champ.vars.errors %}<li><a class="link link-primary inline-flex min-h-11 items-center" href="{{ champ.parent is null or champ.vars.compound ? ancre : '#' ~ champ.vars.id }}">{{ nom }} : {{ err.message }}</a></li>{% endfor %}{% for enfant in champ %}{{ _self.lister(enfant, nom, ancre) }}{% endfor %}{% endmacro %}
+
+
 {% block contenu %}
+    {% import _self as m %}
     {% form_theme form 'admin/form/erreurs.html.twig' %}
     {{ form_start(form, {attr: {id: 'wizard-form', novalidate: 'novalidate'}}) }}
         {% if form.vars.submitted and not form.vars.valid %}
-            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}Des points sont à corriger dans les phases ci-dessous. Rien n'a été enregistré.{% endblock %}{% endembed %}
+            {# Une ligne par erreur, avec un lien vers le champ concerné (le volet de sa phase est déjà ouvert) #}
+            {% set lignes_erreurs %}{% for i, pf in form.phases %}{{ m.lister(pf, pf.vars.data.nom, '#phase-' ~ i) }}{% endfor %}{% endset %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4', form: form, lignes: lignes_erreurs} %}{% block contenu %}
+                <strong class="font-semibold">Des points sont à corriger dans les phases ci-dessous. Rien n'a été enregistré.</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for err in form.vars.errors %}<li>{{ err.message }}</li>{% endfor %}
+                    {{ lignes }}
+                </ul>
+            {% endblock %}{% endembed %}
         {% endif %}
-        <p class="mb-4 text-(--color-base-content)/80">Dans l'ordre de la saison : il doit suivre les dates de début, car chaque phase envoie ses équipes à la suivante. Utilisez Monter / Descendre pour le corriger. Ouvrez une phase pour la modifier.</p>
+        <p class="mb-4 text-(--color-base-content)/80">Les phases se suivent dans l'ordre de la saison, selon leurs dates de début : chaque phase envoie ses équipes à la suivante. Utilisez Monter / Descendre pour corriger l'ordre. Ouvrez une phase pour la modifier.</p>
 
         {% set nb = form.phases|length %}
         <ol class="flex flex-col gap-3">
@@ -19,7 +32,7 @@
                 {% set nbPoules = phase.poules|length %}
                 {% set unite = finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule') %}
                 {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
-                <li id="phase-{{ i }}" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
+                <li id="phase-{{ i }}" tabindex="-1" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
                     <div class="flex flex-wrap items-center gap-2 p-3">
                         <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 }}.</span> {{ phase.nom }}</span>
                         <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>

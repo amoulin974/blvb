@@ -285,9 +285,115 @@ programmés, les abonnements `.ics` et, après une clôture, provoquait une erre
 visible sur le site ne doit pas rester incohérente.
 *(2026-10-13, lot 4)*
 
+## D35. Mise en place : écrans dédiés dans le wizard
+**Décision** : les étapes Poules, Journées et Matchs (groupe « Mise en place », D29.14) sont de
+nouveaux écrans du wizard, qui réutilisent les services existants (`JourneeService`, `PartieService`,
+optimiseur) avec un parcours guidé et un bilan par étape. Les écrans d'administration actuels
+(poule, journée, partie) restent disponibles pour les retouches.
+**Pourquoi** : un parcours continu avec vérification globale, plutôt qu'un renvoi vers des pages éclatées.
+*(2026-10-14, lot 5)*
+
+## D36. Composition des poules : pré-remplie, ajustable
+**Décision** : pour une saison copiée d'une saison terminée, les équipes de la phase 1 sont placées
+d'après les montées et descentes enregistrées pour la saison suivante (D22) ; l'administrateur ajuste
+(équipes nouvelles, retraits). L'écart entre effectif réel et « nombre d'équipes prévu » reste un
+avertissement (D30).
+*(2026-10-14, lot 5)*
+
+## D37. Enchaînement des phases : retour au wizard
+**Décision** : après la clôture d'une phase, le wizard rouvre Poules → Journées → Matchs pour la phase
+suivante. Les avertissements des règles de passage s'affichent **avant** de cliquer sur « Clôturer »
+(point reporté de D28).
+*(2026-10-14, lot 5)*
+
+## D38. Étape Poules : version relue du wireframe retenue
+**Décision** : `ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
+déplie une liste et un bouton « Valider » (ergonome), tableau de synthèse des effectifs au-delà de
+4 poules (webdesigner), « Retirer de la poule », pas d'action « Ne participe plus », équipes de la
+saison copiée proposées d'abord.
+**Pourquoi** : relecture de l'ergonome et du webdesigner ; les deux divergences ont été tranchées par
+l'utilisateur.
+*(2026-10-14, lot 5)*
+
+## D39. Étape Journées : version relue du wireframe retenue
+**Décision** : `ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
+« Régénérer les journées » (confirmation chiffrée, `btn-ghost`) et « Ajuster dans le calendrier » ; dates
+« 14/09 → 20/09 » ; calendrier existant renvoyé tel quel, lien conservé sur téléphone avec une aide ;
+aucune génération à l'ouverture de l'écran.
+**Pourquoi** : relecture de l'ergonome et du webdesigner ; les divergences ont été tranchées par
+l'utilisateur.
+*(2026-10-14, lot 5)*
+
+## D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
+**Décision** : `ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
+traitement en arrière-plan, rapport recalculé à l'affichage, génération par poule limitée aux poules sans
+match, équipe sans gymnase en avertissement). La clôture d'une phase applique les règles de passage puis
+renvoie à l'étape Poules de la phase suivante ; elle **ne crée plus** les journées ni les matchs (D37).
+**Pourquoi** : la création automatique se faisait sans que personne ne relise la répartition des équipes ;
+choix de l'utilisateur après relecture de l'ergonome.
+*(2026-10-14, lot 5)*
+
+## D41. Optimisation des matchs : priorités fixes, replacement des matchs à venir, poule par poule
+**Décision** (après avis de l'ergonome) :
+- **Pas de pondération** des critères : les priorités restent fixes (aucun gymnase surchargé, puis alternance
+  domicile / extérieur, puis moins de déplacements de suite) et sont **expliquées à l'écran**, dans la fenêtre de
+  génération.
+- **« Replacer les matchs à venir »**, pour la phase entière comme pour une poule, dès que des matchs sont joués.
+  Les matchs avec un score saisi sont conservés tels quels (adversaires, journée, domicile ou extérieur, gymnase,
+  date) et comptent dans l'occupation des gymnases ; les autres sont supprimés puis recréés dans leur journée, sans
+  jamais rejouer une rencontre. L'administrateur doit **cocher** « Je confirme qu'aucun match déjà joué n'attend
+  la saisie de son score » (contrôle côté serveur) ; le nombre de matchs sans score à date passée est signalé.
+- **Régénération d'une poule** non réservée aux phases sans match joué : elle reste possible pour une poule qui
+  n'a aucun match joué, même quand d'autres poules de la phase en ont. Une poule ou une phase avec des matchs joués
+  ne se régénère plus en entier (scores et classement perdus) : on y replace les matchs à venir. Le message de
+  régénération d'une poule dit que le résultat d'ensemble sera au mieux égal à un calcul de toute la phase.
+- **Équipe qui se retire, forfait général** : sujets traités à part (règle de forfait), pas dans l'optimisation.
+**Pourquoi** : les besoins réels apparaissent après le début de la saison (gymnase indisponible, erreur de
+composition, report) et ne doivent pas détruire les scores ; une pondération n'a pas de sens concret pour le bureau
+et permettrait des calendriers injouables.
+*(2026-10-14, lot 5)*
+
 ---
 
 ## Points ouverts
 
-Aucun pour l'instant. Les questions de détail apparaîtront lot par lot (notation des « meilleurs
-Xe », options exactes de chaque format, écrans du wizard).
+### PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026)
+**Situation** : depuis la liste des saisons, le nom d'une saison et le bouton « Piloter » mènent à la même page
+(`admin/saison/show`), qui reprend en doublon des actions du wizard (composer les poules, créer les journées,
+générer les matchs, optimiser, modifier la poule, calendrier des journées) et en propose de dangereuses qui
+contournent ses garde-fous (modifier ou supprimer une phase, supprimer les poules, journées ou matchs en masse,
+générer sans relecture, optimiser sans la case de confirmation de D41). Pour un brouillon, le nom est un lien vers
+cette page alors que la ligne ne propose que « Reprendre » et « Supprimer » (D34).
+
+**Avis de l'ergonome** (« oui avec conditions » : une page de suivi par saison est pertinente, pas un second outil de
+construction concurrent du wizard) :
+- *Brouillon* : nom non cliquable ; seuls « Reprendre » et « Supprimer » ; la page show redirige vers le wizard (garde
+  serveur).
+- *Validée, sans matchs* : le clic ouvre l'écran « Mise en place » à l'étape à faire ; la page show reste en lecture ;
+  « Modifier » mène au wizard (étapes 2 à 6).
+- *En cours* : clic = page de suivi (scores, changement de date ou de gymnase d'un match, « Clôturer la phase »,
+  « Replacer les matchs à venir ») ; suppressions en masse masquées ; « Modifier la phase » et « Modifier la poule »
+  deviennent des liens vers l'étape du wizard ; suppression d'un match isolé conservée, avec confirmation.
+- *Terminée* : page en lecture seule, seul « Modifier » (nom, dates) reste, et « Créer la saison suivante à partir de
+  celle-ci » (D22, D36) s'ajoute.
+- *Liste* : colonne « État » (« Brouillon · étape 3 sur 6 », « Validée · à mettre en place », « En cours · Phase 2 »,
+  « Terminée ») ; un seul bouton principal (« Reprendre la création », « Continuer la mise en place », « Suivre la
+  saison », « Consulter ») ; le nom mène à la même cible ; « Piloter » disparaît.
+- *Libellés de la page* : « Composer les poules » → « Mise en place des poules » ; « Modifier la saison » → « Nom et
+  dates » ; accords « 1 match » / « 2 matchs » dans les confirmations.
+
+**Décisions à prendre par l'utilisateur** (aucune n'est actée) :
+1. Masquer ou supprimer les suppressions en masse (phase, poule, journées, matchs) dès que la saison est lancée ?
+   (recommandé : oui, cohérent avec D34 et D41)
+2. « Modifier la phase » et « Modifier la poule » : liens vers les étapes du wizard (recommandé) ou conservés « pour
+   les retouches » (D35) ?
+3. Le clic sur une saison en cours ouvre-t-il la page de suivi (recommandé) ou le wizard ?
+4. Ajouter « Créer la saison suivante » sur une saison terminée ?
+5. Saisie des scores : où les capitaines saisissent-ils aujourd'hui (l'ergonome n'a pas trouvé le point d'entrée sur
+   la page show) et faut-il un raccourci « Saisir un score » ? **À vérifier dans le code avant de décider.**
+
+### PO2. Équipe qui se retire, forfait général
+Traités à part de l'optimisation (D41) : règle de forfait (score réglementaire), à cadrer avec le bureau.
+
+### PO3. Questions de détail des lots suivants
+Notation des « meilleurs Xe », options exactes de chaque format, écrans du wizard : elles apparaîtront lot par lot.

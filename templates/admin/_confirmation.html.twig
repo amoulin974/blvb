@@ -7,10 +7,12 @@
      consequences     liste de phrases : ce qui sera supprimé ou changé (facultatif)
      blocage          si renseigné : l'action est impossible, la fenêtre explique pourquoi sans bouton de confirmation
      bouton           libellé du bouton de confirmation             (défaut : « Supprimer définitivement »)
-     ton              'error' (défaut) ou 'warning'
+     ton              'error' (défaut), 'warning' ou 'primary' (action sans perte de données)
      irreversible     ajoute « Cette action est définitive. »       (défaut : vrai)
      champs           champs cachés supplémentaires {nom: valeur}
+     attente          texte du bouton pendant l'envoi quand l'action est longue (ex. « Calcul en cours… »), facultatif
      declencheur      libellé du bouton                             (défaut : « Supprimer »)
+     declencheur_sr   complément lu seulement par les lecteurs d'écran, après le libellé (ex. « de Poule A »)
      declencheur_classe  classes du bouton                          (défaut : bouton discret rouge)
      declencheur_icone   icône du bouton, ou false                  (défaut : poubelle)
      icone_seule      n'affiche que l'icône (le libellé devient l'étiquette accessible) #}
@@ -30,7 +32,8 @@
         data-confirmation-bouton-param="{{ bouton|default('Supprimer définitivement') }}"
         data-confirmation-ton-param="{{ ton|default('error') }}"
         data-confirmation-irreversible-param="{{ (irreversible ?? true) ? 'true' : 'false' }}"
+        data-confirmation-attente-param="{{ attente|default('') }}"
         data-confirmation-champs-param="{{ champs|default({})|json_encode }}">
     {%- if declencheur_icone %}{{ icone.i(declencheur_icone) }}{% endif -%}
-    {%- if not icone_seule|default(false) %} {{ declencheur }}{% endif -%}
+    {%- if not icone_seule|default(false) %} {{ declencheur }}{% if declencheur_sr|default('') %}<span class="sr-only"> {{ declencheur_sr }}</span>{% endif %}{% endif -%}
 </button>

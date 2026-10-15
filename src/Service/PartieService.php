@@ -177,6 +177,136 @@ class PartieService
     }
 
     /**
+     * Replace les matchs À VENIR de la phase, ou d'une seule poule, sans toucher aux matchs joués.
+     *
+     * Un match est « joué » dès qu'un score est saisi : il est conservé tel quel (adversaires, journée, domicile ou
+     * extérieur, lieu, date) et compte dans l'occupation des gymnases comme dans les déplacements de suite. Les autres
+     * matchs (sans score) sont supprimés puis recréés dans leur journée : la recherche locale ne peut que changer leur
+     * domicile / extérieur, donc leur gymnase et leur date, et échanger entre elles des rondes qui ne contiennent aucun
+     * match joué. Qui rencontre qui ne change pas : une rencontre déjà jouée n'est jamais rejouée.
+     * Les poules d'un format hors optimiseur (élimination) ne sont pas touchées.
+     *
+     * @return array<int, array{poule: string, type: string, nbBreaks: ?int, surcharges: string[], conserves: int, replaces: int}>
+     */
+    public function replacerMatchsAVenir(Phase $phase, ?Poule $poule = null): array
+    {
+        $candidates = $poule !== null ? [$poule] : $phase->getPoules()->toArray();
+
+        $cibles = [];
+        $initiaux = [];
+        $figes = [];
+        $comptes = [];
+        $aSupprimer = [];
+        $joues = [];
+        foreach ($candidates as $candidate) {
+            if (!$this->generateur($candidate)->estOptimisable() || count($candidate->getEquipes()) < 2) {
+                continue;
+            }
+            $equipes = array_values($candidate->getEquipes()->toArray());
+            $indices = [];
+            foreach ($equipes as $i => $equipe) {
+                $indices[$equipe->getId()] = $i;
+            }
+            $journees = $candidate->getJournees()->toArray();
+            usort($journees, fn (Journee $a, Journee $b) => $a->getNumero() <=> $b->getNumero());
+
+            $schedule = [];
+            $fige = [];
+            $conserves = 0;
+            $replaces = 0;
+            $vus = [];
+            foreach ($journees as $round => $journee) {
+                $ligne = [];
+                foreach ($journee->getParties() as $partie) {
+                    $vus[spl_object_id($partie)] = true;
+                    $joue = $partie->getNbSetGagnantReception() !== null || $partie->getNbSetGagnantDeplacement() !== null;
+                    if ($joue) {
+                        $joues[] = $partie;
+                    }
+                    $home = $indices[$partie->getIdEquipeRecoit()?->getId()] ?? null;
+                    $away = $indices[$partie->getIdEquipeDeplace()?->getId()] ?? null;
+                    if (!$joue) {
+                        $aSupprimer[] = $partie;
+                        if ($home === null || $away === null) {
+                            continue; // équipe qui n'est plus dans la poule : le match disparaît
+                        }
+                        ++$replaces;
+                    } else {
+                        ++$conserves;
+                        if ($home === null || $away === null) {
+                            continue; // match joué d'une équipe sortie de la poule : conservé en base, hors calcul
+                        }
+                        $fige[$round][count($ligne)] = true;
+                    }
+                    $ligne[] = [$home, $away];
+                }
+                $schedule[$round] = $ligne;
+            }
+            // Matchs de la poule rattachés à aucune de ses journées : joués, ils sont conservés ; sinon supprimés
+            foreach ($candidate->getParties() as $partie) {
+                if (isset($vus[spl_object_id($partie)])) {
+                    continue;
+                }
+                if ($partie->getNbSetGagnantReception() !== null || $partie->getNbSetGagnantDeplacement() !== null) {
+                    $joues[] = $partie;
+                    ++$conserves;
+                } else {
+                    $aSupprimer[] = $partie;
+                }
+            }
+
+            $idx = count($cibles);
+            $cibles[$idx] = $candidate;
+            $initiaux[$idx] = $schedule;
+            $figes[$idx] = $fige;
+            $comptes[$idx] = ['conserves' => $conserves, 'replaces' => $replaces];
+        }
+
+        if ($cibles === []) {
+            return [];
+        }
+
+        // Occupation des gymnases par les poules qui ne sont pas replacées
+        $occupationFixe = [];
+        foreach ($phase->getPoules() as $autre) {
+            if (!in_array($autre, $cibles, true)) {
+                $this->ajouterOccupation($occupationFixe, $autre->getParties());
+            }
+        }
+
+        // Lieu et date réels des matchs joués (et non recalculés) : ils occupent leur gymnase ce jour-là
+        $this->ajouterOccupation($occupationFixe, $joues);
+
+        // Relecture en base juste avant la suppression : un score saisi entre-temps ne doit jamais être supprimé
+        foreach ($aSupprimer as $partie) {
+            $this->em->refresh($partie);
+            if ($partie->getNbSetGagnantReception() !== null || $partie->getNbSetGagnantDeplacement() !== null) {
+                throw new \RuntimeException('Un score vient d\'être saisi sur un match à replacer : le calcul est annulé.');
+            }
+        }
+        foreach ($aSupprimer as $partie) {
+            $this->em->remove($partie);
+        }
+        $this->em->flush();
+
+        $resultat = $this->optimiserPoulesChampionnat($cibles, $occupationFixe, $initiaux, $figes);
+
+        $rapport = [];
+        foreach ($cibles as $idx => $cible) {
+            $rapport[] = [
+                'poule' => $cible->getNom(),
+                'type' => 'championnat',
+                'nbBreaks' => $resultat['breaksParPoule'][$idx],
+                'surcharges' => $resultat['surchargesParPoule'][$idx],
+                'conserves' => $comptes[$idx]['conserves'],
+                'replaces' => $comptes[$idx]['replaces'],
+            ];
+        }
+
+        return $rapport;
+    }
+
+    /**
      * Ajoute à $occupation (indexé par "lieuId|dateYmd") le décompte d'une liste de matchs déjà
      * placés (poules non concernées par l'optimisation en cours, mais dont les matchs occupent
      * tout de même des créneaux partagés).
@@ -224,7 +354,7 @@ class PartieService
      * @param array<string, array{lieu: Lieu, count: int}> $occupationFixe
      * @return array{breaksParPoule: int[], surchargesParPoule: array<int, string[]>}
      */
-    private function optimiserPoulesChampionnat(array $poules, array $occupationFixe): array
+    private function optimiserPoulesChampionnat(array $poules, array $occupationFixe, array $initiaux = [], array $figes = []): array
     {
         $equipesParPoule = [];
         $journeesParPoule = [];
@@ -249,10 +379,11 @@ class PartieService
                 }
                 $schedule[$round] = $ligne;
             }
-            $schedulesByPoule[$pouleIdx] = $schedule;
+            // Répartition de départ imposée (replacement des matchs à venir) ou round-robin standard
+            $schedulesByPoule[$pouleIdx] = $initiaux[$pouleIdx] ?? $schedule;
         }
 
-        $meilleur = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe);
+        $meilleur = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
 
         for ($cycle = 0; $cycle < 10; $cycle++) {
             $amelioreCycle = false;
@@ -261,8 +392,11 @@ class PartieService
             foreach ($schedulesByPoule as $pouleIdx => $schedule) {
                 foreach ($schedule as $round => $paires) {
                     foreach ($paires as $i => [$home, $away]) {
+                        if (isset($figes[$pouleIdx][$round][$i])) {
+                            continue; // match déjà joué : figé
+                        }
                         $schedulesByPoule[$pouleIdx][$round][$i] = [$away, $home];
-                        $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe);
+                        $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
 
                         if ($nouveau['score'] < $meilleur['score']) {
                             $meilleur = $nouveau;
@@ -279,6 +413,9 @@ class PartieService
             foreach ($schedulesByPoule as $pouleIdx => $schedule) {
                 foreach ($schedule as $round => $paires) {
                     foreach (array_keys($paires) as $i) {
+                        if (isset($figes[$pouleIdx][$round][$i])) {
+                            continue;
+                        }
                         $references[] = [$pouleIdx, $round, $i];
                     }
                 }
@@ -295,7 +432,7 @@ class PartieService
 
                     $schedulesByPoule[$pA][$rA][$iA] = [$awayA, $homeA];
                     $schedulesByPoule[$pB][$rB][$iB] = [$awayB, $homeB];
-                    $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe);
+                    $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
 
                     if ($nouveau['score'] < $meilleur['score']) {
                         $meilleur = $nouveau;
@@ -311,12 +448,18 @@ class PartieService
             foreach ($schedulesByPoule as $pouleIdx => $schedule) {
                 $nbRounds = count($schedule);
                 for ($r1 = 0; $r1 < $nbRounds; $r1++) {
+                    if (!empty($figes[$pouleIdx][$r1]) || $schedulesByPoule[$pouleIdx][$r1] === []) {
+                        continue; // une ronde qui contient un match joué, ou vide, ne change pas de journée
+                    }
                     for ($r2 = $r1 + 1; $r2 < $nbRounds; $r2++) {
+                        if (!empty($figes[$pouleIdx][$r2]) || $schedulesByPoule[$pouleIdx][$r2] === []) {
+                            continue;
+                        }
                         $tmp = $schedulesByPoule[$pouleIdx][$r1];
                         $schedulesByPoule[$pouleIdx][$r1] = $schedulesByPoule[$pouleIdx][$r2];
                         $schedulesByPoule[$pouleIdx][$r2] = $tmp;
 
-                        $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe);
+                        $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
 
                         if ($nouveau['score'] < $meilleur['score']) {
                             $meilleur = $nouveau;
@@ -353,7 +496,10 @@ class PartieService
                 }
                 $journee = $journees[$round];
 
-                foreach ($paires as [$homeIdx, $awayIdx]) {
+                foreach ($paires as $i => [$homeIdx, $awayIdx]) {
+                    if (isset($figes[$pouleIdx][$round][$i])) {
+                        continue; // match déjà joué : conservé tel quel, rien à recréer
+                    }
                     $equipeHome = $equipes[$homeIdx];
                     $equipeAway = $equipes[$awayIdx];
 
@@ -465,7 +611,8 @@ class PartieService
         array $schedulesByPoule,
         array $equipesParPoule,
         array $journeesParPoule,
-        array $occupationFixe
+        array $occupationFixe,
+        array $figes = []
     ): array {
         $occupation = $occupationFixe;
         $breaksTotal = 0;
@@ -500,7 +647,10 @@ class PartieService
                 }
                 $journee = $journees[$round];
 
-                foreach ($paires as [$homeIdx, $awayIdx]) {
+                foreach ($paires as $i => [$homeIdx, $awayIdx]) {
+                    if (isset($figes[$pouleIdx][$round][$i])) {
+                        continue; // match joué : son lieu et sa date réels sont déjà dans $occupationFixe
+                    }
                     $equipeHome = $equipes[$homeIdx];
                     [$lieu, $date] = $this->calculerLieuEtDateDomicile($equipeHome, $journee->getDateDebut());
 
@@ -612,12 +762,9 @@ class PartieService
 
     private function deleteMatches(Poule $poule): void
     {
-        foreach ($poule->getJournees() as $journee) {
-            //On supprime les matchs de cette journée
-            $oldParties = $journee->getParties();
-            foreach ($oldParties as $partie) {
-                $this->em->remove($partie);
-            }
+        // Tous les matchs de la poule, y compris ceux qui ne seraient rattachés à aucune journée
+        foreach ($poule->getParties()->toArray() as $partie) {
+            $this->em->remove($partie);
         }
         $this->em->flush();
     }

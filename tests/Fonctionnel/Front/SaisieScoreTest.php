@@ -67,10 +67,10 @@ final class SaisieScoreTest extends TestFonctionnel
         self::assertSame([null, null], $this->score('match.reference'));
     }
 
-    #[TestDox('SCO-03/04 (A4) Refus de droits : 403 « Modification interdite » (et non 400)')]
+    #[TestDox('SCO-03/04 (A4) Refus de droits (capitaine d\'une autre poule) : 403 « Modification interdite » (et non 400)')]
     public function test_refus_403(): void
     {
-        $this->connecter('cap.a2');
+        $this->connecter('cap.b1');
         $reponse = $this->envoyer('match.reference', '3', '0');
         self::assertResponseStatusCodeSame(403);
         self::assertSame('Modification interdite', $reponse['error']);

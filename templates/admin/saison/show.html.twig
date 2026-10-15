@@ -11,7 +11,10 @@
         titre: saison.nom,
         sous_titre: saison.favori ? 'Saison affichée sur le site' : 'Saison non affichée sur le site',
         retour: {url: path('admin_saison_index'), label: 'Saisons'},
-        actions: [{url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'}],
+        actions: [
+            {url: path('admin_saison_miseenplace_poules', {id: saison.id}), label: 'Composer les poules', icone: 'crayon'},
+            {url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'},
+        ],
     }) }}
 
     <div class="space-y-4">
@@ -39,8 +42,8 @@
                                 consequences: [
                                     'Le classement final de chaque poule est figé et la phase est marquée « Clôturée ».',
                                     'Les équipes sont réparties dans les poules de la phase suivante selon leur classement (montées et descentes).',
-                                    'Les journées et les matchs de la phase suivante sont générés automatiquement.',
-                                ],
+                                    'Vous composez ensuite les poules, les journées et les matchs de la phase suivante depuis la mise en place.',
+                                ]|merge((avertissementsCloture[phase.id]|default([]))|map(p => 'À vérifier avant de clôturer : ' ~ p)),
                                 bouton: 'Clôturer la phase',
                                 ton: 'warning',
                                 action: path('admin_phase_cloturer', {id: phase.id}),

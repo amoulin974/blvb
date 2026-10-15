@@ -31,6 +31,20 @@ final class Championnat implements GenerateurFormat
         return true;
     }
 
+    public function nombreMatchs(Poule $poule): int
+    {
+        $n = count($poule->getEquipes());
+
+        return $n < 2 ? 0 : intdiv($n * ($n - 1), 2);
+    }
+
+    public function nombreJournees(Poule $poule): int
+    {
+        $n = count($poule->getEquipes());
+
+        return $n < 2 ? 0 : ($n % 2 === 0 ? $n - 1 : $n);
+    }
+
     public function creerJournees(Poule $poule): ?string
     {
         //On vérifie si la première poule de la phase à déjà des journées et si le nombre d'équipe est identique. Si c'est le cas on copie les journées
@@ -84,7 +98,7 @@ final class Championnat implements GenerateurFormat
                 for ($i = 1; $i <= $nbJournee; $i++) {
 
                     // BOUCLE DE SAUT : On avance d'une semaine tant qu'on est sur une période indisponible
-                    while ($currentDate <= $finPhase && $this->isSemaineIndisponible($currentDate, $indisponibilites)) {
+                    while ($currentDate <= $finPhase && Semaines::fermee($currentDate, $indisponibilites)) {
                         $currentDate = $currentDate->modify('+1 week');
                     }
 
@@ -115,28 +129,6 @@ final class Championnat implements GenerateurFormat
         }
         return null;
 
-    }
-
-    /**
-     * Vérifie si une semaine donnée chevauche une période d'indisponibilité.
-     */
-    private function isSemaineIndisponible(\DateTimeImmutable $date, iterable $indisponibilites): bool
-    {
-        // On définit la plage de la semaine entière (du lundi 00:00 au dimanche 23:59)
-        $debutSemaine = $date->modify('monday this week')->setTime(0, 0, 0);
-        $finSemaine = $date->modify('sunday this week')->setTime(23, 59, 59);
-
-        foreach ($indisponibilites as $indispo) {
-            //
-            $debutIndispo = $indispo->getDateDebut()->setTime(0, 0, 0);
-            $finIndispo = $indispo->getDateFin()->setTime(23, 59, 59);
-
-            // Formule de chevauchement de deux périodes : (DébutA <= FinB) ET (FinA >= DébutB)
-            if ($debutSemaine <= $finIndispo && $finSemaine >= $debutIndispo) {
-                return true;
-            }
-        }
-        return false;
     }
 
     public function genererMatchs(Poule $poule): void

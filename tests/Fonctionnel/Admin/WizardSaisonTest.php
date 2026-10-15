@@ -284,9 +284,10 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSelectorTextContains('body', '1er et 2e de la Poule B (Phase 1) vers la Poule A (Phase 2)');
 
         $this->client->submit($crawler->filter('button[value="valider"]')->form());
-        self::assertResponseRedirects('/admin/saison/'.$id);
+        self::assertResponseRedirects('/admin/saison/'.$id.'/mise-en-place/poules');
         $this->client->followRedirect();
         self::assertSelectorTextContains('body', 'Prochaine étape : composer les poules de « Phase 1 ».');
+        self::assertSelectorTextContains('#titre-etape', 'Poules de Phase 1');
         $this->em()->clear();
         $saison = $this->em()->find(Saison::class, $id);
         self::assertFalse($saison->isBrouillon());

@@ -30,6 +30,19 @@ enum CritereDepartage: string
         };
     }
 
+    /** Explication courte, affichée sous le critère dans le wizard. */
+    public function aide(): string
+    {
+        return match ($this) {
+            self::POINTS => 'Les points du barème de la saison.',
+            self::DIFFERENCE_SETS => 'Sets gagnés moins sets perdus, sur toute la poule.',
+            self::QUOTIENT_SETS => 'Sets gagnés divisés par sets perdus (règle de la FFVB).',
+            self::CONFRONTATION_DIRECTE => 'Le vainqueur du dernier match joué entre deux équipes à égalité passe devant.',
+            self::MINI_CLASSEMENT => 'Classement refait avec les seuls matchs joués entre les équipes à égalité.',
+            self::ALPHABETIQUE => 'Ordre alphabétique des noms d\'équipes.',
+        };
+    }
+
     /** Les critères qui se calculent par équipe (une valeur à comparer), et non par paire d'équipes. */
     public function estUneValeur(): bool
     {

@@ -14,7 +14,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 2 | Classement paramétrable : barème par phase, départage configurable (quotient de sets, mini-classement à 3 équipes ou plus), sans écran (D16 à D19) | ✅ |
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D28) | ✅ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ✅ |
-| 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ⬜ |
+| 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ✅ |
 | 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ⬜ |
 | 7 | Autres championnats : brassage puis niveau (A4), serpentin (A5), géographique (A6) | ⬜ |
 | 8 | Autres éliminations et hybrides : classement intégral (B3), consolante (B4), aller-retour et set en or (B6), play-offs et play-downs (C2), meilleurs Xe (C5) | ⬜ |
@@ -121,12 +121,37 @@ matchs individuels), qui changent le modèle lui-même (D13).
       champs ; vérifier dans le navigateur les utilitaires Tailwind écrasés par daisyUI (webdesigner)
 - [x] Fin de la création automatique : `SaisonListener` supprimé, « Créer une saison » ouvre le wizard (D6)
 
+## Lot 5 : wizard, mise en place ✅
+- [x] Branche `formats-competition-lot5` ; décisions D35 à D37
+- [x] Étape Poules : composition d'une phase (`CompositionPoules`, `SaisonMiseEnPlaceController`, gabarit
+      `miseenplace/poules.html.twig`), origine des équipes déduite de la poule précédente (le départ de la
+      copie n'est pas enregistré), pré-remplissage déjà fait à la copie (D36) ; wireframe relu (D38), écran
+      relu par l'ergonome, le webdesigner et la sécurité ; MEP-01 à MEP-08. « Terminer » renvoie à la saison
+      en attendant l'étape Journées
+- [x] Étape Journées : bilan, génération groupée ou par poule, régénération confirmée, semaines de fermeture,
+      verrou de phase (`MiseEnPlaceJournees`, `Semaines`, `GenerateurFormat::nombreJournees`) ; wireframe relu
+      (D39), écran relu par l'ergonome, le webdesigner et la sécurité ; MEP-09 à MEP-14. « Suivant : Matchs »
+      renvoie à la saison en attendant l'étape Matchs
+- [x] Étape Matchs : bilan recalculé à l'affichage, génération de la phase (optimiseur) ou d'une poule, régénération
+      confirmée avec attente annoncée, transaction, verrou de phase (aussi sur l'ancienne page « Optimiser »),
+      équipes sans gymnase ; wireframe relu (D40) ; MEP-16 à MEP-20 ; replacement des matchs à venir
+      (phase ou poule, matchs joués conservés, case de confirmation) et régénération poule par poule (D41) ; MEP-21, MEP-22
+- [x] Enchaînement : la clôture renvoie à l'étape Poules de la phase suivante et ne crée plus journées ni matchs
+      (D37, D40) ; avertissements des règles de passage dans la fenêtre « Clôturer » ; conditions de clôture
+      vérifiées côté serveur (PHA-10, PHA-11)
+- [x] Reportés du lot 4 : carte « Point de départ » du récapitulatif, « Brouillon enregistré à 14 h 32 »,
+      écarts d'effectif dans le schéma, aide courte des critères de départage, liens de l'alerte d'erreur
+      de l'étape 3 vers les champs
+- [x] Tests (MEP-01 à MEP-24, WIZ-18 à WIZ-21, PHA-10, PHA-11), `tests/SPECIFICATIONS.md`, relecture ergonome + webdesigner + sécurité de chaque écran
+      Point à traiter à part (hors lot) : équipe qui se retire et forfait général (règle de forfait, D41).
+
 ## À faire hors lots (relevé en relecture)
 - [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
       (webdesigner, D28) : fait sur `main` et `prod` (`af97240`), gabarit commun `admin/_alerte.html.twig`
 - [ ] Avertissements des règles de passage affichés avant de cliquer sur « Clôturer » (ergonome,
       D28) : avec le wizard (lots 4-5)
 - [ ] Autres messages joints par « ; » (surcharges des gymnases, `optimiserTout`) : liste comme D28
+- [ ] Page d'une saison hors wizard : la recentrer sur le suivi (liste avec colonne « État » et bouton principal unique,\n      suppressions en masse masquées une fois la saison lancée, show renvoyant un brouillon vers le wizard,\n      « Créer la saison suivante ») : avis de l'ergonome et décisions à prendre dans decisions.md, PO1\n- [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)\n- [x] Avertissements des règles de passage avant « Clôturer » : fait (D37, PHA-10)
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;
