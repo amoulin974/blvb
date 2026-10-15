@@ -61,7 +61,8 @@ final class CopieSaison
                 ->setClose(0)
                 ->setDateDebut($decaler($ancienne->getDateDebut()))
                 ->setDateFin($decaler($ancienne->getDateFin()))
-                ->setBareme($ancienne->getBareme());
+                ->setBareme($ancienne->getBareme())
+                ->setOptions($ancienne->getOptions());
             $saison->addPhase($phase);
             foreach ($ancienne->getPoules() as $anciennePoule) {
                 $poule = (new Poule())

@@ -29,8 +29,10 @@
             {% for i, phaseForm in form.phases %}
                 {% set phase = phaseForm.vars.data %}
                 {% set finale = phase.type.name == 'FINALE' %}
+                {% set barrage = phase.type.name == 'BARRAGE' %}
                 {% set nbPoules = phase.poules|length %}
-                {% set unite = finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule') %}
+                {% set unite = barrage ? (nbPoules > 1 ? 'matchs' : 'match') : (finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule')) %}
+                {% set element = barrage ? 'match' : (finale ? 'tableau' : 'poule') %}
                 {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
                 <li id="phase-{{ i }}" tabindex="-1" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
                     <div class="flex flex-wrap items-center gap-2 p-3">
@@ -52,12 +54,21 @@
                                     {% for choix in phaseForm.type %}
                                         <label class="choix-carte">
                                             <span class="flex items-center gap-2 font-semibold">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</span>
-                                            <span class="text-sm text-(--color-base-content)/80">{{ libelles[choix.vars.value][1]|default('') }}</span>
+                                            <span class="text-sm text-(--color-base-content)/80">{{ libelles[{'0': 'CHAMPIONNAT', '1': 'FINALE', '2': 'BARRAGE'}[choix.vars.value]|default('')][1]|default('') }}</span>
                                         </label>
                                     {% endfor %}
                                 </div>
                                 <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés.</p>
                             </fieldset>
+                            {% if barrage %}
+                                <fieldset class="fieldset border border-base-300 rounded-box p-3">
+                                    <legend class="fieldset-legend">Qui reçoit le match ?</legend>
+                                    {{ form_widget(phaseForm.reception, {attr: {class: 'select select-bordered w-full max-w-xl', 'aria-label': 'Qui reçoit le match ? ' ~ phase.nom}}) }}
+                                    <p class="mt-2 text-sm text-(--color-base-content)/80">Chaque match oppose deux équipes de poules voisines. Un seul match, en trois sets gagnants. Le vainqueur et le perdant jouent ensuite dans les poules que vous indiquez à l'étape Passages.</p>
+                                </fieldset>
+                            {% else %}
+                                <div hidden>{{ form_widget(phaseForm.reception) }}</div>
+                            {% endif %}
                             <div class="grid max-w-xl gap-4 sm:grid-cols-2">
                                 <div>
                                     {{ form_label(phaseForm.datedebut, null, {label_attr: {class: 'label font-semibold'}}) }}
@@ -72,7 +83,7 @@
                             </div>
 
                             <fieldset class="fieldset border border-base-300 rounded-box p-3">
-                                <legend class="fieldset-legend">{{ finale ? 'Tableaux' : 'Poules' }}</legend>
+                                <legend class="fieldset-legend">{{ barrage ? 'Matchs de barrage' : (finale ? 'Tableaux' : 'Poules') }}</legend>
                                 {# Tableau sur grand écran, une carte par poule sur téléphone (.table-empilee) #}
                                 <table class="table table-admin table-empilee">
                                     <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
@@ -80,7 +91,7 @@
                                     {% for j, pouleForm in phaseForm.poules %}
                                         {% set nomPoule = pouleForm.vars.data.nom %}
                                         <tr>
-                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ' ~ (finale ? 'tableau ' : 'poule ') ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
+                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ' ~ element ~ ' ' ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
                                             <td data-label="Niveau">{{ form_widget(pouleForm.niveau, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Niveau, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.niveau) }}</td>
                                             <td data-label="Équipes prévues">{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Équipes prévues, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
                                             <td class="pleine-largeur text-right"><button type="submit" name="action" value="supprimer-poule-{{ i }}-{{ j }}" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer {{ nomPoule }} de {{ phase.nom }}" data-turbo-confirm="Supprimer {{ nomPoule }} de {{ phase.nom }} ? Les passages qui en partent ou y arrivent seront supprimés.">{{ icone.i('poubelle') }} Supprimer</button></td>
@@ -88,7 +99,7 @@
                                     {% endfor %}
                                     </tbody>
                                 </table>
-                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter {{ finale ? 'un tableau' : 'une poule' }}</button></div>
+                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter {{ barrage ? 'un match' : (finale ? 'un tableau' : 'une poule') }}</button></div>
                             </fieldset>
 
                             <details class="rounded-box border border-dashed border-base-300 p-3">

@@ -55,6 +55,19 @@ final class EtapePassages
         return array_values(array_filter($phase->getReglesDePassage()->toArray(), fn (RegleDePassage $r) => str_starts_with($r->getSource(), $prefixe)));
     }
 
+    /** Destination (« p:identifiant ») du vainqueur ou du perdant d'un match de barrage, ou vide si elle n'est pas choisie. */
+    private static function destinationDeMatch(Phase $phase, Poule $poule, string $issue): string
+    {
+        $source = $phase->getCode().'.'.$poule->getCode().'.'.$issue;
+        foreach ($phase->getReglesDePassage() as $regle) {
+            if ($regle->getSource() === $source && $regle->getPouleDestination() !== null) {
+                return 'p:'.$regle->getPouleDestination()->getId();
+            }
+        }
+
+        return '';
+    }
+
     /**
      * Transitions à afficher : pour chaque phase qui a une suivante, ses poules (valeurs simples ou lignes détaillées),
      * les destinations possibles, le contrôle des effectifs reçus et les problèmes relevés par la vérification.
@@ -79,6 +92,8 @@ final class EtapePassages
                 continue;
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
+            $barrage = $phase->getType() === PhaseType::BARRAGE;           // les poules sont des matchs (D42)
+            $versBarrage = $suivante->getType() === PhaseType::BARRAGE;    // toujours en mode détaillé (D32)
 
             // Destinations : poules des phases suivantes, puis niveaux de la saison suivante
             $destinations = [];
@@ -89,6 +104,13 @@ final class EtapePassages
 
             $poules = [];
             foreach (self::poules($phase) as $poule) {
+                if ($barrage) {
+                    // Un match : où vont le vainqueur et le perdant
+                    $poules[] = ['poule' => $poule, 'taille' => 2, 'simple' => null, 'mode' => 'barrage', 'lignes' => [], 'rangs' => [],
+                        'vainqueur' => self::destinationDeMatch($phase, $poule, Place::VAINQUEUR),
+                        'perdant' => self::destinationDeMatch($phase, $poule, Place::PERDANT)];
+                    continue;
+                }
                 $prefixe = $phase->getCode().'.'.$poule->getCode().'#';
                 $regles = self::reglesDe($phase, $poule);
                 $simple = PassagesSimples::lire($prefixe, $regles, $versFinale);
@@ -97,7 +119,7 @@ final class EtapePassages
                     'poule' => $poule,
                     'taille' => $taille,
                     'simple' => $simple,
-                    'mode' => $simple === null || \in_array($poule->getId(), $detail, true) ? 'detail' : 'simple',
+                    'mode' => $versBarrage || $simple === null || \in_array($poule->getId(), $detail, true) ? 'detail' : 'simple',
                     'lignes' => array_map(fn (RegleDePassage $r) => self::ligne($r), $regles),
                     'rangs' => self::rangs($taille, $regles),
                 ];
@@ -112,6 +134,8 @@ final class EtapePassages
                 'phase' => $phase,
                 'suivante' => $suivante,
                 'versFinale' => $versFinale,
+                'barrage' => $barrage,
+                'versBarrage' => $versBarrage,
                 'poules' => $poules,
                 'destinations' => $destinations,
                 'effectifs' => self::effectifs($phase, $suivante),
@@ -146,6 +170,7 @@ final class EtapePassages
                 continue;
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
+            $versBarrage = $suivante->getType() === PhaseType::BARRAGE;
             // Destinations permises : poules des phases suivantes
             $permises = [];
             foreach (\array_slice($phases, $i + 1) as $p) {
@@ -154,7 +179,35 @@ final class EtapePassages
                 }
             }
 
-            if ($action === 'retablir-'.$phase->getId()) {
+            if ($phase->getType() === PhaseType::BARRAGE) {
+                // Barrages : une carte par match, vainqueur et perdant vers une poule (D32, D42)
+                $nouvelles = [];
+                foreach (self::poules($phase) as $poule) {
+                    $champs = \is_array($saisie[$poule->getId()] ?? null) ? $saisie[$poule->getId()] : null;
+                    foreach ([Place::VAINQUEUR, Place::PERDANT] as $issue) {
+                        $source = $phase->getCode().'.'.$poule->getCode().'.'.$issue;
+                        if ($champs === null) {
+                            // match non envoyé : règles inchangées
+                            foreach ($phase->getReglesDePassage() as $existante) {
+                                if ($existante->getSource() === $source) {
+                                    $nouvelles[] = $existante;
+                                }
+                            }
+                            continue;
+                        }
+                        $dest = \is_string($champs[$issue] ?? null) ? $champs[$issue] : ''; // un tableau envoyé = valeur absente
+                        if (preg_match('/^p:(\d+)$/', $dest, $m) && isset($permises[(int) $m[1]])) {
+                            $nouvelles[] = (new RegleDePassage())->setSource($source)->setPouleDestination($permises[(int) $m[1]]);
+                        } else {
+                            $problemes[] = sprintf('%s : indiquez où va le %s.', $poule->getNom(), $issue);
+                        }
+                    }
+                }
+                self::remplacer($phase, $nouvelles);
+                continue;
+            }
+
+            if (!$versBarrage && $action === 'retablir-'.$phase->getId()) {
                 self::remplacer($phase, ReglesParDefaut::pourPhase($phase, $suivante));
                 foreach ($phase->getPoules() as $poule) {
                     $detail = array_values(array_diff($detail, [$poule->getId()]));
@@ -168,7 +221,7 @@ final class EtapePassages
                 $prefixe = $phase->getCode().'.'.$poule->getCode().'#';
                 $champs = \is_array($saisie[$id] ?? null) ? $saisie[$id] : null;
 
-                if ($action === 'simple-'.$id) {
+                if (!$versBarrage && $action === 'simple-'.$id) {
                     $detail = array_values(array_diff($detail, [$id]));
                     $regles = self::reglesDe($phase, $poule);
                     if (PassagesSimples::lire($prefixe, $regles, $versFinale) === null) {
@@ -184,7 +237,7 @@ final class EtapePassages
 
                 if ($champs === null) {
                     array_push($nouvelles, ...self::reglesDe($phase, $poule)); // poule non envoyée : règles inchangées
-                } elseif (($champs['mode'] ?? 'simple') === 'simple') {
+                } elseif (!$versBarrage && ($champs['mode'] ?? 'simple') === 'simple') {
                     $valeurs = [
                         'montee' => (int) ($champs['montee'] ?? 0),
                         'descente' => (int) ($champs['descente'] ?? 0),
@@ -339,31 +392,42 @@ final class EtapePassages
     {
         $recues = [];
         $inconnu = [];
-        foreach ($phase->getReglesDePassage() as $regle) {
-            $destination = $regle->getPouleDestination();
-            if ($destination === null || $destination->getPhase() !== $suivante) {
+        // Une poule peut recevoir des équipes de plusieurs phases (barrages : la phase 2 reçoit de la phase 1 et des
+        // barrages) : on compte les règles de toutes les phases qui précèdent la phase suivante
+        foreach (self::phasesDansLOrdre($suivante->getSaison()) as $origine) {
+            if ($origine->getOrdre() >= $suivante->getOrdre()) {
                 continue;
             }
-            try {
-                $place = NotationPlace::analyser($regle->getSource());
-            } catch (NotationInvalide) {
-                continue;
-            }
-            $source = null;
-            foreach ($phase->getPoules() as $poule) {
-                if ($poule->getCode() === $place->poule) {
-                    $source = $poule;
+            foreach ($origine->getReglesDePassage() as $regle) {
+                $destination = $regle->getPouleDestination();
+                if ($destination === null || $destination->getPhase() !== $suivante) {
+                    continue;
                 }
-            }
-            $taille = $source ? self::taille($source) : null;
-            $cle = spl_object_id($destination);
-            if ($taille === null) {
-                $inconnu[$cle] = true;
-                continue;
-            }
-            try {
-                $recues[$cle] = ($recues[$cle] ?? 0) + \count($place->rangsPour($taille));
-            } catch (NotationInvalide) {
+                try {
+                    $place = NotationPlace::analyser($regle->getSource());
+                } catch (NotationInvalide) {
+                    continue;
+                }
+                $cle = spl_object_id($destination);
+                if (!$place->estRang()) {
+                    $recues[$cle] = ($recues[$cle] ?? 0) + 1; // vainqueur ou perdant d'un match : une équipe
+                    continue;
+                }
+                $source = null;
+                foreach ($origine->getPoules() as $poule) {
+                    if ($poule->getCode() === $place->poule) {
+                        $source = $poule;
+                    }
+                }
+                $taille = $source ? self::taille($source) : null;
+                if ($taille === null) {
+                    $inconnu[$cle] = true;
+                    continue;
+                }
+                try {
+                    $recues[$cle] = ($recues[$cle] ?? 0) + \count($place->rangsPour($taille));
+                } catch (NotationInvalide) {
+                }
             }
         }
 

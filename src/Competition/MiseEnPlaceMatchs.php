@@ -46,7 +46,7 @@ final class MiseEnPlaceMatchs
     public function etat(Phase $phase): array
     {
         $generateur = $this->formats->pourPhase($phase);
-        $elimination = $phase->getType() === PhaseType::FINALE;
+        $elimination = $phase->getType() !== PhaseType::CHAMPIONNAT; // tableau ou barrage : pas de déplacements de suite
 
         $poules = $phase->getPoules()->toArray();
         usort($poules, fn (Poule $a, Poule $b) => [(int) $a->getNiveau(), $a->getNom()] <=> [(int) $b->getNiveau(), $b->getNom()]);

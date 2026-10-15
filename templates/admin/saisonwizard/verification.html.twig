@@ -109,7 +109,7 @@
                 </div>
                 <div class="rounded-box border border-base-300 p-3">
                     <h4>Phases</h4>
-                    <ul class="text-sm text-(--color-base-content)/80">{% for p in phases %}<li>{{ p.nom }} : {{ libelles[p.type.name][0] }}, {{ p.type.name == 'FINALE' ? m.pluriel(p.poules|length, 'tableau', 'tableaux') : m.pluriel(p.poules|length, 'poule', 'poules') }}</li>{% endfor %}</ul>
+                    <ul class="text-sm text-(--color-base-content)/80">{% for p in phases %}<li>{{ p.nom }} : {{ libelles[p.type.name][0] }}, {{ p.type.name == 'FINALE' ? m.pluriel(p.poules|length, 'tableau', 'tableaux') : (p.type.name == 'BARRAGE' ? m.pluriel(p.poules|length, 'match', 'matchs') : m.pluriel(p.poules|length, 'poule', 'poules')) }}</li>{% endfor %}</ul>
                     <button type="submit" name="aller" value="3" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier les phases</button>
                 </div>
                 <div class="rounded-box border border-base-300 p-3">

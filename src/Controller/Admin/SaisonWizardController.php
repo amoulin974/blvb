@@ -463,9 +463,14 @@ class SaisonWizardController extends AbstractController
         if (preg_match('/^ajouter-poule-(\d+)$/', $action, $m) && isset($phases[(int) $m[1]])) {
             $phase = $phases[(int) $m[1]];
             $niveaux = array_map(fn (Poule $p) => (int) $p->getNiveau(), $phase->getPoules()->toArray());
+            $rang = $phase->getPoules()->count() + 1;
+            $barrage = $phase->getType() === PhaseType::BARRAGE; // un match de deux équipes (D42)
             $poule = (new Poule())
-                ->setNom('Poule '.\chr(64 + min(26, $phase->getPoules()->count() + 1)))
+                ->setNom($barrage ? 'Barrage '.$rang : 'Poule '.\chr(64 + min(26, $rang)))
                 ->setNiveau(($niveaux === [] ? 0 : max($niveaux)) + 1);
+            if ($barrage) {
+                $poule->setNbEquipesPrevu(2);
+            }
             $phase->addPoule($poule);
             $em->persist($poule);
 

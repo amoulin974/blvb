@@ -27,7 +27,7 @@ final class VerificationSaison
         $sansPrevu = 0;
         foreach ($phases as $i => $phase) {
             if ($phase->getPoules()->isEmpty()) {
-                $erreurs[] = ['texte' => sprintf('%s : ajoutez au moins une poule.', $phase->getNom()), 'etape' => 3];
+                $erreurs[] = ['texte' => sprintf($phase->getType() === PhaseType::BARRAGE ? '%s : ajoutez au moins un match.' : '%s : ajoutez au moins une poule.', $phase->getNom()), 'etape' => 3];
             }
             foreach ($phase->getPoules() as $poule) {
                 $sansPrevu += $poule->getNbEquipesPrevu() === null ? 1 : 0;

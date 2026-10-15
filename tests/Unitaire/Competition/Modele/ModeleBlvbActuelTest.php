@@ -3,6 +3,7 @@
 namespace App\Tests\Unitaire\Competition\Modele;
 
 use App\Competition\Modele\ModeleBlvbActuel;
+use App\Competition\Modele\ModeleBlvbAvecBarrages;
 use App\Competition\Modele\Modeles;
 use App\Entity\Saison;
 use App\Enum\PhaseType;
@@ -57,6 +58,6 @@ final class ModeleBlvbActuelTest extends TestCase
         self::assertSame('test_Phase 1', $saison->getPhases()->first()->getNom());
         self::assertSame('test_Poule A', $saison->getPhases()->first()->getPoules()->first()->getNom());
         self::assertInstanceOf(ModeleBlvbActuel::class, (new Modeles())->parCode(ModeleBlvbActuel::CODE));
-        self::assertSame([ModeleBlvbActuel::CODE], array_keys((new Modeles())->tous()));
+        self::assertSame([ModeleBlvbActuel::CODE, ModeleBlvbAvecBarrages::CODE], array_keys((new Modeles())->tous()));
     }
 }

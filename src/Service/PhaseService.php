@@ -10,6 +10,7 @@ use App\Competition\ResultatsSaison;
 use App\Competition\VerificationPassages;
 use App\Entity\Phase;
 use App\Entity\RegleDePassage;
+use App\Enum\PhaseType;
 use App\Repository\ClassementRepository;
 use App\Service\ClassementService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -45,8 +46,18 @@ class PhaseService
     {
         CodesCompetition::attribuer($phase->getSaison());
         $regles = $phase->getReglesDePassage()->toArray();
+        if ($regles !== []) {
+            return array_values($regles);
+        }
 
-        return $regles !== [] ? array_values($regles) : ReglesParDefaut::pourPhase($phase, $this->phaseSuivante($phase));
+        // Une phase de barrages, ou celle qui l'alimente, n'a pas de règles « par défaut » : les passages sont à saisir
+        // (étape Passages du wizard) ; sans règle, la clôture signale les équipes sans destination (D24)
+        $suivante = $this->phaseSuivante($phase);
+        if ($phase->getType() === PhaseType::BARRAGE || $suivante?->getType() === PhaseType::BARRAGE) {
+            return [];
+        }
+
+        return ReglesParDefaut::pourPhase($phase, $suivante);
     }
 
     /**

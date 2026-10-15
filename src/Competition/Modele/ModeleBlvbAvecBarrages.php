@@ -10,7 +10,6 @@ use App\Entity\RegleDePassage;
 use App\Entity\Saison;
 use App\Enum\PhaseType;
 use DateTimeImmutable;
-use Symfony\Component\DependencyInjection\Attribute\Exclude;
 
 /**
  * Format BLVB avec barrages (proposition du bureau, docs/formats-competition.md F2, D44) : comme le format actuel,
@@ -22,7 +21,6 @@ use Symfony\Component\DependencyInjection\Attribute\Exclude;
  * Les barrages sont des poules de deux équipes (D42) codées « AB », « BC », « CD » ; les règles de passage de la phase 1
  * les alimentent, et celles de la phase de barrages (`BAR.AB.vainqueur`, `.perdant`) alimentent la phase 2.
  */
-#[Exclude] // proposé aux administrateurs avec les écrans de la phase de barrages (lot 6c)
 final class ModeleBlvbAvecBarrages implements ModeleSaison
 {
     public const CODE = 'blvb_avec_barrages';
@@ -74,7 +72,7 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
         for ($i = 0; $i < \count(self::LETTRES) - 1; ++$i) {
             $code = self::LETTRES[$i].self::LETTRES[$i + 1];
             $matchs[$i] = (new Poule())->setNom($this->prefixeNoms.'Barrage '.self::LETTRES[$i].' / '.self::LETTRES[$i + 1])
-                ->setCode($code)->setNiveau($i + 1);
+                ->setCode($code)->setNiveau($i + 1)->setNbEquipesPrevu(2);
             $barrage->addPoule($matchs[$i]);
         }
 

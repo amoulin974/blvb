@@ -12,7 +12,7 @@ class Modeles
 
     /** @param iterable<ModeleSaison> $modeles */
     public function __construct(
-        #[AutowireIterator(ModeleSaison::TAG)] iterable $modeles = [new ModeleBlvbActuel()],
+        #[AutowireIterator(ModeleSaison::TAG)] iterable $modeles = [new ModeleBlvbActuel(), new ModeleBlvbAvecBarrages()],
     ) {
         foreach ($modeles as $modele) {
             $this->parCode[$modele->code()] = $modele;

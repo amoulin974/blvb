@@ -42,6 +42,12 @@
                     {% endfor %}
                 </ul>
 
+                {% if t.versBarrage %}
+                    <p class="text-sm text-(--color-base-content)/80">Pour chaque rang, choisissez le match de barrage que l'équipe joue, ou la poule de la phase d'après si elle ne joue pas de barrage. Les matchs sont ceux de « {{ t.suivante.nom }} » : le vainqueur et le perdant de chacun se règlent plus bas, dans la partie « {{ t.suivante.nom }} → … ».</p>
+                {% elseif t.barrage %}
+                    <p class="text-sm text-(--color-base-content)/80">Chaque match de barrage a un vainqueur et un perdant : indiquez la poule où chacun joue ensuite.</p>
+                {% endif %}
+
                 {% if t.problemes is not empty %}
                     {% embed 'admin/_alerte.html.twig' with {type: 'warning'} %}{% block contenu %}
                         <strong class="font-semibold">À vérifier : {{ t.phase.nom }}</strong>
@@ -60,7 +66,24 @@
                             <span class="text-sm text-(--color-base-content)/80">({{ t.phase.nom }}{% if ps.taille %} · {{ ps.taille }} équipes{% endif %})</span>
                         </div>
 
-                        {% if ps.mode == 'simple' and not t.versFinale %}
+                        {% if ps.mode == 'barrage' %}
+                            {# Un match de barrage : où vont le vainqueur et le perdant (D32, D42) #}
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                {% for issue, libelle in {vainqueur: 'Le vainqueur joue ensuite dans', perdant: 'Le perdant joue ensuite dans'} %}
+                                    <label class="flex flex-col gap-1">
+                                        <span class="font-semibold">{{ libelle }}</span>
+                                        <select name="{{ nom }}[{{ issue }}]" class="select select-bordered w-full" aria-label="{{ libelle }}, {{ poule.nom }}">
+                                            <option value="">Choisir où il va</option>
+                                            {% for groupe, options in t.destinations %}
+                                                {% if groupe != 'Saison suivante' %}
+                                                    <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == ps[issue] %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% elseif ps.mode == 'simple' and not t.versFinale %}
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
                                 {% if not loop.first or s.montee > 0 %}
                                     <span class="inline-flex flex-wrap items-center gap-2">Montées : {{ m.choix_nombre(nom ~ '[montee]', s.montee, poule.nom ~ ', nombre de montées') }} → {{ m.choix_poule(nom ~ '[versMontee]', poulesSuivante, s.versMontee ?? poulesSuivante|first, poule.nom ~ ', poule où montent les premiers') }}</span>
@@ -107,7 +130,9 @@
                         {% endif %}
 
                         <div>
-                            {% if ps.mode == 'simple' %}
+                            {% if ps.mode == 'barrage' or t.versBarrage %}
+                                {# pas de mode simple : les rangs vont vers un match de barrage ou directement en phase suivante #}
+                            {% elseif ps.mode == 'simple' %}
                                 <button type="submit" name="action" value="detail-{{ poule.id }}" class="btn btn-ghost btn-sm">Personnaliser les règles de {{ poule.nom }}</button>
                             {% else %}
                                 <button type="submit" name="action" value="simple-{{ poule.id }}" class="btn btn-ghost btn-sm" {% if s is null %}data-turbo-confirm="Revenir au mode simple pour {{ poule.nom }} ? Ses règles détaillées seront remplacées par les règles par défaut."{% endif %}>Revenir au mode simple pour {{ poule.nom }}</button>
@@ -116,7 +141,9 @@
                     </div>
                 {% endfor %}
 
-                <div><button type="submit" name="action" value="retablir-{{ t.phase.id }}" class="btn btn-ghost" data-turbo-confirm="Remplacer les passages de {{ t.phase.nom }} par les règles par défaut ?">{{ icone.i('restaurer') }} Rétablir les règles par défaut</button></div>
+                {% if not t.barrage and not t.versBarrage %}
+                    <div><button type="submit" name="action" value="retablir-{{ t.phase.id }}" class="btn btn-ghost" data-turbo-confirm="Remplacer les passages de {{ t.phase.nom }} par les règles par défaut ?">{{ icone.i('restaurer') }} Rétablir les règles par défaut</button></div>
+                {% endif %}
             </section>
         {% else %}
             <p>Il n'y a qu'une phase : pas de passage à définir.</p>

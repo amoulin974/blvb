@@ -5,6 +5,7 @@ namespace App\Form\Wizard;
 use App\Entity\Phase;
 use App\Enum\PhaseType;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
@@ -36,9 +37,23 @@ class PhaseWizardType extends AbstractType
             ->add('type', EnumType::class, [
                 'label' => 'Type de phase',
                 'class' => PhaseType::class,
-                'choices' => [PhaseType::CHAMPIONNAT, PhaseType::FINALE], // barrages : proposés avec l'étape 6c (D29.9, formats pas encore disponibles masqués)
                 'expanded' => true,
                 'choice_label' => fn (PhaseType $type) => self::LIBELLES[$type->name][0],
+            ])
+            // Barrages (D43) : qui reçoit le match ; enregistré dans les options de la phase, seulement pour un barrage
+            ->add('reception', ChoiceType::class, [
+                'label' => 'Qui reçoit le match ?',
+                'choices' => [
+                    'L\'équipe de la poule de niveau supérieur (elle défend sa place)' => Phase::RECEPTION_NIVEAU_SUPERIEUR,
+                    'L\'équipe la mieux classée dans sa poule' => Phase::RECEPTION_MIEUX_CLASSE,
+                    'Terrain neutre (gymnase par défaut)' => Phase::RECEPTION_NEUTRE,
+                ],
+                'getter' => fn (Phase $phase): string => $phase->getReception(),
+                'setter' => function (Phase $phase, ?string $valeur): void {
+                    if ($phase->getType() === PhaseType::BARRAGE && $valeur !== null) {
+                        $phase->setOptions(array_merge($phase->getOptions(), ['reception' => $valeur]));
+                    }
+                },
             ])
             ->add('datedebut', DateType::class, ['label' => 'Du', 'widget' => 'single_text', 'input' => 'datetime_immutable',
                 'constraints' => [new Assert\NotNull(message: 'Indiquez la date de début de la phase.')],
