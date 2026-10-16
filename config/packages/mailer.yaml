@@ -2,3 +2,9 @@ framework:
     mailer:
         dsn: '%env(MAILER_DSN)%'
         message_bus: false
+        # Un seul expéditeur pour tous les messages du site : le compte avec lequel on s'authentifie sur le SMTP
+        # (OVH refuse un autre expéditeur). Valeur par défaut dans services.yaml, modifiable par MAILER_FROM.
+        envelope:
+            sender: '%env(MAILER_FROM)%'
+        headers:
+            From: 'BLVB <%env(MAILER_FROM)%>'
