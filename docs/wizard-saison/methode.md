@@ -269,6 +269,9 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - **Rappels** : répondre à l'utilisateur en français ; le `.env` de `prod` contient des secrets, ne pas l'afficher
   (le contrôle automatique bloque sa lecture) : le résoudre par `git checkout --ours .env` puis ajouter les lignes
   nouvelles.
+- **Faille de sécurité** CVE-2026-109449 (`symfony/expression-language`, signalée par le job « Sécurité » de la CI) :
+  passage en 7.4.21 sur `main` (`4a13ab8`), fusionné dans `prod` (`1b609d4`) et dans `formats-competition-lot6`
+  (`03c063e`) ; sur le serveur, un `docker compose up -d --build` suffit (l'image réinstalle les dépendances).
 - Le chantier n'a pas avancé : reste du lot 6 inchangé (6c bis, 6e, 6f).
 
 ## 5. Reprendre le travail sur un autre ordinateur
