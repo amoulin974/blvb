@@ -271,7 +271,14 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   nouvelles.
 - **Faille de sécurité** CVE-2026-109449 (`symfony/expression-language`, signalée par le job « Sécurité » de la CI) :
   passage en 7.4.21 sur `main` (`4a13ab8`), fusionné dans `prod` (`1b609d4`) et dans `formats-competition-lot6`
-  (`03c063e`) ; sur le serveur, un `docker compose up -d --build` suffit (l'image réinstalle les dépendances).
+  (`03c063e`). **Correction (soir du 16/10)** : le serveur tourne avec `.:/app` monté (compose.yaml, cible
+  `frankenphp_dev`), donc le `vendor` est celui du dossier du serveur, **pas** celui de l'image : il faut y lancer
+  `composer install` (versions exactes de `composer.lock`), vider le cache et **redémarrer** le conteneur (le mode worker de
+  FrankenPHP garde les anciennes classes en mémoire).
+- **Cause de la panne en production** (logs de Francis) : `vendor` du serveur en retard sur `composer.lock` ; Twig trop ancien
+  pour l'opérateur `?.` introduit le 15/10 (`d79bdfa`, `_score_partie.html.twig` ligne 16) ; après la mise à jour de
+  `twig/twig` seul, erreur `CallExpression::needsIsSandboxed()` : anciennes classes Twig encore chargées par le worker.
+  Remède : `composer install`, `cache:clear`, `docker compose restart php` ; annuler la retouche manuelle du gabarit.
 - Le chantier n'a pas avancé : reste du lot 6 inchangé (6c bis, 6e, 6f).
 
 ## 5. Reprendre le travail sur un autre ordinateur
@@ -297,6 +304,8 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    leur fiche si la session ne les charge pas.
 7. **Déploiement** (quand le chantier est livré, pas avant) : `git pull`, `docker compose up -d
    --build`, `importmap:install`, `tailwind:build --minify`, `asset-map:compile`, `cache:clear`,
-   migrations ; l'agent `deploiement` relit avant la fusion dans `prod`.
+   migrations ; l'agent `deploiement` relit avant la fusion dans `prod`. Le serveur monte le dossier dans le
+   conteneur (`.:/app`) : `composer install` **dans le conteneur** à chaque changement de `composer.lock`, puis
+   `cache:clear` et `docker compose restart php`.
    La branche `prod` garde son propre `.env` (secrets du serveur) : à chaque fusion, conflit attendu si `main` a
    changé `.env` ; garder celui de `prod` et y reporter les nouvelles variables (ex. `MAILER_FROM`).
