@@ -165,10 +165,23 @@ matchs individuels), qui changent le modèle lui-même (D13).
 ## À faire hors lots (relevé en relecture)
 - [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
       (webdesigner, D28) : fait sur `main` et `prod` (`af97240`), gabarit commun `admin/_alerte.html.twig`
-- [ ] Avertissements des règles de passage affichés avant de cliquer sur « Clôturer » (ergonome,
-      D28) : avec le wizard (lots 4-5)
+- [x] Avertissements des règles de passage avant « Clôturer » (ergonome, D28) : fait (D37, PHA-10)
 - [ ] Autres messages joints par « ; » (surcharges des gymnases, `optimiserTout`) : liste comme D28
-- [ ] Page d'une saison hors wizard : la recentrer sur le suivi (liste avec colonne « État » et bouton principal unique,\n      suppressions en masse masquées une fois la saison lancée, show renvoyant un brouillon vers le wizard,\n      « Créer la saison suivante ») : avis de l'ergonome et décisions à prendre dans decisions.md, PO1\n- [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)\n- [x] Avertissements des règles de passage avant « Clôturer » : fait (D37, PHA-10)
+- [ ] Page d'une saison hors wizard : la recentrer sur le suivi (liste avec colonne « État » et bouton principal unique,
+      suppressions en masse masquées une fois la saison lancée, show renvoyant un brouillon vers le wizard,
+      « Créer la saison suivante ») : avis de l'ergonome et décisions à prendre dans decisions.md, PO1
+- [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)
+- [x] Expéditeur des e-mails : un seul, `blvb@vblc.fr` (le compte authentifié sur le SMTP d'OVH, qui refusait
+      `admin@blvb.fr` et `tech@vblc.fr`), réglable par `MAILER_FROM` ; fait sur `main` (`ad55678`) et `prod`
+      (`41ba275`), test MAI-01. À ramener dans cette branche à la prochaine fusion de `main`
+- [ ] Import Excel des utilisateurs trop lent sur le serveur (erreur 500 au-delà d'une dizaine de lignes ; il
+      fonctionne 10 lignes par 10 lignes) : chaque compte reçoit un mot de passe aléatoire haché avec le coût
+      normal (≈ 0,3 s par compte), jamais utilisé. Décision de l'utilisateur (16/10/2026) : générer ces mots de
+      passe plus simplement ; l'utilisateur choisit le sien par « J'ai oublié mon mot de passe ». Proposition :
+      compte créé sans mot de passe utilisable. Sur `main`, puis `prod`
+- [ ] Site en panne en production (16/10/2026) : la branche `prod` a été vérifiée sur le poste de développement
+      (image de production construite, pages publiques en 200, assets servis sous `/blvb`) ; la cause est côté
+      serveur. En attente de `docker compose ps` et `docker compose logs --tail=80 php` sur le serveur (Francis)
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;

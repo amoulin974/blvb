@@ -252,6 +252,25 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   dans le navigateur la mise en place (Poules, Journées, Matchs) d'une phase de barrages ; barrages aussi en
   fin de saison (point 6 de F2, à décider). Les deux migrations du lot ne vont en production qu'au déploiement.
 
+### 2026-10-16 : e-mails, import Excel et panne en production (hors chantier)
+
+- **Expéditeur des e-mails** (sur `main` `ad55678`, fusionné dans `prod` `41ba275`) : Francis a constaté que le
+  SMTP d'OVH n'accepte que le compte authentifié, `blvb@vblc.fr` ; le code envoyait « mot de passe oublié » avec
+  `admin@blvb.fr` et la confirmation d'inscription (inscription fermée, code conservé) avec `tech@vblc.fr`. Un seul
+  expéditeur, en-tête From et enveloppe, dans `config/packages/mailer.yaml`, réglable par `MAILER_FROM` (par défaut
+  `blvb@vblc.fr` dans `services.yaml`) ; objets et texte des messages en français ; test MAI-01. Fusion dans `prod` :
+  seul conflit `.env`, résolu en gardant celui de `prod` (mot de passe SMTP de Francis) et en y ajoutant `MAILER_FROM`.
+- **Import Excel des utilisateurs** : erreur 500 en production, fonctionne 10 lignes par 10 lignes. Cause probable :
+  hachage d'un mot de passe aléatoire par compte (≈ 0,3 s) qui dépasse les 30 s de PHP sur le serveur. Décision de
+  l'utilisateur : générer ces mots de passe plus simplement, l'utilisateur passant par « J'ai oublié mon mot de
+  passe ». À faire sur `main` (voir `lots.md`, hors lots).
+- **Site en panne en production** : la branche `prod` (`b62d0b1`, puis `41ba275`) se construit et fonctionne sur le
+  poste de développement ; cause côté serveur, diagnostic en attente (Francis).
+- **Rappels** : répondre à l'utilisateur en français ; le `.env` de `prod` contient des secrets, ne pas l'afficher
+  (le contrôle automatique bloque sa lecture) : le résoudre par `git checkout --ours .env` puis ajouter les lignes
+  nouvelles.
+- Le chantier n'a pas avancé : reste du lot 6 inchangé (6c bis, 6e, 6f).
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Pour un nouveau
@@ -276,3 +295,5 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 7. **Déploiement** (quand le chantier est livré, pas avant) : `git pull`, `docker compose up -d
    --build`, `importmap:install`, `tailwind:build --minify`, `asset-map:compile`, `cache:clear`,
    migrations ; l'agent `deploiement` relit avant la fusion dans `prod`.
+   La branche `prod` garde son propre `.env` (secrets du serveur) : à chaque fusion, conflit attendu si `main` a
+   changé `.env` ; garder celui de `prod` et y reporter les nouvelles variables (ex. `MAILER_FROM`).
