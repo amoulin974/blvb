@@ -377,6 +377,36 @@ la phase suivante. Le calendrier de la phase suivante se génère après les bar
 directes reste une option du wizard (D1).
 *(2026-10-15, lot 6)*
 
+## D45. Journée des finales (C3) : derniers tours au choix, dans un gymnase et à une date
+**Décision** : option de la phase à élimination. Sans elle, comportement actuel (un tour par semaine, chez l'équipe qui
+reçoit). Avec elle, l'administrateur choisit **par phase** les tours regroupés : les finales seules (avec les petites
+finales), ou les demi-finales et les finales. Ces tours de **tous les tableaux** de la phase se jouent le même jour, dans
+un même gymnase choisi ; les tours précédents restent un par semaine, avant cette date.
+**Pourquoi** : la finale du vendredi soir avec la remise des prix (F1) ; certains règlements regroupent aussi les
+demi-finales (final four). Choix de l'utilisateur, 16/10/2026.
+*(2026-10-16, lot 6)*
+
+## D46. Journée des finales : planning calculé
+**Décision** : paramètres gymnase, date, heure de début, nombre de terrains, durée d'un match. Les matchs s'enchaînent par
+créneaux (autant de matchs par créneau que de terrains) : demi-finales d'abord s'il y en a, puis petites finales et finales,
+chaque fois du niveau le plus bas au niveau 1 ; la finale du niveau 1 se joue en dernier, avant la remise des prix. Les heures
+restent modifiables ensuite dans le calendrier.
+*(2026-10-16, lot 6)*
+
+## D47. Championnat aller-retour (A2) : retour en miroir
+**Décision** : option de la phase de championnat. Le retour reprend les journées de l'aller dans le même ordre, domicile et
+extérieur inversés, dans la seconde moitié de la phase (`2(n-1)` journées, `2n` avec un nombre impair d'équipes).
+L'optimiseur place l'aller (gymnases, alternance) ; le retour en découle. Pas de retour décalé pour l'instant.
+**Pourquoi** : lecture simple pour les clubs, équilibre domicile / extérieur parfait. Choix de l'utilisateur.
+*(2026-10-16, lot 6)*
+
+## D48. Format de match par phase : 3 ou 2 sets gagnants, barème adapté
+**Décision** : option de toute phase, 3 sets gagnants par défaut. En 2 sets gagnants : scores 2-0 et 2-1 ; 2-0 = victoire
+forte, 2-1 = victoire faible, 1-2 = défaite forte, 0-2 = défaite faible ; forfait 2 contre -1 ; match interrompu (règle
+1R) : 1-1 et 1-0, 0 point chacun. Le barème de la saison (ou de la phase) s'applique aux catégories forte / faible comme
+en 3 sets. La validation du score et la fenêtre de saisie suivent le format de la phase du match.
+*(2026-10-16, lot 6)*
+
 ---
 
 ## Points ouverts

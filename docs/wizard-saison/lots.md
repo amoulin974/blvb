@@ -146,7 +146,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       Point à traiter à part (hors lot) : équipe qui se retire et forfait général (règle de forfait, D41).
 
 ## Lot 6 : formats BLVB 🟡
-- [x] Branche `formats-competition-lot6` ; décisions D42 à D44
+- [x] Branche `formats-competition-lot6` ; décisions D42 à D44, puis D45 à D48 (16/10 : journée des finales, aller-retour, format de match)
 - [x] 6a. Phase de barrages : `PhaseType::BARRAGE`, `Phase.options` (JSON, migration), générateur `Barrage`
       (une poule de deux équipes par match, réception selon l'option), vainqueur / perdant résolus par
       `ResultatsSaison`, règles de passage depuis une phase de barrages ; clôture d'une phase sans classement
@@ -158,8 +158,9 @@ matchs individuels), qui changent le modèle lui-même (D13).
       textes des bilans)
 - [x] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
       1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
-- [ ] 6e. Journée des finales (C3) : tableaux de tous les niveaux sur une date
-- [ ] 6f. Aller-retour (A2) et format de match par phase (3 ou 2 sets gagnants)
+- [ ] 6e. Journée des finales (C3) : derniers tours au choix (finales seules, ou demi-finales et finales) de tous les
+      tableaux sur une date, dans un gymnase, planning calculé (D45, D46)
+- [ ] 6f. Aller-retour (A2), retour en miroir (D47) ; format de match par phase, 3 ou 2 sets gagnants (D48)
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 
 ## À faire hors lots (relevé en relecture)
