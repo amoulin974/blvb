@@ -187,6 +187,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
       (image de production construite, pages publiques en 200, assets servis sous `/blvb`) ; la cause est côté
       serveur. En attente de `docker compose ps` et `docker compose logs --tail=80 php` sur le serveur (Francis)
 
+- [ ] Contraste des libellés de formulaire (`.label` de daisyUI, ≈ 4,4:1, limite AA) : correction globale proposée par
+      le webdesigner (`color-mix(... currentColor 80% ...)` hors couche dans `app.css`), à décider
+- [ ] Texte à 12 px dans les autres `fieldset` de l'étape Phases (daisyUI) : leur appliquer `.fieldset-formulaire`
+- [ ] Journée des finales en 2 sets gagnants : durée proposée de 60 minutes au lieu de 90 (ergonome), avec 6f
+
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;
 - documentation des tests à jour (`tests/SPECIFICATIONS.md`, et `tests/recette/README.md` si la

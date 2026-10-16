@@ -95,7 +95,7 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 | Données | fabriquées par les tests (factories, stories) | `app:recette:charger`, scénarios `en-cours`, `phase1-terminee`, `vierge` |
 | Référence | `tests/SPECIFICATIONS.md` | `tests/recette/README.md` |
 
-Tests automatisés, dans le conteneur `php` (385 tests verts + 2 lents au 2026-10-13, fin du lot 4) :
+Tests automatisés, dans le conteneur `php` (455 tests verts + 2 lents au 2026-10-16, lot 6e ; toujours par `composer tests`) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
@@ -301,8 +301,9 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
-1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Pour un nouveau
-   lot, créer `git checkout -b formats-competition-lot5` depuis `formats-competition`.
+1. **Récupérer le code** : `git fetch && git checkout formats-competition-lot6 && git pull` (lot en cours, pas
+   encore fusionné dans `formats-competition`). Pour un nouveau lot, créer `formats-competition-lotN` depuis
+   `formats-competition` une fois le lot précédent fusionné.
 2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,
    `docker compose exec php composer install`, droits MySQL des bases de test, `gh auth login` puis
    `gh auth setup-git` pour pousser et suivre la CI (`gh run list`).
