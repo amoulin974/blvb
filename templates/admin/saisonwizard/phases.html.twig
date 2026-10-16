@@ -68,8 +68,38 @@
                                     </label>
                                     <p id="aide-petite-finale-{{ i }}" class="pl-8 text-sm text-(--color-base-content)/80">Entre les deux perdants des demi-finales, le jour de la finale. Sans effet s'il y a moins de 4 équipes.</p>
                                 </div>
+                                {# Journée des finales (D45, D46) : réglages affichés quand la case est cochée (sans JavaScript) #}
+                                {% set jf = phaseForm.journeeFinales %}
+                                <fieldset class="group fieldset fieldset-formulaire border border-base-300 rounded-box p-3">
+                                    <legend class="fieldset-legend">Journée des finales</legend>
+                                    <label class="flex min-h-11 items-start gap-2 py-2">
+                                        {{ form_widget(jf.actif, {attr: {class: 'checkbox mt-0.5 js-journee-finales', 'aria-describedby': 'aide-journee-finales-' ~ i, 'aria-controls': 'reglages-journee-finales-' ~ i}}) }}
+                                        <span>{{ jf.actif.vars.label }}</span>
+                                    </label>
+                                    <p id="aide-journee-finales-{{ i }}" class="sm:pl-8 text-sm text-(--color-base-content)/80">Les derniers tours de tous les tableaux se jouent le même jour, dans un même gymnase. Case décochée : un tour par semaine, chez l'équipe qui reçoit.</p>
+                                    <div id="reglages-journee-finales-{{ i }}" class="{{ jf.vars.valid ? 'hidden' : 'flex' }} group-has-[.js-journee-finales:checked]:flex flex-col gap-4 pt-2 sm:pl-8">
+                                        <fieldset>
+                                            <legend class="label font-semibold">{{ jf.tours.vars.label }}</legend>
+                                            <div class="flex flex-wrap gap-x-6">
+                                                {% for choix in jf.tours %}
+                                                    <label class="flex min-h-11 items-center gap-2">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</label>
+                                                {% endfor %}
+                                            </div>
+                                        </fieldset>
+                                        <div class="grid max-w-xl gap-4 sm:grid-cols-2">
+                                            {% for champ in [jf.date, jf.lieu, jf.heure, jf.terrains, jf.duree] %}
+                                                <div>
+                                                    {{ form_label(champ, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                                    {{ form_widget(champ, {attr: {class: champ is same as(jf.lieu) ? 'select select-bordered w-full' : (champ is same as(jf.terrains) or champ is same as(jf.duree) ? 'input input-bordered champ-court' : 'input input-bordered w-full')}}) }}
+                                                    {{ form_errors(champ) }}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <p class="text-sm text-(--color-base-content)/80">Horaires calculés du dernier tableau au tableau 1 ; la finale du tableau 1 se joue en dernier. Vous pourrez les modifier dans le calendrier.</p>
+                                    </div>
+                                </fieldset>
                             {% else %}
-                                <div hidden>{{ form_widget(phaseForm.petiteFinale) }}</div>
+                                <div hidden>{{ form_widget(phaseForm.petiteFinale) }}{{ form_widget(phaseForm.journeeFinales) }}</div>
                             {% endif %}
                             {% if barrage %}
                                 <fieldset class="fieldset border border-base-300 rounded-box p-3">

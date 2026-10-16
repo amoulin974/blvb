@@ -281,6 +281,24 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   Remède : `composer install`, `cache:clear`, `docker compose restart php` ; annuler la retouche manuelle du gabarit.
 - Le chantier n'a pas avancé : reste du lot 6 inchangé (6c bis, 6e, 6f).
 
+### 2026-10-16 (soir) : lot 6e, journée des finales
+
+- Décisions D45 à D48 prises avec l'utilisateur : journée des finales (tours regroupés au choix par phase), planning
+  calculé, aller-retour en miroir, 2 sets gagnants avec barème adapté.
+- **6e réalisé** : option `journee_finales` de la phase (`Phase::getJourneeFinales`), service `PlanningFinales` (créneaux
+  d'autant de matchs que de terrains, demi-finales puis finales, du niveau le plus bas au niveau 1 ; une régénération de
+  tableau ne replace que ce tableau ; un match avec score n'est jamais déplacé ; toute la journée recalculée après la
+  génération de la phase), journées datées par `Elimination`, message « trop tôt » aussi à la vérification, date décalée
+  à la copie. Écran à l'étape Phases (`JourneeFinalesType`), relu par l'ergonome, le webdesigner et la sécurité, retours
+  intégrés (libellés, aide raccourcie, contrôles seulement si la case est cochée, texte en 16 px dans le fieldset avec
+  `.fieldset-formulaire`, liste des gymnases par identifiant). Défaut corrigé : pas de petite finale dans un tableau de 4.
+- **Piège** : ne pas déclarer un type de formulaire comme service. Dans ce projet, aucun ne l'est ; en déclarer un fait
+  perdre aux autres le jeton CSRF commun `submit` (contrôle d'origine), détecté par `FicheClubTest::test_protection_csrf`.
+  Passer les données par une option du formulaire.
+- 455 tests verts + 2 lents. **Suite** : 6f (aller-retour en miroir, format de match en 2 sets gagnants ; durée proposée
+  de 60 minutes pour la journée des finales en 2 sets, avis de l'ergonome), 6c bis (relecture navigateur des barrages).
+  Reporté (webdesigner) : contraste des `.label` de daisyUI (≈ 4,4:1) et taille de texte des autres fieldsets de l'étape.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Pour un nouveau
@@ -294,7 +312,7 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
    en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
    manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
-5. **Vérifier l'état** : `docker compose exec php composer tests` (445 tests verts attendus ; `php bin/phpunit` lancé seul dépasse les 128 Mo de PHP, passer par `composer tests`) et
+5. **Vérifier l'état** : `docker compose exec php composer tests` (455 tests verts attendus ; `php bin/phpunit` lancé seul dépasse les 128 Mo de PHP, passer par `composer tests`) et
    `docker compose exec php composer qualite`.
 6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D48), `lots.md`
    (lot 6) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à

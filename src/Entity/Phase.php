@@ -74,6 +74,10 @@ class Phase
     public const RECEPTION_MIEUX_CLASSE = 'mieux_classe';
     public const RECEPTION_NEUTRE = 'neutre';
 
+    /** Journée des finales (D45) : tours regroupés le même jour. */
+    public const TOURS_FINALES = 'finales';
+    public const TOURS_DEMI_FINALES = 'demi_finales';
+
     /**
      * Règles de passage des équipes de cette phase vers la suivante (ou la saison suivante), dans l'ordre.
      *
@@ -213,6 +217,42 @@ class Phase
         $valeur = $this->getOptions()['reception'] ?? null;
 
         return \in_array($valeur, [self::RECEPTION_MIEUX_CLASSE, self::RECEPTION_NEUTRE], true) ? $valeur : self::RECEPTION_NIVEAU_SUPERIEUR;
+    }
+
+    /**
+     * Option d'un tableau à élimination : journée des finales (C3, D45, D46). Les derniers tours (finales seules, ou
+     * demi-finales et finales) de tous les tableaux de la phase se jouent le même jour dans un gymnase, à des heures
+     * calculées (PlanningFinales). Null quand l'option n'est pas choisie ; valeurs corrigées si elles sont incomplètes.
+     *
+     * @return array{tours: string, lieu: ?int, date: ?\DateTimeImmutable, heure: string, terrains: int, duree: int}|null
+     */
+    public function getJourneeFinales(): ?array
+    {
+        $option = $this->getOptions()['journee_finales'] ?? null;
+        if (!\is_array($option)) {
+            return null;
+        }
+        $date = \is_string($option['date'] ?? null) ? \DateTimeImmutable::createFromFormat('!Y-m-d', $option['date']) : false;
+        $heure = $option['heure'] ?? null;
+
+        return [
+            'tours' => ($option['tours'] ?? null) === self::TOURS_DEMI_FINALES ? self::TOURS_DEMI_FINALES : self::TOURS_FINALES,
+            'lieu' => is_numeric($option['lieu'] ?? null) ? (int) $option['lieu'] : null,
+            'date' => $date ?: null,
+            'heure' => \is_string($heure) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $heure) ? $heure : '19:00',
+            'terrains' => max(1, (int) ($option['terrains'] ?? 1)),
+            'duree' => max(15, (int) ($option['duree'] ?? 90)),
+        ];
+    }
+
+    /** Nombre de tours regroupés le jour des finales : 0 sans l'option, 1 (finales) ou 2 (demi-finales et finales). */
+    public function nbToursJourneeFinales(): int
+    {
+        if ($this->getType() !== PhaseType::FINALE || ($option = $this->getJourneeFinales()) === null) {
+            return 0;
+        }
+
+        return $option['tours'] === self::TOURS_DEMI_FINALES ? 2 : 1;
     }
 
     /** Option d'un tableau à élimination : un match pour la 3e place entre les perdants des demi-finales (B2). */

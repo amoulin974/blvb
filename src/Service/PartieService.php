@@ -4,6 +4,7 @@ namespace App\Service;
 use App\Competition\Format\DateMatch;
 use App\Competition\Format\Formats;
 use App\Competition\Format\GenerateurFormat;
+use App\Competition\Format\PlanningFinales;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Partie;
@@ -22,6 +23,7 @@ class PartieService
         private EntityManagerInterface $em,
         private OptimisationService $optimisationService,
         private Formats $formats,
+        private PlanningFinales $planningFinales,
     ) {}
 
 
@@ -124,6 +126,9 @@ class PartieService
                 ];
             }
         }
+
+        // Journée des finales (D46) : planning recalculé une fois tous les tableaux générés
+        $this->planningFinales->planifier($phase);
 
         // On restitue le rapport dans l'ordre d'origine des poules de la phase.
         $rapport = [];

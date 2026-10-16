@@ -220,6 +220,8 @@ body{
 .btn-ajout { border-style: dashed; }
 .badge-ecart { border-color: var(--color-warning); }
 .champ-court { width: 6rem; }
+/* Fieldset de formulaire : texte à taille normale (daisyUI impose .75rem à .fieldset) */
+.fieldset-formulaire { font-size: 1rem; }
 /* Cibles tactiles de 44 px dans l'admin */
 @media (pointer: coarse) { main .btn { min-height: 2.75rem; } main .btn-square { width: 2.75rem; } }
 /* Tableau de saisie empilé en cartes sur téléphone : chaque cellule porte son libellé (data-label) */

@@ -67,6 +67,16 @@ class PhaseWizardType extends AbstractType
                     }
                 },
             ])
+            // Tableau à élimination : journée des finales (D45, D46), enregistrée dans les options, seulement pour un tableau
+            ->add('journeeFinales', JourneeFinalesType::class, [
+                'gymnases' => $options['gymnases'],
+                'getter' => fn (Phase $phase): array => JourneeFinalesType::depuisPhase($phase),
+                'setter' => function (Phase $phase, ?array $valeurs): void {
+                    if ($phase->getType() === PhaseType::FINALE) {
+                        JourneeFinalesType::versPhase($phase, $valeurs);
+                    }
+                },
+            ])
             ->add('datedebut', DateType::class, ['label' => 'Du', 'widget' => 'single_text', 'input' => 'datetime_immutable',
                 'constraints' => [new Assert\NotNull(message: 'Indiquez la date de début de la phase.')],
                 // Date vidée : message d'erreur ; le setter n'accepte pas null
@@ -88,6 +98,7 @@ class PhaseWizardType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(['data_class' => Phase::class]);
+        $resolver->setDefaults(['data_class' => Phase::class, 'gymnases' => []]);
+        $resolver->setAllowedTypes('gymnases', 'array');
     }
 }

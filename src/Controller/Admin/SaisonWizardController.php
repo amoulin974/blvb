@@ -9,6 +9,7 @@ use App\Competition\EtapePassages;
 use App\Competition\VerificationSaison;
 use App\Competition\Modele\Modeles;
 use App\Competition\Sport\Sports;
+use App\Entity\Lieu;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Saison;
@@ -186,7 +187,11 @@ class SaisonWizardController extends AbstractController
     private function etapePhases(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
     {
         $phases = self::phasesDansLOrdre($saison);
-        $form = $this->createForm(PhasesWizardType::class, ['phases' => $phases]);
+        $gymnases = [];
+        foreach ($em->getRepository(Lieu::class)->findBy([], ['nom' => 'ASC']) as $lieu) {
+            $gymnases[$lieu->getId()] = (string) $lieu->getNom(); // identifiant => nom : deux gymnases de même nom restent distincts
+        }
+        $form = $this->createForm(PhasesWizardType::class, ['phases' => $phases], ['gymnases' => $gymnases]);
         $form->handleRequest($request);
         $ouverte = $request->query->getInt('phase', 0);
 

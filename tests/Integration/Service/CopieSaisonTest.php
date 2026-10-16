@@ -37,7 +37,8 @@ final class CopieSaisonTest extends TestIntegration
         $this->phase1 = PhaseFactory::createOne(['saison' => $this->source, 'nom' => 'Phase 1', 'code' => 'P1', 'ordre' => 1,
             'datedebut' => new \DateTimeImmutable('2025-09-15'), 'datefin' => new \DateTimeImmutable('2026-02-01')]);
         $finale = PhaseFactory::createOne(['saison' => $this->source, 'nom' => 'Finale', 'code' => 'F', 'ordre' => 2, 'type' => PhaseType::FINALE,
-            'datedebut' => new \DateTimeImmutable('2026-06-01'), 'datefin' => new \DateTimeImmutable('2026-06-30'), 'bareme' => ['victoire_forte' => 0]]);
+            'datedebut' => new \DateTimeImmutable('2026-06-01'), 'datefin' => new \DateTimeImmutable('2026-06-30'), 'bareme' => ['victoire_forte' => 0],
+            'options' => ['petite_finale' => true, 'journee_finales' => ['tours' => Phase::TOURS_FINALES, 'lieu' => null, 'date' => '2026-06-26', 'heure' => '19:00', 'terrains' => 2, 'duree' => 90]]]);
         foreach (['A' => 1, 'B' => 2] as $code => $niveau) {
             $equipes = array_map(fn ($n) => EquipeFactory::createOne(['nom' => "$code$n", 'lieu' => null]), [1, 2, 3, 4]);
             $this->{'poule'.$code} = PouleFactory::createOne(['phase' => $this->phase1, 'nom' => "Poule $code", 'code' => $code, 'niveau' => $niveau, 'equipes' => $equipes]);
@@ -96,7 +97,7 @@ final class CopieSaisonTest extends TestIntegration
         return $noms;
     }
 
-    #[TestDox('CPS-01 Structure recopiée : sport, barème, départage, phases (dates décalées d\'un an, non closes), poules, codes, barème de phase, périodes sans match décalées')]
+    #[TestDox('CPS-01 Structure recopiée : sport, barème, départage, phases (dates décalées d\'un an, non closes), poules, codes, barème et options de phase (date de la journée des finales décalée), périodes sans match décalées')]
     public function test_structure(): void
     {
         $this->cloturerPhase1();
@@ -109,6 +110,8 @@ final class CopieSaisonTest extends TestIntegration
         self::assertSame([['Phase 1', 'P1', 0, '2026-09-15'], ['Finale', 'F', 0, '2027-06-01']],
             array_map(fn (Phase $p) => [$p->getNom(), $p->getCode(), $p->getClose(), $p->getDateDebut()->format('Y-m-d')], $phases));
         self::assertSame(['victoire_forte' => 0], $phases[1]->getBareme());
+        self::assertTrue($phases[1]->aPetiteFinale(), 'options recopiées');
+        self::assertSame('2027-06-26', $phases[1]->getJourneeFinales()['date']->format('Y-m-d'), 'journée des finales décalée comme la phase');
         self::assertSame(['A' => 1, 'B' => 2], array_column(array_map(fn (Poule $p) => [$p->getCode(), $p->getNiveau()], $phases[0]->getPoules()->toArray()), 1, 0));
         $noel = $copie->getIndisponibilites()->first();
         self::assertSame(['Noël', '2026-12-20', '2027-01-04'], [$noel->getNom(), $noel->getDateDebut()->format('Y-m-d'), $noel->getDateFin()->format('Y-m-d')]);

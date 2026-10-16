@@ -62,7 +62,7 @@ final class CopieSaison
                 ->setDateDebut($decaler($ancienne->getDateDebut()))
                 ->setDateFin($decaler($ancienne->getDateFin()))
                 ->setBareme($ancienne->getBareme())
-                ->setOptions($ancienne->getOptions());
+                ->setOptions(self::optionsDecalees($ancienne->getOptions(), $decaler));
             $saison->addPhase($phase);
             foreach ($ancienne->getPoules() as $anciennePoule) {
                 $poule = (new Poule())
@@ -209,5 +209,22 @@ final class CopieSaison
         usort($phases, fn (Phase $a, Phase $b) => $a->getOrdre() <=> $b->getOrdre());
 
         return array_values($phases);
+    }
+
+    /**
+     * Options d'une phase copiée : la date de la journée des finales est décalée comme les dates de la phase.
+     *
+     * @param array<string, mixed> $options
+     *
+     * @return array<string, mixed>
+     */
+    private static function optionsDecalees(array $options, callable $decaler): array
+    {
+        $date = $options['journee_finales']['date'] ?? null;
+        if (\is_string($date) && ($jour = DateTimeImmutable::createFromFormat('!Y-m-d', $date)) !== false) {
+            $options['journee_finales']['date'] = $decaler($jour)->format('Y-m-d');
+        }
+
+        return $options;
     }
 }

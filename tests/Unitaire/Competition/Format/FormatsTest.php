@@ -5,6 +5,7 @@ namespace App\Tests\Unitaire\Competition\Format;
 use App\Competition\Format\Championnat;
 use App\Competition\Format\Elimination;
 use App\Competition\Format\Formats;
+use App\Competition\Format\PlanningFinales;
 use App\Entity\Equipe;
 use App\Entity\Phase;
 use App\Entity\Poule;
@@ -20,7 +21,7 @@ final class FormatsTest extends TestCase
     {
         $em = $this->createStub(EntityManagerInterface::class);
 
-        return new Formats([new Championnat($em), new Elimination($em)]);
+        return new Formats([new Championnat($em), new Elimination($em, new PlanningFinales($em))]);
     }
 
     #[TestDox('Une phase de championnat est générée par le championnat, optimisé')]
@@ -54,7 +55,7 @@ final class FormatsTest extends TestCase
             return $poule;
         };
         $championnat = new Championnat($em);
-        $elimination = new Elimination($em);
+        $elimination = new Elimination($em, new PlanningFinales($em));
 
         foreach ([0 => 0, 1 => 0, 2 => 1, 4 => 3, 8 => 7, 9 => 9] as $equipes => $attendu) {
             self::assertSame($attendu, $championnat->nombreJournees($poule($equipes)), "championnat à $equipes équipes");

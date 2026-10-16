@@ -131,7 +131,7 @@ final class EliminationTableauTest extends TestIntegration
         self::assertContains('E01-?', $quarts, 'le 1er attend le vainqueur du barrage');
     }
 
-    #[TestDox('ELI-04 Petite finale (option de la phase) : perdants des deux demi-finales, jouée avec la finale ; pas de petite finale sous 4 équipes')]
+    #[TestDox('ELI-04 Petite finale (option de la phase) : perdants des deux demi-finales, jouée avec la finale, aussi dans un tableau de 4 ; pas de petite finale sous 4 équipes')]
     public function test_petite_finale(): void
     {
         $matchs = $this->tableau(8, ['petite_finale' => true]);
@@ -147,5 +147,12 @@ final class EliminationTableauTest extends TestIntegration
         self::assertFalse($finale->isParentPerdants());
 
         self::assertCount(1, $this->tableau(2, ['petite_finale' => true]), 'deux équipes : la finale seule');
+
+        // 4 équipes : les demi-finales sont le premier tour (défaut corrigé le 16/10/2026 : pas de petite finale)
+        $quatre = $this->tableau(4, ['petite_finale' => true]);
+        self::assertCount(4, $quatre, 'deux demi-finales, la finale et la petite finale');
+        $petite = array_values(array_filter($quatre, fn (Partie $m) => $m->getNom() === 'Petite finale'));
+        self::assertCount(1, $petite);
+        self::assertSame('Demi-finale', $petite[0]->getParentMatch1()->getJournee()->getNom());
     }
 }

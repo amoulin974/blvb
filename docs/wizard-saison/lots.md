@@ -158,8 +158,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
       textes des bilans)
 - [x] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
       1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
-- [ ] 6e. Journée des finales (C3) : derniers tours au choix (finales seules, ou demi-finales et finales) de tous les
-      tableaux sur une date, dans un gymnase, planning calculé (D45, D46)
+- [x] 6e. Journée des finales (C3) : derniers tours au choix (finales seules, ou demi-finales et finales) de tous les
+      tableaux sur une date, dans un gymnase, planning calculé (D45, D46) : option `journee_finales` de la phase,
+      `PlanningFinales`, dates des journées (`Elimination`), vérification, copie ; écran de l'étape Phases relu par
+      l'ergonome, le webdesigner et la sécurité ; JFI-01 à JFI-05, WIZ-28, WIZ-29. Petite finale d'un tableau de 4
+      équipes corrigée
 - [ ] 6f. Aller-retour (A2), retour en miroir (D47) ; format de match par phase, 3 ou 2 sets gagnants (D48)
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 

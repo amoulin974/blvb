@@ -23,7 +23,7 @@ use Doctrine\ORM\EntityManagerInterface;
  */
 final class Elimination implements GenerateurFormat
 {
-    public function __construct(private EntityManagerInterface $em)
+    public function __construct(private EntityManagerInterface $em, private PlanningFinales $planning)
     {
     }
 
@@ -49,7 +49,12 @@ final class Elimination implements GenerateurFormat
 
     public function nombreJournees(Poule $poule): int
     {
-        $n = count($poule->getEquipes());
+        return self::nombreJourneesPour(count($poule->getEquipes()));
+    }
+
+    /** Nombre de journées (tours) d'un tableau de $n équipes, barrages compris. */
+    public static function nombreJourneesPour(int $n): int
+    {
         if ($n < 2) {
             return 0;
         }
@@ -57,6 +62,27 @@ final class Elimination implements GenerateurFormat
         $tours = (int) log($puissance, 2);
 
         return $n === $puissance ? $tours : $tours + 1;
+    }
+
+    /**
+     * Journée des finales trop tôt : les $avant tours qui la précèdent se jouent une semaine chacun à partir du début de
+     * la phase ; message (relu par l'ergonome) si la date tombe avant la fin de leur dernière semaine, sinon null.
+     */
+    public static function messageFinalesTropTot(\DateTimeImmutable $debutPhase, \DateTimeImmutable $date, int $avant): ?string
+    {
+        if ($avant <= 0) {
+            return null;
+        }
+        $fin = $debutPhase->modify(sprintf('+%d days', 7 * $avant - 1));
+        if ($date > $fin) {
+            return null;
+        }
+
+        return $avant > 1
+            ? sprintf('Journée des finales trop tôt (%s) : les %d tours précédents se jouent une semaine chacun, du %s au %s. Choisissez une date après le %s.',
+                $date->format('d/m/Y'), $avant, $debutPhase->format('d/m/Y'), $fin->format('d/m/Y'), $fin->format('d/m/Y'))
+            : sprintf('Journée des finales trop tôt (%s) : le tour précédent se joue la semaine du %s au %s. Choisissez une date après le %s.',
+                $date->format('d/m/Y'), $debutPhase->format('d/m/Y'), $fin->format('d/m/Y'), $fin->format('d/m/Y'));
     }
 
     public function creerJournees(Poule $poule): ?string
@@ -81,8 +107,20 @@ final class Elimination implements GenerateurFormat
         $nbJourneesFinales = (int)log($puissanceInf, 2);
         $totalJournees = $aDesBarrages ? $nbJourneesFinales + 1 : $nbJourneesFinales;
 
-        $debutPhase = $poule->getPhase()->getDateDebut();
+        $phase = $poule->getPhase();
+        $debutPhase = $phase->getDateDebut();
         $currentDate = clone $debutPhase;
+
+        // Journée des finales (D45) : les derniers tours se jouent le même jour ; les précédents, une semaine chacun, avant
+        $regroupes = min($phase->nbToursJourneeFinales(), $totalJournees);
+        $dateFinales = $phase->getJourneeFinales()['date'] ?? null;
+        if ($regroupes > 0 && $dateFinales !== null) {
+            if (($message = self::messageFinalesTropTot($debutPhase, $dateFinales, $totalJournees - $regroupes)) !== null) {
+                return $message;
+            }
+        } else {
+            $regroupes = 0;
+        }
 
         for ($i = 1; $i <= $totalJournees; $i++) {
             $journee = new Journee();
@@ -91,8 +129,12 @@ final class Elimination implements GenerateurFormat
             $journee->setNom($nom);
             $journee->setNumero($i);
 
-            $journee->setDateDebut(new \DateTimeImmutable($currentDate->format('Y-m-d')));
-            $journee->setDateFin(new \DateTimeImmutable($currentDate->modify('+6 days')->format('Y-m-d')));
+            if ($i > $totalJournees - $regroupes) {
+                $journee->setDateDebut($dateFinales)->setDateFin($dateFinales);
+            } else {
+                $journee->setDateDebut(new \DateTimeImmutable($currentDate->format('Y-m-d')));
+                $journee->setDateFin(new \DateTimeImmutable($currentDate->modify('+6 days')->format('Y-m-d')));
+            }
             $journee->setPoule($poule);
 
             $this->em->persist($journee);
@@ -228,7 +270,8 @@ final class Elimination implements GenerateurFormat
         }
 
         $matchs = array_filter(array_column($noeuds, 'match'));
-        $demis = []; // demi-finales, pour la petite finale
+        // Demi-finales, pour la petite finale : le premier tour quand le tableau compte 4 places
+        $demis = $tours === 2 ? array_values(array_filter(array_column($noeuds, 'match'))) : [];
         for ($tour = 2; $tour <= $tours; ++$tour) {
             $suivants = [];
             $rang = 0;
@@ -273,5 +316,8 @@ final class Elimination implements GenerateurFormat
         }
 
         $this->em->flush();
+
+        // Journée des finales (D46) : gymnase et heure de ce tableau, à sa place dans le planning de toute la phase
+        $this->planning->planifier($poule->getPhase(), $poule);
     }
 }

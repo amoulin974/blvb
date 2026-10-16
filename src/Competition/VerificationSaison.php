@@ -2,6 +2,7 @@
 
 namespace App\Competition;
 
+use App\Competition\Format\Elimination;
 use App\Entity\Saison;
 use App\Enum\PhaseType;
 
@@ -37,6 +38,29 @@ final class VerificationSaison
             } elseif ($jour($phase->getDateDebut()) < $jour($saison->getDateDebut()) || $jour($phase->getDateFin()) > $jour($saison->getDateFin())) {
                 $erreurs[] = ['texte' => sprintf('%s : les dates doivent être comprises dans la saison (du %s au %s).', $phase->getNom(), $format($saison->getDateDebut()), $format($saison->getDateFin())), 'etape' => 3];
             }
+            // Journée des finales (D45) : gymnase et date choisis, date dans la phase
+            if ($phase->nbToursJourneeFinales() > 0) {
+                $finales = $phase->getJourneeFinales();
+                if ($finales['lieu'] === null) {
+                    $erreurs[] = ['texte' => sprintf('%s : choisissez le gymnase de la journée des finales.', $phase->getNom()), 'etape' => 3];
+                }
+                if ($finales['date'] === null) {
+                    $erreurs[] = ['texte' => sprintf('%s : indiquez la date de la journée des finales.', $phase->getNom()), 'etape' => 3];
+                } elseif ($jour($finales['date']) < $jour($phase->getDateDebut()) || $jour($finales['date']) > $jour($phase->getDateFin())) {
+                    $erreurs[] = ['texte' => sprintf('%s : la journée des finales (%s) doit avoir lieu pendant la phase (du %s au %s).', $phase->getNom(), $format($finales['date']), $format($phase->getDateDebut()), $format($phase->getDateFin())), 'etape' => 3];
+                } else {
+                    // Tours joués avant la journée des finales, pour le plus grand tableau (effectif réel, sinon prévu)
+                    $avant = 0;
+                    foreach ($phase->getPoules() as $poule) {
+                        $total = Elimination::nombreJourneesPour(\count($poule->getEquipes()) ?: (int) $poule->getNbEquipesPrevu());
+                        $avant = max($avant, $total - min($phase->nbToursJourneeFinales(), $total));
+                    }
+                    if (($message = Elimination::messageFinalesTropTot($phase->getDateDebut(), $finales['date'], $avant)) !== null) {
+                        $erreurs[] = ['texte' => $phase->getNom().' : '.$message, 'etape' => 3];
+                    }
+                }
+            }
+
             $suivante = $phases[$i + 1] ?? null;
             if ($suivante !== null && $jour($suivante->getDateDebut()) < $jour($phase->getDateDebut())) {
                 // L'ordre des phases décide des passages : il doit suivre les dates (phases en parallèle : même début)
