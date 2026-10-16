@@ -173,7 +173,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)
 - [x] Expéditeur des e-mails : un seul, `blvb@vblc.fr` (le compte authentifié sur le SMTP d'OVH, qui refusait
       `admin@blvb.fr` et `tech@vblc.fr`), réglable par `MAILER_FROM` ; fait sur `main` (`ad55678`) et `prod`
-      (`41ba275`), test MAI-01. À ramener dans cette branche à la prochaine fusion de `main`
+      (`41ba275`), test MAI-01 ; ramené dans `formats-competition-lot6` le 16/10
 - [ ] Import Excel des utilisateurs trop lent sur le serveur (erreur 500 au-delà d'une dizaine de lignes ; il
       fonctionne 10 lignes par 10 lignes) : chaque compte reçoit un mot de passe aléatoire haché avec le coût
       normal (≈ 0,3 s par compte), jamais utilisé. Décision de l'utilisateur (16/10/2026) : générer ces mots de
