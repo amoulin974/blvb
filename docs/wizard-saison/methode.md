@@ -284,7 +284,7 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
    en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
    manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
-5. **Vérifier l'état** : `docker compose exec php composer tests` (444 tests verts attendus) et
+5. **Vérifier l'état** : `docker compose exec php composer tests` (445 tests verts attendus ; `php bin/phpunit` lancé seul dépasse les 128 Mo de PHP, passer par `composer tests`) et
    `docker compose exec php composer qualite`.
 6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D44), `lots.md`
    (lot 6) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à
