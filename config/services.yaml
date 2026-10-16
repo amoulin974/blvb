@@ -1,6 +1,8 @@
 # This file configures your own services
 
 parameters:
+    # Expéditeur des e-mails (config/packages/mailer.yaml), si MAILER_FROM n'est pas défini dans .env
+    env(MAILER_FROM): 'blvb@vblc.fr'
     # Images des clubs (logos) envoyées depuis la fiche du club : servies par asset('uploads/clubs/…').
     # En prod, le dossier de l'application est monté depuis le serveur : les images survivent aux reconstructions.
     app.dossier_images_clubs: '%kernel.project_dir%/public/uploads/clubs'
