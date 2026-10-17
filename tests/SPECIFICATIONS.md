@@ -199,6 +199,8 @@ Il ne peut pas non plus s'attribuer d'équipes ni de responsables en ajoutant de
 
 **MAI-01 — Expéditeur des e-mails** ✅ *`Securite/ExpediteurEmailTest`* : l'e-mail « mot de passe oublié » part de `blvb@vblc.fr` (en-tête From **et** enveloppe SMTP), le compte authentifié chez OVH, qui refuse tout autre expéditeur ; adresse unique réglée par `MAILER_FROM` (`config/packages/mailer.yaml`, valeur par défaut dans `services.yaml`) ; objet en français.
 
+**MAI-02 — Rappel des scores non saisis** ✅ *`Integration/Service/RappelScoreTest`* (commande `app:scores:rappeler`, à planifier chaque jour par cron) : deux jours (réglable par `--jours`) après la date d'un match de la saison courante sans aucun score, le capitaine de chacune des deux équipes et les responsables de leur club (désignés pour la saison) reçoivent un e-mail. Un seul e-mail par destinataire, qui récapitule tous ses matchs (une personne à la fois capitaine et responsable n'en reçoit qu'un) ; un match n'est rappelé qu'une fois (`partie.rappel_score_envoye_le`) ; pas de rappel pour un match de moins de deux jours, à venir, sans date, ou dont un score (même 0-0) est saisi ; un match sans capitaine ni responsable n'est pas marqué (rappelé dès qu'un destinataire existe) ; `--simulation` n'envoie ni ne marque rien ; un e-mail refusé par le SMTP n'interrompt pas les autres.
+
 ### 4.2 Saisie des scores — `Fonctionnel/Front/SaisieScoreTest` (P0) ✅ lot 2
 
 Cible : `PUT /front/partie/{id}/api/update`, corps JSON `{scoreReception, scoreDeplacement}`, en-tête `X-CSRF-TOKEN` (jeton `score_update`).
@@ -492,6 +494,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Contraste des alertes de l'admin** ✅ | ADM-02 : relecture du webdesigner (contraste, icônes, lecteurs d'écran) | 256 tests verts + 2 lents (`main`) | fait le 13/10/2026 |
 | **Zones de montée / descente du classement** ✅ | CLA-17 : pas de zone de descente sans poule de niveau inférieur (ni de montée sans niveau supérieur) | 258 tests verts + 2 lents (`main`) | fait le 15/10/2026 |
 | **Expéditeur des e-mails** ✅ | MAI-01 : un seul expéditeur, `blvb@vblc.fr` (anciennement `admin@blvb.fr` et `tech@vblc.fr`, refusés par le SMTP d'OVH) | 259 tests verts + 2 lents (`main`) | fait le 16/10/2026 |
+| **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

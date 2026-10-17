@@ -1,0 +1,53 @@
+{# Couleurs de la charte en dur : les e-mails ne lisent pas les variables CSS. Marine #14306B, jaune ballon #F2B705, bordure #d9dde6, texte #1f2937. #}
+{% set jours = delai ~ ' jour' ~ (delai > 1 ? 's' : '') %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f5f8;">
+  <tr><td align="center" style="padding:16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#ffffff;border:1px solid #d9dde6;border-radius:8px;font-family:Barlow,Arial,Helvetica,sans-serif;font-size:16px;line-height:1.5;color:#1f2937;">
+      <tr><td style="padding:16px 24px;border-bottom:3px solid #F2B705;font-size:22px;font-weight:bold;letter-spacing:1px;color:#14306B;">BLVB</td></tr>
+      <tr><td style="padding:24px;">
+        <p style="margin:0 0 16px;">Bonjour,</p>
+
+        <p style="margin:0 0 16px;">
+          {% if matchs|length == 1 %}
+            Le score du match suivant n’a pas encore été saisi sur le site (match joué il y a plus de {{ jours }}) :
+          {% else %}
+            Les scores des {{ matchs|length }} matchs suivants n’ont pas encore été saisis sur le site (matchs joués il y a plus de {{ jours }}) :
+          {% endif %}
+        </p>
+
+        <ul style="margin:0 0 24px;padding:0;list-style:none;">
+          {% for match in matchs %}
+            <li style="margin:0 0 8px;padding:12px;border:1px solid #d9dde6;border-radius:8px;">
+              <strong style="color:#14306B;">{{ match.nomReception }} contre {{ match.nomDeplacement }}</strong><br>
+              <span style="color:#444444;font-size:14px;">
+                {{ match.date|date('d/m/Y') }}{% if match.date|date('H:i') != '00:00' %} à {{ match.date|date('H\\hi') }}{% endif %}{% if match.lieu %} · {{ match.lieu.nom }}{% endif %}{% if match.poule %} · {{ match.poule.nom }}{% endif %}
+              </span>
+            </li>
+          {% endfor %}
+        </ul>
+
+        <p style="margin:0 0 16px;">
+          Si le score est déjà saisi par quelqu’un d’autre, vous n’avez rien à faire. Sinon, ouvrez le calendrier, repérez le match, puis touchez « Saisir ».
+        </p>
+
+        <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 8px;"><tr>
+          <td style="background:#F2B705;border-radius:8px;">
+            <a href="{{ url('front_calendrier') }}" style="display:inline-block;padding:14px 24px;font-weight:bold;color:#14306B;text-decoration:none;">Ouvrir le calendrier</a>
+          </td>
+        </tr></table>
+        <p style="margin:0 0 24px;font-size:13px;color:#444444;">Lien direct : <a href="{{ url('front_calendrier') }}" style="color:#14306B;text-decoration:underline;">{{ url('front_calendrier') }}</a></p>
+
+        <p style="margin:0 0 16px;font-size:14px;color:#444444;">
+          Mot de passe oublié ou pas encore créé ? Sur <a href="{{ url('app_login') }}" style="color:#14306B;text-decoration:underline;">la page de connexion</a>,
+          touchez « J’ai oublié mon mot de passe » : vous recevrez un e-mail pour en choisir un.
+        </p>
+
+        <p style="margin:0 0 16px;font-size:14px;color:#444444;">
+          Vous recevez ce message parce que vous êtes capitaine ou responsable de club d’une des équipes concernées.
+        </p>
+
+        <p style="margin:0;">Merci d’avance,<br><strong style="color:#14306B;">l’équipe du championnat BLVB</strong></p>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
