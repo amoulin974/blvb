@@ -321,10 +321,11 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    formulaires, agent `deploiement` avant tout passage en production, pas de décision de conception
    sans l'avoir consignée). Les agents `.claude/agents/*.md` se lancent comme agents généraux qui lisent
    leur fiche si la session ne les charge pas.
-7. **Déploiement** (quand le chantier est livré, pas avant) : `git pull`, `docker compose up -d
-   --build`, `importmap:install`, `tailwind:build --minify`, `asset-map:compile`, `cache:clear`,
-   migrations ; l'agent `deploiement` relit avant la fusion dans `prod`. Le serveur monte le dossier dans le
-   conteneur (`.:/app`) : `composer install` **dans le conteneur** à chaque changement de `composer.lock`, puis
-   `cache:clear` et `docker compose restart php`.
+7. **Déploiement** (quand le chantier est livré, pas avant) : **on ne touche jamais à la branche
+   `prod`, Francis seul fusionne dedans.** Nous arrêtons à `main` ; l'agent `deploiement` relit et
+   rend la checklist à transmettre à Francis : `git pull`, `docker compose up -d --build`,
+   `importmap:install`, `tailwind:build --minify`, `asset-map:compile`, `cache:clear`, migrations.
+   Le serveur monte le dossier dans le conteneur (`.:/app`) : `composer install` **dans le conteneur** à chaque
+   changement de `composer.lock`, puis `cache:clear` et `docker compose restart php`.
    La branche `prod` garde son propre `.env` (secrets du serveur) : à chaque fusion, conflit attendu si `main` a
    changé `.env` ; garder celui de `prod` et y reporter les nouvelles variables (ex. `MAILER_FROM`).
