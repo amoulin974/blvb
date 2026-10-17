@@ -48,6 +48,10 @@ class Partie
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom = null;
 
+    /** Date d'envoi du rappel « score non saisi » aux capitaines et responsables de club (app:scores:rappeler) : un seul rappel par match. */
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $rappelScoreEnvoyeLe = null;
+
 
     // src/Entity/Partie.php
 
@@ -223,6 +227,18 @@ class Partie
     public function setNom(?string $nom): static
     {
         $this->nom = $nom;
+
+        return $this;
+    }
+
+    public function getRappelScoreEnvoyeLe(): ?\DateTimeImmutable
+    {
+        return $this->rappelScoreEnvoyeLe;
+    }
+
+    public function setRappelScoreEnvoyeLe(?\DateTimeImmutable $rappelScoreEnvoyeLe): static
+    {
+        $this->rappelScoreEnvoyeLe = $rappelScoreEnvoyeLe;
 
         return $this;
     }
