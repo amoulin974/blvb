@@ -57,6 +57,35 @@ class PartieRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Matchs d'une saison joués avant la date limite, entre deux équipes connues, dont aucun score n'est saisi
+     * et pour lesquels aucun rappel n'est encore parti (app:scores:rappeler).
+     *
+     * @return Partie[]
+     */
+    public function findSansScoreARappeler(Saison $saison, \DateTimeImmutable $limite): array
+    {
+        return $this->createQueryBuilder('m')
+            ->addSelect('er', 'ed', 'cr', 'cd', 'l')
+            ->innerJoin('m.poule', 'p')
+            ->innerJoin('p.phase', 'ph')
+            ->innerJoin('m.id_equipe_recoit', 'er')
+            ->innerJoin('m.id_equipe_deplace', 'ed')
+            ->leftJoin('er.club', 'cr')
+            ->leftJoin('ed.club', 'cd')
+            ->leftJoin('m.lieu', 'l')
+            ->andWhere('ph.saison = :saison')
+            ->andWhere('m.date IS NOT NULL AND m.date <= :limite')
+            ->andWhere('m.nb_set_gagnant_reception IS NULL AND m.nb_set_gagnant_deplacement IS NULL')
+            ->andWhere('m.rappelScoreEnvoyeLe IS NULL')
+            ->setParameter('saison', $saison)
+            ->setParameter('limite', $limite)
+            ->orderBy('m.date', 'ASC')
+            ->addOrderBy('m.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function getMatchsByEquipePhase(int $equipeId, int $pouleId): array
     {
         $matchs = $this->createQueryBuilder('m')
