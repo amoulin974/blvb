@@ -339,6 +339,11 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   phase figée. Pour ajouter des barrages en production : « Modifier la saison » → « Ajouter des phases » → ajouter une
   phase, type Barrages, la monter entre la phase 1 et la phase 2 (si la phase 2 n'a pas commencé) ou la laisser après la
   phase finale, régler ses dates et ses matchs, puis les passages. 554 tests verts + 2 lents.
+- **6i fait, barrages de fin de saison à l'étape Passages (D53)** : `EtapePassages::barragesFinDeSaison` (phase de
+  barrages qui suit une phase finale, source = dernière phase de championnat avant elle), `sectionsFinDeSaison`
+  (affichage, proposition du bureau, encart « À vérifier »), `appliquerFin` (ne remplace que les règles vers ces
+  barrages ; places proposées seulement ; rang réel pour reconnaître la même équipe). La section source → phase finale
+  conserve ces règles dans toutes ses branches (simple, détaillé, « Rétablir », « mode simple »). 569 tests verts + 2 lents.
 - **Reste du lot 6** : vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
 
 ## 5. Reprendre le travail sur un autre ordinateur

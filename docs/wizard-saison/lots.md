@@ -182,6 +182,10 @@ matchs individuels), qui changent le modèle lui-même (D13).
       phases libres ; passages d'une phase clôturée ou vers une phase commencée figés ; suppression refusée si une
       phase commencée y envoie des équipes ; lien « Ajouter des phases » sur « Modifier la saison ». Relu par l'ergonome,
       le webdesigner et la sécurité (3 constats mineurs corrigés) ; ADJ-01 à ADJ-09
+- [x] 6i. Section « Barrages de fin de saison » à l'étape Passages (D53) : identification par la position, une carte par
+      match (places de la source), proposition du schéma du bureau, contrôles (deux équipes, différentes, un seul
+      barrage, même équipe sous deux libellés) ; chaque section n'enregistre que ses propres règles ; case « saison
+      suivante » masquée ; relu par l'ergonome, le webdesigner et la sécurité ; FIN-01 à FIN-07
 - [ ] Bilan de fin de lot : relecture globale et journal
 
 ## À faire hors lots (relevé en relecture)

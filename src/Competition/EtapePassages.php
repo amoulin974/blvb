@@ -85,6 +85,7 @@ final class EtapePassages
         }
         $niveauMax = min(self::NIVEAU_MAX, max([1, ...$niveaux]));
 
+        $fins = self::barragesFinDeSaison($phases);
         $transitions = [];
         foreach ($phases as $i => $phase) {
             $suivante = $phases[$i + 1] ?? null;
@@ -94,10 +95,16 @@ final class EtapePassages
             $versFinale = $suivante->getType() === PhaseType::FINALE;
             $barrage = $phase->getType() === PhaseType::BARRAGE;           // les poules sont des matchs (D42)
             $versBarrage = $suivante->getType() === PhaseType::BARRAGE;    // toujours en mode détaillé (D32)
+            // Barrages de fin de saison alimentés par cette phase : saisis dans leur propre section (D53)
+            $phasesFin = self::finsDe($phase, $fins);
 
-            // Destinations : poules des phases suivantes, puis niveaux de la saison suivante
+            // Destinations : poules des phases suivantes, puis niveaux de la saison suivante ; jamais les barrages de fin de
+            // saison, qui se saisissent dans leur propre section (D53)
             $destinations = [];
             foreach (\array_slice($phases, $i + 1) as $phaseSuivante) {
+                if (\in_array($phaseSuivante, array_column($fins, 'barrage'), true)) {
+                    continue;
+                }
                 $destinations[$phaseSuivante->getNom()] = array_map(fn (Poule $p) => ['valeur' => 'p:'.$p->getId(), 'libelle' => $p->getNom().' ('.$phaseSuivante->getNom().')'], self::poules($phaseSuivante));
             }
             $destinations['Saison suivante'] = array_map(fn (int $n) => ['valeur' => 'n:'.$n, 'libelle' => "Niveau $n la saison prochaine"], range(1, $niveauMax));
@@ -112,7 +119,7 @@ final class EtapePassages
                     continue;
                 }
                 $prefixe = $phase->getCode().'.'.$poule->getCode().'#';
-                $regles = self::reglesDe($phase, $poule);
+                $regles = array_values(array_filter(self::reglesDe($phase, $poule), fn (RegleDePassage $r) => !self::versPhases($r, $phasesFin)));
                 $simple = PassagesSimples::lire($prefixe, $regles, $versFinale);
                 $taille = self::taille($poule);
                 $poules[] = [
@@ -136,6 +143,8 @@ final class EtapePassages
                 'versFinale' => $versFinale,
                 'barrage' => $barrage,
                 'versBarrage' => $versBarrage,
+                // Barrages de fin de saison après cette phase : pas de case « saison suivante » (D53)
+                'finDeSaison' => $phasesFin !== [],
                 'poules' => $poules,
                 'destinations' => $destinations,
                 'effectifs' => self::effectifs($phase, $suivante),
@@ -153,9 +162,10 @@ final class EtapePassages
      * @param list<int> $detail poules en mode détaillé (modifié par les actions « detail- » et « simple- »)
      * @return list<string> problèmes de saisie (valeurs ignorées)
      */
-    public static function appliquer(Saison $saison, array $saisie, string $action, array &$detail, array $figees = []): array
+    public static function appliquer(Saison $saison, array $saisie, string $action, array &$detail, array $figees = [], array $saisieFin = []): array
     {
         $phases = self::phasesDansLOrdre($saison);
+        $fins = self::barragesFinDeSaison($phases);
         $poulesParId = [];
         foreach ($phases as $phase) {
             foreach ($phase->getPoules() as $poule) {
@@ -171,9 +181,15 @@ final class EtapePassages
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
             $versBarrage = $suivante->getType() === PhaseType::BARRAGE;
-            // Destinations permises : poules des phases suivantes
+            // Barrages de fin de saison alimentés par cette phase : leurs règles se saisissent dans leur section (D53) et
+            // sont conservées telles quelles ici
+            $phasesFin = self::finsDe($phase, $fins);
+            // Destinations permises : poules des phases suivantes, sauf les barrages de fin de saison (D53)
             $permises = [];
             foreach (\array_slice($phases, $i + 1) as $p) {
+                if (\in_array($p, array_column($fins, 'barrage'), true)) {
+                    continue;
+                }
                 foreach ($p->getPoules() as $poule) {
                     $permises[$poule->getId()] = $poule;
                 }
@@ -208,7 +224,10 @@ final class EtapePassages
             }
 
             if (!$versBarrage && $action === 'retablir-'.$phase->getId()) {
-                self::remplacer($phase, ReglesParDefaut::pourPhase($phase, $suivante));
+                // Règles par défaut, sans saison suivante s'il y a des barrages de fin de saison ; leurs règles restent
+                $defaut = array_filter(ReglesParDefaut::pourPhase($phase, $suivante), fn (RegleDePassage $r) => $phasesFin === [] || !$r->versSaisonSuivante());
+                $fin = array_filter($phase->getReglesDePassage()->toArray(), fn (RegleDePassage $r) => self::versPhases($r, $phasesFin));
+                self::remplacer($phase, [...$defaut, ...$fin]);
                 foreach ($phase->getPoules() as $poule) {
                     $detail = array_values(array_diff($detail, [$poule->getId()]));
                 }
@@ -220,15 +239,18 @@ final class EtapePassages
                 $id = $poule->getId();
                 $prefixe = $phase->getCode().'.'.$poule->getCode().'#';
                 $champs = \is_array($saisie[$id] ?? null) ? $saisie[$id] : null;
+                $reglesPoule = self::reglesDe($phase, $poule);
+                $reglesFin = array_values(array_filter($reglesPoule, fn (RegleDePassage $r) => self::versPhases($r, $phasesFin)));
+                $reglesPoule = array_values(array_filter($reglesPoule, fn (RegleDePassage $r) => !self::versPhases($r, $phasesFin)));
 
                 if (!$versBarrage && $action === 'simple-'.$id) {
                     $detail = array_values(array_diff($detail, [$id]));
-                    $regles = self::reglesDe($phase, $poule);
+                    $regles = $reglesPoule;
                     if (PassagesSimples::lire($prefixe, $regles, $versFinale) === null) {
                         // Règles détaillées : on repart des règles par défaut de cette poule
-                        $regles = array_values(array_filter(ReglesParDefaut::pourPhase($phase, $suivante), fn (RegleDePassage $r) => str_starts_with($r->getSource(), $prefixe)));
+                        $regles = array_values(array_filter(ReglesParDefaut::pourPhase($phase, $suivante), fn (RegleDePassage $r) => str_starts_with($r->getSource(), $prefixe) && ($phasesFin === [] || !$r->versSaisonSuivante())));
                     }
-                    array_push($nouvelles, ...$regles);
+                    array_push($nouvelles, ...$regles, ...$reglesFin);
                     continue;
                 }
                 if ($action === 'detail-'.$id) {
@@ -236,7 +258,7 @@ final class EtapePassages
                 }
 
                 if ($champs === null) {
-                    array_push($nouvelles, ...self::reglesDe($phase, $poule)); // poule non envoyée : règles inchangées
+                    array_push($nouvelles, ...$reglesPoule); // poule non envoyée : règles inchangées
                 } elseif (!$versBarrage && ($champs['mode'] ?? 'simple') === 'simple') {
                     $valeurs = [
                         'montee' => (int) ($champs['montee'] ?? 0),
@@ -244,7 +266,8 @@ final class EtapePassages
                         'versMontee' => $permises[(int) ($champs['versMontee'] ?? 0)] ?? null,
                         'versDescente' => $permises[(int) ($champs['versDescente'] ?? 0)] ?? null,
                         'versAutres' => $permises[(int) ($champs['versAutres'] ?? 0)] ?? null,
-                        'saisonSuivante' => !empty($champs['saisonSuivante']),
+                        // Case masquée quand des barrages de fin de saison suivent (D53) : pas de saison suivante
+                        'saisonSuivante' => $phasesFin === [] && !empty($champs['saisonSuivante']),
                         'niveauMontee' => self::niveau($champs['niveauMontee'] ?? 1),
                         'niveauDescente' => self::niveau($champs['niveauDescente'] ?? 1),
                         'niveauAutres' => self::niveau($champs['niveauAutres'] ?? 1),
@@ -263,13 +286,202 @@ final class EtapePassages
                         $nouvelles[] = $regle;
                     }
                 }
+                array_push($nouvelles, ...$reglesFin);
             }
             self::remplacer($phase, $nouvelles);
+        }
+
+        // Barrages de fin de saison : seules leurs règles sont remplacées (D53)
+        foreach ($fins as ['barrage' => $barrage, 'source' => $source]) {
+            $champs = $saisieFin[$barrage->getId()] ?? null;
+            if (!\is_array($champs) || $source->getClose() || \in_array($barrage, $figees, true)) {
+                continue; // section non envoyée, ou passages figés (D51) : règles inchangées
+            }
+            array_push($problemes, ...self::appliquerFin($barrage, $source, $champs));
         }
 
         $detail = array_values(array_unique($detail));
 
         return $problemes;
+    }
+
+    /**
+     * Barrages de fin de saison (D53) : phase de barrages dont la phase précédente est une phase finale ; ses équipes
+     * viennent de la dernière phase de championnat placée avant elle (la source).
+     *
+     * @param list<Phase> $phases dans l'ordre de la saison
+     * @return list<array{barrage: Phase, source: Phase}>
+     */
+    public static function barragesFinDeSaison(array $phases): array
+    {
+        $fins = [];
+        foreach ($phases as $i => $phase) {
+            if ($phase->getType() !== PhaseType::BARRAGE || ($phases[$i - 1] ?? null)?->getType() !== PhaseType::FINALE) {
+                continue;
+            }
+            for ($j = $i - 1; $j >= 0; --$j) {
+                if ($phases[$j]->getType() === PhaseType::CHAMPIONNAT) {
+                    $fins[] = ['barrage' => $phase, 'source' => $phases[$j]];
+                    break;
+                }
+            }
+        }
+
+        return $fins;
+    }
+
+    /**
+     * Sections « source → barrages de fin de saison » de l'étape Passages (D53) : choix (rang et poule de la source, en
+     * un seul choix), deux équipes par match ; pré-remplies selon le schéma du bureau s'il n'y a encore aucune règle.
+     * Sans section quand la source est clôturée ou les barrages déjà commencés (mode ajout, D51).
+     *
+     * @param list<Phase> $figees
+     * @return list<array{source: Phase, barrage: Phase, choix: array<string, list<array{valeur: string, libelle: string}>>, matchs: list<array{poule: Poule, valeurs: list<string>}>, propose: bool}>
+     */
+    public static function sectionsFinDeSaison(Saison $saison, array $figees = []): array
+    {
+        $sections = [];
+        foreach (self::barragesFinDeSaison(self::phasesDansLOrdre($saison)) as ['barrage' => $barrage, 'source' => $source]) {
+            if ($source->getClose() || \in_array($barrage, $figees, true)) {
+                continue;
+            }
+            $poulesSource = self::poules($source);
+            $choix = [];
+            foreach ($poulesSource as $poule) {
+                $choix[$poule->getNom()] = array_map(fn (int $rang) => [
+                    'valeur' => $poule->getCode().'#'.$rang,
+                    'libelle' => self::equipeEnClair($rang, $poule, true),
+                ], self::rangsProposes($poule));
+            }
+
+            // Équipes déjà choisies : règles « un rang d'une poule → ce match »
+            $existantes = [];
+            foreach ($source->getReglesDePassage() as $regle) {
+                $match = $regle->getPouleDestination();
+                if ($match === null || $match->getPhase() !== $barrage) {
+                    continue;
+                }
+                try {
+                    $place = NotationPlace::analyser($regle->getSource());
+                } catch (NotationInvalide) {
+                    continue;
+                }
+                if ($place->estRang() && $place->rangDebut === $place->rangFin) {
+                    $existantes[$match->getId()][] = $place->poule.'#'.$place->rangDebut;
+                }
+            }
+
+            // Schéma du bureau : avant-dernier de la poule N contre 2e de la poule N+1 (D44, D50)
+            $propose = $existantes === [];
+            $matchs = [];
+            $problemes = [];
+            foreach (self::poules($barrage) as $k => $match) {
+                $valeurs = $existantes[$match->getId()] ?? [];
+                if ($propose) {
+                    $valeurs = array_values(array_filter([
+                        isset($poulesSource[$k]) ? $poulesSource[$k]->getCode().'#-2' : null,
+                        isset($poulesSource[$k + 1]) ? $poulesSource[$k + 1]->getCode().'#2' : null,
+                    ]));
+                }
+                $matchs[] = ['poule' => $match, 'valeurs' => $valeurs];
+                if (\count($valeurs) !== 2) {
+                    $problemes[] = sprintf('%s : choisissez les deux équipes.', $match->getNom());
+                }
+            }
+
+            $sections[] = ['source' => $source, 'barrage' => $barrage, 'choix' => $choix, 'matchs' => $matchs, 'propose' => $propose, 'problemes' => $problemes];
+        }
+
+        return $sections;
+    }
+
+    /**
+     * Enregistre les équipes des matchs d'une phase de barrages de fin de saison : remplace les seules règles de la source
+     * qui y mènent. Contrôles : deux équipes par match, différentes, une équipe dans un seul barrage.
+     *
+     * @return list<string> problèmes de saisie
+     */
+    private static function appliquerFin(Phase $barrage, Phase $source, array $champs): array
+    {
+        // Places proposées par la page, par code de poule : seules celles-là sont acceptées
+        $proposees = [];
+        foreach ($source->getPoules() as $poule) {
+            foreach (self::rangsProposes($poule) as $rang) {
+                $proposees[$poule->getCode().'#'.$rang] = [$poule, $rang];
+            }
+        }
+        $problemes = [];
+        $nouvelles = [];
+        $deja = [];
+        foreach (self::poules($barrage) as $match) {
+            $valeurs = \is_array($champs[$match->getId()] ?? null) ? $champs[$match->getId()] : [];
+            $choisies = [];
+            foreach ([0, 1] as $k) {
+                $valeur = \is_string($valeurs[$k] ?? null) ? $valeurs[$k] : '';
+                if (isset($proposees[$valeur])) {
+                    [$poule, $rang] = $proposees[$valeur];
+                    // Même équipe sous deux libellés (6e et avant-dernier d'une poule de 7) : même clé
+                    $choisies[] = ['poule' => $poule, 'rang' => $rang, 'cle' => $poule->getCode().'#'.self::rangReel($rang, self::taille($poule))];
+                }
+            }
+            if (\count($choisies) < 2) {
+                $problemes[] = sprintf('%s : choisissez les deux équipes.', $match->getNom());
+            } elseif ($choisies[0]['cle'] === $choisies[1]['cle']) {
+                $problemes[] = sprintf('%s : choisissez deux équipes différentes.', $match->getNom());
+                array_pop($choisies);
+            }
+            foreach ($choisies as $choisie) {
+                if (isset($deja[$choisie['cle']])) {
+                    $problemes[] = sprintf('%s est déjà dans %s : une équipe ne joue qu\'un barrage.', ucfirst(self::equipeEnClair($choisie['rang'], $choisie['poule'], false)), $deja[$choisie['cle']]->getNom());
+                    continue;
+                }
+                $deja[$choisie['cle']] = $match;
+                $nouvelles[] = (new RegleDePassage())->setSource($source->getCode().'.'.$choisie['poule']->getCode().'#'.$choisie['rang'])->setPouleDestination($match);
+            }
+        }
+
+        $autres = array_filter($source->getReglesDePassage()->toArray(), fn (RegleDePassage $r) => !self::versPhases($r, [$barrage]));
+        self::remplacer($source, [...$autres, ...$nouvelles]);
+
+        return $problemes;
+    }
+
+    /**
+     * « 2e – Poule A » (choix d'une liste) ou « le 2e de Poule A » / « l'avant-dernier de Poule A » (phrase) : sans
+     * article devant le nom saisi de la poule, qui peut être « Poule A » comme « Excellence ».
+     */
+    private static function equipeEnClair(int $rang, Poule $poule, bool $choix): string
+    {
+        $rangEnClair = Place::rangEnClair($rang);
+        if ($choix) {
+            return ucfirst($rangEnClair).' – '.$poule->getNom();
+        }
+
+        return (preg_match('/^[aeiouyéè]/iu', $rangEnClair) ? 'l\'' : 'le ').$rangEnClair.' de '.$poule->getNom();
+    }
+
+    /** Rangs proposés pour une poule de la source (mêmes listes à l'affichage et à l'enregistrement). @return list<int> */
+    private static function rangsProposes(Poule $poule): array
+    {
+        return array_map(fn (array $r) => (int) $r['valeur'], self::rangs(self::taille($poule), []));
+    }
+
+    /** Rang compté depuis le début : -2 dans une poule de 7 → 6 ; taille inconnue : rang tel quel. */
+    private static function rangReel(int $rang, ?int $taille): int
+    {
+        return $rang < 0 && $taille !== null ? $taille + 1 + $rang : $rang;
+    }
+
+    /** Phases de barrages de fin de saison alimentées par cette phase. @return list<Phase> */
+    private static function finsDe(Phase $phase, array $fins): array
+    {
+        return array_values(array_map(fn (array $f) => $f['barrage'], array_filter($fins, fn (array $f) => $f['source'] === $phase)));
+    }
+
+    /** La règle mène-t-elle à une poule de l'une de ces phases ? @param list<Phase> $phases */
+    private static function versPhases(RegleDePassage $regle, array $phases): bool
+    {
+        return $phases !== [] && \in_array($regle->getPouleDestination()?->getPhase(), $phases, true);
     }
 
     /**

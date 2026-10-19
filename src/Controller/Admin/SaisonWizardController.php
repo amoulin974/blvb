@@ -248,7 +248,7 @@ class SaisonWizardController extends AbstractController
             $action = $request->getPayload()->getString('action');
             $saisie = $request->getPayload()->all('p');
             $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
-            foreach (EtapePassages::appliquer($saison, $saisie, $action, $detail, $figees) as $probleme) {
+            foreach (EtapePassages::appliquer($saison, $saisie, $action, $detail, $figees, $request->getPayload()->all('fin')) as $probleme) {
                 $this->addFlash('warning', $probleme);
             }
             $request->getSession()->set($cleDetail, $detail);
@@ -274,6 +274,8 @@ class SaisonWizardController extends AbstractController
 
         return $this->render('admin/saisonwizard/passages.html.twig', $vue + [
             'transitions' => EtapePassages::transitions($saison, $detail, $figees),
+            // Barrages de fin de saison : une section par phase, une carte par match (D53)
+            'barragesFin' => EtapePassages::sectionsFinDeSaison($saison, $figees),
             'figes' => $figes,
         ]);
     }

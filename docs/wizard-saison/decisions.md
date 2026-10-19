@@ -461,6 +461,24 @@ Préféré à un bouton dédié « Ajouter des barrages » (plus souple : tout f
 - Après enregistrement : retour à la page de la saison, sur la poule.
 *(2026-10-19, hors lots)*
 
+## D53. Barrages de fin de saison : une section dédiée à l'étape Passages (précise D50)
+**Décision** (utilisateur, 19/10/2026, sur avis de l'ergonome) :
+- **Identification par la position** : une phase de barrages dont la phase précédente est une phase finale est une phase
+  de barrages de fin de saison ; ses équipes viennent de la dernière phase de championnat placée avant elle (la
+  « source »). Aucun réglage supplémentaire.
+- **Section dédiée** à l'étape Passages, juste après « source → phase finale », titrée « {source} → {barrages} » : une
+  carte par match, deux listes « Première équipe » et « Seconde équipe » (rang et poule de la source en un seul choix),
+  pré-remplie selon le schéma du bureau (avant-dernier de la poule N contre 2e de la poule N+1), enregistrée seulement à
+  la validation de l'étape. Contrôles : deux équipes par match, deux équipes différentes, une équipe dans un seul barrage.
+- **Une seule source de saisie** : les règles vers ces barrages ne s'affichent ni ne se modifient dans « source → phase
+  finale » ; chaque section n'enregistre que ses propres règles.
+- **Saison suivante** : quand une phase de barrages de fin de saison existe, la case « Montées et descentes pour la saison
+  suivante » de la section « source → phase finale » est masquée (poules de la saison suivante remplies à la main, D50).
+- Mode ajout (D51) : la section se modifie tant que la source n'est pas clôturée.
+**Pourquoi** : l'écran Passages ne montrait que des transitions vers la phase suivante ; ces barrages n'avaient aucun
+endroit visible, et leurs règles faisaient basculer les poules de la phase 2 en mode détaillé.
+*(2026-10-19, lot 6)*
+
 ---
 
 ## Points ouverts

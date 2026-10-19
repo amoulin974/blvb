@@ -78,7 +78,7 @@
                                 {% for issue, libelle in {vainqueur: 'Le vainqueur joue ensuite dans', perdant: 'Le perdant joue ensuite dans'} %}
                                     <label class="flex flex-col gap-1">
                                         <span class="font-semibold">{{ libelle }}</span>
-                                        <select name="{{ nom }}[{{ issue }}]" class="select select-bordered w-full" aria-label="{{ libelle }}, {{ poule.nom }}">
+                                        <select name="{{ nom }}[{{ issue }}]" class="select select-bordered w-full min-h-11" aria-label="{{ libelle }}, {{ poule.nom }}">
                                             <option value="">Choisir où il va</option>
                                             {% for groupe, options in t.destinations %}
                                                 {% if groupe != 'Saison suivante' %}
@@ -101,6 +101,8 @@
                             </div>
                         {% elseif ps.mode == 'simple' %}
                             <div class="flex flex-wrap items-center gap-2">Tout le classement, dans l'ordre → {{ m.choix_poule(nom ~ '[versAutres]', poulesSuivante, s.versAutres, poule.nom ~ ', tableau') }}</div>
+                            {# Masquée quand des barrages de fin de saison suivent : poules de la saison suivante remplies à la main (D50, D53) #}
+                            {% if not t.finDeSaison %}
                             <label class="flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" name="{{ nom }}[saisonSuivante]" value="1" {% if s.saisonSuivante %}checked{% endif %}> Montées et descentes pour la saison suivante</label>
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pl-7">
                                 {% set niveau = poule.niveau|default(1) %}
@@ -108,6 +110,7 @@
                                 <span class="inline-flex flex-wrap items-center gap-2">· Descentes : {{ m.choix_nombre(nom ~ '[descente]', s.descente, poule.nom ~ ', descentes pour la saison suivante') }} → {{ m.choix_niveau(nom ~ '[niveauDescente]', s.niveauDescente ?? min(niveauMax, niveau + 1), niveauMax, poule.nom ~ ', niveau des descentes') }}</span>
                                 <span class="inline-flex flex-wrap items-center gap-2">· Autres équipes → {{ m.choix_niveau(nom ~ '[niveauAutres]', s.niveauAutres ?? niveau, niveauMax, poule.nom ~ ', niveau des autres équipes') }}</span>
                             </div>
+                            {% endif %}
                         {% else %}
                             <p class="text-sm text-(--color-base-content)/80">Mode détaillé : une ligne par règle, appliquées dans l'ordre (une équipe déjà placée ne l'est pas une seconde fois).</p>
                             <ol class="flex flex-col gap-2">
@@ -153,6 +156,45 @@
             </section>
         {% else %}
             <p>Il n'y a qu'une phase : pas de passage à définir.</p>
+        {% endfor %}
+
+        {# Barrages de fin de saison (D53) : qui joue chaque match, choisi parmi les rangs des poules de la source #}
+        {% for f in barragesFin|default([]) %}
+            <section class="mb-8 flex flex-col gap-3" aria-labelledby="fin-{{ f.barrage.id }}">
+                <h3 id="fin-{{ f.barrage.id }}" class="border-b-2 border-(--color-primary) pb-1">{{ f.source.nom }} → {{ f.barrage.nom }}</h3>
+                <p class="text-sm text-(--color-base-content)/80">Choisissez les deux équipes de chaque match. Ces barrages ne changent pas la phase finale ; leurs résultats servent à composer à la main les poules de la saison prochaine.</p>
+                {% if f.propose %}
+                    {% embed 'admin/_alerte.html.twig' with {type: 'info'} %}{% block contenu %}
+                        Proposition selon le schéma du bureau : l'avant-dernier d'une poule contre le 2e de la poule du dessous. Vérifiez-la : elle sera enregistrée avec le reste de l'étape.
+                    {% endblock %}{% endembed %}
+                {% elseif f.problemes is not empty %}
+                    {% embed 'admin/_alerte.html.twig' with {type: 'warning', f: f} %}{% block contenu %}
+                        <strong class="font-semibold">À vérifier : {{ f.barrage.nom }}</strong>
+                        <ul class="mt-1 list-disc pl-5 space-y-1">{% for p in f.problemes %}<li>{{ p }}</li>{% endfor %}</ul>
+                    {% endblock %}{% endembed %}
+                {% endif %}
+                {# Une carte par match, empilées : côte à côte, les listes seraient tronquées sur grand écran #}
+                <div class="flex flex-col gap-3">
+                    {% for mt in f.matchs %}
+                        <div id="fin-poule-{{ mt.poule.id }}" class="rounded-box border border-base-300 p-3 flex flex-col gap-3 scroll-mt-20">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ mt.poule.nom }}</strong>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                {% for k, libelle in ['Première équipe', 'Seconde équipe'] %}
+                                    <label class="flex flex-col gap-1">
+                                        <span class="font-semibold">{{ libelle }}</span>
+                                        <select name="fin[{{ f.barrage.id }}][{{ mt.poule.id }}][{{ k }}]" class="select select-bordered w-full min-h-11" aria-label="{{ libelle }}, {{ mt.poule.nom }}">
+                                            <option value="">Choisir une équipe</option>
+                                            {% for groupe, options in f.choix %}
+                                                <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == (mt.valeurs[k] ?? '') %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
         {% endfor %}
 
         {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}

@@ -95,6 +95,22 @@ final class VerificationSaison
                 }
             }
         }
+        // Barrages de fin de saison (D53) : deux équipes par match, tant que leur source n'est pas clôturée
+        foreach (EtapePassages::barragesFinDeSaison($phases) as ['barrage' => $barrage, 'source' => $source]) {
+            if ($source->getClose()) {
+                continue;
+            }
+            foreach ($barrage->getPoules() as $match) {
+                // Règles de toutes les phases vers ce match (seule la source devrait en avoir)
+                $equipes = 0;
+                foreach ($phases as $autre) {
+                    $equipes += \count(array_filter($autre->getReglesDePassage()->toArray(), fn ($r) => $r->getPouleDestination() === $match));
+                }
+                if ($equipes !== 2) {
+                    $erreurs[] = ['texte' => sprintf('%s (%s) : choisissez les deux équipes.', $match->getNom(), $barrage->getNom()), 'etape' => 4];
+                }
+            }
+        }
         if ($sansPrevu > 0) {
             $avertissements[] = ['texte' => sprintf('Nombre d\'équipes prévu non indiqué pour %d poule%s : leurs passages ne sont pas contrôlés en détail.', $sansPrevu, $sansPrevu > 1 ? 's' : ''), 'etape' => 3];
         }
