@@ -407,6 +407,15 @@ forte, 2-1 = victoire faible, 1-2 = défaite forte, 0-2 = défaite faible ; forf
 en 3 sets. La validation du score et la fenêtre de saisie suivent le format de la phase du match.
 *(2026-10-16, lot 6)*
 
+## D49. Durée d'un match : réglable pour la journée des finales, proposée selon le format
+**Décision** : la durée d'un match ne se règle que pour la journée des finales (champ « Durée d'un match (minutes) »,
+entre 30 et 240). Valeur proposée quand rien n'est enregistré : 120 minutes en 3 sets gagnants, 75 minutes en 2 sets
+gagnants (`Phase::dureeMatchParDefaut`). Les autres usages (agenda `.ics`, affichage du calendrier d'administration)
+gardent leur durée actuelle ; un réglage par phase ou par saison reste possible plus tard.
+**Pourquoi** : un match en 2 sets est plus court ; la proposition évite de saisir une durée à chaque fois. Choix de
+l'utilisateur, 19/10/2026 (périmètre : journée des finales seulement). Remplace l'ancien défaut de 90 minutes.
+*(2026-10-19, lot 6)*
+
 ---
 
 ## Points ouverts

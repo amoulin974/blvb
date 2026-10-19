@@ -78,6 +78,10 @@ class Phase
     public const SETS_GAGNANTS_DEFAUT = 3;
     public const SETS_GAGNANTS_COURT = 2;
 
+    /** Durée d'un match proposée (minutes) selon le format (D49), modifiable pour la journée des finales. */
+    public const DUREE_MATCH_DEFAUT = 120;
+    public const DUREE_MATCH_COURT = 75;
+
     /** Journée des finales (D45) : tours regroupés le même jour. */
     public const TOURS_FINALES = 'finales';
     public const TOURS_DEMI_FINALES = 'demi_finales';
@@ -245,7 +249,7 @@ class Phase
             'date' => $date ?: null,
             'heure' => \is_string($heure) && preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $heure) ? $heure : '19:00',
             'terrains' => max(1, (int) ($option['terrains'] ?? 1)),
-            'duree' => max(15, (int) ($option['duree'] ?? 90)),
+            'duree' => max(15, (int) ($option['duree'] ?? $this->dureeMatchParDefaut())),
         ];
     }
 
@@ -266,6 +270,12 @@ class Phase
     public function getSetsGagnants(): int
     {
         return ($this->getOptions()['sets_gagnants'] ?? null) === self::SETS_GAGNANTS_COURT ? self::SETS_GAGNANTS_COURT : self::SETS_GAGNANTS_DEFAUT;
+    }
+
+    /** Durée d'un match proposée pour cette phase (D49) : 120 minutes en 3 sets gagnants, 75 en 2 sets gagnants. */
+    public function dureeMatchParDefaut(): int
+    {
+        return $this->getSetsGagnants() === self::SETS_GAGNANTS_COURT ? self::DUREE_MATCH_COURT : self::DUREE_MATCH_DEFAUT;
     }
 
     /** Le format par défaut (3 sets gagnants) n'est pas écrit dans les options. */

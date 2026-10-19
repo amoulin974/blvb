@@ -90,7 +90,7 @@ class JourneeFinalesType extends AbstractType
             'date' => $option['date'] ?? null,
             'heure' => $option['heure'] ?? '19:00',
             'terrains' => $option['terrains'] ?? 2,
-            'duree' => $option['duree'] ?? 90,
+            'duree' => $option['duree'] ?? $phase->dureeMatchParDefaut(),
         ];
     }
 

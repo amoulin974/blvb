@@ -314,8 +314,10 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   raccourcie, `aria-describedby` sur le fieldset, `fieldset-formulaire`, règlement public complété. 521 tests verts.
 - **À décider avec le comité** (signalé par l'ergonome) : valider que 1-1 et 1-0 valent zéro point en format court ;
   le règlement public ne le dit pas encore (seule la phrase sur les 2 sets gagnants a été ajoutée).
-- **Reste du lot 6** : 6f-2 aller-retour en miroir (D47) ; durée de match proposée à 60 min en 2 sets pour la journée
-  des finales ; vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
+- **Durée d'un match (D49)** : réglable pour la journée des finales seulement (choix de l'utilisateur), proposée
+  selon le format : 120 minutes en 3 sets gagnants, 75 en 2 sets (`Phase::dureeMatchParDefaut`, SET-05) ; l'agenda
+  `.ics` (2 h) et le calendrier d'administration (1 h) gardent leur durée fixe.
+- **Reste du lot 6** : 6f-2 aller-retour en miroir (D47) ; vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 

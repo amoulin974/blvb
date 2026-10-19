@@ -104,7 +104,7 @@
                                                 </div>
                                             {% endfor %}
                                         </div>
-                                        <p class="text-sm text-(--color-base-content)/80">Horaires calculés du dernier tableau au tableau 1 ; la finale du tableau 1 se joue en dernier. Vous pourrez les modifier dans le calendrier.</p>
+                                        <p class="text-sm text-(--color-base-content)/80">Horaires calculés du dernier tableau au tableau 1 ; la finale du tableau 1 se joue en dernier. Durée conseillée d'un match : {{ constant('App\\Entity\\Phase::DUREE_MATCH_DEFAUT') }} minutes en trois sets gagnants, {{ constant('App\\Entity\\Phase::DUREE_MATCH_COURT') }} minutes en deux. Vous pourrez modifier les horaires dans le calendrier.</p>
                                     </div>
                                 </fieldset>
                             {% else %}

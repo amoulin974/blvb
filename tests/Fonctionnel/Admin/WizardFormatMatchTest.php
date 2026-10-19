@@ -91,6 +91,19 @@ final class WizardFormatMatchTest extends TestFonctionnel
         self::assertArrayNotHasKey('sets_gagnants', $phase->getOptions());
     }
 
+    #[TestDox('SET-05 Durée d\'un match de la journée des finales proposée selon le format : 120 minutes en 3 sets gagnants, 75 en 2 sets')]
+    public function test_duree_proposee_selon_le_format(): void
+    {
+        $saison = $this->brouillon();
+        $duree = fn () => $this->client->request('GET', '/admin/saison/'.$saison->getId().'/wizard/3')
+            ->filter('input[name$="[journeeFinales][duree]"]')->last()->attr('value'); // la phase finale est la dernière
+
+        self::assertSame('120', $duree());
+
+        $this->envoyer($saison, 'F', '2');
+        self::assertSame('75', $duree());
+    }
+
     #[TestDox('SET-04 Une valeur inconnue envoyée pour le format est refusée, rien n\'est enregistré')]
     public function test_valeur_inconnue(): void
     {
