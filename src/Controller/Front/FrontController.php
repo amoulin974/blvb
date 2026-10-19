@@ -463,8 +463,13 @@ final class FrontController extends AbstractController
             return $this->json(['error' => 'Ce match n\'a pas encore eu lieu : seul un administrateur peut saisir son score.'], 403);
         }
 
+
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
+        // Texte ou nombre uniquement : un tableau ou un objet envoyé à la main est refusé (400), pas une erreur 500
+        foreach (['scoreReception', 'scoreDeplacement'] as $champ) {
+            if (!\is_int($data[$champ]) && !\is_string($data[$champ])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
+        }
 
         $sport = $sports->pourSaison($partie->getPoule()?->getPhase()?->getSaison());
         // Format de match de la phase (D48) : 3 sets gagnants, ou 2

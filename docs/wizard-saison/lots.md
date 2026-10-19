@@ -105,7 +105,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Brouillon : `Saison.brouillon`, `Saison.etapeWizard`, `Poule.nbEquipesPrevu` (migration
       `Version20261013150000`) ; brouillon invisible sur le site et jamais « affiché sur le site »
       (`SaisonRepository::findPubliees`, `findPubliee`, `findPlusRecentePubliee`)
-- [ ] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : reporté au lot 6 (D33)
+- [x] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : sans objet, le type de la phase est son format (D42, lot 6)
 - [x] Écrans du wizard : 6 étapes (départ, saison, phases, passages, classement, vérification et validation)
 - [x] « Modifier la saison » (D29, question 8) : wizard en mode édition tant que la saison n'est pas
       lancée (D34) ; la page de modification ne garde que nom, dates et périodes de fermeture
@@ -115,7 +115,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       stepper cliquable sur téléphone, barre du bas allégée, icônes au lieu des glyphes, cibles de
       44 px, pluriels, textes sans article devant un nom saisi, règles en clair dans les messages,
       aperçu et avertissement de la saison copiée dès l'étape 1, brouillon supprimable depuis la liste
-- [ ] Reporté au lot 5 (relecture) : carte « Point de départ » du récapitulatif (le départ n'est pas
+- [x] Reporté au lot 5 (relecture), réalisé au lot 5 : carte « Point de départ » du récapitulatif (le départ n'est pas
       enregistré), « Brouillon enregistré à 14 h 32 », écarts d'effectif dans le schéma (« 9 / 8 »),
       aide courte sous chaque critère de départage, liens de l'alerte d'erreur de l'étape 3 vers les
       champs ; vérifier dans le navigateur les utilitaires Tailwind écrasés par daisyUI (webdesigner)
@@ -175,7 +175,9 @@ matchs individuels), qui changent le modèle lui-même (D13).
       vers la saison suivante (poules remplies à la main). Une phase finale est terminale (clôture sans répartition),
       une équipe peut avoir une destination par phase d'arrivée ; BAR-07 à BAR-09, VER-02
 - [ ] Vérifier dans le navigateur la mise en place des deux phases de barrages du modèle (Poules, Journées, Matchs)
-- [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
+- [x] Relecture sécurité de 6f et 6g (19/10/2026) : aucune faille critique ni importante ; corps JSON forgé de l'API de
+      score refusé en 400 (SCO-17, défaut déjà présent avant le lot). Le match sans poule est impossible en base
+- [ ] Bilan de fin de lot : relecture globale et journal
 
 ## À faire hors lots (relevé en relecture)
 - [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
