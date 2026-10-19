@@ -11,11 +11,17 @@
             {% embed 'admin/_alerte.html.twig' with {type: 'info'} %}{% block contenu %}
                 {% import 'admin/_icones.html.twig' as icone %}{# les macros du gabarit parent ne sont pas visibles ici #}
                 Aucun match n'est encore programmé : les phases, les passages et le classement se modifient avec l'assistant de création.
-                <div class="mt-2"><a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 3}) }}" class="btn btn-outline btn-primary btn-sm">{{ icone.i('crayon') }} Modifier l'organisation de la saison</a></div>
+                <div class="mt-2"><a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 3}) }}" class="btn btn-outline btn-primary btn-sm max-sm:min-h-11">{{ icone.i('crayon') }} Modifier l'organisation de la saison</a></div>
             {% endblock %}{% endembed %}
         </div>
     {% else %}
-        <p class="max-w-3xl mb-4 text-(--color-base-content)/80">La saison est lancée (matchs programmés ou phase clôturée) : seuls le nom, les dates et les périodes de fermeture se modifient.</p>
+        <div class="max-w-3xl mb-4">
+            {% embed 'admin/_alerte.html.twig' with {type: 'info'} %}{% block contenu %}
+                {% import 'admin/_icones.html.twig' as icone %}{# les macros du gabarit parent ne sont pas visibles ici #}
+                La saison est lancée : ici, seuls le nom, les dates et les périodes de fermeture se modifient. Les phases déjà commencées ne se modifient plus, mais vous pouvez ajouter des phases après elles, par exemple des barrages.
+                <div class="mt-2"><a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 3}) }}" class="btn btn-outline btn-primary btn-sm max-sm:min-h-11">{{ icone.i('plus') }} Ajouter des phases</a></div>
+            {% endblock %}{% endembed %}
+        </div>
     {% endif %}
 
     <div class="admin-carte max-w-3xl">

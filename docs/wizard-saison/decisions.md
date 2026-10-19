@@ -431,6 +431,23 @@ jamais deux dans la même ; une phase finale sans règle est « terminale » : e
 n'apparaît plus dans les passages, même si une autre phase la suit.
 *(2026-10-19, lot 6)*
 
+## D51. Saison lancée : le wizard rouvre en mode ajout (modifie D29, D34)
+**Décision** (utilisateur, 19/10/2026) : une saison lancée (un match, une phase clôturée ou un classement) se modifie
+encore dans le wizard, en **mode ajout**, pour lui ajouter des phases, en particulier les barrages qui n'existaient pas
+quand la saison de production a été créée (barrages entre phase 1 et phase 2, barrages de fin de saison, D44, D50).
+- **Phases commencées, figées** : une phase est commencée si elle est clôturée, a un match, un classement non nul ou des
+  équipes dans ses poules. Elle et toutes celles qui la précèdent sont affichées en lecture seule : ni nom, ni dates, ni
+  type, ni poules, ni ordre ne changent, et aucune phase ne se place avant elles.
+- **Phases suivantes, libres** : les phases placées après la dernière phase commencée se modifient, se déplacent et se
+  suppriment comme dans un brouillon ; une nouvelle phase s'ajoute à la fin puis se remonte parmi elles.
+- **Passages** : ceux d'une phase clôturée sont déjà appliqués et ne s'affichent plus ; ceux d'une phase en cours se
+  modifient (pour envoyer ses équipes dans un barrage ajouté).
+- **Étapes** : seules Phases, Passages et Vérification sont proposées ; la saison (nom, dates, fermetures) se modifie
+  par la page « Modifier la saison », le classement (barème, départage) ne change plus en cours de saison.
+**Pourquoi** : ajouter des barrages à la saison en cours sans jamais toucher aux matchs, scores et classements déjà là.
+Préféré à un bouton dédié « Ajouter des barrages » (plus souple : tout format de phase peut s'ajouter).
+*(2026-10-19, lot 6)*
+
 ---
 
 ## Points ouverts

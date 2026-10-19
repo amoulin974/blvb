@@ -385,8 +385,10 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->em()->clear();
         $this->em()->find(Saison::class, $id)->getPhases()->first()->setClose(1);
         $this->em()->flush();
+        // Une phase clôturée : la saison est lancée, le wizard passe en mode ajout (D51)
         $this->client->request('GET', '/admin/saison/'.$id.'/wizard/3');
-        self::assertResponseRedirects('/admin/saison/'.$id.'/edit');
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'Clôturée · ne se modifie plus');
     }
 
     #[TestDox('WIZ-15 Sécurité : sans jeton, les étapes 4 à 6 n\'enregistrent rien ; une poule d\'une autre saison n\'est pas une destination ; champs mal formés et niveau démesuré refusés sans erreur 500')]
@@ -428,18 +430,20 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSelectorTextContains('body', 'Le niveau est un nombre de 1 à 20.');
     }
 
-    #[TestDox('WIZ-05 Garde-fous : une saison lancée (matchs programmés) n\'ouvre pas le wizard, ni en lecture ni en envoi ; une étape pas encore atteinte renvoie à la dernière atteinte')]
+    #[TestDox('WIZ-05 Garde-fous : une saison lancée (matchs programmés) ouvre le wizard en mode ajout (D51), sans les étapes Saison et Classement, ni en lecture ni en envoi ; une étape pas encore atteinte renvoie à la dernière atteinte')]
     public function test_garde_fous(): void
     {
         $this->connecter('admin');
         $id = ChampionnatDeTest::get('saison')->getId();
-        $this->client->request('GET', '/admin/saison/'.$id.'/wizard/3');
-        self::assertResponseRedirects('/admin/saison/'.$id.'/edit');
-        $this->client->followRedirect();
+        $crawler = $this->client->request('GET', '/admin/saison/'.$id.'/edit');
         self::assertSelectorTextContains('body', 'seuls le nom, les dates et les périodes de fermeture se modifient');
-        self::assertSelectorNotExists('a[href$="/wizard/3"]', 'pas de lien vers le wizard');
+        self::assertCount(1, $crawler->filter('a[href$="/wizard/3"]:contains("Ajouter des phases")'), 'accès au mode ajout');
+        foreach ([2, 5] as $etape) {
+            $this->client->request('GET', '/admin/saison/'.$id.'/wizard/'.$etape);
+            self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/3');
+        }
         $this->client->request('POST', '/admin/saison/'.$id.'/wizard/5', ['bareme' => ['victoire_forte' => '9'], 'aller' => 'suivant']);
-        self::assertResponseRedirects('/admin/saison/'.$id.'/edit');
+        self::assertResponseRedirects('/admin/saison/'.$id.'/wizard/3');
         $this->em()->clear();
         self::assertNotSame(9, $this->em()->find(Saison::class, $id)->getPointsVictoireForte());
 

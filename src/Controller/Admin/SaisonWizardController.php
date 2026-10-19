@@ -6,6 +6,7 @@ use App\Competition\Classement\CritereDepartage;
 use App\Competition\CodesCompetition;
 use App\Competition\CopieSaison;
 use App\Competition\EtapePassages;
+use App\Competition\ModeAjout;
 use App\Competition\VerificationSaison;
 use App\Competition\Modele\Modeles;
 use App\Competition\Sport\Sports;
@@ -37,11 +38,17 @@ use Symfony\Contracts\Cache\CacheInterface;
 #[Route('/admin/saison', name: 'admin_saison_wizard_')]
 class SaisonWizardController extends AbstractController
 {
-    public function __construct(private Sports $sports)
+    public function __construct(private Sports $sports, private ModeAjout $modeAjout)
     {
     }
 
     public const ETAPES = [1 => 'Départ', 2 => 'Saison', 3 => 'Phases', 4 => 'Passages', 5 => 'Classement', 6 => 'Vérification'];
+
+    /** Étapes proposées en mode ajout d'une saison lancée (D51). */
+    private const ETAPES_AJOUT = [3, 4, 6];
+
+    /** Saison lancée en cours de modification : mode ajout (D51), fixé par etape(). */
+    private bool $ajout = false;
 
     /** Étape 1 : copier une saison ou partir d'un modèle ; crée le brouillon. */
     #[Route('/wizard/nouvelle', name: 'nouvelle', methods: ['GET', 'POST'])]
@@ -112,11 +119,11 @@ class SaisonWizardController extends AbstractController
     public function etape(Saison $saison, int $etape, Request $request, EntityManagerInterface $em, SaisonRepository $saisons, Sports $sports, CacheInterface $cache): Response
     {
         if (!$saison->isBrouillon()) {
-            // Saison créée : son organisation se modifie dans le wizard (étapes 2 à 6) tant qu'elle n'est pas lancée (D29)
-            if ($saisons->estLancee($saison)) {
-                $this->addFlash('error', sprintf('La saison %s est lancée (matchs programmés ou phase clôturée) : seuls le nom, les dates et les périodes de fermeture se modifient.', $saison->getNom()));
-
-                return $this->redirectToRoute('admin_saison_edit', ['id' => $saison->getId()]);
+            // Saison créée : son organisation se modifie dans le wizard (étapes 2 à 6) tant qu'elle n'est pas lancée (D29) ;
+            // lancée, en mode ajout (D51) : phases commencées figées, étapes Phases, Passages et Vérification seulement
+            $this->ajout = $saisons->estLancee($saison);
+            if ($this->ajout && !\in_array($etape, self::ETAPES_AJOUT, true)) {
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 3]);
             }
             if ($etape === 1) {
                 return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 2]);
@@ -133,7 +140,7 @@ class SaisonWizardController extends AbstractController
         // Vérification déjà atteinte (ou saison créée) : les étapes à corriger sont signalées dans le stepper
         $verification = !$saison->isBrouillon() || (int) $saison->getEtapeWizard() >= 6 ? VerificationSaison::verifier($saison) : null;
         $aCorriger = array_values(array_unique(array_column($verification['erreurs'] ?? [], 'etape')));
-        $vue = ['saison' => $saison, 'etape' => $etape, 'etapes' => self::etapes($saison, $etape, $aCorriger)];
+        $vue = ['saison' => $saison, 'etape' => $etape, 'etapes' => self::etapes($saison, $etape, $aCorriger, $this->ajout), 'ajout' => $this->ajout];
 
         if ($etape === 2) {
             $form = $this->createForm(SaisonWizardType::class, $saison);
@@ -187,6 +194,9 @@ class SaisonWizardController extends AbstractController
     private function etapePhases(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
     {
         $phases = self::phasesDansLOrdre($saison);
+        // Mode ajout (D51) : les phases commencées et celles qui les précèdent restent hors du formulaire, en lecture seule
+        $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
+        $phases = \array_slice($phases, \count($figees));
         $gymnases = [];
         foreach ($em->getRepository(Lieu::class)->findBy([], ['nom' => 'ASC']) as $lieu) {
             $gymnases[$lieu->getId()] = (string) $lieu->getNom(); // identifiant => nom : deux gymnases de même nom restent distincts
@@ -196,11 +206,11 @@ class SaisonWizardController extends AbstractController
         $ouverte = $request->query->getInt('phase', 0);
 
         if ($form->isSubmitted()) {
-            self::verifierCodes($form);
+            self::verifierCodes($form, array_map(fn (Phase $p) => (string) $p->getCode(), $figees));
             if ($form->isValid()) {
                 $action = $request->getPayload()->getString('action');
                 if ($action !== '') {
-                    $ouverte = $this->appliquerAction($action, $saison, $phases, $em);
+                    $ouverte = $this->appliquerAction($action, $saison, $phases, $em, $figees);
                 }
                 CodesCompetition::attribuer($saison);
                 $em->flush();
@@ -214,6 +224,7 @@ class SaisonWizardController extends AbstractController
 
         return $this->render('admin/saisonwizard/phases.html.twig', $vue + [
             'form' => $form,
+            'figees' => $figees,
             'ouverte' => $ouverte,
             'libelles' => PhaseWizardType::LIBELLES,
         ], new Response(status: $form->isSubmitted() ? 422 : 200));
@@ -236,7 +247,8 @@ class SaisonWizardController extends AbstractController
             }
             $action = $request->getPayload()->getString('action');
             $saisie = $request->getPayload()->all('p');
-            foreach (EtapePassages::appliquer($saison, $saisie, $action, $detail) as $probleme) {
+            $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
+            foreach (EtapePassages::appliquer($saison, $saisie, $action, $detail, $figees) as $probleme) {
                 $this->addFlash('warning', $probleme);
             }
             $request->getSession()->set($cleDetail, $detail);
@@ -250,8 +262,19 @@ class SaisonWizardController extends AbstractController
             return $this->naviguer($request, $saison, 4, $em);
         }
 
+        // Mode ajout (D51) : passages déjà appliqués, ou vers une phase déjà commencée : ils ne s'affichent plus
+        $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
+        $phases = self::phasesDansLOrdre($saison);
+        $figes = [];
+        foreach ($phases as $i => $phase) {
+            if (isset($phases[$i + 1]) && $phase->getType() !== PhaseType::FINALE && EtapePassages::passagesFiges($phase, $phases[$i + 1], $figees)) {
+                $figes[] = $phase;
+            }
+        }
+
         return $this->render('admin/saisonwizard/passages.html.twig', $vue + [
-            'transitions' => EtapePassages::transitions($saison, $detail),
+            'transitions' => EtapePassages::transitions($saison, $detail, $figees),
+            'figes' => $figes,
         ]);
     }
 
@@ -274,7 +297,9 @@ class SaisonWizardController extends AbstractController
             }
             if ($verification['erreurs'] === [] && !$saison->isBrouillon()) {
                 $em->flush();
-                $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.', $saison->getNom()));
+                $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.%s', $saison->getNom(),
+                    // Mode ajout (D51) : la suite pour les phases ajoutées
+                    $this->ajout ? ' Les poules, journées et matchs d\'une phase ajoutée se mettent en place quand la phase qui la précède est clôturée.' : ''));
 
                 return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
             }
@@ -424,12 +449,14 @@ class SaisonWizardController extends AbstractController
     }
 
     /** Applique un bouton de structure de l'étape 3 ; renvoie l'index de la phase à garder ouverte. */
-    private function appliquerAction(string $action, Saison $saison, array $phases, EntityManagerInterface $em): int
+    private function appliquerAction(string $action, Saison $saison, array $phases, EntityManagerInterface $em, array $figees = []): int
     {
         if ($action === 'ajouter-phase') {
-            $derniere = end($phases) ?: null;
+            // Après la dernière phase de la saison, y compris les phases figées du mode ajout (D51)
+            $toutes = self::phasesDansLOrdre($saison);
+            $derniere = end($toutes) ?: null;
             $phase = (new Phase())
-                ->setNom('Phase '.(\count($phases) + 1))
+                ->setNom('Phase '.(\count($toutes) + 1))
                 ->setType(PhaseType::CHAMPIONNAT)
                 ->setOrdre(($derniere?->getOrdre() ?? -1) + 1)
                 ->setClose(0)
@@ -449,6 +476,11 @@ class SaisonWizardController extends AbstractController
             $i = (int) $m[2];
             $phase = $phases[$i];
             if ($m[1] === 'supprimer') {
+                if (($refus = self::viseeParPhaseFigee($phase->getPoules()->toArray(), $figees)) !== null) {
+                    $this->addFlash('error', sprintf('%s n\'est pas supprimée : %s Modifiez d\'abord ces passages.', $phase->getNom(), $refus));
+
+                    return $i;
+                }
                 $saison->removePhase($phase);
                 $em->remove($phase);
 
@@ -486,7 +518,9 @@ class SaisonWizardController extends AbstractController
         if (preg_match('/^supprimer-poule-(\d+)-(\d+)$/', $action, $m) && isset($phases[(int) $m[1]])) {
             $phase = $phases[(int) $m[1]];
             $poule = array_values($phase->getPoules()->toArray())[(int) $m[2]] ?? null;
-            if ($poule !== null) {
+            if ($poule !== null && ($refus = self::viseeParPhaseFigee([$poule], $figees)) !== null) {
+                $this->addFlash('error', sprintf('%s n\'est pas supprimée : %s Modifiez d\'abord ces passages.', $poule->getNom(), $refus));
+            } elseif ($poule !== null) {
                 $phase->removePoule($poule);
                 $em->remove($poule);
             }
@@ -497,10 +531,34 @@ class SaisonWizardController extends AbstractController
         return 0;
     }
 
-    /** Codes saisis : uniques dans la saison (phases) et dans la phase (poules), sinon erreur sur le champ. */
-    private static function verifierCodes(FormInterface $form): void
+    /**
+     * Mode ajout (D51) : une poule visée par les passages d'une phase figée ne se supprime pas (la base effacerait ces
+     * passages sans prévenir). Rend la raison, ou null si rien ne la vise.
+     *
+     * @param list<Poule> $poules
+     * @param list<Phase> $figees
+     */
+    private static function viseeParPhaseFigee(array $poules, array $figees): ?string
     {
-        $codesPhases = [];
+        foreach ($figees as $figee) {
+            foreach ($figee->getReglesDePassage() as $regle) {
+                if (\in_array($regle->getPouleDestination(), $poules, true)) {
+                    return sprintf('les passages de « %s », déjà commencée, y envoient des équipes.', $figee->getNom());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Codes saisis : uniques dans la saison (phases) et dans la phase (poules), sinon erreur sur le champ.
+     *
+     * @param list<string> $reserves codes des phases hors du formulaire (phases figées du mode ajout, D51)
+     */
+    private static function verifierCodes(FormInterface $form, array $reserves = []): void
+    {
+        $codesPhases = array_fill_keys(array_filter($reserves), true);
         foreach ($form->get('phases') as $phaseForm) {
             $code = (string) $phaseForm->get('code')->getData();
             if ($code !== '' && isset($codesPhases[$code])) {
@@ -557,6 +615,17 @@ class SaisonWizardController extends AbstractController
             default => $etape + 1,
         };
         $cible = max($saison->isBrouillon() ? 1 : 2, min(6, $cible));
+        if ($this->ajout && !\in_array($cible, self::ETAPES_AJOUT, true)) {
+            // Mode ajout (D51) : étape proposée la plus proche dans le sens du déplacement
+            $recul = $cible < $etape;
+            $cible = $etape;
+            foreach ($recul ? array_reverse(self::ETAPES_AJOUT) : self::ETAPES_AJOUT as $numero) {
+                if ($recul ? $numero < $etape : $numero > $etape) {
+                    $cible = $numero;
+                    break;
+                }
+            }
+        }
         if ($cible > $etape && $saison->isBrouillon()) {
             $saison->setEtapeWizard(max((int) $saison->getEtapeWizard(), $cible));
             $em->flush();
@@ -573,14 +642,14 @@ class SaisonWizardController extends AbstractController
      *
      * @return list<array{numero: int, libelle: string, etat: string, accessible: bool}>
      */
-    private static function etapes(?Saison $saison, int $courante, array $aCorriger = []): array
+    private static function etapes(?Saison $saison, int $courante, array $aCorriger = [], bool $ajout = false): array
     {
-        // Saison déjà créée (modification) : toutes les étapes sauf le départ
+        // Saison déjà créée (modification) : toutes les étapes sauf le départ ; lancée : Phases, Passages, Vérification (D51)
         $edition = $saison !== null && !$saison->isBrouillon();
         $atteinte = $edition ? 6 : max($courante, (int) $saison?->getEtapeWizard());
         $etapes = [];
         foreach (self::ETAPES as $numero => $libelle) {
-            if ($edition && $numero === 1) {
+            if (($edition && $numero === 1) || ($ajout && !\in_array($numero, self::ETAPES_AJOUT, true))) {
                 continue;
             }
             $etapes[] = [

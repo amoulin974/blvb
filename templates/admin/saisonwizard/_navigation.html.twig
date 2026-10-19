@@ -3,7 +3,8 @@
    Sur téléphone, seule la ligne Précédent / bouton principal reste collée en bas ; les actions secondaires passent
    au-dessus, sans être collantes. #}
 {% import 'admin/_icones.html.twig' as icone %}
-{% set premiere =saison is defined and saison and not saison.brouillon ? 2 : 1 %}
+{# Première étape proposée : Départ (brouillon), Saison (saison créée), Phases (mode ajout d'une saison lancée, D51) #}
+{% set premiere = ajout|default(false) ? 3 : (saison is defined and saison and not saison.brouillon ? 2 : 1) %}
 {% set principal = principal|default(etape < 6 ? {valeur: 'suivant', libelle: 'Suivant', classe: 'btn-primary'} : null) %}
 {% set secondaires %}
     {% if not sans_quitter|default(false) %}<button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>{% endif %}

@@ -22,10 +22,28 @@
                 </ul>
             {% endblock %}{% endembed %}
         {% endif %}
+        {% set figees = figees|default([]) %}
+        {% if ajout|default(false) %}
+            {# Mode ajout d'une saison lancée (D51) : en tête de l'étape, avant la consigne générale #}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}
+                La saison est lancée : les phases déjà commencées ne se modifient plus, et aucune phase ne se place avant elles. Vous pouvez modifier celles qui n'ont pas commencé et en ajouter, par exemple des barrages. Une nouvelle phase s'ajoute à la fin : utilisez Monter pour la placer avant une phase qui n'a pas commencé, puis réglez ses dates.
+            {% endblock %}{% endembed %}
+        {% endif %}
         <p class="mb-4 text-(--color-base-content)/80">Les phases se suivent dans l'ordre de la saison, selon leurs dates de début : chaque phase envoie ses équipes à la suivante. Utilisez Monter / Descendre pour corriger l'ordre. Ouvrez une phase pour la modifier.</p>
 
         {% set nb = form.phases|length %}
         <ol class="flex flex-col gap-3">
+            {% for k, phase in figees %}
+                {% set nbPoules = phase.poules|length %}
+                {% set unite = phase.type.name == 'BARRAGE' ? (nbPoules > 1 ? 'matchs' : 'match') : (phase.type.name == 'FINALE' ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule')) %}
+                <li class="rounded-box border border-base-300 bg-base-200">
+                    <div class="flex flex-wrap items-center gap-2 p-3">
+                        <span class="font-display text-xl uppercase tracking-wide text-(--color-base-content)/80"><span class="tabular-nums">{{ k + 1 }}.</span> {{ phase.nom }}</span>
+                        <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
+                        <span class="sm:ml-auto badge badge-outline h-auto py-1">{{ phase.close ? 'Clôturée' : 'Commencée' }} · ne se modifie plus</span>
+                    </div>
+                </li>
+            {% endfor %}
             {% for i, phaseForm in form.phases %}
                 {% set phase = phaseForm.vars.data %}
                 {% set finale = phase.type.name == 'FINALE' %}
@@ -36,7 +54,7 @@
                 {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
                 <li id="phase-{{ i }}" tabindex="-1" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
                     <div class="flex flex-wrap items-center gap-2 p-3">
-                        <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 }}.</span> {{ phase.nom }}</span>
+                        <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 + figees|length }}.</span> {{ phase.nom }}</span>
                         <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
                         <span class="ml-auto">{{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-phase-' ~ i, bas: 'descendre-phase-' ~ i, cible: phase.nom, premier: i == 0, dernier: i == nb - 1}) }}</span>
                     </div>

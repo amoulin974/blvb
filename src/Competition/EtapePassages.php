@@ -74,7 +74,7 @@ final class EtapePassages
      *
      * @param list<int> $detail poules forcées en mode détaillé
      */
-    public static function transitions(Saison $saison, array $detail): array
+    public static function transitions(Saison $saison, array $detail, array $figees = []): array
     {
         $phases = self::phasesDansLOrdre($saison);
         $niveaux = [];
@@ -88,8 +88,8 @@ final class EtapePassages
         $transitions = [];
         foreach ($phases as $i => $phase) {
             $suivante = $phases[$i + 1] ?? null;
-            if ($suivante === null || $phase->getType() === PhaseType::FINALE) {
-                continue; // une phase finale ne transmet pas d'équipes (D50)
+            if ($suivante === null || $phase->getType() === PhaseType::FINALE || self::passagesFiges($phase, $suivante, $figees)) {
+                continue; // une phase finale ne transmet pas d'équipes (D50) ; passages figés en mode ajout (D51)
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
             $barrage = $phase->getType() === PhaseType::BARRAGE;           // les poules sont des matchs (D42)
@@ -153,7 +153,7 @@ final class EtapePassages
      * @param list<int> $detail poules en mode détaillé (modifié par les actions « detail- » et « simple- »)
      * @return list<string> problèmes de saisie (valeurs ignorées)
      */
-    public static function appliquer(Saison $saison, array $saisie, string $action, array &$detail): array
+    public static function appliquer(Saison $saison, array $saisie, string $action, array &$detail, array $figees = []): array
     {
         $phases = self::phasesDansLOrdre($saison);
         $poulesParId = [];
@@ -166,8 +166,8 @@ final class EtapePassages
 
         foreach ($phases as $i => $phase) {
             $suivante = $phases[$i + 1] ?? null;
-            if ($suivante === null || $phase->getType() === PhaseType::FINALE) {
-                continue; // une phase finale ne transmet pas d'équipes (D50)
+            if ($suivante === null || $phase->getType() === PhaseType::FINALE || self::passagesFiges($phase, $suivante, $figees)) {
+                continue; // une phase finale ne transmet pas d'équipes (D50) ; passages figés en mode ajout (D51)
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
             $versBarrage = $suivante->getType() === PhaseType::BARRAGE;
@@ -270,6 +270,17 @@ final class EtapePassages
         $detail = array_values(array_unique($detail));
 
         return $problemes;
+    }
+
+    /**
+     * Passages qui ne se modifient plus (mode ajout d'une saison lancée, D51) : la phase est clôturée (ses passages sont
+     * appliqués) ou la phase suivante est figée (déjà composée ou commencée).
+     *
+     * @param list<Phase> $figees phases figées du mode ajout (ModeAjout::phasesFigees)
+     */
+    public static function passagesFiges(Phase $phase, Phase $suivante, array $figees): bool
+    {
+        return (bool) $phase->getClose() || \in_array($suivante, $figees, true);
     }
 
     /** Remplace les règles de la phase, numérotées dans l'ordre. @param list<RegleDePassage> $regles */

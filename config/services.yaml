@@ -50,6 +50,9 @@ services:
     # Matchs d'une phase, étape « Matchs » de la mise en place (D35 à D40)
     App\Competition\MiseEnPlaceMatchs: ~
 
+    # Wizard en mode ajout d'une saison lancée : phases figées (D51)
+    App\Competition\ModeAjout: ~
+
     # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
     App\Competition\Modele\:
         resource: '../src/Competition/Modele/'

@@ -24,6 +24,12 @@
     {% import _self as m %}
     <form id="wizard-form" method="post">
         <input type="hidden" name="_token" value="{{ csrf_token('wizard' ~ saison.id) }}">
+        {% if figes|default([]) is not empty %}
+            {# Mode ajout d'une saison lancée (D51) : passages déjà appliqués, ou vers une phase déjà commencée #}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4', figes: figes} %}{% block contenu %}
+                {{ figes|length > 1 ? 'Les passages des phases' : 'Les passages de la phase' }} {{ figes|map(p => '« ' ~ p.nom ~ ' »')|join(', ', ' et ') }} ne se modifient plus : ils sont déjà appliqués, ou la phase suivante a commencé.
+            {% endblock %}{% endembed %}
+        {% endif %}
 
         {% for t in transitions %}
             {% set poulesSuivante = t.suivante.poules|sort((a, b) => a.niveau <=> b.niveau) %}

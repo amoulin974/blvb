@@ -332,6 +332,13 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   finale sans règle comme terminale (`estTerminale` : clôture sans répartition, ni avertissement, ni ligne de passages
   dans le wizard) ; un barrage ne propose plus toutes les équipes de la phase précédente comme « à placer » ; le
   barrage « mieux classé » ignore les tableaux d'une phase finale. 545 tests verts + 2 lents.
+- **6h fait, mode ajout (D51)** : la saison de production a été créée sans barrages ; plutôt qu'un bouton dédié,
+  le wizard rouvre sur une saison lancée en mode ajout (choix de l'utilisateur). `App\Competition\ModeAjout` fige les
+  phases commencées (clôturée, match, classement même nul, équipes placées) et toutes celles qui les précèdent ; elles
+  restent hors du formulaire de l'étape Phases. `EtapePassages::passagesFiges` : passages d'une phase clôturée ou vers une
+  phase figée. Pour ajouter des barrages en production : « Modifier la saison » → « Ajouter des phases » → ajouter une
+  phase, type Barrages, la monter entre la phase 1 et la phase 2 (si la phase 2 n'a pas commencé) ou la laisser après la
+  phase finale, régler ses dates et ses matchs, puis les passages. 554 tests verts + 2 lents.
 - **Reste du lot 6** : vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
 
 ## 5. Reprendre le travail sur un autre ordinateur

@@ -177,6 +177,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [ ] Vérifier dans le navigateur la mise en place des deux phases de barrages du modèle (Poules, Journées, Matchs)
 - [x] Relecture sécurité de 6f et 6g (19/10/2026) : aucune faille critique ni importante ; corps JSON forgé de l'API de
       score refusé en 400 (SCO-17, défaut déjà présent avant le lot). Le match sans poule est impossible en base
+- [x] 6h. Wizard en mode ajout pour une saison lancée (D51) : étapes Phases, Passages, Vérification ; phases
+      commencées (`ModeAjout::phasesFigees`) en lecture seule, nouvelle phase ajoutée à la fin puis remontée parmi les
+      phases libres ; passages d'une phase clôturée ou vers une phase commencée figés ; suppression refusée si une
+      phase commencée y envoie des équipes ; lien « Ajouter des phases » sur « Modifier la saison ». Relu par l'ergonome,
+      le webdesigner et la sécurité (3 constats mineurs corrigés) ; ADJ-01 à ADJ-08
 - [ ] Bilan de fin de lot : relecture globale et journal
 
 ## À faire hors lots (relevé en relecture)
