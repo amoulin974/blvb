@@ -6,6 +6,7 @@ use App\Entity\Equipe;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Saison;
+use App\Enum\PhaseType;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -78,7 +79,8 @@ final class CompositionPoules
                 $placees[$equipe->getId()] = $equipe;
             }
         }
-        $candidates = array_diff_key($this->equipesDeReference($phase), $placees);
+        // Un barrage ne réunit qu'une partie des équipes de la phase précédente : les autres n'y jouent pas, elles ne sont pas « à placer »
+        $candidates = $phase->getType() === PhaseType::BARRAGE ? [] : array_diff_key($this->equipesDeReference($phase), $placees);
         $tous = $this->em->getRepository(Equipe::class)->findBy([], ['nom' => 'ASC']);
         $autres = array_values(array_filter($tous, fn (Equipe $e) => !isset($placees[$e->getId()]) && !isset($candidates[$e->getId()])));
 

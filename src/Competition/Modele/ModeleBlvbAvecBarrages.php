@@ -3,7 +3,6 @@
 namespace App\Competition\Modele;
 
 use App\Competition\CodesCompetition;
-use App\Competition\ReglesParDefaut;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\RegleDePassage;
@@ -20,6 +19,11 @@ use DateTimeImmutable;
  *
  * Les barrages sont des poules de deux équipes (D42) codées « AB », « BC », « CD » ; les règles de passage de la phase 1
  * les alimentent, et celles de la phase de barrages (`BAR.AB.vainqueur`, `.perdant`) alimentent la phase 2.
+ *
+ * Fin de saison (D50) : la phase 2 alimente la phase finale comme avant, et envoie aussi son avant-dernier et le 2e de la
+ * poule du dessous dans une seconde phase de barrages, placée après la phase finale et jouée en même temps. Ces
+ * barrages n'influencent pas la phase finale ; leurs résultats servent à remplir à la main les poules de la saison
+ * suivante : le modèle n'enregistre aucun passage vers la saison suivante.
  */
 final class ModeleBlvbAvecBarrages implements ModeleSaison
 {
@@ -45,7 +49,7 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
 
     public function description(): string
     {
-        return 'Comme le format actuel, avec une semaine de barrages entre la phase 1 et la phase 2 : le 1er monte, le dernier descend, l\'avant-dernier d\'une poule joue contre le 2e de la poule du dessous.';
+        return 'Comme le format actuel, avec des barrages entre la phase 1 et la phase 2 : le 1er monte, le dernier descend, l\'avant-dernier d\'une poule joue contre le 2e de la poule du dessous. La phase 2 se termine par des barrages de fin de saison, joués en même temps que la phase finale, sur le même principe. Ces barrages ne changent pas la phase finale. Les poules de la saison suivante sont à remplir à la main.';
     }
 
     public function appliquer(Saison $saison): void
@@ -55,9 +59,11 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
         $barrage->setOptions(['reception' => Phase::RECEPTION_NIVEAU_SUPERIEUR]);
         $phase2 = $this->phase($saison, 'Phase 2', PhaseType::CHAMPIONNAT, 2, '08/02/n+1', '01/06/n+1');
         $finale = $this->phase($saison, 'Phase Finale', PhaseType::FINALE, 3, '01/06/n+1', '31/07/n+1');
+        $barrageFin = $this->phase($saison, 'Barrages de fin de saison', PhaseType::BARRAGE, 4, '01/06/n+1', '31/07/n+1');
+        $barrageFin->setOptions(['reception' => Phase::RECEPTION_NIVEAU_SUPERIEUR]);
 
         // Poules de niveau des phases 1, 2 et finale (1 montée, 1 descente : zones du classement et règles par défaut)
-        $poules2 = $matchs = [];
+        $poules2 = $poulesFinale = $matchs = $matchsFin = [];
         foreach ([$phase1, $phase2, $finale] as $phase) {
             foreach (self::LETTRES as $i => $lettre) {
                 $poule = (new Poule())->setNom($this->prefixeNoms.'Poule '.$lettre)->setCode($lettre)->setNiveau($i + 1)
@@ -65,6 +71,9 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
                 $phase->addPoule($poule);
                 if ($phase === $phase2) {
                     $poules2[$i] = $poule;
+                }
+                if ($phase === $finale) {
+                    $poulesFinale[$i] = $poule;
                 }
             }
         }
@@ -74,6 +83,9 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
             $matchs[$i] = (new Poule())->setNom($this->prefixeNoms.'Barrage '.self::LETTRES[$i].' / '.self::LETTRES[$i + 1])
                 ->setCode($code)->setNiveau($i + 1)->setNbEquipesPrevu(2);
             $barrage->addPoule($matchs[$i]);
+            $matchsFin[$i] = (new Poule())->setNom($this->prefixeNoms.'Barrage de fin de saison '.self::LETTRES[$i].' / '.self::LETTRES[$i + 1])
+                ->setCode($code)->setNiveau($i + 1)->setNbEquipesPrevu(2);
+            $barrageFin->addPoule($matchsFin[$i]);
         }
 
         // Codes des phases (P1, BAR, P2, F) ; ceux des poules sont déjà posés
@@ -112,9 +124,18 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
             $regle($barrage, $ordre, $cBarrage.'.'.$match->getCode().'.perdant', $poules2[$i + 1]);
         }
 
-        // Phase 2 : tableau du niveau, et montées / descentes de la saison suivante (règles par défaut)
-        foreach (ReglesParDefaut::pourPhase($phase2, $finale) as $regle) {
-            $phase2->addRegleDePassage($regle);
+        // Phase 2 (D50) : toute la poule va dans le tableau de son niveau ; l'avant-dernier d'une poule et le 2e de la poule du
+        // dessous jouent en plus un barrage de fin de saison, sans effet sur le tableau. Aucun passage vers la saison suivante.
+        $c2 = $phase2->getCode();
+        $ordre = 0;
+        foreach (self::LETTRES as $i => $lettre) {
+            $regle($phase2, $ordre, "$c2.$lettre#1..-1", $poulesFinale[$i]);
+            if ($i > 0) {
+                $regle($phase2, $ordre, "$c2.$lettre#2", $matchsFin[$i - 1]);
+            }
+            if ($i < \count(self::LETTRES) - 1) {
+                $regle($phase2, $ordre, "$c2.$lettre#-2", $matchsFin[$i]);
+            }
         }
     }
 

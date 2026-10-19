@@ -324,6 +324,14 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   leurs retours, ce qui garde le miroir et l'équilibre domicile / extérieur ; le replacement des matchs à venir fige un
   groupe dès qu'un de ses matchs est joué. Case « Matchs aller et retour » à l'étape Phases, relue par l'ergonome et le
   webdesigner. 538 tests verts + 2 lents (l'aller simple est inchangé, les tests existants passent sans modification).
+- **6g fait, barrages de fin de saison (D50)** : le modèle « BLVB avec barrages » compte 5 phases (Barrages de fin de
+  saison, code BAR2, après la phase finale, mêmes dates). La phase 2 envoie toute sa poule dans le tableau de son niveau
+  (`P2.A#1..-1`) et son avant-dernier / son 2e dans le barrage ; aucune règle vers la saison suivante (choix de
+  l'utilisateur : poules de la saison suivante remplies à la main). Changements : `VerificationPassages` compte une
+  destination par phase d'arrivée ; `PhaseService` place une équipe une fois par phase d'arrivée et traite une phase
+  finale sans règle comme terminale (`estTerminale` : clôture sans répartition, ni avertissement, ni ligne de passages
+  dans le wizard) ; un barrage ne propose plus toutes les équipes de la phase précédente comme « à placer » ; le
+  barrage « mieux classé » ignore les tableaux d'une phase finale. 545 tests verts + 2 lents.
 - **Reste du lot 6** : vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
 
 ## 5. Reprendre le travail sur un autre ordinateur

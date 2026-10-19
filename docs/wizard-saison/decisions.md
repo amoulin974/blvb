@@ -423,9 +423,12 @@ barrages **n'influencent pas la phase finale** : les tableaux finaux sont alimen
 comme aujourd'hui. Ils **déterminent seulement le niveau de la saison suivante** : le vainqueur est placé dans la poule
 supérieure, le perdant dans la poule inférieure ; les autres équipes suivent les montées et descentes directes de la
 phase 2 (1er monte, dernier descend). Les barrages se jouent en même temps que la phase finale.
-**Conséquences à traiter** (plan à valider, voir `lots.md`, 6g) : une équipe peut avoir deux destinations en fin de
-phase 2 (son tableau final et son barrage) ; la saison suivante se lit dans les règles de plusieurs phases, pas d'une
-seule ; la dernière phase doit pouvoir être clôturée.
+**Précisions** (utilisateur, 19/10/2026) : les barrages de fin de saison sont placés **après** la phase finale ; **aucun
+lien n'est codé entre saisons** : leurs résultats servent à remplir à la main les poules de la saison suivante. Le modèle
+n'enregistre donc aucune règle « saison suivante » pour la phase 2.
+**Conséquences** (lot 6g) : une équipe peut avoir une destination dans chaque phase d'arrivée (tableau final et barrage),
+jamais deux dans la même ; une phase finale sans règle est « terminale » : elle se clôture sans répartir d'équipes et
+n'apparaît plus dans les passages, même si une autre phase la suit.
 *(2026-10-19, lot 6)*
 
 ---

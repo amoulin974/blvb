@@ -33,7 +33,7 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
         return $parCode;
     }
 
-    #[TestDox('Quatre phases : Phase 1, Barrages (une semaine), Phase 2, Phase Finale, codes P1, BAR, P2, F')]
+    #[TestDox('Cinq phases : Phase 1, Barrages (une semaine), Phase 2, Phase Finale, Barrages de fin de saison, codes P1, BAR, P2, F, BAR2')]
     public function test_phases(): void
     {
         $phases = array_map(fn ($p) => [$p->getNom(), $p->getType(), $p->getCode(), $p->getOrdre(),
@@ -44,6 +44,7 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
             ['Barrages', PhaseType::BARRAGE, 'BAR', 1, '2027-02-01', '2027-02-08'],
             ['Phase 2', PhaseType::CHAMPIONNAT, 'P2', 2, '2027-02-08', '2027-06-01'],
             ['Phase Finale', PhaseType::FINALE, 'F', 3, '2027-06-01', '2027-07-31'],
+            ['Barrages de fin de saison', PhaseType::BARRAGE, 'BAR2', 4, '2027-06-01', '2027-07-31'],
         ], $phases);
     }
 
@@ -52,8 +53,10 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
     {
         $phases = $this->phases($this->saison());
 
-        self::assertSame(['AB', 'BC', 'CD'], array_map(fn ($p) => $p->getCode(), $phases['BAR']->getPoules()->toArray()));
-        self::assertSame(Phase::RECEPTION_NIVEAU_SUPERIEUR, $phases['BAR']->getReception());
+        foreach (['BAR', 'BAR2'] as $code) {
+            self::assertSame(['AB', 'BC', 'CD'], array_map(fn ($p) => $p->getCode(), $phases[$code]->getPoules()->toArray()), $code);
+            self::assertSame(Phase::RECEPTION_NIVEAU_SUPERIEUR, $phases[$code]->getReception(), $code);
+        }
         foreach (['P1', 'P2', 'F'] as $code) {
             self::assertSame(['A', 'B', 'C', 'D'], array_map(fn ($p) => $p->getCode(), $phases[$code]->getPoules()->toArray()), $code);
         }
@@ -91,6 +94,24 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
         ], $regles);
     }
 
+    #[TestDox('Phase 2 (D50) : toute la poule va au tableau de son niveau ; l\'avant-dernier et le 2e du dessous jouent en plus un barrage de fin de saison ; aucun passage vers la saison suivante')]
+    public function test_regles_phase_2(): void
+    {
+        $regles = [];
+        foreach ($this->phases($this->saison())['P2']->getReglesDePassage() as $regle) {
+            $poule = $regle->getPouleDestination();
+            self::assertNotNull($poule, 'aucun passage vers la saison suivante');
+            $regles[] = $regle->getSource().' → '.$poule->getPhase()->getCode().'.'.$poule->getCode();
+        }
+
+        self::assertSame([
+            'P2.A#1..-1 → F.A', 'P2.A#-2 → BAR2.AB',
+            'P2.B#1..-1 → F.B', 'P2.B#2 → BAR2.AB', 'P2.B#-2 → BAR2.BC',
+            'P2.C#1..-1 → F.C', 'P2.C#2 → BAR2.BC', 'P2.C#-2 → BAR2.CD',
+            'P2.D#1..-1 → F.D', 'P2.D#2 → BAR2.CD',
+        ], $regles);
+    }
+
     #[TestDox('Vérification D5 : poules de 8 équipes en phase 1, barrages de deux équipes : aucune erreur')]
     public function test_verification_sans_erreur(): void
     {
@@ -103,9 +124,15 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
         foreach ($phases['BAR']->getPoules() as $poule) {
             $poule->addEquipe((new Equipe())->setNom('x'))->addEquipe((new Equipe())->setNom('y'));
         }
+        foreach ($phases['P2']->getPoules() as $poule) {
+            for ($i = 0; $i < 8; ++$i) {
+                $poule->addEquipe((new Equipe())->setNom($poule->getCode().$i));
+            }
+        }
 
         self::assertSame([], VerificationPassages::verifier($phases['P1'], $phases['P1']->getReglesDePassage()));
         self::assertSame([], VerificationPassages::verifier($phases['BAR'], $phases['BAR']->getReglesDePassage()));
+        self::assertSame([], VerificationPassages::verifier($phases['P2'], $phases['P2']->getReglesDePassage()), 'une équipe peut aller à la fois au tableau et au barrage (D50)');
     }
 
     #[TestDox('Le modèle n\'est pas encore proposé dans le wizard (écrans du lot 6c) mais a son code et son libellé')]

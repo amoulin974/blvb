@@ -295,7 +295,8 @@ class SaisonWizardController extends AbstractController
         $phases = self::phasesDansLOrdre($saison);
         $transitions = [];
         foreach ($phases as $i => $phase) {
-            if (isset($phases[$i + 1])) {
+            // Une phase finale ne transmet pas d'équipes (D50) : pas de ligne de passages
+            if (isset($phases[$i + 1]) && $phase->getType() !== PhaseType::FINALE) {
                 $transitions[] = ['phase' => $phase, 'suivante' => $phases[$i + 1], 'regles' => $phase->getReglesDePassage()->toArray()];
             }
         }

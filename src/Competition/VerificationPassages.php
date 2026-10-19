@@ -8,7 +8,8 @@ use App\Entity\RegleDePassage;
 /**
  * Vérification des règles de passage d'une phase (docs/wizard-saison/decisions.md, D5) : chaque règle est lisible et
  * désigne une poule de cette phase ; chaque rang de chaque poule (selon son nombre d'équipes) a exactement une
- * destination dans la phase suivante, et au plus une pour la saison suivante.
+ * destination dans la phase suivante, et au plus une pour la saison suivante. Un rang peut aussi aller dans une autre
+ * phase (la phase 2 alimente la phase finale et les barrages de fin de saison, D50) : une seule destination par phase.
  * Rend des messages lisibles par un administrateur bénévole (règles en clair, notation entre crochets) ;
  * liste vide si tout va bien.
  */
@@ -31,7 +32,7 @@ final class VerificationPassages
         }
 
         $erreurs = [];
-        // [destination : 'phase' ou 'saison'][code de poule][rang] = nombre de règles
+        // [destination : 'phase' ou 'saison'][code de poule][rang][phase d'arrivée] = nombre de règles
         $couverture = ['phase' => [], 'saison' => []];
         $saisonSuivante = [];
         foreach ($regles as $regle) {
@@ -75,8 +76,9 @@ final class VerificationPassages
                     continue;
                 }
             }
+            $arrivee = $type === 'phase' ? spl_object_id($regle->getPouleDestination()?->getPhase() ?? $phase) : 0;
             foreach ($rangs as $rang) {
-                $couverture[$type][$codePoule][$rang] = ($couverture[$type][$codePoule][$rang] ?? 0) + 1;
+                $couverture[$type][$codePoule][$rang][$arrivee] = ($couverture[$type][$codePoule][$rang][$arrivee] ?? 0) + 1;
             }
         }
 
@@ -88,10 +90,10 @@ final class VerificationPassages
                 }
                 $sans = $doubles = [];
                 for ($rang = 1; $rang <= $nb; ++$rang) {
-                    $n = $couverture[$type][$code][$rang] ?? 0;
-                    if ($n === 0) {
+                    $arrivees = $couverture[$type][$code][$rang] ?? [];
+                    if ($arrivees === []) {
                         $sans[] = $rang;
-                    } elseif ($n > 1) {
+                    } elseif (max($arrivees) > 1) {
                         $doubles[] = $rang;
                     }
                 }

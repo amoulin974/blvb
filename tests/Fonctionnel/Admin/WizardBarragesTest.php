@@ -49,14 +49,14 @@ final class WizardBarragesTest extends TestFonctionnel
         self::fail("Phase $code absente");
     }
 
-    #[TestDox('WIZ-22 Le modèle « BLVB avec barrages » est proposé au départ : 4 phases dont des barrages (3 matchs), réception par la poule supérieure')]
+    #[TestDox('WIZ-22 Le modèle « BLVB avec barrages » est proposé au départ : 5 phases dont deux phases de barrages (3 matchs chacune), réception par la poule supérieure')]
     public function test_depart_modele_barrages(): void
     {
         $saison = $this->brouillon();
 
         $codes = array_map(fn ($p) => $p->getCode(), $saison->getPhases()->toArray());
         sort($codes);
-        self::assertSame(['BAR', 'F', 'P1', 'P2'], $codes);
+        self::assertSame(['BAR', 'BAR2', 'F', 'P1', 'P2'], $codes);
         $barrage = $this->phase($saison, 'BAR');
         self::assertSame(PhaseType::BARRAGE, $barrage->getType());
         self::assertCount(3, $barrage->getPoules());

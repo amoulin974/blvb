@@ -88,8 +88,8 @@ final class EtapePassages
         $transitions = [];
         foreach ($phases as $i => $phase) {
             $suivante = $phases[$i + 1] ?? null;
-            if ($suivante === null) {
-                continue;
+            if ($suivante === null || $phase->getType() === PhaseType::FINALE) {
+                continue; // une phase finale ne transmet pas d'équipes (D50)
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
             $barrage = $phase->getType() === PhaseType::BARRAGE;           // les poules sont des matchs (D42)
@@ -166,8 +166,8 @@ final class EtapePassages
 
         foreach ($phases as $i => $phase) {
             $suivante = $phases[$i + 1] ?? null;
-            if ($suivante === null) {
-                continue;
+            if ($suivante === null || $phase->getType() === PhaseType::FINALE) {
+                continue; // une phase finale ne transmet pas d'équipes (D50)
             }
             $versFinale = $suivante->getType() === PhaseType::FINALE;
             $versBarrage = $suivante->getType() === PhaseType::BARRAGE;

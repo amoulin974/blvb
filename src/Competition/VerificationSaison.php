@@ -65,12 +65,13 @@ final class VerificationSaison
             if ($suivante !== null && $jour($suivante->getDateDebut()) < $jour($phase->getDateDebut())) {
                 // L'ordre des phases décide des passages : il doit suivre les dates (phases en parallèle : même début)
                 $erreurs[] = ['texte' => sprintf('%s est placée avant %s mais commence plus tard (%s contre %s) : changez l\'ordre des phases ou leurs dates.', $phase->getNom(), $suivante->getNom(), $format($phase->getDateDebut()), $format($suivante->getDateDebut())), 'etape' => 3];
-            } elseif ($suivante !== null && $jour($phase->getDateFin()) > $jour($suivante->getDateDebut())) {
+            } elseif ($suivante !== null && $jour($phase->getDateFin()) > $jour($suivante->getDateDebut())
+                && !($phase->getType() === PhaseType::FINALE && $suivante->getType() === PhaseType::BARRAGE)) { // finale et barrages de fin de saison : en parallèle (D50)
                 $avertissements[] = ['texte' => sprintf('%s et %s se chevauchent.', $phase->getNom(), $suivante->getNom()), 'etape' => 3];
             }
 
-            if ($suivante === null) {
-                continue;
+            if ($suivante === null || $phase->getType() === PhaseType::FINALE) {
+                continue; // une phase finale ne transmet pas d'équipes (D50)
             }
             $versSuivante = array_filter($phase->getReglesDePassage()->toArray(), fn ($r) => $r->getPouleDestination()?->getPhase() === $suivante);
             if ($versSuivante === []) {

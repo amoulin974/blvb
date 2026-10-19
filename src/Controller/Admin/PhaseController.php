@@ -184,7 +184,8 @@ final class PhaseController extends AbstractController
         // 1. Trouver la phase suivante (même règle que PhaseService : ordre immédiatement supérieur)
         $phaseSuivante = $phaseService->phaseSuivante($phase);
 
-        if (!$phaseSuivante) {
+        $terminale = $phaseService->estTerminale($phase);
+        if (!$phaseSuivante && !$terminale) {
             $this->addFlash('error', 'Il n’y a pas de phase suivante pour clôturer celle-ci.');
             return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
         }
@@ -207,6 +208,12 @@ final class PhaseController extends AbstractController
         // Les journées et les matchs de la phase suivante ne sont plus créés ici (D40) : on renvoie à la mise en place,
         // où l'on vérifie d'abord la composition des poules.
         $avertissements = $phaseService->cloturerEtBasculer($phase);
+        if ($terminale) {
+            // Phase finale sans passage (D50) : rien à répartir, retour au suivi de la saison
+            $this->addFlash('success', sprintf('Phase clôturée : %s ne transmet aucune équipe à une autre phase.', $phase->getNom()));
+
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+        }
         if ($avertissements === []) {
             $this->addFlash('success', sprintf('Phase clôturée : les équipes ont été réparties dans « %s ». Vérifiez les poules, puis créez les journées et les matchs.', $phaseSuivante->getNom()));
         } else {

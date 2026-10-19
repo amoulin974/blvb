@@ -170,7 +170,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] 6f-2. Aller-retour (A2), retour en miroir (D47) : option `aller_retour` du championnat, journées et matchs doublés,
       retour dérivé de l'aller par l'optimiseur (un match de l'aller et son retour s'inversent ensemble, les rondes
       s'échangent avec leurs retours), replacement des matchs à venir compatible, case à l'étape Phases ; ALR-01 à ALR-07
-- [ ] 6g. Barrages de fin de phase 2, sans effet sur la phase finale, qui décident de la saison suivante (D50) : plan à valider
+- [x] 6g. Barrages de fin de phase 2 (D50) : seconde phase de barrages placée après la phase finale et jouée en même
+      temps, alimentée par la phase 2 (avant-dernier du haut, 2e du bas) sans effet sur le tableau final ; aucun passage
+      vers la saison suivante (poules remplies à la main). Une phase finale est terminale (clôture sans répartition),
+      une équipe peut avoir une destination par phase d'arrivée ; BAR-07 à BAR-09, VER-02
+- [ ] Vérifier dans le navigateur la mise en place des deux phases de barrages du modèle (Poules, Journées, Matchs)
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 
 ## À faire hors lots (relevé en relecture)

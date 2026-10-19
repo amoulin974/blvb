@@ -61,6 +61,15 @@ class PhaseService
     }
 
     /**
+     * Une phase finale sans règle de passage ne transmet pas d'équipes (D50) : elle se clôture sans rien répartir, même
+     * si une autre phase (barrages de fin de saison) la suit.
+     */
+    public function estTerminale(Phase $phase): bool
+    {
+        return $phase->getType() === PhaseType::FINALE && $phase->getReglesDePassage()->isEmpty();
+    }
+
+    /**
      * Une phase se clôture si elle a au moins une poule, que chaque poule a ses journées (sans quoi son classement n'a
      * pas de sens) et que les phases qui la précèdent sont clôturées.
      */
@@ -91,6 +100,10 @@ class PhaseService
      */
     public function problemesAvantCloture(Phase $phase): array
     {
+        if ($this->estTerminale($phase)) {
+            return [];
+        }
+
         return array_values(VerificationPassages::verifier($phase, $this->reglesDePassage($phase)));
     }
 
@@ -110,6 +123,13 @@ class PhaseService
             return []; // déjà clôturée : ne jamais redistribuer les équipes une seconde fois
         }
 
+        if ($this->estTerminale($phaseActuelle)) {
+            $phaseActuelle->setClose(1);
+            $this->em->flush();
+
+            return [];
+        }
+
         $phaseSuivante = $this->phaseSuivante($phaseActuelle);
         if (!$phaseSuivante) {
             return []; // Pas de phase suivante, fin de saison
@@ -124,7 +144,8 @@ class PhaseService
         $problemesRegles = VerificationPassages::verifier($phaseActuelle, $regles);
 
         $resolveur = new ResolveurPlace(new ResultatsSaison($phaseActuelle->getSaison(), $this->classementRepository));
-        $placees = [];
+        $placees = [];    // équipe et phase d'arrivée : une équipe peut aller dans deux phases (D50), jamais deux fois dans la même
+        $avecPoule = [];  // équipes placées au moins une fois
         foreach ($regles as $regle) {
             $destination = $regle->getPouleDestination();
             if ($destination === null) {
@@ -136,10 +157,12 @@ class PhaseService
                 continue; // plage vide (aucune équipe à ces rangs), ou règle inapplicable : déjà signalée par la vérification
             }
             foreach ($equipes as $equipe) {
-                if (isset($placees[spl_object_id($equipe)])) {
+                $cle = spl_object_id($equipe).'|'.($destination->getPhase()?->getId() ?? 0);
+                if (isset($placees[$cle])) {
                     continue;
                 }
-                $placees[spl_object_id($equipe)] = true;
+                $placees[$cle] = true;
+                $avecPoule[spl_object_id($equipe)] = true;
                 $destination->addEquipe($equipe);
             }
         }
@@ -147,7 +170,7 @@ class PhaseService
         $sansDestination = [];
         foreach ($phaseActuelle->getPoules() as $poule) {
             foreach ($poule->getEquipes() as $equipe) {
-                if (!isset($placees[spl_object_id($equipe)])) {
+                if (!isset($avecPoule[spl_object_id($equipe)])) {
                     $sansDestination[] = $equipe->getNom();
                 }
             }

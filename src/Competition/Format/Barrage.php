@@ -129,7 +129,7 @@ final class Barrage implements GenerateurFormat
     {
         $precedentes = [];
         foreach ($phase->getSaison()->getPhases() as $autre) {
-            if ($autre->getOrdre() < $phase->getOrdre()) {
+            if ($autre->getOrdre() < $phase->getOrdre() && $autre->getType() !== PhaseType::FINALE) {
                 $precedentes[] = $autre;
             }
         }
