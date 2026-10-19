@@ -35,14 +35,20 @@ final class Championnat implements GenerateurFormat
     {
         $n = count($poule->getEquipes());
 
-        return $n < 2 ? 0 : intdiv($n * ($n - 1), 2);
+        return $n < 2 ? 0 : intdiv($n * ($n - 1), 2) * $this->passages($poule);
     }
 
     public function nombreJournees(Poule $poule): int
     {
         $n = count($poule->getEquipes());
 
-        return $n < 2 ? 0 : ($n % 2 === 0 ? $n - 1 : $n);
+        return $n < 2 ? 0 : ($n % 2 === 0 ? $n - 1 : $n) * $this->passages($poule);
+    }
+
+    /** 2 pour un championnat aller-retour (D47), 1 pour un aller simple. */
+    private function passages(Poule $poule): int
+    {
+        return $poule->getPhase()?->estAllerRetour() ? 2 : 1;
     }
 
     public function creerJournees(Poule $poule): ?string
@@ -75,7 +81,7 @@ final class Championnat implements GenerateurFormat
             }else{
                 $nbMatchParJour = ($nbEquipe-1)/2;
             }
-            $nbJournee = $nbMatch/$nbMatchParJour;
+            $nbJournee = $nbMatch/$nbMatchParJour * $this->passages($poule);
 
             // Dates de la phase
             $debutPhase = $poule->getPhase()->getDateDebut();
@@ -159,6 +165,7 @@ final class Championnat implements GenerateurFormat
         });
 
         // 2. Algorithme de la Ronde (Circle Method)
+        $aller = [];
         for ($round = 0; $round < $rounds; $round++) {
             $journee = $journees[$round];
 
@@ -203,28 +210,41 @@ final class Championnat implements GenerateurFormat
                 }
 
                 // 4. Création de la partie
-                $partie = new Partie();
+                $this->creerPartie($poule, $journee, $equipeHome, $equipeAway);
+                $aller[] = [$round, $equipeHome, $equipeAway];
+            }
+        }
 
-                // Calcul de la date selon les préférences de l'équipe qui REÇOIT
-                $lieuMatch = $equipeHome->getLieu();
-                $creneau = $lieuMatch->getCreneaux()[0]; // On suppose qu'il y a au moins un créneau
-
-                $dateMatch = DateMatch::calculer(
-                    $journee->getDateDebut(),
-                    $creneau->getJourSemaine(),
-                    $creneau->getHeureDebut(),
-                );
-
-                $partie->setDate($dateMatch);
-                $partie->setLieu($lieuMatch);
-                $partie->setIdEquipeRecoit($equipeHome);
-                $partie->setIdEquipeDeplace($equipeAway);
-                $partie->setJournee($journee);
-                $partie->setPoule($poule);
-
-                $this->em->persist($partie);
+        // 5. Aller-retour (D47) : le retour reprend les journées de l'aller dans le même ordre, domicile et extérieur inversés
+        if ($poule->getPhase()?->estAllerRetour()) {
+            foreach ($aller as [$round, $equipeHome, $equipeAway]) {
+                if (isset($journees[$round + $rounds])) {
+                    $this->creerPartie($poule, $journees[$round + $rounds], $equipeAway, $equipeHome);
+                }
             }
         }
         $this->em->flush();
+    }
+
+    private function creerPartie(Poule $poule, Journee $journee, Equipe $equipeHome, Equipe $equipeAway): void
+    {
+        $partie = new Partie();
+
+        // Calcul de la date selon les préférences de l'équipe qui REÇOIT
+        $lieuMatch = $equipeHome->getLieu();
+        $creneau = $lieuMatch->getCreneaux()[0]; // On suppose qu'il y a au moins un créneau
+
+        $partie->setDate(DateMatch::calculer(
+            $journee->getDateDebut(),
+            $creneau->getJourSemaine(),
+            $creneau->getHeureDebut(),
+        ));
+        $partie->setLieu($lieuMatch);
+        $partie->setIdEquipeRecoit($equipeHome);
+        $partie->setIdEquipeDeplace($equipeAway);
+        $partie->setJournee($journee);
+        $partie->setPoule($poule);
+
+        $this->em->persist($partie);
     }
 }

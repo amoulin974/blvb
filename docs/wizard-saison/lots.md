@@ -167,7 +167,9 @@ matchs individuels), qui changent le modèle lui-même (D13).
       `RegleSport` et `Volley` paramétrés (`$setsGagnants`), classement par format de phase, API et fenêtre de saisie
       du score, choix dans l'étape Phases ; relu par l'ergonome et le webdesigner (règle 1R en format court, règlement
       public, `fieldset-formulaire`) ; SET-01 à SET-04
-- [ ] 6f-2. Aller-retour (A2), retour en miroir (D47)
+- [x] 6f-2. Aller-retour (A2), retour en miroir (D47) : option `aller_retour` du championnat, journées et matchs doublés,
+      retour dérivé de l'aller par l'optimiseur (un match de l'aller et son retour s'inversent ensemble, les rondes
+      s'échangent avec leurs retours), replacement des matchs à venir compatible, case à l'étape Phases ; ALR-01 à ALR-07
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 
 ## À faire hors lots (relevé en relecture)

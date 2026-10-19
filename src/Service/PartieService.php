@@ -364,6 +364,7 @@ class PartieService
         $equipesParPoule = [];
         $journeesParPoule = [];
         $schedulesByPoule = [];
+        $nbAllerParPoule = [];
 
         foreach ($poules as $pouleIdx => $poule) {
             $equipes = $poule->getEquipes()->toArray();
@@ -384,8 +385,18 @@ class PartieService
                 }
                 $schedule[$round] = $ligne;
             }
+            // Aller-retour (D47) : le retour reprend les rondes de l'aller dans le même ordre, domicile et extérieur inversés
+            $allerRetour = $poule->getPhase()->estAllerRetour();
+            if ($allerRetour) {
+                $nbRondesAller = count($pairingsByRound);
+                foreach ($pairingsByRound as $round => $paires) {
+                    $schedule[$nbRondesAller + $round] = array_map(fn (array $paire) => [$paire[1], $paire[0]], $schedule[$round]);
+                }
+            }
             // Répartition de départ imposée (replacement des matchs à venir) ou round-robin standard
             $schedulesByPoule[$pouleIdx] = $initiaux[$pouleIdx] ?? $schedule;
+            // Nombre de rondes de l'aller (0 : pas d'aller-retour)
+            $nbAllerParPoule[$pouleIdx] = $allerRetour ? intdiv(count($schedulesByPoule[$pouleIdx]), 2) : 0;
         }
 
         $meilleur = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
@@ -393,76 +404,76 @@ class PartieService
         for ($cycle = 0; $cycle < 10; $cycle++) {
             $amelioreCycle = false;
 
-            // a) Inversion d'un seul match
-            foreach ($schedulesByPoule as $pouleIdx => $schedule) {
-                foreach ($schedule as $round => $paires) {
-                    foreach ($paires as $i => [$home, $away]) {
-                        if (isset($figes[$pouleIdx][$round][$i])) {
-                            continue; // match déjà joué : figé
-                        }
-                        $schedulesByPoule[$pouleIdx][$round][$i] = [$away, $home];
-                        $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
+            // Groupes de matchs qui changent ensemble : un match seul ou, en aller-retour, un match de l'aller avec son retour
+            // (même rencontre, domicile et extérieur inversés, D47). Un groupe qui contient un match joué est figé.
+            $groupes = $this->groupesBasculables($schedulesByPoule, $nbAllerParPoule, $figes);
 
-                        if ($nouveau['score'] < $meilleur['score']) {
-                            $meilleur = $nouveau;
-                            $amelioreCycle = true;
-                        } else {
-                            $schedulesByPoule[$pouleIdx][$round][$i] = [$home, $away];
-                        }
-                    }
+            // a) Inversion d'un seul groupe
+            foreach ($groupes as $groupe) {
+                $this->basculer($schedulesByPoule, $groupe);
+                $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
+
+                if ($nouveau['score'] < $meilleur['score']) {
+                    $meilleur = $nouveau;
+                    $amelioreCycle = true;
+                } else {
+                    $this->basculer($schedulesByPoule, $groupe);
                 }
             }
 
-            // b) Inversion de deux matchs à la fois, éventuellement dans des poules différentes
-            $references = [];
-            foreach ($schedulesByPoule as $pouleIdx => $schedule) {
-                foreach ($schedule as $round => $paires) {
-                    foreach (array_keys($paires) as $i) {
-                        if (isset($figes[$pouleIdx][$round][$i])) {
-                            continue;
-                        }
-                        $references[] = [$pouleIdx, $round, $i];
-                    }
-                }
-            }
-
-            foreach ($references as $a => [$pA, $rA, $iA]) {
-                foreach ($references as $b => [$pB, $rB, $iB]) {
+            // b) Inversion de deux groupes à la fois, éventuellement dans des poules différentes
+            foreach ($groupes as $a => $groupeA) {
+                foreach ($groupes as $b => $groupeB) {
                     if ($b <= $a) {
                         continue;
                     }
 
-                    [$homeA, $awayA] = $schedulesByPoule[$pA][$rA][$iA];
-                    [$homeB, $awayB] = $schedulesByPoule[$pB][$rB][$iB];
-
-                    $schedulesByPoule[$pA][$rA][$iA] = [$awayA, $homeA];
-                    $schedulesByPoule[$pB][$rB][$iB] = [$awayB, $homeB];
+                    $this->basculer($schedulesByPoule, $groupeA);
+                    $this->basculer($schedulesByPoule, $groupeB);
                     $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
 
                     if ($nouveau['score'] < $meilleur['score']) {
                         $meilleur = $nouveau;
                         $amelioreCycle = true;
                     } else {
-                        $schedulesByPoule[$pA][$rA][$iA] = [$homeA, $awayA];
-                        $schedulesByPoule[$pB][$rB][$iB] = [$homeB, $awayB];
+                        $this->basculer($schedulesByPoule, $groupeA);
+                        $this->basculer($schedulesByPoule, $groupeB);
                     }
                 }
             }
 
-            // c) Échange de deux rondes entières, au sein d'une même poule
-            foreach ($schedulesByPoule as $pouleIdx => $schedule) {
-                $nbRounds = count($schedule);
-                for ($r1 = 0; $r1 < $nbRounds; $r1++) {
-                    if (!empty($figes[$pouleIdx][$r1]) || $schedulesByPoule[$pouleIdx][$r1] === []) {
-                        continue; // une ronde qui contient un match joué, ou vide, ne change pas de journée
+            // c) Échange de deux rondes entières, au sein d'une même poule ; en aller-retour, deux rondes de l'aller
+            // avec leurs retours
+            foreach (array_keys($schedulesByPoule) as $pouleIdx) {
+                $nbAller = $nbAllerParPoule[$pouleIdx];
+                $limite = $nbAller > 0 ? $nbAller : count($schedulesByPoule[$pouleIdx]);
+                // Une ronde qui contient un match joué, ou vide, ne change pas de journée
+                $bloquee = function (int $ronde) use (&$schedulesByPoule, $figes, $pouleIdx, $nbAller): bool {
+                    foreach ($nbAller > 0 ? [$ronde, $ronde + $nbAller] : [$ronde] as $r) {
+                        if (!empty($figes[$pouleIdx][$r]) || ($schedulesByPoule[$pouleIdx][$r] ?? []) === []) {
+                            return true;
+                        }
                     }
-                    for ($r2 = $r1 + 1; $r2 < $nbRounds; $r2++) {
-                        if (!empty($figes[$pouleIdx][$r2]) || $schedulesByPoule[$pouleIdx][$r2] === []) {
+
+                    return false;
+                };
+                $echanger = function (int $r1, int $r2) use (&$schedulesByPoule, $pouleIdx, $nbAller): void {
+                    foreach ($nbAller > 0 ? [[$r1, $r2], [$r1 + $nbAller, $r2 + $nbAller]] : [[$r1, $r2]] as [$x, $y]) {
+                        $tmp = $schedulesByPoule[$pouleIdx][$x];
+                        $schedulesByPoule[$pouleIdx][$x] = $schedulesByPoule[$pouleIdx][$y];
+                        $schedulesByPoule[$pouleIdx][$y] = $tmp;
+                    }
+                };
+
+                for ($r1 = 0; $r1 < $limite; $r1++) {
+                    if ($bloquee($r1)) {
+                        continue;
+                    }
+                    for ($r2 = $r1 + 1; $r2 < $limite; $r2++) {
+                        if ($bloquee($r2)) {
                             continue;
                         }
-                        $tmp = $schedulesByPoule[$pouleIdx][$r1];
-                        $schedulesByPoule[$pouleIdx][$r1] = $schedulesByPoule[$pouleIdx][$r2];
-                        $schedulesByPoule[$pouleIdx][$r2] = $tmp;
+                        $echanger($r1, $r2);
 
                         $nouveau = $this->calculerScoreCombine($schedulesByPoule, $equipesParPoule, $journeesParPoule, $occupationFixe, $figes);
 
@@ -470,9 +481,7 @@ class PartieService
                             $meilleur = $nouveau;
                             $amelioreCycle = true;
                         } else {
-                            $tmp = $schedulesByPoule[$pouleIdx][$r1];
-                            $schedulesByPoule[$pouleIdx][$r1] = $schedulesByPoule[$pouleIdx][$r2];
-                            $schedulesByPoule[$pouleIdx][$r2] = $tmp;
+                            $echanger($r1, $r2);
                         }
                     }
                 }
@@ -555,6 +564,75 @@ class PartieService
         }
 
         return ['breaksParPoule' => $breaksParPoule, 'surchargesParPoule' => $surchargesParPoule];
+    }
+
+    /**
+     * Matchs qui s'inversent ensemble dans la recherche locale : [[pouleIdx, ronde, position], …]. En aller-retour (D47),
+     * un match de l'aller et son retour forment un groupe ; un groupe qui contient un match joué n'est pas proposé.
+     *
+     * @param array<int, array<int, array<int, array{0: int, 1: int}>>> $schedulesByPoule
+     * @param array<int, int> $nbAllerParPoule rondes de l'aller par poule, 0 sans aller-retour
+     * @return list<list<array{0: int, 1: int, 2: int}>>
+     */
+    private function groupesBasculables(array $schedulesByPoule, array $nbAllerParPoule, array $figes): array
+    {
+        $groupes = [];
+        foreach ($schedulesByPoule as $pouleIdx => $schedule) {
+            $nbAller = $nbAllerParPoule[$pouleIdx] ?? 0;
+            foreach ($schedule as $round => $paires) {
+                foreach (array_keys($paires) as $i) {
+                    $groupe = [[$pouleIdx, $round, $i]];
+                    if ($nbAller > 0 && ($jumeau = $this->jumeau($schedule, $nbAller, $round, $i)) !== null) {
+                        if ($round >= $nbAller) {
+                            continue; // le retour change avec son match de l'aller
+                        }
+                        $groupe[] = [$pouleIdx, $jumeau[0], $jumeau[1]];
+                    }
+                    foreach ($groupe as [$p, $r, $j]) {
+                        if (isset($figes[$p][$r][$j])) {
+                            continue 2;
+                        }
+                    }
+                    $groupes[] = $groupe;
+                }
+            }
+        }
+
+        return $groupes;
+    }
+
+    /**
+     * Retour d'un match de l'aller (ou aller d'un retour) : même rencontre dans la ronde située $nbAller rondes plus
+     * loin ou plus tôt. [ronde, position], ou null si elle n'existe pas.
+     *
+     * @param array<int, array<int, array{0: int, 1: int}>> $schedule
+     * @return array{0: int, 1: int}|null
+     */
+    private function jumeau(array $schedule, int $nbAller, int $round, int $i): ?array
+    {
+        $autre = $round < $nbAller ? $round + $nbAller : $round - $nbAller;
+        [$home, $away] = $schedule[$round][$i];
+        foreach ($schedule[$autre] ?? [] as $j => [$h, $a]) {
+            if (($h === $away && $a === $home) || ($h === $home && $a === $away)) {
+                return [$autre, $j];
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Inverse domicile et extérieur de tous les matchs du groupe.
+     *
+     * @param array<int, array<int, array<int, array{0: int, 1: int}>>> $schedulesByPoule modifié par référence
+     * @param list<array{0: int, 1: int, 2: int}> $groupe
+     */
+    private function basculer(array &$schedulesByPoule, array $groupe): void
+    {
+        foreach ($groupe as [$pouleIdx, $round, $i]) {
+            [$home, $away] = $schedulesByPoule[$pouleIdx][$round][$i];
+            $schedulesByPoule[$pouleIdx][$round][$i] = [$away, $home];
+        }
     }
 
     /**

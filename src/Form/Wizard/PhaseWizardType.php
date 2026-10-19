@@ -54,6 +54,17 @@ class PhaseWizardType extends AbstractType
                     $phase->setSetsGagnants((int) $valeur === Phase::SETS_GAGNANTS_COURT ? Phase::SETS_GAGNANTS_COURT : Phase::SETS_GAGNANTS_DEFAUT);
                 },
             ])
+            // Championnat aller-retour (A2, D47) : enregistré dans les options, seulement pour un championnat
+            ->add('allerRetour', CheckboxType::class, [
+                'label' => 'Matchs aller et retour',
+                'required' => false,
+                'getter' => fn (Phase $phase): bool => $phase->estAllerRetour(),
+                'setter' => function (Phase $phase, ?bool $valeur): void {
+                    if ($phase->getType() === PhaseType::CHAMPIONNAT) {
+                        $phase->setAllerRetour((bool) $valeur);
+                    }
+                },
+            ])
             // Barrages (D43) : qui reçoit le match ; enregistré dans les options de la phase, seulement pour un barrage
             ->add('reception', ChoiceType::class, [
                 'label' => 'Qui reçoit le match ?',

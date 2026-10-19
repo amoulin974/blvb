@@ -78,6 +78,26 @@ class Phase
     public const SETS_GAGNANTS_DEFAUT = 3;
     public const SETS_GAGNANTS_COURT = 2;
 
+    /**
+     * Option d'un championnat (A2, D47) : chaque équipe rencontre deux fois chaque autre, le retour reprenant les
+     * journées de l'aller dans le même ordre, domicile et extérieur inversés.
+     */
+    public function estAllerRetour(): bool
+    {
+        return $this->getType() === PhaseType::CHAMPIONNAT && ($this->getOptions()['aller_retour'] ?? false) === true;
+    }
+
+    public function setAllerRetour(bool $allerRetour): static
+    {
+        $options = $this->getOptions();
+        unset($options['aller_retour']);
+        if ($allerRetour) {
+            $options['aller_retour'] = true;
+        }
+
+        return $this->setOptions($options);
+    }
+
     /** Durée d'un match proposée (minutes) selon le format (D49), modifiable pour la journée des finales. */
     public const DUREE_MATCH_DEFAUT = 120;
     public const DUREE_MATCH_COURT = 75;

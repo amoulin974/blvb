@@ -69,6 +69,17 @@
                                 </div>
                                 <p id="aide-sets-gagnants-{{ i }}" class="text-sm text-(--color-base-content)/80">Trois sets gagnants : le match se termine à 3–0, 3–1 ou 3–2. Deux sets gagnants : il se termine à 2–0 ou 2–1, donc plus vite. Le barème de la saison s'applique dans les deux cas : la victoire est forte quand l'adversaire n'a pris aucun set (3–0, 3–1 ou 2–0), faible sinon. Par défaut : trois sets gagnants.</p>
                             </fieldset>
+                            {% if not finale and not barrage %}
+                                <div>
+                                    <label class="flex min-h-11 items-start gap-2 py-2">
+                                        {{ form_widget(phaseForm.allerRetour, {attr: {class: 'checkbox mt-0.5', 'aria-describedby': 'aide-aller-retour-' ~ i}}) }}
+                                        <span>Matchs aller et retour<span class="sr-only"> ({{ phase.nom }})</span></span>
+                                    </label>
+                                    <p id="aide-aller-retour-{{ i }}" class="pl-8 text-sm text-(--color-base-content)/80">Chaque équipe rencontre deux fois chaque autre : le retour reprend les journées de l'aller, domicile et extérieur inversés. Les journées sont doublées (6 équipes : 10 journées au lieu de 5), prévoyez assez de semaines : l'étape Journées signale une phase trop courte.</p>
+                                </div>
+                            {% else %}
+                                <div hidden>{{ form_widget(phaseForm.allerRetour) }}</div>
+                            {% endif %}
                             {% if finale %}
                                 <div>
                                     <label class="flex min-h-11 items-start gap-2 py-2">

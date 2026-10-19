@@ -317,7 +317,14 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - **Durée d'un match (D49)** : réglable pour la journée des finales seulement (choix de l'utilisateur), proposée
   selon le format : 120 minutes en 3 sets gagnants, 75 en 2 sets (`Phase::dureeMatchParDefaut`, SET-05) ; l'agenda
   `.ics` (2 h) et le calendrier d'administration (1 h) gardent leur durée fixe.
-- **Reste du lot 6** : 6f-2 aller-retour en miroir (D47) ; vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
+- **6f-2 fait, aller-retour (D47)** : `Phase::estAllerRetour` (option `aller_retour`, championnat seulement) ;
+  `Championnat` double journées et matchs, `genererMatchs` crée le retour inversé ; l'optimiseur de `PartieService`
+  travaille sur 2R rondes dont la seconde moitié est le miroir de la première : la recherche locale bascule
+  ensemble un match de l'aller et son retour (`groupesBasculables`, `jumeau`, `basculer`) et échange les rondes avec
+  leurs retours, ce qui garde le miroir et l'équilibre domicile / extérieur ; le replacement des matchs à venir fige un
+  groupe dès qu'un de ses matchs est joué. Case « Matchs aller et retour » à l'étape Phases, relue par l'ergonome et le
+  webdesigner. 538 tests verts + 2 lents (l'aller simple est inchangé, les tests existants passent sans modification).
+- **Reste du lot 6** : vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
