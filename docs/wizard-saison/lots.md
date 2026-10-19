@@ -170,6 +170,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] 6f-2. Aller-retour (A2), retour en miroir (D47) : option `aller_retour` du championnat, journées et matchs doublés,
       retour dérivé de l'aller par l'optimiseur (un match de l'aller et son retour s'inversent ensemble, les rondes
       s'échangent avec leurs retours), replacement des matchs à venir compatible, case à l'étape Phases ; ALR-01 à ALR-07
+- [ ] 6g. Barrages de fin de phase 2, sans effet sur la phase finale, qui décident de la saison suivante (D50) : plan à valider
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 
 ## À faire hors lots (relevé en relecture)

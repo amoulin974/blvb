@@ -416,6 +416,18 @@ gardent leur durée actuelle ; un réglage par phase ou par saison reste possibl
 l'utilisateur, 19/10/2026 (périmètre : journée des finales seulement). Remplace l'ancien défaut de 90 minutes.
 *(2026-10-19, lot 6)*
 
+## D50. Barrages de fin de phase 2 : sans effet sur la phase finale, ils décident de la saison suivante
+**Décision** (point 6 de F2, utilisateur, 19/10/2026) : dans le modèle BLVB, la phase 2 se termine aussi par des barrages
+entre poules voisines (avant-dernier de la poule N contre 2e de la poule N+1, comme en fin de phase 1, D44). Ces
+barrages **n'influencent pas la phase finale** : les tableaux finaux sont alimentés par le classement de la phase 2,
+comme aujourd'hui. Ils **déterminent seulement le niveau de la saison suivante** : le vainqueur est placé dans la poule
+supérieure, le perdant dans la poule inférieure ; les autres équipes suivent les montées et descentes directes de la
+phase 2 (1er monte, dernier descend). Les barrages se jouent en même temps que la phase finale.
+**Conséquences à traiter** (plan à valider, voir `lots.md`, 6g) : une équipe peut avoir deux destinations en fin de
+phase 2 (son tableau final et son barrage) ; la saison suivante se lit dans les règles de plusieurs phases, pas d'une
+seule ; la dernière phase doit pouvoir être clôturée.
+*(2026-10-19, lot 6)*
+
 ---
 
 ## Points ouverts
