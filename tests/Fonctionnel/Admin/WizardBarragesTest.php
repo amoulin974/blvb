@@ -72,7 +72,9 @@ final class WizardBarragesTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Barrages');
         self::assertSelectorTextContains('body', 'Qui reçoit le match ?');
-        self::assertSelectorTextContains('body', 'Ajouter un match');
+        // Texte du bouton d'ajout selon le type enregistré : la variante active (sans .type-inactif) d'au moins une phase
+        $actifs = $crawler->filter('button[value^="ajouter-poule"] .selon-type > span:not(.type-inactif)')->each(fn ($s) => $s->text());
+        self::assertContains('Ajouter un match', $actifs);
 
         $valeurs = $crawler->filter('#wizard-form')->form()->getPhpValues();
         $index = null;

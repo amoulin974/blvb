@@ -7,6 +7,10 @@
 {% macro lister(champ, nom, ancre) %}{% for err in champ.vars.errors %}<li><a class="link link-primary inline-flex min-h-11 items-center" href="{{ champ.parent is null or champ.vars.compound ? ancre : '#' ~ champ.vars.id }}">{{ nom }} : {{ err.message }}</a></li>{% endfor %}{% for enfant in champ %}{{ _self.lister(enfant, nom, ancre) }}{% endfor %}{% endmacro %}
 
 
+{# Texte qui suit le type de phase coché, avant même l'enregistrement : un span par type (valeur de PhaseType),
+   seul celui du type enregistré est visible sans :has() (app.css, .selon-type) #}
+{% macro selon_type(textes, actuel) %}<span class="selon-type">{% for valeur, texte in textes %}<span data-type="{{ valeur }}"{% if valeur != actuel %} class="type-inactif"{% endif %}>{{ texte }}</span>{% endfor %}</span>{% endmacro %}
+
 {% block contenu %}
     {% import _self as m %}
     {% form_theme form 'admin/form/erreurs.html.twig' %}
@@ -52,7 +56,7 @@
                 {% set unite = barrage ? (nbPoules > 1 ? 'matchs' : 'match') : (finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule')) %}
                 {% set element = barrage ? 'match' : (finale ? 'tableau' : 'poule') %}
                 {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
-                <li id="phase-{{ i }}" tabindex="-1" class="rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
+                <li id="phase-{{ i }}" tabindex="-1" class="phase-wizard rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
                     <div class="flex flex-wrap items-center gap-2 p-3">
                         <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 + figees|length }}.</span> {{ phase.nom }}</span>
                         <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
@@ -76,7 +80,7 @@
                                         </label>
                                     {% endfor %}
                                 </div>
-                                <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés.</p>
+                                <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés. Les réglages propres à un type s'affichent après l'enregistrement.</p>
                             </fieldset>
                             <fieldset class="fieldset fieldset-formulaire border border-base-300 rounded-box p-3" aria-describedby="aide-sets-gagnants-{{ i }}">
                                 <legend class="fieldset-legend">{{ phaseForm.setsGagnants.vars.label }}<span class="sr-only"> ({{ phase.nom }})</span></legend>
@@ -162,23 +166,23 @@
                             </div>
 
                             <fieldset class="fieldset border border-base-300 rounded-box p-3">
-                                <legend class="fieldset-legend">{{ barrage ? 'Matchs de barrage' : (finale ? 'Tableaux' : 'Poules') }}</legend>
+                                <legend class="fieldset-legend">{{ m.selon_type({0: 'Poules', 1: 'Tableaux', 2: 'Matchs de barrage'}, phase.type.value) }}</legend>
                                 {# Tableau sur grand écran, une carte par poule sur téléphone (.table-empilee) #}
                                 <table class="table table-admin table-empilee">
-                                    <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                                    <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Nombre d'équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
                                     <tbody>
                                     {% for j, pouleForm in phaseForm.poules %}
                                         {% set nomPoule = pouleForm.vars.data.nom %}
                                         <tr>
-                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ' ~ element ~ ' ' ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
+                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ligne ' ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
                                             <td data-label="Niveau">{{ form_widget(pouleForm.niveau, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Niveau, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.niveau) }}</td>
-                                            <td data-label="Équipes prévues">{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Équipes prévues, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
+                                            <td data-label="Nombre d'équipes prévues">{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Nombre d\'équipes prévues, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
                                             <td class="pleine-largeur text-right"><button type="submit" name="action" value="supprimer-poule-{{ i }}-{{ j }}" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer {{ nomPoule }} de {{ phase.nom }}" data-turbo-confirm="Supprimer {{ nomPoule }} de {{ phase.nom }} ? Les passages qui en partent ou y arrivent seront supprimés.">{{ icone.i('poubelle') }} Supprimer</button></td>
                                         </tr>
                                     {% endfor %}
                                     </tbody>
                                 </table>
-                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter {{ barrage ? 'un match' : (finale ? 'un tableau' : 'une poule') }}</button></div>
+                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} {{ m.selon_type({0: 'Ajouter une poule', 1: 'Ajouter un tableau', 2: 'Ajouter un match'}, phase.type.value) }}</button></div>
                             </fieldset>
 
                             <details class="rounded-box border border-dashed border-base-300 p-3">

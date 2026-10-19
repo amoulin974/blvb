@@ -104,6 +104,20 @@ final class WizardFormatMatchTest extends TestFonctionnel
         self::assertSame('75', $duree());
     }
 
+    #[TestDox('WIZ-30 Étape 3 : la légende des poules et le bouton d\'ajout ont une variante par type de phase, seule celle du type enregistré est active ; colonne « Nombre d\'équipes prévues »')]
+    public function test_libelles_selon_le_type(): void
+    {
+        $saison = $this->brouillon();
+        $crawler = $this->client->request('GET', '/admin/saison/'.$saison->getId().'/wizard/3');
+
+        $phase = $crawler->filter('li.phase-wizard')->first(); // Phase 1, championnat
+        self::assertSame(['Poules', 'Ajouter une poule'], $phase->filter('.selon-type > span:not(.type-inactif)')->each(fn ($s) => $s->text()));
+        self::assertSame(['Tableaux', 'Matchs de barrage', 'Ajouter un tableau', 'Ajouter un match'], $phase->filter('.selon-type > span.type-inactif')->each(fn ($s) => $s->text()));
+        self::assertSame(['0', '0'], $phase->filter('.selon-type > span:not(.type-inactif)')->each(fn ($s) => $s->attr('data-type')));
+        self::assertGreaterThan(0, $crawler->filter('th:contains("Nombre d\'équipes prévues")')->count());
+        self::assertSelectorNotExists('th:contains("Équipes prévues")');
+    }
+
     #[TestDox('SET-04 Une valeur inconnue envoyée pour le format est refusée, rien n\'est enregistré')]
     public function test_valeur_inconnue(): void
     {

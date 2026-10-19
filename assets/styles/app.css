@@ -220,6 +220,18 @@ body{
 .btn-ajout { border-style: dashed; }
 .badge-ecart { border-color: var(--color-warning); }
 .champ-court { width: 6rem; }
+/* Wizard, étape Phases : textes qui suivent le type de phase coché avant l'enregistrement (macro selon_type).
+   Sans :has(), seul le texte du type enregistré s'affiche. */
+.selon-type > .type-inactif { display: none; }
+@supports selector(:has(*)) {
+  /* Seulement si un type est coché : sinon (type refusé, aucun choix coché) le repli .type-inactif s'applique */
+  .phase-wizard:has(input[name$="[type]"]:checked) .selon-type > [data-type] { display: none; }
+  .phase-wizard:has(input[name$="[type]"][value="0"]:checked) .selon-type > [data-type="0"],
+  .phase-wizard:has(input[name$="[type]"][value="1"]:checked) .selon-type > [data-type="1"],
+  .phase-wizard:has(input[name$="[type]"][value="2"]:checked) .selon-type > [data-type="2"] { display: inline; }
+}
+/* En-têtes de tableau de l'admin posés sur le filet, même quand un voisin passe sur deux lignes */
+.table-admin thead th { vertical-align: bottom; }
 /* Fieldset de formulaire : texte à taille normale (daisyUI impose .75rem à .fieldset) */
 .fieldset-formulaire { font-size: 1rem; }
 /* Cibles tactiles de 44 px dans l'admin */
@@ -228,7 +240,7 @@ body{
 @media (max-width: 47.99rem) {
   .table-empilee thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   .table-empilee, .table-empilee tbody { display: block; }
-  .table-empilee tr { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); }
+  .table-empilee tr { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 0.5rem 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); }
   .table-empilee td { display: block; padding: 0; }
   .table-empilee td.pleine-largeur { grid-column: 1 / -1; }
   .table-empilee td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 70%, transparent); }

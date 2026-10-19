@@ -27,7 +27,7 @@ class PouleWizardType extends AbstractType
                 'constraints' => [new Assert\NotBlank(message: 'Indiquez le niveau de la poule.'), new Assert\Range(min: 1, max: EtapePassages::NIVEAU_MAX, notInRangeMessage: 'Le niveau est un nombre de {{ min }} à {{ max }}.')],
             ])
             ->add('nbEquipesPrevu', IntegerType::class, [
-                'label' => 'Équipes prévues',
+                'label' => 'Nombre d\'équipes prévues',
                 'required' => false,
                 'constraints' => [new Assert\Range(min: 2, max: 40, notInRangeMessage: 'Entre {{ min }} et {{ max }} équipes.')],
             ])
