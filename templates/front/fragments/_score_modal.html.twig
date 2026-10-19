@@ -1,7 +1,7 @@
 {# Fenêtre de saisie du résultat d'un match (score-modal-controller.js) : à placer dans un élément data-controller="score-modal".
    Validée par l'ergonome (octobre 2026) :
    - le forfait se choisit dans des options qui nomment les équipes (plus de « F » à taper) ;
-   - sets en champs numériques 0 à 3, score impossible signalé dans la fenêtre avant l'envoi ;
+   - sets en champs numériques 0 à 3 (0 à 2 en format court : data-sets-gagnants), score impossible signalé dans la fenêtre avant l'envoi ;
    - résumé en direct des points attribués, selon le barème de la saison du match ;
    - « Effacer le score » explicite ; erreurs affichées dans la fenêtre (pas d'alerte du navigateur) ;
    - options et champs d'au moins 44 px de haut (mobile).
@@ -32,11 +32,13 @@
         </fieldset>
 
         <fieldset class="mt-4 disabled:opacity-50" data-score-modal-target="sets">
-            <legend class="text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80 mb-1">Sets gagnés</legend>
+            <legend class="text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80 mb-1">Sets gagnés <span data-score-modal-target="formatSets" class="normal-case font-normal"></span></legend>
             {# Règle 1R du règlement, rappelée quand « Match interrompu » est choisi #}
             <p class="mb-2 text-sm text-(--color-base-content)/80 hidden" data-score-modal-target="aideInterrompu">
-                Partie interrompue (coupure de courant, fermeture du gymnase, blessure obligeant à finir à 4) : 2–1, 2–2, 1–1 ou 1–0.
-                Si une équipe menait dans le set en cours, elle est déclarée vainqueur : comptez ce set pour elle.
+                Partie interrompue (coupure de courant, fermeture du gymnase, blessure obligeant à finir à 4) :
+                <span data-score-modal-target="aide3Sets">2–1, 2–2, 1–1 ou 1–0.
+                Si une équipe menait dans le set en cours, elle est déclarée vainqueur : comptez ce set pour elle.</span>
+                <span data-score-modal-target="aide2Sets" class="hidden">1–1 ou 1–0 (match en 2 sets gagnants), sans point pour les deux équipes.</span>
                 <a class="link link-primary whitespace-nowrap" href="{{ path('front_reglement') }}#regle-1r" target="_blank" rel="noopener">Lire la règle 1R<span class="sr-only"> (s'ouvre dans un nouvel onglet)</span></a>
             </p>
             {# Les deux colonnes ont la même hauteur (grille) : mt-auto garde les champs alignés en bas,

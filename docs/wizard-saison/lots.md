@@ -163,7 +163,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
       `PlanningFinales`, dates des journées (`Elimination`), vérification, copie ; écran de l'étape Phases relu par
       l'ergonome, le webdesigner et la sécurité ; JFI-01 à JFI-05, WIZ-28, WIZ-29. Petite finale d'un tableau de 4
       équipes corrigée
-- [ ] 6f. Aller-retour (A2), retour en miroir (D47) ; format de match par phase, 3 ou 2 sets gagnants (D48)
+- [x] 6f-1. Format de match par phase, 3 ou 2 sets gagnants (D48) : option `sets_gagnants` (`Phase::getSetsGagnants`),
+      `RegleSport` et `Volley` paramétrés (`$setsGagnants`), classement par format de phase, API et fenêtre de saisie
+      du score, choix dans l'étape Phases ; relu par l'ergonome et le webdesigner (règle 1R en format court, règlement
+      public, `fieldset-formulaire`) ; SET-01 à SET-04
+- [ ] 6f-2. Aller-retour (A2), retour en miroir (D47)
 - [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
 
 ## À faire hors lots (relevé en relecture)

@@ -7,6 +7,8 @@ use App\Competition\Sport\Bareme;
 use App\Competition\Sport\RegleSport;
 use App\Competition\Sport\Sports;
 use App\Entity\Equipe;
+use App\Entity\Partie;
+use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Classement;
 use App\Entity\Saison;
@@ -106,8 +108,8 @@ class ClassementService
     private function pointsEquipe(Equipe $equipe, RegleSport $sport, Bareme $bareme, ?Poule $pouleContext): int
     {
         $points = 0;
-        foreach ($this->scoresEquipe($equipe, $pouleContext) as [$pour, $contre]) {
-            $points += $sport->points($pour, $contre, $bareme);
+        foreach ($this->scoresEquipe($equipe, $pouleContext) as [$pour, $contre, $setsGagnants]) {
+            $points += $sport->points($pour, $contre, $bareme, $setsGagnants);
         }
 
         return $points;
@@ -144,6 +146,7 @@ class ClassementService
             }
         }
 
+        $setsGagnants = $poule->getPhase()?->getSetsGagnants() ?? Phase::SETS_GAGNANTS_DEFAUT;
         $groupes = [];
         foreach ($classements as $i => $ligne) {
             $cle = json_encode(array_map(fn (CritereDepartage $c) => (string) self::valeur($c, $ligne), $precedents));
@@ -170,8 +173,8 @@ class ClassementService
                     } else {
                         continue;
                     }
-                    $points += $sport->points($pour, $contre, $bareme);
-                    [$gagnes, $perdus] = $sport->statistiques($pour, $contre);
+                    $points += $sport->points($pour, $contre, $bareme, $setsGagnants);
+                    [$gagnes, $perdus] = $sport->statistiques($pour, $contre, $setsGagnants);
                     $sets += $gagnes - $perdus;
                 }
                 $classements[$i]['mini'] = [$points, $sets];
@@ -187,8 +190,8 @@ class ClassementService
     private function statistiquesEquipe(Equipe $equipe, RegleSport $sport, ?Poule $pouleContext = null): array
     {
         $marques = $encaisses = 0;
-        foreach ($this->scoresEquipe($equipe, $pouleContext) as [$pour, $contre]) {
-            [$m, $e] = $sport->statistiques($pour, $contre);
+        foreach ($this->scoresEquipe($equipe, $pouleContext) as [$pour, $contre, $setsGagnants]) {
+            [$m, $e] = $sport->statistiques($pour, $contre, $setsGagnants);
             $marques += $m;
             $encaisses += $e;
         }
@@ -196,22 +199,27 @@ class ClassementService
         return [$marques, $encaisses];
     }
 
+    private static function setsGagnants(Partie $partie): int
+    {
+        return $partie->getPoule()?->getPhase()?->getSetsGagnants() ?? Phase::SETS_GAGNANTS_DEFAUT;
+    }
+
     /**
-     * Scores des matchs de l'équipe de son point de vue (ce qu'elle a marqué, ce que l'adversaire a marqué),
-     * à domicile puis à l'extérieur, limités à la poule si elle est donnée.
+     * Scores des matchs de l'équipe de son point de vue (ce qu'elle a marqué, ce que l'adversaire a marqué) et sets à
+     * gagner dans la phase du match (D48), à domicile puis à l'extérieur, limités à la poule si elle est donnée.
      *
-     * @return iterable<array{?int, ?int}>
+     * @return iterable<array{?int, ?int, int}>
      */
     private function scoresEquipe(Equipe $equipe, ?Poule $pouleContext): iterable
     {
         foreach ($equipe->getPartiesReception() as $partie) {
             if (!$pouleContext || $partie->getPoule() === $pouleContext) {
-                yield [$partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement()];
+                yield [$partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement(), self::setsGagnants($partie)];
             }
         }
         foreach ($equipe->getPartiesDeplacement() as $partie) {
             if (!$pouleContext || $partie->getPoule() === $pouleContext) {
-                yield [$partie->getNbSetGagnantDeplacement(), $partie->getNbSetGagnantReception()];
+                yield [$partie->getNbSetGagnantDeplacement(), $partie->getNbSetGagnantReception(), self::setsGagnants($partie)];
             }
         }
     }

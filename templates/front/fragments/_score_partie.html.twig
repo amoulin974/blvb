@@ -37,6 +37,7 @@
             data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}"
             data-score-reception="{{ partie.getNbSetGagnantReception }}"
             data-score-deplacement="{{ partie.getNbSetGagnantDeplacement }}"
+            data-sets-gagnants="{{ partie.poule.phase.setsGagnants }}"
             data-bareme="{{ {victoireForte: saison.pointsVictoireForte, victoireFaible: saison.pointsVictoireFaible, defaiteForte: saison.pointsDefaiteForte, defaiteFaible: saison.pointsDefaiteFaible, forfait: saison.pointsForfait}|json_encode }}"
         {% endset %}
         <a href="#"

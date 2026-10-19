@@ -7,6 +7,7 @@ use App\Competition\Sport\Sports;
 use App\Entity\Equipe;
 use App\Enum\PhaseType;
 use App\Entity\Partie;
+use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\User;
 use App\Form\Front\UserChangePasswordType;
@@ -466,6 +467,8 @@ final class FrontController extends AbstractController
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
 
         $sport = $sports->pourSaison($partie->getPoule()?->getPhase()?->getSaison());
+        // Format de match de la phase (D48) : 3 sets gagnants, ou 2
+        $setsGagnants = $partie->getPoule()?->getPhase()?->getSetsGagnants() ?? Phase::SETS_GAGNANTS_DEFAUT;
 
         if (trim($data['scoreReception']) === '' && trim($data['scoreDeplacement']) === ''){
             //Les deux champs vides : on efface le score (ex. score saisi par erreur sur un match non joué)
@@ -475,7 +478,7 @@ final class FrontController extends AbstractController
         } elseif ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
             //Cas d'une forfait : score enregistré selon le sport (volley : -1 set pour l'équipe forfait, 3 pour l'autre)
             if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
-            [$scoreReception, $scoreDeplacement] = $sport->scoreForfait($data['scoreReception'] === 'F');
+            [$scoreReception, $scoreDeplacement] = $sport->scoreForfait($data['scoreReception'] === 'F', $setsGagnants);
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);
             $newScore = ScoreExtension::sets($scoreReception) . ' - ' . ScoreExtension::sets($scoreDeplacement);
@@ -487,7 +490,7 @@ final class FrontController extends AbstractController
             if (!$entier($data['scoreReception']) || !$entier($data['scoreDeplacement'])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
             $scoreReception = (int) $data['scoreReception'];
             $scoreDeplacement = (int) $data['scoreDeplacement'];
-            if (!$sport->estValide($scoreReception, $scoreDeplacement)) throw new Exception($sport->messageScoreInvalide());
+            if (!$sport->estValide($scoreReception, $scoreDeplacement, $setsGagnants)) throw new Exception($sport->messageScoreInvalide($setsGagnants));
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);

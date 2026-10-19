@@ -60,6 +60,15 @@
                                 </div>
                                 <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés.</p>
                             </fieldset>
+                            <fieldset class="fieldset fieldset-formulaire border border-base-300 rounded-box p-3" aria-describedby="aide-sets-gagnants-{{ i }}">
+                                <legend class="fieldset-legend">{{ phaseForm.setsGagnants.vars.label }}<span class="sr-only"> ({{ phase.nom }})</span></legend>
+                                <div class="flex flex-wrap gap-x-6">
+                                    {% for choix in phaseForm.setsGagnants %}
+                                        <label class="flex min-h-11 items-center gap-2">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</label>
+                                    {% endfor %}
+                                </div>
+                                <p id="aide-sets-gagnants-{{ i }}" class="text-sm text-(--color-base-content)/80">Trois sets gagnants : le match se termine à 3–0, 3–1 ou 3–2. Deux sets gagnants : il se termine à 2–0 ou 2–1, donc plus vite. Le barème de la saison s'applique dans les deux cas : la victoire est forte quand l'adversaire n'a pris aucun set (3–0, 3–1 ou 2–0), faible sinon. Par défaut : trois sets gagnants.</p>
+                            </fieldset>
                             {% if finale %}
                                 <div>
                                     <label class="flex min-h-11 items-start gap-2 py-2">
@@ -105,7 +114,7 @@
                                 <fieldset class="fieldset border border-base-300 rounded-box p-3">
                                     <legend class="fieldset-legend">Qui reçoit le match ?</legend>
                                     {{ form_widget(phaseForm.reception, {attr: {class: 'select select-bordered w-full max-w-xl', 'aria-label': 'Qui reçoit le match ? ' ~ phase.nom}}) }}
-                                    <p class="mt-2 text-sm text-(--color-base-content)/80">Chaque match oppose deux équipes de poules voisines. Un seul match, en trois sets gagnants. Le vainqueur et le perdant jouent ensuite dans les poules que vous indiquez à l'étape Passages.</p>
+                                    <p class="mt-2 text-sm text-(--color-base-content)/80">Chaque match oppose deux équipes de poules voisines. Un seul match, en {{ phase.setsGagnants == 2 ? 'deux' : 'trois' }} sets gagnants (format réglé plus haut). Le vainqueur et le perdant jouent ensuite dans les poules que vous indiquez à l'étape Passages.</p>
                                 </fieldset>
                             {% else %}
                                 <div hidden>{{ form_widget(phaseForm.reception) }}</div>

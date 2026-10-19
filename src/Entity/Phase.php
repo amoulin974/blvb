@@ -74,6 +74,10 @@ class Phase
     public const RECEPTION_MIEUX_CLASSE = 'mieux_classe';
     public const RECEPTION_NEUTRE = 'neutre';
 
+    /** Format de match (D48) : nombre de sets à gagner, 3 par défaut. */
+    public const SETS_GAGNANTS_DEFAUT = 3;
+    public const SETS_GAGNANTS_COURT = 2;
+
     /** Journée des finales (D45) : tours regroupés le même jour. */
     public const TOURS_FINALES = 'finales';
     public const TOURS_DEMI_FINALES = 'demi_finales';
@@ -253,6 +257,27 @@ class Phase
         }
 
         return $option['tours'] === self::TOURS_DEMI_FINALES ? 2 : 1;
+    }
+
+    /**
+     * Option de toute phase (D48) : nombre de sets à gagner pour remporter un match, 3 par défaut, 2 en format court.
+     * Toute autre valeur enregistrée est lue comme 3.
+     */
+    public function getSetsGagnants(): int
+    {
+        return ($this->getOptions()['sets_gagnants'] ?? null) === self::SETS_GAGNANTS_COURT ? self::SETS_GAGNANTS_COURT : self::SETS_GAGNANTS_DEFAUT;
+    }
+
+    /** Le format par défaut (3 sets gagnants) n'est pas écrit dans les options. */
+    public function setSetsGagnants(int $sets): static
+    {
+        $options = $this->getOptions();
+        unset($options['sets_gagnants']);
+        if ($sets === self::SETS_GAGNANTS_COURT) {
+            $options['sets_gagnants'] = $sets;
+        }
+
+        return $this->setOptions($options);
     }
 
     /** Option d'un tableau à élimination : un match pour la 3e place entre les perdants des demi-finales (B2). */

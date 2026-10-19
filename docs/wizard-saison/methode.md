@@ -299,6 +299,24 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   de 60 minutes pour la journée des finales en 2 sets, avis de l'ergonome), 6c bis (relecture navigateur des barrages).
   Reporté (webdesigner) : contraste des `.label` de daisyUI (≈ 4,4:1) et taille de texte des autres fieldsets de l'étape.
 
+### 2026-10-19 : lot 6f-1, format de match (2 ou 3 sets gagnants)
+
+- Reprise sur `formats-competition-lot6` après `git fetch` : le distant avait 11 commits d'avance (lot 6e, D45 à D48,
+  rappel des scores) faits depuis un autre poste ; le seul commit local (méthode, branche `prod`) a été rejoué dessus
+  (`git rebase`), conflit de `methode.md` résolu en gardant les deux versions.
+- `docs/` et un `CLAUDE.md` (consignes, pointeur vers ce chantier) ont été ajoutés à `main`.
+- **6f-1 fait** (D48) : `Phase::getSetsGagnants` (option `sets_gagnants`, 3 par défaut), `RegleSport` et `Volley`
+  prennent `$setsGagnants` ; en 2 sets : 2-0 forte, 2-1 faible, 1-2 défaite forte, 0-2 défaite faible, forfait 2 contre -1,
+  interrompu 1-1 et 1-0 sans point. `ClassementService` évalue chaque match selon la phase du match ; l'API de score
+  et la fenêtre de saisie (`data-sets-gagnants`) suivent. Choix « Format des matchs » à l'étape Phases (toutes les phases).
+- Relectures ergonome et webdesigner intégrées : règle 1R réduite à « 1–1 ou 1–0, sans point » en format court (la
+  phrase « comptez ce set pour elle » n'est gardée qu'en 3 sets), format rappelé dans la fenêtre de saisie, aide
+  raccourcie, `aria-describedby` sur le fieldset, `fieldset-formulaire`, règlement public complété. 521 tests verts.
+- **À décider avec le comité** (signalé par l'ergonome) : valider que 1-1 et 1-0 valent zéro point en format court ;
+  le règlement public ne le dit pas encore (seule la phrase sur les 2 sets gagnants a été ajoutée).
+- **Reste du lot 6** : 6f-2 aller-retour en miroir (D47) ; durée de match proposée à 60 min en 2 sets pour la journée
+  des finales ; vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition-lot6 && git pull` (lot en cours, pas

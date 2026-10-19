@@ -41,6 +41,19 @@ class PhaseWizardType extends AbstractType
                 'expanded' => true,
                 'choice_label' => fn (PhaseType $type) => self::LIBELLES[$type->name][0],
             ])
+            // Format de match (D48), pour tout type de phase : nombre de sets à gagner, enregistré dans les options de la phase
+            ->add('setsGagnants', ChoiceType::class, [
+                'label' => 'Format des matchs',
+                'expanded' => true,
+                'choices' => [
+                    'Trois sets gagnants' => Phase::SETS_GAGNANTS_DEFAUT,
+                    'Deux sets gagnants' => Phase::SETS_GAGNANTS_COURT,
+                ],
+                'getter' => fn (Phase $phase): int => $phase->getSetsGagnants(),
+                'setter' => function (Phase $phase, mixed $valeur): void {
+                    $phase->setSetsGagnants((int) $valeur === Phase::SETS_GAGNANTS_COURT ? Phase::SETS_GAGNANTS_COURT : Phase::SETS_GAGNANTS_DEFAUT);
+                },
+            ])
             // Barrages (D43) : qui reçoit le match ; enregistré dans les options de la phase, seulement pour un barrage
             ->add('reception', ChoiceType::class, [
                 'label' => 'Qui reçoit le match ?',
