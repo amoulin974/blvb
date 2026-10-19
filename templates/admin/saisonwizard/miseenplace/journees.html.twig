@@ -99,7 +99,7 @@
             </table>
         {% endif %}
 
-        <form id="wizard-form" method="post" action="{{ url }}" data-controller="poules-pliables">
+        <form id="wizard-form" method="post" action="{{ url }}" data-controller="poules-pliables position-defilement" data-action="submit->position-defilement#memoriser">
             <input type="hidden" name="_token" value="{{ csrf_token('miseenplace' ~ saison.id) }}">
 
             {% if not etat.verrouillee and etat.sansJournee > 0 and etat.poules|filter(p => p.statut == 'aucune')|length > 0 %}

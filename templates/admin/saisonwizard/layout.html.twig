@@ -46,7 +46,8 @@
         {% if not edition %}<p class="mt-3 text-sm text-(--color-base-content)/80">Mise en place (après validation) : poules, journées, matchs.</p>{% endif %}
     </nav>
 
-    <div class="admin-carte">
+    {# Position de défilement gardée quand une action réaffiche la même étape (position_defilement_controller.js) #}
+    <div class="admin-carte" data-controller="position-defilement" data-action="submit->position-defilement#memoriser">
         <h2 id="titre-etape" class="mb-4">{% block titre_etape %}{{ etape_courante.libelle }}{% endblock %}</h2>
         {% block contenu %}{% endblock %}
     </div>

@@ -112,7 +112,7 @@
             </table>
         {% endif %}
 
-        <form id="wizard-form" method="post" data-controller="poules-pliables">
+        <form id="wizard-form" method="post" data-controller="poules-pliables position-defilement" data-action="submit->position-defilement#memoriser">
             <input type="hidden" name="_token" value="{{ csrf_token('miseenplace' ~ saison.id) }}">
             {% if not etat.verrouillee %}<p id="aide-retirer" class="mb-4 text-sm text-(--color-base-content)/80">« Retirer de la poule » : l'équipe revient dans « Équipes à placer ».</p>{% endif %}
 

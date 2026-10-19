@@ -41,6 +41,8 @@ final class WizardEnregistrerTest extends TestFonctionnel
         // Touche Entrée : le premier bouton d'envoi du formulaire dans le document est « Enregistrer » (pas une étape du stepper)
         $premier = $crawler->filter('button[type="submit"][form="wizard-form"], #wizard-form button[type="submit"]')->first();
         self::assertSame('enregistrer', $premier->attr('value'));
+        // Position de défilement gardée par les actions de l'étape (position_defilement_controller.js)
+        self::assertCount(1, $crawler->filter('[data-controller~="position-defilement"][data-action*="submit->position-defilement#memoriser"] #wizard-form'));
         $valeurs = $crawler->filter('#wizard-form')->form()->getPhpValues();
         $valeurs['phases_wizard']['phases'][0]['nom'] = 'Phase 1 renommée';
         $this->client->request('POST', $url, $valeurs + ['aller' => 'enregistrer']);
