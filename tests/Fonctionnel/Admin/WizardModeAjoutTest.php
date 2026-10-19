@@ -184,6 +184,28 @@ final class WizardModeAjoutTest extends TestFonctionnel
         self::assertCount(0, $crawler->filter('h3:contains("Phase 1 →")'));
     }
 
+    #[TestDox('ADJ-09 Phase 1 commencée mais pas clôturée : ses passages restent modifiables, vers les matchs d\'un barrage ajouté entre la phase 1 et la phase 2')]
+    public function test_passages_phase_en_cours_vers_barrage(): void
+    {
+        $this->envoyerPhases(action: 'ajouter-phase');
+        $this->envoyerPhases(['phases_wizard' => ['phases' => [1 => ['nom' => 'Barrages', 'type' => (string) PhaseType::BARRAGE->value]]]], 'monter-phase-1');
+        $this->envoyerPhases(action: 'ajouter-poule-0'); // un match dans les barrages, désormais première phase libre
+        $match = $this->phase('Barrages')->getPoules()->first();
+
+        $crawler = $this->client->request('GET', $this->url(4));
+        self::assertCount(1, $crawler->filter('h3:contains("Phase 1 → Barrages")'), 'passages de la phase 1 affichés');
+        $pouleA = $this->phase('Phase 1')->getPoules()->filter(fn ($p) => $p->getNom() === 'Poule A')->first();
+
+        // Le 3e de la poule A va dans le match de barrage
+        $valeurs = $crawler->filter('#wizard-form')->form()->getPhpValues();
+        $valeurs['p'][$pouleA->getId()] = ['mode' => 'detail', 'r' => [['du' => '3', 'au' => '3', 'dest' => 'p:'.$match->getId()]]];
+        $this->client->request('POST', $this->url(4), $valeurs + ['aller' => 'suivant']);
+        self::assertResponseRedirects($this->url(6));
+
+        $destinations = array_map(fn ($r) => $r->getPouleDestination()?->getNom(), $this->phase('Phase 1')->getReglesDePassage()->toArray());
+        self::assertContains($match->getNom(), $destinations);
+    }
+
     #[TestDox('ADJ-06 Navigation du mode ajout : Passages → Vérification (sans Classement), Vérification → Passages')]
     public function test_navigation(): void
     {

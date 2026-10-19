@@ -181,7 +181,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       commencées (`ModeAjout::phasesFigees`) en lecture seule, nouvelle phase ajoutée à la fin puis remontée parmi les
       phases libres ; passages d'une phase clôturée ou vers une phase commencée figés ; suppression refusée si une
       phase commencée y envoie des équipes ; lien « Ajouter des phases » sur « Modifier la saison ». Relu par l'ergonome,
-      le webdesigner et la sécurité (3 constats mineurs corrigés) ; ADJ-01 à ADJ-08
+      le webdesigner et la sécurité (3 constats mineurs corrigés) ; ADJ-01 à ADJ-09
 - [ ] Bilan de fin de lot : relecture globale et journal
 
 ## À faire hors lots (relevé en relecture)
