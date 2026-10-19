@@ -586,8 +586,9 @@ class SaisonWizardController extends AbstractController
     }
 
     /**
-     * Après enregistrement d'une étape : bouton « aller » = precedent, suivant, verification, quitter ou un numéro
-     * d'étape déjà vue. L'étape atteinte est mémorisée pour reprendre le brouillon.
+     * Après enregistrement d'une étape : bouton « aller » = precedent, suivant, verification, quitter, enregistrer (rester
+     * sur l'étape, alertes recalculées) ou un numéro d'étape déjà vue. L'étape atteinte est mémorisée pour reprendre le
+     * brouillon.
      */
     private function naviguer(Request $request, Saison $saison, int $etape, EntityManagerInterface $em): Response
     {
@@ -607,6 +608,11 @@ class SaisonWizardController extends AbstractController
             $this->addFlash('success', sprintf('Brouillon « %s » enregistré. Reprenez-le depuis la liste des saisons.', $saison->getNom()));
 
             return $this->redirectToRoute('admin_saison_index');
+        }
+        if ($aller === 'enregistrer') {
+            $this->addFlash('success', 'Modifications enregistrées. Les alertes ci-dessous sont à jour.');
+
+            return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => $etape]);
         }
         $cible = match (true) {
             $aller === 'precedent' => $etape - 1,

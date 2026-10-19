@@ -24,6 +24,9 @@
         retour: {url: path('admin_saison_index'), label: 'Saisons'},
     }) }}
 
+    {# Bouton par défaut du formulaire (touche Entrée dans un champ) : le premier bouton d'envoi dans l'ordre du document.
+       Sans lui, ce serait une étape du stepper ci-dessous : Entrée enregistrerait puis changerait d'étape. #}
+    {% if etape|default(0) >= 2 and etape|default(0) <= 5 %}<button type="submit" form="wizard-form" name="aller" value="enregistrer" class="sr-only" tabindex="-1" aria-hidden="true">Enregistrer</button>{% endif %}
     <nav aria-label="Étapes de la saison" class="mb-6">
         <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Organisation</p>
         <ol class="steps steps-wizard w-full">
