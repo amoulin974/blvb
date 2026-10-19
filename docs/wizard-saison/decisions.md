@@ -448,6 +448,19 @@ quand la saison de production a été créée (barrages entre phase 1 et phase 2
 Préféré à un bouton dédié « Ajouter des barrages » (plus souple : tout format de phase peut s'ajouter).
 *(2026-10-19, lot 6)*
 
+## D52. Page « Modifier la poule » : retouches seulement, la composition reste dans la mise en place
+**Décision** (utilisateur, 19/10/2026, sur proposition de l'ergonome et du webdesigner) : la page d'administration
+« Modifier la poule » ne sert plus qu'aux retouches.
+- **Champs** : nom et niveau ; la phase et la saison ne se changent plus et figurent dans le sous-titre de la page
+  (déplacer une poule casse ses journées, matchs et passages : on la supprime puis on la recrée dans le wizard) ; les
+  journées sortent du formulaire (écran « Calendrier des journées »).
+- **Équipes** : liste en lecture seule, avec un lien vers l'étape « Poules » de la mise en place tant que la composition de
+  la phase n'est pas verrouillée (D36, D38).
+- **Phase commencée** (ModeAjout::commencee, D51) : seul le nom se modifie, le niveau est verrouillé côté serveur, la
+  suppression n'est plus proposée sur cette page. **Phase clôturée** : page en lecture seule.
+- Après enregistrement : retour à la page de la saison, sur la poule.
+*(2026-10-19, hors lots)*
+
 ---
 
 ## Points ouverts

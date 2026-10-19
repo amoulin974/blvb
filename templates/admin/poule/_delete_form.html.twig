@@ -1,11 +1,12 @@
 {# Suppression d'une poule. Variables facultatives : declencheur_classe (bouton), sinon zone de suppression. #}
+{% set nbJ = poule.journees|length %}{% set nbM = poule.parties|length %}{% set nbE = poule.equipes|length %}
 {% set confirmation = {
     titre: 'Supprimer la poule ' ~ poule.nom ~ ' (' ~ poule.phase.nom ~ ') ?',
     action: path('admin_poule_delete', {id: poule.id}),
     token: csrf_token('delete' ~ poule.id),
     consequences: [
-        poule.journees|length ~ ' journée(s) et ' ~ poule.parties|length ~ ' match(s) avec leurs scores seront supprimés.',
-        'Les ' ~ poule.equipes|length ~ ' équipe(s) seront retirées de la poule ; elles sont conservées.',
+        nbJ == 0 and nbM == 0 ? 'Aucune journée ni aucun match à supprimer.' : nbJ ~ (nbJ > 1 ? ' journées et ' : ' journée et ') ~ nbM ~ (nbM > 1 ? ' matchs' : ' match') ~ ' avec leurs scores seront supprimés.',
+        nbE > 1 ? 'Les ' ~ nbE ~ ' équipes seront retirées de la poule ; elles sont conservées.' : (nbE == 1 ? 'L\'équipe sera retirée de la poule ; elle est conservée.' : 'La poule n\'a aucune équipe.'),
     ],
 } %}
 {% if declencheur_classe is defined %}

@@ -116,7 +116,7 @@
                                             {% for equipe in poule.equipes %}
                                                 <li><a class="font-display font-medium tracking-wide hover:underline" href="{{ path('admin_equipe_show', {id: equipe.id}) }}">{{ equipe.nom }}</a></li>
                                             {% else %}
-                                                <li class="text-(--color-base-content)/80">Aucune équipe : ajoutez-en depuis « Modifier la poule ».</li>
+                                                <li class="text-(--color-base-content)/80">Aucune équipe.</li>
                                             {% endfor %}
                                         </ul>
                                     </section>
