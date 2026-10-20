@@ -1,0 +1,19 @@
+{# Codes du texte non affichés au public (RenduReglement, D55), en tête de la page d'édition ; remplacé après chaque
+   enregistrement et chaque aperçu. Variables : inapplicables (liste de {code, raison}). #}
+{% if inapplicables is not empty %}
+    {% set n = inapplicables|length %}
+    {% embed 'admin/_alerte.html.twig' with {type: 'warning', role: 'status', classe: 'mb-4'} %}
+        {% block contenu %}
+            <p class="font-semibold">{{ n }} code{{ n > 1 ? 's ne sont pas affichés' : ' n\'est pas affiché' }} au public</p>
+            <ul class="mt-1 space-y-1">
+                {% for i in inapplicables %}
+                    <li class="flex flex-wrap items-center gap-x-2">
+                        <span><code>{{ i.code }}</code> : {{ i.raison }}</span>
+                        <button type="button" class="btn btn-ghost btn-sm" data-action="reglement-editeur#allerAuCode" data-reglement-editeur-code-param="{{ i.code }}">Aller au code<span class="sr-only"> {{ i.code }}</span></button>
+                    </li>
+                {% endfor %}
+            </ul>
+            <p class="mt-1 text-sm">Liste mise à jour à chaque enregistrement et à chaque aperçu.</p>
+        {% endblock %}
+    {% endembed %}
+{% endif %}

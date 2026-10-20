@@ -124,6 +124,11 @@ final class FrontController extends AbstractController
         // texte nettoyé de nouveau (contenu repris ou importé), éléments calculés à chaque affichage, encarts des codes
         // inapplicables pour les admins seulement
         $saison = $saisonRepository->find($this->idSaisonSelected);
+        // Lien « Voir la page publique » de la page d'édition (D59) : un admin ouvre la saison modifiée, sans changer la
+        // saison choisie sur le site ; jamais un brouillon
+        if ($request->query->has('saison') && $this->isGranted('ROLE_ADMIN')) {
+            $saison = $saisonRepository->findPubliee($request->query->getInt('saison')) ?? $saison;
+        }
         $reglement = $reglementRepository->findDeSaison($saison);
         $contenu = $reglement !== null && $reglement->getContenu() !== ''
             ? $renduReglement->rendre($saison, $editionReglement->nettoyer($reglement->getContenu()), $this->isGranted('ROLE_ADMIN'))['html']

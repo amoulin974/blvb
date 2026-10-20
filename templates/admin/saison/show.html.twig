@@ -14,6 +14,7 @@
         actions: [
             {url: path('admin_saison_miseenplace_poules', {id: saison.id}), label: 'Composer les poules', icone: 'crayon'},
             {url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'},
+            {url: path('admin_reglement_edit', {id: saison.id}), label: reglement_saison(saison) ? 'Modifier le règlement' : 'Rédiger le règlement', icone: 'document'},
         ],
     }) }}
 

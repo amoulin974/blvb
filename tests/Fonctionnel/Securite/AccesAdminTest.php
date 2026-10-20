@@ -44,6 +44,8 @@ final class AccesAdminTest extends TestFonctionnel
                 'journee' => ChampionnatDeTest::get('match.reference')->getJournee()->getId(),
                 'membre' => 1,
                 'etape' => 2, // wizard de saison (la saison de référence n'est pas un brouillon : renvoi vers sa page)
+                'code' => 'departage', // élément calculé du règlement
+                'version' => 1, // version du règlement
                 default => $this->identifiant($nom),
             };
         }
@@ -60,6 +62,7 @@ final class AccesAdminTest extends TestFonctionnel
             str_starts_with($nom, 'admin_joueur_') => ChampionnatDeTest::get('joueur.joueur.a1')->getId(),
             str_starts_with($nom, 'admin_club_') => ChampionnatDeTest::get('club')->getId(),
             str_starts_with($nom, 'admin_saison') => ChampionnatDeTest::get('saison')->getId(),
+            str_starts_with($nom, 'admin_reglement_') => ChampionnatDeTest::get('saison')->getId(), // {id} = saison
             str_starts_with($nom, 'admin_phase_') => ChampionnatDeTest::get('phase.1')->getId(),
             str_starts_with($nom, 'admin_poule_') => ChampionnatDeTest::get('poule.A')->getId(),
             str_starts_with($nom, 'admin_partie_') => ChampionnatDeTest::get('poule.A')->getId(), // {id} = poule pour les calendriers et les API

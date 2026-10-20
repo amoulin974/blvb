@@ -32,6 +32,15 @@ final class EditionReglement
         return $this->reglementRepository->findDeSaison($saison) ?? (new Reglement())->setSaison($saison);
     }
 
+    /**
+     * Jeton de la version publiée, pour repérer qu'un autre admin a enregistré entre l'ouverture de la page et
+     * l'enregistrement (D59) ; vide tant que le règlement n'existe pas
+     */
+    public function jeton(Reglement $reglement): string
+    {
+        return $reglement->getId() === null ? '' : sprintf('%s-%d', $reglement->getModifieLe()?->format('U') ?? '0', $reglement->getVersions()->count());
+    }
+
     public function nettoyer(string $html): string
     {
         // Le sanitizer encode « = » dans le texte : rétabli pour garder les codes courts lisibles (« [bareme phase=P2] ») ;

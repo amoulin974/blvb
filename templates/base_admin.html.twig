@@ -80,6 +80,13 @@
                         <span class="flex flex-col leading-tight"><span>Saison en cours</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
                     </a></li>
                 {% endif %}
+                {% if saisonCourante %}
+                    {% set surReglement = route starts with 'admin_reglement_' and app.request.attributes.get('id') == saisonCourante.id %}
+                    <li><a href="{{ path('admin_reglement_edit', {id: saisonCourante.id}) }}" class="{{ lien }} {{ surReglement ? 'menu-active' }}" {% if surReglement %}aria-current="page"{% endif %}>
+                        {{ icone.i('document', 'size-5') }}
+                        <span class="flex flex-col leading-tight"><span>Règlement</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
+                    </a></li>
+                {% endif %}
                 {% set actif = route starts with 'admin_saison_' and not surSaisonCourante %}
                 <li><a href="{{ path('admin_saison_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('saison', 'size-5') }} Toutes les saisons</a></li>
             </ul>

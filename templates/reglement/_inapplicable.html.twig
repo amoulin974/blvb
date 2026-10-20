@@ -5,5 +5,6 @@
         <p class="font-semibold">Élément calculé non affiché au public</p>
         <p><code>{{ code }}</code> : {{ raison }}</p>
         <p class="text-sm">Cet encart n'est visible que des administrateurs.</p>
+        <a class="btn btn-ghost btn-sm mt-1" href="{{ path('admin_reglement_edit', {id: saison.id, code: code}) }}">Modifier le règlement</a>
     {% endblock %}
 {% endembed %}

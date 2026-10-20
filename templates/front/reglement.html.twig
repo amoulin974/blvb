@@ -17,7 +17,7 @@
                 <div id="toc" class="toc js-toc hidden lg:block bg-base-100 border border-base-300 rounded-box p-4"></div>
             </nav>
         {% endif %}
-        <article id="article-reglement" class="js-toc-content col-span-8 {{ contenu ? 'lg:col-span-6 lg:col-start-3' : 'lg:col-span-6 lg:col-start-2' }} bg-base-100 border border-base-300 rounded-box p-4 md:p-8 print:border-0 print:p-0">
+        <article id="article-reglement" class="reglement-article js-toc-content col-span-8 {{ contenu ? 'lg:col-span-6 lg:col-start-3' : 'lg:col-span-6 lg:col-start-2' }} bg-base-100 border border-base-300 rounded-box p-4 md:p-8 print:border-0 print:p-0">
             <h1>Règlement de la saison {{ saison.nom|replace({'Saison ': ''}) }}</h1>
             {% if contenu %}
                 {% if reglement.modifieLe %}
@@ -31,6 +31,7 @@
             {% else %}
                 <p>Le règlement de cette saison n'est pas encore publié.</p>
                 <p class="reglement-bloc-infos">Les règlements des autres saisons sont accessibles en changeant de saison dans le menu.</p>
+                {% if is_granted('ROLE_ADMIN') %}<a class="btn btn-accent mt-2" href="{{ path('admin_reglement_edit', {id: saison.id}) }}">Rédiger le règlement</a>{% endif %}
             {% endif %}
         </article>
     </div>

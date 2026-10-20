@@ -6,6 +6,8 @@ parameters:
     # Images des clubs (logos) envoyées depuis la fiche du club : servies par asset('uploads/clubs/…').
     # En prod, le dossier de l'application est monté depuis le serveur : les images survivent aux reconstructions.
     app.dossier_images_clubs: '%kernel.project_dir%/public/uploads/clubs'
+    # Images du règlement envoyées depuis l'éditeur (App\Reglement\ImagesReglement) : servies par asset('uploads/reglement/…')
+    app.dossier_images_reglement: '%kernel.project_dir%/public/uploads/reglement'
 # La structure d'une saison (phases, poules) ne vient plus de config/app/saison.yaml mais des modèles de saison
 # (App\Competition\Modele, docs/wizard-saison/decisions.md D6 et D10)
 
@@ -89,6 +91,7 @@ services:
 when@test:
     parameters:
         app.dossier_images_clubs: '%kernel.project_dir%/var/test/uploads/clubs'
+        app.dossier_images_reglement: '%kernel.project_dir%/var/test/uploads/reglement'
     services:
         # Services utilisés une seule fois, donc retirés du conteneur de test : rendus accessibles aux tests
         App\Competition\CopieSaison: { autowire: true, public: true }

@@ -129,6 +129,13 @@
                     </p>
                     <button type="submit" name="aller" value="5" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier le classement</button>
                 </div>
+                {% set reglement = reglement_saison(saison) %}
+                <div class="rounded-box border border-base-300 p-3">
+                    <h4>Règlement</h4>
+                    <p class="text-sm text-(--color-base-content)/80">{{ reglement and reglement.modifieLe ? 'Rédigé, mis à jour le ' ~ reglement.modifieLe|date('d/m/Y') : 'Pas encore rédigé' }}</p>
+                    {# Lien, pas un envoi : on quitte le wizard, l'étape de vérification n'a pas de champ à perdre #}
+                    <a href="{{ path('admin_reglement_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm">{{ icone.i('document') }} {{ reglement ? 'Modifier le règlement' : 'Rédiger le règlement' }}</a>
+                </div>
             </div>
             {% if saison.brouillon %}<p class="mt-4">Après validation : composition des poules{% if phases is not empty %} de « {{ (phases|first).nom }} »{% endif %}, puis journées et matchs.</p>{% endif %}
         </section>
