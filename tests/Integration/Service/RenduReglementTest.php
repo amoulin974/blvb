@@ -178,7 +178,7 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringContainsString('Le tableau sera établi à la fin de la phase précédente.', $texte);
     }
 
-    #[TestDox('RGL-08 Barème : un tableau par format de match, victoire par forfait et forfait, match interrompu (règle 1R) ; phases sans classement en une phrase')]
+    #[TestDox('RGL-08 Barème : un tableau par format de match (résultat, points du gagnant, points du perdant), forfait, match interrompu (règle 1R) ; phases sans classement en une phrase')]
     public function test_bareme(): void
     {
         $this->phase('P2')->setSetsGagnants(Phase::SETS_GAGNANTS_COURT);
@@ -187,9 +187,9 @@ final class RenduReglementTest extends TestIntegration
 
         $html = $this->rendre('<p>[bareme]</p>')['html'];
         $texte = self::texte($html);
-        self::assertStringContainsString('Phase 1 · 3 sets gagnants Résultat Points Victoire 3-0 ou 3-1 3 Victoire 3-2 2 Défaite 2-3 1 Défaite 1-3 ou 0-3 0 Victoire par forfait 3 Forfait (équipe absente) -1', $texte);
-        self::assertStringContainsString('Forfait (équipe absente) -1 Match interrompu à 2-1 (règle 1R) 2 Match interrompu à 1-2 ou 2-2 (règle 1R) 1 Match interrompu à 1-1, 1-0 ou 0-1 (règle 1R) 0', $texte);
-        self::assertStringContainsString('Phase 2 · 2 sets gagnants Résultat Points Victoire 2-0 3 Victoire 2-1 2 Défaite 1-2 1 Défaite 0-2 0', $texte);
+        self::assertStringContainsString('Phase 1 · 3 sets gagnants Résultat Points du gagnant Points du perdant 3-0 ou 3-1 3 0 3-2 2 1 Forfait (l\'équipe absente perd) 3 −1', $texte);
+        self::assertStringContainsString('Forfait (l\'équipe absente perd) 3 −1 Match interrompu à 2-1 (règle 1R) 2 1 Match interrompu à 2-2, égalité dans le 5e set (règle 1R) 1 1 Match interrompu à 1-1 ou 1-0 (règle 1R) 0 0', $texte);
+        self::assertStringContainsString('Phase 2 · 2 sets gagnants Résultat Points du gagnant Points du perdant 2-0 3 0 2-1 2 1 Forfait (l\'équipe absente perd) 3 −1 Match interrompu à 1-1 ou 1-0 (règle 1R) 0 0 Forfait : l\'équipe présente gagne, l\'équipe absente perd. Match interrompu (règle 1R) : le set en cours compte pour l\'équipe qui y mène ; le gagnant est l\'équipe qui mène en sets. À égalité (1-1), ou à 1-0, aucune équipe ne marque de point.', $texte);
         self::assertStringContainsString('Barrages, Phase finale et Barrages de fin de saison : pas de points au classement, seul compte le vainqueur du match (3 sets gagnants).', $texte);
         self::assertStringContainsString('href="#regle-1r"', $html);
     }

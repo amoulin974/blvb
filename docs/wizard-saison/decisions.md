@@ -552,7 +552,8 @@ rendu pour la saison.
   poule A », « Le 8e descend en poule B dans la phase 2 » ; en mots publics
   (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
   numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
-- **Barème** : un tableau par format de match ; lignes « Victoire par forfait » et « Forfait (équipe absente) » ; ligne
+- **Barème** : un tableau par format de match, trois colonnes « Résultat », « Points du gagnant », « Points du perdant »
+  (choix de l'utilisateur, 20/10/2026 ; une ligne par résultat : 3-0 ou 3-1, 3-2, forfait) ; ligne
   « Match interrompu (règle 1R) », points fixés par le règlement (`Volley::pointsInterrompus`, selon le format de match),
   avec lien vers la règle ; le texte de la règle 1R n'écrit plus les points en dur. Phase à élimination : une phrase, pas de tableau.
 - **Départage** : liste numérotée, aides du wizard.

@@ -221,7 +221,10 @@ body{
 .match-tableau-nom { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
 .match-tableau-equipe + .sr-only + .match-tableau-equipe, .match-tableau-nom + .match-tableau-equipe { border-top: 1px solid var(--color-base-300); }
 .reglement-baremes { display: grid; gap: 1rem; }
-@container (min-width: 36rem) { .reglement-baremes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@container (min-width: 44rem) { .reglement-baremes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Barème : colonnes de points de largeur fixe, en-têtes sur 2 lignes équilibrées, note du pied en texte courant */
+.reglement-baremes th[scope="col"]:not(:first-child) { width: 5.5rem; text-wrap: balance; }
+.reglement-table tfoot td { font-weight: 400; text-transform: none; letter-spacing: normal; }
 .reglement-baremes > :only-child { grid-column: 1 / -1; max-width: 36rem; }
 #article-reglement .reglement-bloc table { margin: 0; width: 100%; }
 #article-reglement .reglement-bloc .reglement-table:not(.reglement-calendrier) { break-inside: avoid; }

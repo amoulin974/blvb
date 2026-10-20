@@ -1,4 +1,5 @@
-{# [bareme] (App\Reglement\Bloc\BlocBareme, D58) : un tableau par format de match ; phases sans points en une phrase. #}
+{# [bareme] (App\Reglement\Bloc\BlocBareme, D58) : un tableau par format de match (résultat, points du gagnant, points du
+   perdant ; match interrompu : l'équipe qui mène, puis l'autre) ; phases sans points en une phrase. #}
 <section class="reglement-bloc" data-bloc="bareme" aria-label="Barème des points">
     {% if tableaux is not empty %}
         <div class="reglement-baremes">
@@ -6,16 +7,18 @@
                 <table class="table table-sm reglement-table">
                     <caption>{{ tableau.titre }} · {{ tableau.sets }} sets gagnants</caption>
                     <thead>
-                        <tr><th scope="col">Résultat</th><th scope="col" class="text-center">Points</th></tr>
+                        <tr><th scope="col">Résultat</th><th scope="col" class="text-right">Points du gagnant</th><th scope="col" class="text-right">Points du perdant</th></tr>
                     </thead>
                     <tbody>
                         {% for ligne in tableau.lignes %}
                             <tr>
                                 <th scope="row" class="font-normal">{{ ligne.resultat }}{% if ligne.regle1R|default(false) %} (<a class="link link-primary" href="#regle-1r">règle 1R</a>){% endif %}</th>
-                                <td class="text-center tabular-nums">{{ ligne.points }}</td>
+                                <td class="text-right tabular-nums">{{ ligne.gagnant }}</td>
+                                <td class="text-right tabular-nums">{{ ligne.perdant }}</td>
                             </tr>
                         {% endfor %}
                     </tbody>
+                    {% if tableau.note %}<tfoot><tr><td colspan="3" class="reglement-bloc-infos">{{ tableau.note }}</td></tr></tfoot>{% endif %}
                 </table>
             {% endfor %}
         </div>
