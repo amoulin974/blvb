@@ -17,6 +17,12 @@ Scénarios (`bin/recette reinitialiser --scenario=…`) :
 - `en-cours` (défaut) : phase 1 en cours, matchs passés saisis, matchs à venir ;
 - `phase1-terminee` : tous les matchs de la phase 1 saisis, phase non clôturée (tester la **clôture** et les montées/descentes) ;
 - `vierge` : structure, équipes et journées sans aucun match (tester la **génération / l'optimisation** des matchs).
+- `barrages` : comme `en-cours`, plus une **« Saison 2026-2027 barrages test »** au modèle « BLVB avec barrages »,
+  qui devient la saison affichée : Phase 1 (4 poules de 8) jouée et clôturée, barrages joués et clôturés (Phase 2 recomposée
+  à 8 équipes par poule), Phase 2 en cours (matchs passés saisis), Phase finale (journée des finales un vendredi, gymnase
+  Test Anglet) et Barrages de fin de saison à venir, deux semaines sans match, et un **règlement de démonstration** (texte
+  court et les quatre éléments calculés) : tester la page `/reglement`, les barrages et la mise en place des phases
+  suivantes. Ses 32 équipes (Aldudes … Came) n'ont ni joueurs ni club.
 
 Les dates sont **relatives à aujourd'hui** : la saison démarre 2 semaines avant la semaine en cours, il y a donc toujours
 une journée en cours, des journées passées et des journées à venir. Relancer `reinitialiser` rafraîchit les dates.

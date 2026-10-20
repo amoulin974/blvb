@@ -372,6 +372,9 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   recopié avec la saison est daté de la copie. Relu par l'ergonome, le webdesigner et la sécurité (aucun constat critique
   ni important ; codes courts ignorés dans les attributs, marqueurs internes retirés, `retour` plus strict). 605 tests verts.
   Un règlement de démonstration est enregistré dans la base locale (saisons 1 et 3), à remplacer par l'import (R5).
+- **Recette** : scénario `barrages` (`bin/recette reinitialiser --scenario=barrages`) : saison au modèle « BLVB avec
+  barrages », phase 1 et barrages joués et clôturés, phase 2 en cours, phase finale et barrages de fin de saison à venir,
+  règlement de démonstration (voir `tests/recette/README.md`).
 - **Suite** : R4, édition par les admins.
 
 ## 5. Reprendre le travail sur un autre ordinateur
