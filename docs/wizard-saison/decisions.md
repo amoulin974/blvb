@@ -552,6 +552,10 @@ rendu pour la saison.
   poule A », « Le 8e descend en poule B dans la phase 2 » ; en mots publics
   (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
   numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
+- **Enchaînement des phases** (demande de l'utilisateur, 20/10/2026) : en tête de `[schema_phases]` pour toute la saison,
+  un schéma des étapes (une case par phase, flèches ; phases qui commencent le même jour dans la même étape, « En même
+  temps : »), et sous chaque flèche qui passe à l'étape suivante, résumé à partir des règles de passage (mouvements communs
+  à plusieurs poules ; le détail reste dans les cartes ; condition de l'ergonome).
 - **Barème** : un tableau par format de match, trois colonnes « Résultat », « Points du gagnant », « Points du perdant »
   (choix de l'utilisateur, 20/10/2026 ; une ligne par résultat : 3-0 ou 3-1, 3-2, forfait) ; ligne
   « Match interrompu (règle 1R) », points fixés par le règlement (`Volley::pointsInterrompus`, selon le format de match),

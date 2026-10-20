@@ -2,6 +2,32 @@
    élément de liste ; poules en cartes (2 colonnes au plus), barrages par match, tableaux finaux en tours (colonnes
    quand la place le permet, .tableau-final). Titres internes h3 / h4 sans ancre ni entrée de sommaire. #}
 <section class="reglement-bloc" data-bloc="schema_phases" aria-label="Schéma des phases">
+    {% if etapes is not empty %}
+        <h3 class="reglement-bloc-titre js-toc-ignore">Enchaînement des phases</h3>
+        <ol class="reglement-etapes" aria-label="Enchaînement des phases, dans l'ordre">
+            {% for etape in etapes %}
+                <li class="reglement-etape">
+                    {% if etape.transition or not loop.first %}
+                        <div class="reglement-etape-passage">
+                            <span class="reglement-etape-fleche" aria-hidden="true"></span>
+                            {% if etape.transition %}<p class="reglement-etape-transition">{{ etape.transition }}</p>{% endif %}
+                        </div>
+                    {% endif %}
+                    <div class="reglement-etape-phases">
+                        {% if etape.ensemble %}<p class="reglement-etape-ensemble">En même temps :</p>{% endif %}
+                        {% for phase in etape.phases %}
+                            <div class="reglement-carte reglement-etape-phase">
+                                <p class="reglement-carte-titre reglement-etape-nom">{{ phase.nom }}</p>
+                                <p>{{ phase.resume }}</p>
+                                {% if phase.finales %}<p>{{ phase.finales }}</p>{% endif %}
+                                <p class="reglement-bloc-infos">{{ phase.periode }}</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </li>
+            {% endfor %}
+        </ol>
+    {% endif %}
     <ol class="reglement-schema">
         {% for phase in phases %}
             <li class="reglement-schema-phase">

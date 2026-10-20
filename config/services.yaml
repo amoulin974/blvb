@@ -61,7 +61,7 @@ services:
     App\Reglement\:
         resource: '../src/Reglement/'
         # Valeurs et textes, pas des services
-        exclude: '../src/Reglement/{ParametreBloc.php,BlocInapplicable.php,Texte.php,Bloc/TableauElimination.php}'
+        exclude: '../src/Reglement/{ParametreBloc.php,BlocInapplicable.php,Texte.php,Bloc/TableauElimination.php,Bloc/EnchainementPhases.php}'
 
     # --------------------------------------------------------
     # Contrôleurs

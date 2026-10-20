@@ -54,6 +54,8 @@ final class SchemaPhases extends BlocParPhase
         }
 
         return $this->twig->render('reglement/blocs/schema_phases.html.twig', [
+            // Vue d'ensemble pour toute la saison seulement (demande de l'utilisateur, 20/10/2026)
+            'etapes' => !isset($parametres['phase']) && \count($phases) > 1 ? EnchainementPhases::etapes($phases) : [],
             'phases' => array_map(fn (Phase $phase) => $this->phase($phase, $regles), $phases),
         ]);
     }

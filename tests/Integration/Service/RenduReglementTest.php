@@ -129,6 +129,10 @@ final class RenduReglementTest extends TestIntegration
     public function test_schema_phases(): void
     {
         $p1 = self::texte($this->rendre('<p>[schema_phases phase=P1]</p>')['html']);
+        self::assertStringNotContainsString('Enchaînement des phases', $p1);
+        // Effectif connu et commun : taille des poules et rangs en chiffres dans l'enchaînement
+        $tout = self::texte($this->rendre('<p>[schema_phases]</p>')['html']);
+        self::assertStringStartsWith('Enchaînement des phases Phase 1 4 poules de 8 équipes Du 01/09/2026 au 01/02/2027 Le 1er de chaque poule monte, le 8e descend. Le 7e joue un barrage contre le 2e de la poule du dessous.', $tout);
         self::assertStringContainsString('Phase 1 Championnat aller simple · du 01/09/2026 au 01/02/2027 · 3 sets gagnants', $p1);
         self::assertStringContainsString('Poule A · 8 équipes Du 1er au 6e restent en poule A dans la phase 2 Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s\'il reste en poule A Le 8e descend en poule B dans la phase 2', $p1);
         self::assertStringContainsString('Poule B · 8 équipes Le 1er monte en poule A dans la phase 2 Le 2e joue le barrage A / B contre le 7e de la poule A pour savoir s\'il monte en poule A Du 3e au 6e restent en poule B dans la phase 2 Le 7e joue le barrage B / C contre le 2e de la poule C pour savoir s\'il reste en poule B Le 8e descend en poule C dans la phase 2', $p1);
@@ -163,7 +167,7 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringContainsString('7e de la poule A (Phase 2) contre 2e de la poule B (Phase 2)', $fin);
     }
 
-    #[TestDox('RGL-07 Schéma d\'une saison sans équipes : rangs voisins fusionnés sans effectif (« tous sauf les 2 derniers »), tableau établi plus tard')]
+    #[TestDox('RGL-07 Schéma d\'une saison sans équipes : enchaînement des phases en tête, rangs voisins fusionnés sans effectif (« tous sauf les 2 derniers »), tableau établi plus tard')]
     public function test_schema_sans_equipes(): void
     {
         $saison = SaisonFactory::createOne(['nom' => 'Brouillon', 'date_debut' => new \DateTimeImmutable('2027-09-01'), 'date_fin' => new \DateTimeImmutable('2028-07-31')]);
@@ -176,6 +180,16 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringContainsString('Poule D Le 1er monte en poule C dans la phase 2 Le 2e joue le barrage C / D contre l\'avant-dernier de la poule C pour savoir s\'il monte en poule C Du 3e au dernier restent en poule D dans la phase 2', $texte);
         self::assertStringContainsString('Poule B Le 1er monte en poule A dans la phase 2 Le 2e joue le barrage A / B contre l\'avant-dernier de la poule A pour savoir s\'il monte en poule A À partir du 3e, tous sauf les 2 derniers restent en poule B dans la phase 2', $texte);
         self::assertStringContainsString('Le tableau sera établi à la fin de la phase précédente.', $texte);
+        // Enchaînement des phases (toute la saison) : une étape par date de début, phase finale et barrages de fin de saison ensemble
+        // et, sous chaque flèche, qui passe à l'étape suivante (mouvements communs aux poules, d'après les règles)
+        self::assertStringStartsWith('Enchaînement des phases Phase 1 4 poules Du 01/09/2027 au 01/02/2028 '
+            .'Le 1er de chaque poule monte, le dernier descend. L\'avant-dernier joue un barrage contre le 2e de la poule du dessous. '
+            .'Barrages 3 matchs de barrage Du 01/02/2028 au 08/02/2028 '
+            .'Le vainqueur de chaque barrage joue la phase 2 dans la poule du dessus, le perdant dans celle du dessous. '
+            .'Phase 2 4 poules Du 08/02/2028 au 01/06/2028 '
+            .'Chaque équipe joue la phase finale dans le tableau de son niveau. L\'avant-dernier joue aussi un barrage de fin de saison contre le 2e de la poule du dessous. '
+            .'En même temps : Phase finale 4 tableaux à élimination directe Du 01/06/2028 au 31/07/2028 '
+            .'Barrages de fin de saison 3 matchs de barrage, pour les poules de la saison prochaine', $texte);
     }
 
     #[TestDox('RGL-08 Barème : un tableau par format de match (résultat, points du gagnant, points du perdant), forfait, match interrompu (règle 1R) ; phases sans classement en une phrase')]
