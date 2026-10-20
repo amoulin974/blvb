@@ -4,6 +4,7 @@ namespace App\Controller\Admin;
 
 
 use App\Competition\MiseEnPlaceJournees;
+use App\Competition\ModeAjout;
 use App\Entity\Equipe;
 use App\Entity\Journee;
 use App\Entity\Partie;
@@ -100,10 +101,13 @@ final class PartieController extends AbstractController
 
     //Supprime tous les matchs d'une poule
     #[Route('/{id}/deleteall', name: 'deleteall', methods: ['POST'])]
-    public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
+    public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
         if (!($this->isCsrfTokenValid('deleteallparties'.$poule->getId(), $request->getPayload()->getString('_token')))) {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } elseif ($modeAjout->jouee($poule->getPhase())) {
+            // Phase jouée : les matchs et leurs scores ne se suppriment plus en masse (D54)
+            $this->addFlash('error', ModeAjout::refusSuppression(sprintf('les matchs de %s',$poule->getNom()), $poule->getPhase()));
         } else {
             foreach ($poule->getParties() as $partie) {
                 $entityManager->remove($partie);
@@ -119,7 +123,7 @@ final class PartieController extends AbstractController
 
     //Supprime tous les matchs d'une journée
     #[Route('/{id}/deleteallbyjournee/{journee}', name: 'deleteallbyjournee', methods: ['POST'])]
-    public function deleteAllByJournee(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $entityManager): Response
+    public function deleteAllByJournee(Request $request, Poule $poule, Journee $journee, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
         if ($journee->getPoule() !== $poule) {
             throw $this->createNotFoundException("Cette journée n'appartient pas à cette poule.");
@@ -127,6 +131,8 @@ final class PartieController extends AbstractController
 
         if (!($this->isCsrfTokenValid('deleteallbyjournee'.$journee->getId(), $request->getPayload()->getString('_token')))) {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } elseif ($modeAjout->jouee($poule->getPhase())) {
+            $this->addFlash('error', ModeAjout::refusSuppression(sprintf('les matchs de la journée %d de %s',$journee->getNumero(), $poule->getNom()), $poule->getPhase()));
         } else {
             foreach ($journee->getParties() as $partie) {
                 $entityManager->remove($partie);

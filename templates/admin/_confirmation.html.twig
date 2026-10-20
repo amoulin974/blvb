@@ -20,7 +20,7 @@
 {% set declencheur = declencheur|default('Supprimer') %}
 {% set declencheur_icone = declencheur_icone ?? 'poubelle' %}
 <button type="button"
-        class="{{ declencheur_classe|default('btn btn-ghost btn-sm text-error') }}"
+        class="{{ declencheur_classe|default('btn btn-ghost btn-sm btn-danger-discret') }}"
         {% if icone_seule|default(false) %}aria-label="{{ declencheur }}" title="{{ declencheur }}"{% endif %}
         aria-haspopup="dialog"
         data-action="confirmation#ouvrir"

@@ -15,6 +15,9 @@ class Phase
     /** Valeur calculée pour la page de la saison (SaisonController::show), non enregistrée en base. */
     public ?bool $cloturable = null;
 
+    /** Phase jouée (D54), calculée pour la page de la saison : suppressions en masse masquées. Non enregistrée en base. */
+    public ?bool $jouee = null;
+
     #[ORM\Id]
     #[ORM\GeneratedValue]
     #[ORM\Column]

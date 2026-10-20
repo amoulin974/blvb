@@ -3,6 +3,7 @@
 namespace App\Controller\Admin;
 
 use App\Competition\MiseEnPlaceJournees;
+use App\Competition\ModeAjout;
 use App\Entity\Journee;
 use App\Entity\Phase;
 use App\Form\PhaseFormType;
@@ -63,8 +64,9 @@ final class PhaseController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Phase $phase, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Phase $phase, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
+        $phase->jouee = $modeAjout->jouee($phase); // suppression bloquée (D54)
         $form = $this->createForm(PhaseFormType::class, $phase);
         $form->handleRequest($request);
 
@@ -81,9 +83,15 @@ final class PhaseController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Phase $phase, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Phase $phase, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
         $saisonId = $phase->getSaison()->getId();
+        if ($this->isCsrfTokenValid('delete'.$phase->getId(), $request->getPayload()->getString('_token')) && $modeAjout->jouee($phase)) {
+            // Phase jouée : ses poules, matchs et scores ne se suppriment plus (D54) ; jeton absent : message habituel
+            $this->addFlash('error', ModeAjout::refusSuppression('la phase '.$phase->getNom(), $phase));
+
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saisonId], Response::HTTP_SEE_OTHER);
+        }
         $this->supprimerEntite($request, $entityManager, $phase, 'delete'.$phase->getId(), 'la phase '.$phase->getNom(), true);
 
         // Retour à la saison : c'est de là que les phases se gèrent

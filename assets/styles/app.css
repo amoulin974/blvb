@@ -232,6 +232,19 @@ body{
 }
 /* En-têtes de tableau de l'admin posés sur le filet, même quand un voisin passe sur deux lignes */
 .table-admin thead th { vertical-align: bottom; }
+/* Menu déroulant en <details> (menu_deroulant_controller.js) : sans triangle du navigateur */
+.dropdown > summary { list-style: none; }
+.dropdown > summary::-webkit-details-marker { display: none; }
+.dropdown[open] > summary svg:last-child { rotate: 180deg; }
+/* Bouton de suppression discret : rouge foncé, contraste AA même sur le fond gris du survol de .btn-ghost (D54) */
+.btn-danger-discret { color: color-mix(in oklab, var(--color-error) 70%, black); }
+/* Entrée destructive d'un menu (D54) : rouge foncé, contraste AA même au survol ; 44 px */
+.menu .menu-danger { color: color-mix(in oklab, var(--color-error) 70%, black); min-height: 2.75rem; width: 100%; justify-content: flex-start; }
+.menu .menu-danger:hover, .menu .menu-danger:focus-visible { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); }
+.menu .menu-danger:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+/* Carte repliable ouverte (daisyUI .collapse) qui contient un menu déroulant ouvert : le menu n'est pas rogné en bas
+   de carte ni recouvert par la carte suivante ; les autres cartes gardent leur rognage */
+.collapse:has(> input:checked):has(details[open]) { overflow: visible; z-index: 1; }
 /* Fieldset de formulaire : texte à taille normale (daisyUI impose .75rem à .fieldset) */
 .fieldset-formulaire { font-size: 1rem; }
 /* Cibles tactiles de 44 px dans l'admin */

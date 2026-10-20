@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Controller\Admin;
+use App\Competition\ModeAjout;
 use App\Entity\Poule;
 use App\Entity\Saison;
 use App\Form\PouleType;
@@ -131,7 +132,7 @@ final class SaisonController extends AbstractController
     //Affiche une saison
 
     #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository, PhaseService $phaseService): Response
+    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository, PhaseService $phaseService, ModeAjout $modeAjout): Response
     {
 
         // 1. Déterminer la poule à ouvrir (via paramètre d'URL si présent)
@@ -158,6 +159,7 @@ final class SaisonController extends AbstractController
         // équipes vers la phase suivante serait prématuré).
         foreach($saison->getPhases() as $phase){
             $phase->cloturable = $phaseService->estCloturable($phase);
+            $phase->jouee = $modeAjout->jouee($phase); // suppressions en masse masquées (D54)
         }
 
         // Problèmes des règles de passage, montrés dans la fenêtre « Clôturer la phase » avant le clic (D37)

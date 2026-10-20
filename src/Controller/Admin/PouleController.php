@@ -99,9 +99,15 @@ final class PouleController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Poule $poule, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
         $saisonId = $poule->getPhase()->getSaison()->getId();
+        if ($this->isCsrfTokenValid('delete'.$poule->getId(), $request->getPayload()->getString('_token')) && $modeAjout->jouee($poule->getPhase())) {
+            // Phase jouée : la poule, ses matchs et ses scores ne se suppriment plus (D54) ; jeton absent : message habituel
+            $this->addFlash('error', ModeAjout::refusSuppression(sprintf('la poule %s',$poule->getNom()), $poule->getPhase()));
+
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saisonId, 'openPoule' => $poule->getId()], Response::HTTP_SEE_OTHER);
+        }
         $this->supprimerEntite($request, $entityManager, $poule, 'delete'.$poule->getId(), 'la poule '.$poule->getNom(), true);
 
         // Retour à la saison : c'est de là que les poules se gèrent

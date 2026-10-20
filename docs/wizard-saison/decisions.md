@@ -479,6 +479,25 @@ Préféré à un bouton dédié « Ajouter des barrages » (plus souple : tout f
 endroit visible, et leurs règles faisaient basculer les poules de la phase 2 en mode détaillé.
 *(2026-10-19, lot 6)*
 
+## D54. Page « Piloter une saison » : suppressions d'une poule dans un menu « Supprimer », refusées une fois la phase jouée
+**Décision** (utilisateur, 19/10/2026, avis de l'ergonome et du webdesigner) :
+- Dans la barre de chaque poule, « Supprimer les matchs », « Supprimer les journées » (« … et les matchs » s'il y en a) et
+  « Supprimer la poule » sont regroupés dans un menu « Supprimer » (poubelle et chevron, rouge discret), toujours présent
+  même avec une seule entrée ; séparateur avant « Supprimer la poule » ; chaque entrée garde la fenêtre de confirmation.
+- **Phase jouée** (clôturée, au moins un score saisi ou un classement non nul) : le menu n'est plus affiché et le serveur
+  refuse ces suppressions (matchs, journées, poule, matchs d'une journée, et la phase elle-même), avec un message
+  « Impossible de supprimer … : des matchs de Phase 1 ont déjà été joués » (ou « Phase 1 est clôturée »). À la place du
+  menu, la barre de la poule l'explique (« Suppression impossible : des matchs ont été joués. ») ; « Supprimer la
+  phase » disparaît de la page de la saison et la page « Modifier la phase » montre le blocage. La suppression d'un match
+  isolé reste possible pour corriger une erreur.
+- Relectures (ergonome, webdesigner) : boutons de suppression discrets en rouge foncé (`.btn-danger-discret`, AA au
+  survol), icônes retirées des entrées du menu, chevron qui pivote à l'ouverture. Une phase dont les matchs sont générés mais pas joués reste modifiable
+  (régénérer les matchs).
+**Pourquoi** : trois boutons rouges voisins aux libellés proches invitaient au clic accidentel ; aucune garde côté serveur
+n'empêchait d'effacer des matchs joués. Règle plus souple que « commencée » (D51, D52) : avant le premier score,
+supprimer et régénérer reste l'usage normal.
+*(2026-10-19, hors lots ; avance sur PO1)*
+
 ---
 
 ## Points ouverts
