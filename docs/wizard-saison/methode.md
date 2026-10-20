@@ -375,7 +375,18 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - **Recette** : scénario `barrages` (`bin/recette reinitialiser --scenario=barrages`) : saison au modèle « BLVB avec
   barrages », phase 1 et barrages joués et clôturés, phase 2 en cours, phase finale et barrages de fin de saison à venir,
   règlement de démonstration (voir `tests/recette/README.md`).
-- **Suite** : R4, édition par les admins.
+- Retouches demandées par l'utilisateur : sorties des poules dans l'ordre du classement avec la phase d'arrivée et l'enjeu
+  des barrages ; barème en trois colonnes (résultat, points du gagnant, points du perdant) avec une note ; tableaux finaux
+  sur fond secondaire ; enchaînement des phases en tête de `[schema_phases]` (qui passe d'une étape à l'autre, calculé
+  à partir des règles) ; R6 ajouté au plan (schémas dans un canvas). Piège : `tailwind:build` peut échouer (accolade
+  orpheline) en n'affichant qu'une ligne d'erreur ; vérifier « Done » et la présence des nouvelles classes dans
+  `var/tailwind/app.built.css`.
+- **R4 écrit** (D59, maquettes `reglement-maquettes-r4.md`) : page d'édition, TipTap par l'importmap (chargé à la
+  demande : `stimulusFetch: 'lazy'`), aperçu, panneau, images, historique, conflit ; `#article-reglement` devenu
+  `.reglement-article` dans `app.css`. 613 tests verts. Relectures sécurité, webdesigner et ergonome **interrompues** (limite
+  d'utilisation) : à relancer, ainsi qu'un essai dans un navigateur. Voir « Reste à faire » dans `reglement.md`.
+- Tests lancés pendant que l'application est sur la base de recette : `docker compose exec -e DATABASE_URL=…blvb_new… php
+  composer tests` (sinon la base de test `blvb_recette_test` n'existe pas).
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
