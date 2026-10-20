@@ -544,6 +544,20 @@ rendu pour la saison.
   la saison en cours ; le gabarit en dur disparaît ensuite.
 *(2026-10-20, règlement)*
 
+## D58. Règlement : rendu des éléments calculés
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes.md`) :
+- **Schéma des phases** : chaque poule liste ses sorties (« 1er et 2e : montent en poule A (phase 2) »), en mots publics
+  (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
+  numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
+- **Barème** : un tableau par format de match ; lignes « Victoire par forfait » et « Forfait (équipe absente) » ; ligne
+  « Match interrompu à égalité (règle 1R) » avec lien vers la règle quand la saison donne des points au nul ; le texte de
+  la règle 1R n'écrit plus les points en dur. Phase à élimination : une phrase, pas de tableau.
+- **Départage** : liste numérotée, aides du wizard.
+- **Calendrier** : tableau « semaine / programme » par phase, fermetures, journée des finales, « Cette semaine » ; les tours
+  d'une phase à élimination s'affichent « à jouer avant le … » (date limite du tour), sauf la journée des finales.
+- **Jours fériés** : texte libre (une semaine entière sans match se saisit comme fermeture).
+*(2026-10-20, règlement)*
+
 ---
 
 ## Points ouverts
