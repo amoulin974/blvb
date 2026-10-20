@@ -200,9 +200,9 @@ body{
 .reglement-carte { background-color: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 0.75rem; break-inside: avoid; }
 .reglement-carte-titre { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; }
 .reglement-carte-effectif { font-family: var(--font-sans); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.875rem; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
-.reglement-carte-groupe { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); margin-top: 0.5rem; }
-#article-reglement .reglement-bloc .reglement-sorties { font-size: 0.875rem; }
-#article-reglement .reglement-bloc .reglement-sorties li + li { margin-top: 0.25rem; }
+/* Sorties d'une poule : une puce par phrase (souvent sur 2 lignes), phrases plus écartées que leurs lignes */
+#article-reglement .reglement-bloc .reglement-sorties { font-size: 0.875rem; line-height: 1.45; list-style: disc; padding-left: 1.125rem; }
+#article-reglement .reglement-bloc .reglement-sorties li + li { margin-top: 0.375rem; }
 .reglement-tableau { margin-top: 1.25rem; }
 /* Tableau à élimination : tours en liste, en colonnes quand l'article est assez large (4 tours au plus) */
 .tableau-final { display: grid; gap: 1rem; margin-top: 0.5rem; }

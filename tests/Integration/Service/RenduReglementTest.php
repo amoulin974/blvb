@@ -130,8 +130,8 @@ final class RenduReglementTest extends TestIntegration
     {
         $p1 = self::texte($this->rendre('<p>[schema_phases phase=P1]</p>')['html']);
         self::assertStringContainsString('Phase 1 Championnat aller simple · du 01/09/2026 au 01/02/2027 · 3 sets gagnants', $p1);
-        self::assertStringContainsString('Poule A · 8 équipes Barrages 7e : joue le barrage A / B Phase 2 Du 1er au 6e : restent en poule A 8e : descend en poule B', $p1);
-        self::assertStringContainsString('Poule B · 8 équipes Barrages 2e : joue le barrage A / B 7e : joue le barrage B / C Phase 2 1er : monte en poule A Du 3e au 6e : restent en poule B 8e : descend en poule C', $p1);
+        self::assertStringContainsString('Poule A · 8 équipes Du 1er au 6e restent en poule A dans la phase 2 Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s\'il reste en poule A Le 8e descend en poule B dans la phase 2', $p1);
+        self::assertStringContainsString('Poule B · 8 équipes Le 1er monte en poule A dans la phase 2 Le 2e joue le barrage A / B contre le 7e de la poule A pour savoir s\'il monte en poule A Du 3e au 6e restent en poule B dans la phase 2 Le 7e joue le barrage B / C contre le 2e de la poule C pour savoir s\'il reste en poule B Le 8e descend en poule C dans la phase 2', $p1);
         self::assertStringNotContainsString('antépénultième', $p1);
         self::assertStringNotContainsString('P1.A', $p1);
 
@@ -144,6 +144,20 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringContainsString('Poule A 8 équipes de la poule A (Phase 2), placées selon leur classement.', $finale);
         self::assertStringContainsString('Quarts de finale Quart de finale 1 : 1er contre 8e Quart de finale 2 : 4e contre 5e', $finale);
         self::assertStringContainsString('Le tableau sera établi à la fin de la phase précédente.', $finale);
+
+        // Poule de 2 équipes : une règle qui ne concerne personne ne donne pas de phrase
+        $em = $this->em();
+        foreach ($this->phase('P1')->getPoules() as $poule) {
+            if ($poule->getCode() === 'D') {
+                foreach (\array_slice($poule->getEquipes()->toArray(), 2) as $equipe) {
+                    $poule->removeEquipe($equipe);
+                }
+            }
+        }
+        $em->flush();
+        $em->clear();
+        $p1 = self::texte($this->rendre('<p>[schema_phases phase=P1]</p>')['html']);
+        self::assertStringContainsString('Poule D · 2 équipes Le 1er monte en poule C dans la phase 2 Le 2e joue le barrage C / D contre le 7e de la poule C pour savoir s\'il monte en poule C Le 2e reste en poule D dans la phase 2', $p1);
 
         $fin = self::texte($this->rendre('<p>[schema_phases phase=BAR2]</p>')['html']);
         self::assertStringContainsString('7e de la poule A (Phase 2) contre 2e de la poule B (Phase 2)', $fin);
@@ -158,8 +172,9 @@ final class RenduReglementTest extends TestIntegration
         $em->clear();
 
         $texte = self::texte(self::service(RenduReglement::class)->rendre($em->find(Saison::class, $saison->getId()), '<p>[schema_phases]</p>')['html']);
-        self::assertStringContainsString('Poule A Barrages Avant-dernier : joue le barrage A / B Phase 2 Tous sauf les 2 derniers : restent en poule A Dernier : descend en poule B', $texte);
-        self::assertStringContainsString('Poule D Barrages 2e : joue le barrage C / D Phase 2 1er : monte en poule C Du 3e au dernier : restent en poule D', $texte);
+        self::assertStringContainsString('Poule A Tous sauf les 2 derniers restent en poule A dans la phase 2 L\'avant-dernier joue le barrage A / B contre le 2e de la poule B pour savoir s\'il reste en poule A Le dernier descend en poule B dans la phase 2', $texte);
+        self::assertStringContainsString('Poule D Le 1er monte en poule C dans la phase 2 Le 2e joue le barrage C / D contre l\'avant-dernier de la poule C pour savoir s\'il monte en poule C Du 3e au dernier restent en poule D dans la phase 2', $texte);
+        self::assertStringContainsString('Poule B Le 1er monte en poule A dans la phase 2 Le 2e joue le barrage A / B contre l\'avant-dernier de la poule A pour savoir s\'il monte en poule A À partir du 3e, tous sauf les 2 derniers restent en poule B dans la phase 2', $texte);
         self::assertStringContainsString('Le tableau sera établi à la fin de la phase précédente.', $texte);
     }
 

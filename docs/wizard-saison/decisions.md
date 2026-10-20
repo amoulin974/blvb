@@ -546,7 +546,10 @@ rendu pour la saison.
 
 ## D58. Règlement : rendu des éléments calculés
 **Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes.md`) :
-- **Schéma des phases** : chaque poule liste ses sorties (« 1er et 2e : montent en poule A (phase 2) »), en mots publics
+- **Schéma des phases** : chaque poule liste ses sorties dans l'ordre du classement, en une seule liste, chacune avec sa
+  phase d'arrivée ; un barrage dit son adversaire et son enjeu (précision de l'utilisateur, 20/10/2026) : « Du 1er au 6e
+  restent en poule A dans la phase 2 », « Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s'il reste en
+  poule A », « Le 8e descend en poule B dans la phase 2 » ; en mots publics
   (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
   numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
 - **Barème** : un tableau par format de match ; lignes « Victoire par forfait » et « Forfait (équipe absente) » ; ligne

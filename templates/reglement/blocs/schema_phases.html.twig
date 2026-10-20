@@ -13,12 +13,11 @@
                         {% for poule in phase.poules %}
                             <li class="reglement-carte">
                                 <p class="reglement-carte-titre">{{ poule.nom }}{% if poule.effectif %}<span class="reglement-carte-effectif"> · {{ poule.effectif }}</span>{% endif %}</p>
-                                {% for groupe in poule.groupes %}
-                                    <p class="reglement-carte-groupe">{{ groupe.titre }}</p>
+                                {% if poule.sorties is not empty %}
                                     <ul class="reglement-sorties">
-                                        {% for sortie in groupe.sorties %}<li>{{ sortie }}</li>{% endfor %}
+                                        {% for sortie in poule.sorties %}<li>{{ sortie }}</li>{% endfor %}
                                     </ul>
-                                {% endfor %}
+                                {% endif %}
                             </li>
                         {% endfor %}
                     </ul>

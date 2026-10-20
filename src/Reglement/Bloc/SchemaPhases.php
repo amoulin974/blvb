@@ -77,7 +77,7 @@ final class SchemaPhases extends BlocParPhase
         $poules = self::poulesParNiveau($phase);
         if ($type === PhaseType::CHAMPIONNAT) {
             foreach ($poules as $poule) {
-                $vue['poules'][] = ['nom' => $poule->getNom(), 'effectif' => self::effectif($poule), 'groupes' => $this->sorties($phase, $poule)];
+                $vue['poules'][] = ['nom' => $poule->getNom(), 'effectif' => self::effectif($poule), 'sorties' => $this->sorties($phase, $poule, $regles)];
             }
         } elseif ($type === PhaseType::BARRAGE) {
             $vue['reception'] = match ($phase->getReception()) {
@@ -99,14 +99,17 @@ final class SchemaPhases extends BlocParPhase
     }
 
     /**
-     * Sorties d'une poule de championnat, groupées par phase d'arrivée (« Phase 2 », « Barrages », « Saison prochaine »)
+     * Sorties d'une poule de championnat, dans l'ordre du classement, chacune avec sa phase d'arrivée (choix de
+     * l'utilisateur, D58) : « Du 1er au 6e restent en poule A dans la phase 2 », « Le 7e joue le barrage A / B contre le
+     * 2e de la poule B pour savoir s'il reste en poule A », « Le 8e descend en poule B dans la phase 2 »
      *
-     * @return list<array{titre: string, sorties: list<string>}>
+     * @param list<RegleDePassage> $regles toutes les règles de la saison
+     * @return list<string>
      */
-    private function sorties(Phase $phase, Poule $poule): array
+    private function sorties(Phase $phase, Poule $poule, array $regles): array
     {
         $effectif = Texte::effectif($poule);
-        $groupes = [];
+        $entrees = [];
         foreach ($phase->getReglesDePassage() as $regle) {
             $place = self::place($regle);
             if ($place === null || !$place->estRang() || $place->poule !== $poule->getCode()) {
@@ -114,32 +117,26 @@ final class SchemaPhases extends BlocParPhase
             }
             if (($destination = $regle->getPouleDestination()) !== null) {
                 $arrivee = $destination->getPhase();
-                $cle = sprintf('phase-%03d-%d', $arrivee?->getOrdre() ?? 0, $arrivee?->getId() ?? 0);
-                $titre = (string) $arrivee?->getNom();
                 $vers = 'poule-'.spl_object_id($destination);
                 $texte = match ($arrivee?->getType()) {
-                    PhaseType::BARRAGE => fn (bool $pluriel) => ($pluriel ? 'jouent le ' : 'joue le ').Texte::poule($destination),
-                    PhaseType::FINALE => fn (bool $pluriel) => ($pluriel ? 'vont ' : 'va ').Texte::dansPoule($destination),
-                    default => fn (bool $pluriel) => self::verbe($poule->getNiveau(), $destination->getNiveau(), $pluriel).' '.Texte::dansPoule($destination),
+                    PhaseType::BARRAGE => fn (bool $pluriel) => $this->enjeuBarrage($regle, $destination, $poule, $regles, $pluriel),
+                    PhaseType::FINALE => fn (bool $pluriel) => ($pluriel ? 'vont ' : 'va ').Texte::dansPoule($destination).' '.self::dansPhase($arrivee),
+                    default => fn (bool $pluriel) => self::verbe($poule->getNiveau(), $destination->getNiveau(), $pluriel).' '.Texte::dansPoule($destination).' '.self::dansPhase($arrivee),
                 };
             } elseif (($niveau = $regle->getNiveauSaisonSuivante()) !== null) {
-                $cle = 'saison-suivante';
-                $titre = 'Saison prochaine';
                 $vers = 'niveau-'.$niveau;
-                $texte = fn (bool $pluriel) => self::verbe($poule->getNiveau(), $niveau, $pluriel).' '.self::niveauSuivant($phase, $niveau);
+                $texte = fn (bool $pluriel) => self::verbe($poule->getNiveau(), $niveau, $pluriel).' '.self::niveauSuivant($phase, $niveau).' la saison prochaine';
             } else {
                 continue;
             }
             try {
                 $rangs = $effectif !== null ? $place->rangsPour($effectif) : null;
             } catch (NotationInvalide) {
-                $rangs = null;
+                continue; // effectif connu et aucune équipe concernée (« du 2e à l'avant-dernier » dans une poule de 2)
             }
-            $groupes[$cle] ??= ['titre' => $titre, 'entrees' => []];
-            $entrees = &$groupes[$cle]['entrees'];
             $derniere = $entrees === [] ? null : \count($entrees) - 1;
-            // Rangs voisins vers la même destination : une seule ligne (« du 1er au 6e » plutôt que « 1er » et « du 2e au 6e »)
             $precedente = $derniere !== null && $entrees[$derniere]['vers'] === $vers ? $entrees[$derniere] : null;
+            // Rangs voisins vers la même destination : une seule ligne (« du 1er au 6e » plutôt que « 1er » et « du 2e au 6e »)
             if ($precedente !== null && $rangs !== null && $precedente['rangs'] !== null && max($precedente['rangs']) + 1 === min($rangs)) {
                 $entrees[$derniere]['rangs'] = array_merge($precedente['rangs'], $rangs);
                 $entrees[$derniere]['place'] = Place::rang($place->phase, $place->poule, min($entrees[$derniere]['rangs']), max($entrees[$derniere]['rangs']));
@@ -148,22 +145,65 @@ final class SchemaPhases extends BlocParPhase
                 // Effectif inconnu : rangs voisins comptés du même bout (« 1er » puis « du 2e … ») ou depuis la fin (-2 puis -1)
                 $entrees[$derniere]['place'] = Place::rang($place->phase, $place->poule, $precedente['place']->rangDebut, $place->rangFin);
             } else {
-                $entrees[] = ['vers' => $vers, 'rangs' => $rangs, 'place' => $place, 'texte' => $texte];
+                $entrees[] = ['vers' => $vers, 'rangs' => $rangs, 'place' => $place, 'texte' => $texte, 'ordre' => \count($entrees)];
             }
-            unset($entrees);
         }
-        // Saison prochaine en dernier
-        ksort($groupes);
-        uksort($groupes, fn ($a, $b) => ($a === 'saison-suivante') <=> ($b === 'saison-suivante'));
 
-        return array_values(array_map(fn (array $groupe) => [
-            'titre' => $groupe['titre'],
-            'sorties' => array_map(function (array $entree) use ($effectif) {
-                $rangs = Texte::rangs($entree['place'], $effectif);
+        // Ordre du classement : rang réel si l'effectif est connu, sinon les rangs comptés du début, puis ceux de la fin
+        usort($entrees, function (array $a, array $b) {
+            $cle = fn (array $e) => $e['rangs'] !== null ? [0, min($e['rangs'])] : ($e['place']->rangDebut > 0 ? [0, $e['place']->rangDebut] : [1, $e['place']->rangDebut]);
 
-                return self::majuscule($rangs['texte']).' : '.($entree['texte'])($rangs['pluriel']);
-            }, $groupe['entrees']),
-        ], $groupes));
+            return [$cle($a), $a['ordre']] <=> [$cle($b), $b['ordre']];
+        });
+
+        return array_map(function (array $entree) use ($effectif) {
+            $rangs = Texte::rangs($entree['place'], $effectif);
+
+            return self::majuscule(Texte::sujet($rangs['texte'])).' '.($entree['texte'])($rangs['pluriel']);
+        }, $entrees);
+    }
+
+    /**
+     * Barrage vu depuis une équipe : « joue le barrage A / B contre le 2e de la poule B pour savoir s'il reste en poule A »
+     * (adversaires : les autres règles qui envoient vers ce barrage ; enjeu : la destination du vainqueur)
+     *
+     * @param list<RegleDePassage> $regles
+     */
+    private function enjeuBarrage(RegleDePassage $regle, Poule $barrage, Poule $poule, array $regles, bool $pluriel): string
+    {
+        $adversaires = [];
+        foreach ($regles as $autre) {
+            // Adversaires : les équipes des autres poules (deux équipes de la même poule ne sont pas présentées l'une contre l'autre)
+            if ($autre !== $regle && $autre->getPouleDestination() === $barrage && ($origine = $this->origine($autre, $regle->getPhase())) !== null
+                && $origine['poule'] !== $poule) {
+                $adversaires[] = Texte::sujet($origine['texte']);
+            }
+        }
+        $texte = ($pluriel ? 'jouent le ' : 'joue le ').Texte::poule($barrage).($adversaires === [] ? '' : ' contre '.Texte::enumeration($adversaires));
+
+        foreach ($barrage->getPhase()?->getReglesDePassage() ?? [] as $issue) {
+            $place = self::place($issue);
+            if ($place !== null && !$place->estRang() && $place->match === $barrage->getCode() && $place->issue === Place::VAINQUEUR
+                && ($vainqueur = $issue->getPouleDestination()) !== null) {
+                return $texte.sprintf(' pour savoir %s %s %s', $pluriel ? 's\'ils' : 's\'il',
+                    self::verbe($poule->getNiveau(), $vainqueur->getNiveau(), $pluriel), Texte::dansPoule($vainqueur));
+            }
+        }
+
+        return $texte;
+    }
+
+    /** « dans la phase 2 », « dans la phase finale », sinon « dans « Brassage » » */
+    private static function dansPhase(?Phase $phase): string
+    {
+        $nom = trim((string) $phase?->getNom());
+
+        return match (true) {
+            // « Phase finale » (aussi l'ancien « Phase Finale » des saisons déjà créées), « Phase 2 »
+            preg_match('/^phase (\d+|finale)$/iu', $nom) === 1 => 'dans la '.mb_strtolower($nom),
+            preg_match('/^phase\b/iu', $nom) === 1 => 'dans la '.mb_strtolower(mb_substr($nom, 0, 1)).mb_substr($nom, 1),
+            default => 'dans « '.$nom.' »',
+        };
     }
 
     /** @param list<RegleDePassage> $regles */
@@ -296,7 +336,7 @@ final class SchemaPhases extends BlocParPhase
      *
      * @return array{texte: string, place: Place, poule: ?Poule, phase: ?Phase}|null
      */
-    private function origine(RegleDePassage $regle): ?array
+    private function origine(RegleDePassage $regle, ?Phase $sansPhase = null): ?array
     {
         $place = self::place($regle);
         $phase = $regle->getPhase();
@@ -315,7 +355,7 @@ final class SchemaPhases extends BlocParPhase
             return ['texte' => $texte, 'place' => $place, 'poule' => null, 'phase' => $phase];
         }
         $rangs = Texte::rangs($place, $poule !== null ? Texte::effectif($poule) : null);
-        $texte = sprintf('%s %s (%s)', $rangs['texte'], $poule !== null ? Texte::dePoule($poule) : 'de la poule '.$place->poule, $phase->getNom());
+        $texte = sprintf('%s %s', $rangs['texte'], $poule !== null ? Texte::dePoule($poule) : 'de la poule '.$place->poule).($phase === $sansPhase ? '' : sprintf(' (%s)', $phase->getNom()));
 
         return ['texte' => $texte, 'place' => $place, 'poule' => $poule, 'phase' => $phase];
     }

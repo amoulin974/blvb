@@ -75,6 +75,22 @@ final class Texte
         return ['texte' => $sauf === '' ? sprintf('du %s au dernier', self::ordinal($debut)) : sprintf('à partir du %s, %s', self::ordinal($debut), $sauf), 'pluriel' => true];
     }
 
+    /**
+     * Rangs en sujet de phrase, avec l'article : « 1er » → « le 1er », « avant-dernier » → « l'avant-dernier »,
+     * « 1er et 2e » → « les 1er et 2e », « à partir du 3e, sauf les 2 derniers » → « à partir du 3e, tous sauf les
+     * 2 derniers » (rangs au masculin, relecture de l'ergonome) ; « du 3e au 6e », « tous sauf … », « toutes les équipes » restent tels quels
+     */
+    public static function sujet(string $rangs): string
+    {
+        return match (true) {
+            str_starts_with($rangs, 'à partir') => str_replace(', sauf', ', tous sauf', $rangs),
+            preg_match('/^(du |tous |toutes |les )/u', $rangs) === 1 => $rangs,
+            str_contains($rangs, ' et ') => 'les '.$rangs,
+            preg_match('/^[aeiouéè]/u', $rangs) === 1 => 'l\''.$rangs,
+            default => 'le '.$rangs,
+        };
+    }
+
     /** « poule A », « tableau 1 », « barrage A / B », sinon le nom entre guillemets (« « Élite des as » ») */
     public static function poule(Poule $poule): string
     {

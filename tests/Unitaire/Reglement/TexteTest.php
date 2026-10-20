@@ -39,6 +39,18 @@ final class TexteTest extends TestCase
         self::assertSame(['texte' => $attendu, 'pluriel' => $pluriel], Texte::rangs(NotationPlace::analyser($notation), $nb));
     }
 
+    #[TestDox('RGL-10 Rangs en sujet de phrase : « le 7e », « l\'avant-dernier », « les 1er et 2e », « à partir du 3e, tous sauf les 2 derniers »')]
+    public function test_sujet(): void
+    {
+        self::assertSame('le 7e', Texte::sujet('7e'));
+        self::assertSame('l\'avant-dernier', Texte::sujet('avant-dernier'));
+        self::assertSame('le dernier', Texte::sujet('dernier'));
+        self::assertSame('les 1er et 2e', Texte::sujet('1er et 2e'));
+        self::assertSame('du 1er au 6e', Texte::sujet('du 1er au 6e'));
+        self::assertSame('les 2 derniers', Texte::sujet('les 2 derniers'));
+        self::assertSame('à partir du 3e, tous sauf les 2 derniers', Texte::sujet('à partir du 3e, sauf les 2 derniers'));
+    }
+
     #[TestDox('RGL-10 Énumération à la française, heure et période en clair')]
     public function test_mots(): void
     {
