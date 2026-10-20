@@ -498,6 +498,40 @@ n'empêchait d'effacer des matchs joués. Règle plus souple que « commencée �
 supprimer et régénérer reste l'usage normal.
 *(2026-10-19, hors lots ; avance sur PO1)*
 
+## D55. Règlement par saison : texte libre édité par les admins, blocs générés insérés par marqueurs (précise D14)
+**Décision** (utilisateur, 20/10/2026) : chaque saison a son règlement, rédigé par les admins dans un **éditeur
+visuel** (titres, gras, listes, liens, images ; HTML nettoyé côté serveur). Les éléments calculés à partir des
+paramètres de la saison sont des **blocs** que l'admin place où il veut dans le texte, choisis dans une liste ; ils
+sont recalculés à chaque affichage. Blocs : schéma des phases (remplace les images `schema-2025*.jpg`), barème et
+format des matchs, départage, calendrier (remplace `calendrier-2025.jpg`). Travail sur la branche `reglement`, créée
+depuis `formats-competition-lot6` (elle tient lieu de lot 11).
+**Pourquoi** : le texte (règles de jeu, arbitrage, joueurs) change peu et reste l'affaire du bureau ; les parties qui
+dépendent des paramètres ne peuvent plus être en décalage avec ce que fait l'application.
+*(2026-10-20, règlement)*
+
+## D56. Règlement : reprise d'une saison à l'autre, publication et historique
+**Décision** (utilisateur, 20/10/2026) :
+- **Reprise** : une saison créée par copie (D3, D10) reprend le texte du règlement de la saison copiée ; les blocs
+  suivent les paramètres de la nouvelle saison.
+- **Publication** : enregistrer publie aussitôt ; la page affiche la date de dernière mise à jour ; chaque
+  enregistrement garde la version précédente, consultable et restaurable par un admin.
+- **Archives** : les blocs d'une saison terminée restent recalculés (ses paramètres ne changent plus, D51) ; rien
+  n'est figé.
+*(2026-10-20, règlement)*
+
+## D57. Règlement : page publique, accès et liens
+**Décision** (utilisateur, 20/10/2026) :
+- `/reglement` affiche le règlement de la saison affichée sur le site (sélecteur de saison du site) ; les règlements
+  des saisons passées restent consultables ; celui d'un brouillon ne l'est jamais.
+- Édition par les admins seulement, sur une **page dédiée par saison** (lien depuis la page de la saison et le
+  récapitulatif du wizard), modifiable à tout moment, même saison lancée.
+- **Ancres automatiques** sur les titres, tirées du code de la règle (« RÈGLE 1R » → `#regle-1r`, utilisé par la
+  fenêtre de saisie du score) ; sommaire généré comme aujourd'hui.
+- **Images** envoyées depuis l'éditeur (JPG, PNG, WebP, taille limitée), stockées sur le serveur.
+- **Reprise de l'existant** : le règlement actuel (gabarit `front/reglement.html.twig` et ses images) est importé dans
+  la saison en cours ; le gabarit en dur disparaît ensuite.
+*(2026-10-20, règlement)*
+
 ---
 
 ## Points ouverts

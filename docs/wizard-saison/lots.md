@@ -20,7 +20,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 8 | Autres éliminations et hybrides : classement intégral (B3), consolante (B4), aller-retour et set en or (B6), play-offs et play-downs (C2), meilleurs Xe (C5) | ⬜ |
 | 9 | Formats particuliers : plateaux (A7), suisse (A8), échelle (A9), double élimination (B5), handicap (C6) | ⬜ |
 | 10 | Autres sports : représentation neutre du score ; sports à buts (match nul), sports à points, sports de raquette en match simple ; saisie et affichages par sport | ⬜ |
-| 11 | Règlement en ligne généré à partir des paramètres | ⬜ |
+| 11 | Règlement en ligne généré à partir des paramètres : branche `reglement`, voir `reglement.md` (D55 à D57) | 🟡 |
 
 Étude à part, hors lots : rencontres par équipes des sports de raquette (une rencontre = plusieurs
 matchs individuels), qui changent le modèle lui-même (D13).
