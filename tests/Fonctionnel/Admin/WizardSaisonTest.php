@@ -41,7 +41,7 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertMatchesRegularExpression('/^Saison (\d{4})-\d{4}$/', $saison->getNom());
         $phases = $saison->getPhases()->toArray();
         usort($phases, fn ($a, $b) => $a->getOrdre() <=> $b->getOrdre());
-        self::assertSame(['Phase 1', 'Phase 2', 'Phase Finale'], array_map(fn ($p) => $p->getNom(), $phases));
+        self::assertSame(['Phase 1', 'Phase 2', 'Phase finale'], array_map(fn ($p) => $p->getNom(), $phases));
         self::assertSame(28, array_sum(array_map(fn ($p) => $p->getReglesDePassage()->count(), $saison->getPhases()->toArray())));
     }
 
@@ -152,7 +152,7 @@ final class WizardSaisonTest extends TestFonctionnel
         self::assertSame(4, $this->phases($id)[0][2]);
 
         $this->cliquer($url, 'monter-phase-1');
-        self::assertSame(['Phase 2', 'Phase 1', 'Phase Finale'], array_column($this->phases($id), 0));
+        self::assertSame(['Phase 2', 'Phase 1', 'Phase finale'], array_column($this->phases($id), 0));
 
         $this->cliquer($url, 'ajouter-phase');
         $phases = $this->phases($id);
@@ -177,7 +177,7 @@ final class WizardSaisonTest extends TestFonctionnel
         $this->cliquer($url, 'suivant', ['phases_wizard[phases][0][poules][1][code]' => 'A']);
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('body', 'Le code A est déjà utilisé par une autre poule de cette phase.');
-        self::assertSame(['Brassage', 'Phase 2', 'Phase Finale'], array_column($this->phases($id), 0), 'rien enregistré');
+        self::assertSame(['Brassage', 'Phase 2', 'Phase finale'], array_column($this->phases($id), 0), 'rien enregistré');
     }
 
     /** Règles de la phase d'ordre donné : sources dans l'ordre. */
@@ -206,7 +206,7 @@ final class WizardSaisonTest extends TestFonctionnel
         $crawler = $this->client->request('GET', $url);
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Phase 1 → Phase 2');
-        self::assertSelectorTextContains('body', 'Phase 2 → Phase Finale');
+        self::assertSelectorTextContains('body', 'Phase 2 → Phase finale');
         self::assertSelectorTextContains('body', 'Montées et descentes pour la saison suivante');
 
         $this->client->submit($crawler->filter('button[value="suivant"]')->form());
@@ -322,10 +322,10 @@ final class WizardSaisonTest extends TestFonctionnel
         [$id, $url] = $this->brouillonA(3);
         $this->cliquer($url, 'monter-phase-2');
         $this->cliquer($url, 'monter-phase-1');
-        self::assertSame(['Phase Finale', 'Phase 1', 'Phase 2'], array_column($this->phases($id), 0));
+        self::assertSame(['Phase finale', 'Phase 1', 'Phase 2'], array_column($this->phases($id), 0));
 
         $this->client->request('GET', '/admin/saison/'.$id.'/wizard/6');
-        self::assertSelectorTextContains('body', 'Phase Finale est placée avant Phase 1 mais commence plus tard');
+        self::assertSelectorTextContains('body', 'Phase finale est placée avant Phase 1 mais commence plus tard');
         self::assertSame('true', $this->client->getCrawler()->filter('button[value="valider"]')->attr('aria-disabled'));
 
         // Les dates suivent l'ordre choisi : plus d'erreur

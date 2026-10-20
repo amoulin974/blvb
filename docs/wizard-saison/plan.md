@@ -9,7 +9,7 @@ Les choix qui fondent ce plan sont dans `decisions.md` (D1 à D15).
 ### Création d'une saison
 - `SaisonController::new` enregistre la saison ; `SaisonListener::postPersist` appelle
   `CompetitionCreator::creerPhasesEtPoules`, qui lit `config/app/saison.yaml` : 3 phases
-  (Phase 1, Phase 2, Phase Finale) de 4 poules A à D, niveaux 1 à 4, dates relatives (`01/09/n`),
+  (Phase 1, Phase 2, Phase finale) de 4 poules A à D, niveaux 1 à 4, dates relatives (`01/09/n`),
   2 montées et 2 descentes écrites en dur.
 - Le wizard existe à l'état d'ébauche : `SaisonWizardController` (une route
   `/admin/saison/{id}/wizard/etape/{step}`) et `templates/admin/saisonwizard/layout.html.twig`

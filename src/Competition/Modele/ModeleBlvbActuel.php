@@ -25,7 +25,7 @@ final class ModeleBlvbActuel implements ModeleSaison
         ['Phase 1', PhaseType::CHAMPIONNAT, '01/09/n', '01/02/n+1'],
         ['Phase 2', PhaseType::CHAMPIONNAT, '01/02/n+1', '01/06/n+1'],
         // Fin au 31 juillet, comme la saison (l'ancien YAML disait 1er août, hors de la saison)
-        ['Phase Finale', PhaseType::FINALE, '01/06/n+1', '31/07/n+1'],
+        ['Phase finale', PhaseType::FINALE, '01/06/n+1', '31/07/n+1'],
     ];
     private const POULES = ['Poule A' => 1, 'Poule B' => 2, 'Poule C' => 3, 'Poule D' => 4];
 

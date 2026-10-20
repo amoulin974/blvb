@@ -330,7 +330,7 @@ class ChargerBaseRecetteCommand extends Command
         $phases = [
             ['Phase 1', PhaseType::CHAMPIONNAT, $debut, $p1Fin],
             ['Phase 2', PhaseType::CHAMPIONNAT, $p2Debut, $p2Fin],
-            ['Phase Finale', PhaseType::FINALE, $p2Fin->modify('+1 day'), $fin],
+            ['Phase finale', PhaseType::FINALE, $p2Fin->modify('+1 day'), $fin],
         ];
         foreach ($phases as $ordre => [$nom, $type, $du, $au]) {
             $phase = (new Phase())->setNom($nom)->setType($type)->setOrdre($ordre)->setClose(0)->setDatedebut($du)->setDatefin($au);

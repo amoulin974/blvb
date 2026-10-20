@@ -48,7 +48,7 @@ final class CodesCompetitionTest extends TestCase
     {
         $poules = ['Poule A' => 1, 'Poule B' => 2, 'Poule C' => 3, 'Poule D' => 4];
         $saison = $this->saison([
-            'Phase Finale' => [PhaseType::FINALE, 2, $poules],
+            'Phase finale' => [PhaseType::FINALE, 2, $poules],
             'Phase 1' => [PhaseType::CHAMPIONNAT, 0, $poules],
             'Phase 2' => [PhaseType::CHAMPIONNAT, 1, $poules],
         ]);
@@ -56,7 +56,7 @@ final class CodesCompetitionTest extends TestCase
         CodesCompetition::attribuer($saison);
 
         $abcd = ['Poule A' => 'A', 'Poule B' => 'B', 'Poule C' => 'C', 'Poule D' => 'D'];
-        self::assertSame(['Phase Finale' => ['F', $abcd], 'Phase 1' => ['P1', $abcd], 'Phase 2' => ['P2', $abcd]], self::codes($saison));
+        self::assertSame(['Phase finale' => ['F', $abcd], 'Phase 1' => ['P1', $abcd], 'Phase 2' => ['P2', $abcd]], self::codes($saison));
     }
 
     #[TestDox('Noms sans lettre finale : première lettre libre dans l\'ordre des niveaux, sans reprendre une lettre déjà tirée d\'un nom')]

@@ -60,8 +60,9 @@ Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal d
 - **Reportés des relectures de R2** (20/10/2026) : bouton « Modifier le règlement » dans l'encart des codes
   inapplicables (R4, quand la page d'édition existe) ; ancre `#regle-1r` présente dans le texte importé (R5), sinon le
   lien du barème est mort ; nom et « Mis à jour le … » imprimés (R3) ; dates courtes sur téléphone dans le calendrier
-  (facultatif). Ergonome : « Phase Finale » → « Phase finale » dans les modèles `ModeleBlvbActuel` et
-  `ModeleBlvbAvecBarrages` (hors règlement, touche le wizard et ses tests : à décider).
+  (facultatif). Ergonome : « Phase Finale » écrit « Phase finale » dans les modèles `ModeleBlvbActuel` et
+  `ModeleBlvbAvecBarrages`, la recette et les fixtures (fait le 20/10/2026, choix de l'utilisateur ; les saisons déjà
+  créées gardent leur nom).
 - **Données 2025 à corriger dans le back-office** (relevé à l'aperçu) : journées de la phase finale aux noms et dates
   incohérents (avant le début de la phase, dates limites identiques d'un tour à l'autre) ; journée 3 des poules C et D le
   16/02/2026, pendant « Vacance d'hiver » ; noms des fermetures ; tableaux nommés « Poule A » à « Poule D ».

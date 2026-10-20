@@ -21,7 +21,7 @@ final class ModeleBlvbActuelTest extends TestCase
         return $saison;
     }
 
-    #[TestDox('Trois phases (Phase 1, Phase 2 en championnat, Phase Finale), dates relatives à l\'année de début, codes P1, P2, F')]
+    #[TestDox('Trois phases (Phase 1, Phase 2 en championnat, Phase finale), dates relatives à l\'année de début, codes P1, P2, F')]
     public function test_phases(): void
     {
         $phases = array_map(fn ($p) => [$p->getNom(), $p->getType(), $p->getCode(), $p->getOrdre(), $p->getClose(),
@@ -30,7 +30,7 @@ final class ModeleBlvbActuelTest extends TestCase
         self::assertSame([
             ['Phase 1', PhaseType::CHAMPIONNAT, 'P1', 0, 0, '2026-09-01', '2027-02-01'],
             ['Phase 2', PhaseType::CHAMPIONNAT, 'P2', 1, 0, '2027-02-01', '2027-06-01'],
-            ['Phase Finale', PhaseType::FINALE, 'F', 2, 0, '2027-06-01', '2027-07-31'],
+            ['Phase finale', PhaseType::FINALE, 'F', 2, 0, '2027-06-01', '2027-07-31'],
         ], $phases);
     }
 

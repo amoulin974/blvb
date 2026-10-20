@@ -86,7 +86,7 @@ final class WizardBarragesFinSaisonTest extends TestFonctionnel
         foreach ($this->phase('P2')->getPoules() as $poule) {
             self::assertSame('simple', $crawler->filter('input[name="p['.$poule->getId().'][mode]"]')->attr('value'), $poule->getNom().' en mode simple');
         }
-        $sectionP2 = $crawler->filter('section')->reduce(fn ($s) => str_contains($s->filter('h3')->text(''), 'Phase 2 → Phase Finale'));
+        $sectionP2 = $crawler->filter('section')->reduce(fn ($s) => str_contains($s->filter('h3')->text(''), 'Phase 2 → Phase finale'));
         self::assertStringNotContainsString('Montées et descentes pour la saison suivante', $sectionP2->text());
         self::assertCount(0, $sectionP2->filter('optgroup[label="Barrages de fin de saison"]'));
         self::assertSelectorNotExists('body:contains("Proposition selon le schéma du bureau")');

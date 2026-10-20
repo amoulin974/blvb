@@ -33,7 +33,7 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
         return $parCode;
     }
 
-    #[TestDox('Cinq phases : Phase 1, Barrages (une semaine), Phase 2, Phase Finale, Barrages de fin de saison, codes P1, BAR, P2, F, BAR2')]
+    #[TestDox('Cinq phases : Phase 1, Barrages (une semaine), Phase 2, Phase finale, Barrages de fin de saison, codes P1, BAR, P2, F, BAR2')]
     public function test_phases(): void
     {
         $phases = array_map(fn ($p) => [$p->getNom(), $p->getType(), $p->getCode(), $p->getOrdre(),
@@ -43,7 +43,7 @@ final class ModeleBlvbAvecBarragesTest extends TestCase
             ['Phase 1', PhaseType::CHAMPIONNAT, 'P1', 0, '2026-09-01', '2027-02-01'],
             ['Barrages', PhaseType::BARRAGE, 'BAR', 1, '2027-02-01', '2027-02-08'],
             ['Phase 2', PhaseType::CHAMPIONNAT, 'P2', 2, '2027-02-08', '2027-06-01'],
-            ['Phase Finale', PhaseType::FINALE, 'F', 3, '2027-06-01', '2027-07-31'],
+            ['Phase finale', PhaseType::FINALE, 'F', 3, '2027-06-01', '2027-07-31'],
             ['Barrages de fin de saison', PhaseType::BARRAGE, 'BAR2', 4, '2027-06-01', '2027-07-31'],
         ], $phases);
     }

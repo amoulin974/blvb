@@ -105,7 +105,7 @@ final class WizardBarragesTest extends TestFonctionnel
 
         $valeurs = $crawler->filter('#wizard-form')->form()->getPhpValues();
         foreach ($valeurs['phases_wizard']['phases'] as $i => $phase) {
-            if (($phase['nom'] ?? '') === 'Phase Finale') {
+            if (($phase['nom'] ?? '') === 'Phase finale') {
                 $valeurs['phases_wizard']['phases'][$i]['petiteFinale'] = '1';
             }
         }

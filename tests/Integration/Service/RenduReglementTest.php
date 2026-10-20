@@ -105,7 +105,7 @@ final class RenduReglementTest extends TestIntegration
         [$inconnu, $parametre, $valeur, $sansParametre] = array_column($public['inapplicables'], 'raison');
         self::assertStringStartsWith('aucun élément calculé ne s\'appelle « inconnu ». Codes possibles : schema_phases, bareme, departage, calendrier.', $inconnu);
         self::assertSame('paramètre « saison » inconnu. Paramètres possibles : phase.', $parametre);
-        self::assertStringStartsWith('« FIN » n\'est pas une valeur possible pour « phase » dans cette saison. Valeurs possibles : P1 (Phase 1), BAR (Barrages), P2 (Phase 2), F (Phase Finale)', $valeur);
+        self::assertStringStartsWith('« FIN » n\'est pas une valeur possible pour « phase » dans cette saison. Valeurs possibles : P1 (Phase 1), BAR (Barrages), P2 (Phase 2), F (Phase finale)', $valeur);
         self::assertSame('« departage » n\'accepte aucun paramètre.', $sansParametre);
 
         $admin = self::texte($this->rendre($contenu, true)['html']);
@@ -164,7 +164,7 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringContainsString('Phase 1 · 3 sets gagnants Résultat Points Victoire 3-0 ou 3-1 3 Victoire 3-2 2 Défaite 2-3 1 Défaite 1-3 ou 0-3 0 Victoire par forfait 3 Forfait (équipe absente) -1', $texte);
         self::assertStringContainsString('Forfait (équipe absente) -1 Match interrompu à 2-1 (règle 1R) 2 Match interrompu à 1-2 ou 2-2 (règle 1R) 1 Match interrompu à 1-1, 1-0 ou 0-1 (règle 1R) 0', $texte);
         self::assertStringContainsString('Phase 2 · 2 sets gagnants Résultat Points Victoire 2-0 3 Victoire 2-1 2 Défaite 1-2 1 Défaite 0-2 0', $texte);
-        self::assertStringContainsString('Barrages, Phase Finale et Barrages de fin de saison : pas de points au classement, seul compte le vainqueur du match (3 sets gagnants).', $texte);
+        self::assertStringContainsString('Barrages, Phase finale et Barrages de fin de saison : pas de points au classement, seul compte le vainqueur du match (3 sets gagnants).', $texte);
         self::assertStringContainsString('href="#regle-1r"', $html);
     }
 

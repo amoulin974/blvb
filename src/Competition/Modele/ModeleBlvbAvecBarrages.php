@@ -58,7 +58,7 @@ final class ModeleBlvbAvecBarrages implements ModeleSaison
         $barrage = $this->phase($saison, 'Barrages', PhaseType::BARRAGE, 1, '01/02/n+1', '08/02/n+1');
         $barrage->setOptions(['reception' => Phase::RECEPTION_NIVEAU_SUPERIEUR]);
         $phase2 = $this->phase($saison, 'Phase 2', PhaseType::CHAMPIONNAT, 2, '08/02/n+1', '01/06/n+1');
-        $finale = $this->phase($saison, 'Phase Finale', PhaseType::FINALE, 3, '01/06/n+1', '31/07/n+1');
+        $finale = $this->phase($saison, 'Phase finale', PhaseType::FINALE, 3, '01/06/n+1', '31/07/n+1');
         $barrageFin = $this->phase($saison, 'Barrages de fin de saison', PhaseType::BARRAGE, 4, '01/06/n+1', '31/07/n+1');
         $barrageFin->setOptions(['reception' => Phase::RECEPTION_NIVEAU_SUPERIEUR]);
 
