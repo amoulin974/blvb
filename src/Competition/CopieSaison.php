@@ -7,6 +7,7 @@ use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\RegleDePassage;
 use App\Entity\Saison;
+use App\Reglement\EditionReglement;
 use App\Repository\ClassementRepository;
 use DateTimeImmutable;
 use Doctrine\ORM\EntityManagerInterface;
@@ -14,14 +15,16 @@ use Doctrine\ORM\EntityManagerInterface;
 /**
  * Nouvelle saison par copie d'une saison existante, point de départ du wizard (docs/wizard-saison/decisions.md, D3,
  * D10, D22) : sport, barème, départage, phases (dates décalées comme le début de saison), poules, codes et règles de
- * passage sont recopiés ; les montées et descentes « pour la saison suivante » de la saison copiée pré-remplissent
- * les poules de la première phase, si la phase qui les porte est clôturée.
+ * passage sont recopiés, ainsi que le texte du règlement (D56, sans son historique) ; les montées et descentes « pour
+ * la saison suivante » de la saison copiée pré-remplissent les poules de la première phase, si la phase qui les porte
+ * est clôturée.
  */
 final class CopieSaison
 {
     public function __construct(
         private EntityManagerInterface $em,
         private ClassementRepository $classementRepository,
+        private EditionReglement $editionReglement,
     ) {
     }
 
@@ -102,6 +105,9 @@ final class CopieSaison
         $avertissements = $this->preRemplir($source, $saison);
 
         $this->em->persist($saison);
+        if ($reglement = $this->editionReglement->copier($source, $saison)) {
+            $this->em->persist($reglement);
+        }
         foreach ($saison->getPhases() as $phase) {
             $this->em->persist($phase);
             foreach ($phase->getPoules() as $poule) {

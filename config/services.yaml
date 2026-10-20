@@ -57,6 +57,10 @@ services:
     App\Competition\Modele\:
         resource: '../src/Competition/Modele/'
 
+    # Règlement d'une saison : enregistrement, éléments calculés (docs/wizard-saison/decisions.md, D55 à D57)
+    App\Reglement\:
+        resource: '../src/Reglement/'
+
     # --------------------------------------------------------
     # Contrôleurs
     App\Controller\:
@@ -83,3 +87,7 @@ services:
 when@test:
     parameters:
         app.dossier_images_clubs: '%kernel.project_dir%/var/test/uploads/clubs'
+    services:
+        # Services utilisés une seule fois, donc retirés du conteneur de test : rendus accessibles aux tests
+        App\Competition\CopieSaison: { autowire: true, public: true }
+        App\Reglement\EditionReglement: { autowire: true, public: true }

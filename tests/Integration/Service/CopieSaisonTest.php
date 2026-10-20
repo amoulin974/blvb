@@ -14,12 +14,13 @@ use App\Factory\IndisponibiliteFactory;
 use App\Factory\PhaseFactory;
 use App\Factory\PouleFactory;
 use App\Factory\SaisonFactory;
-use App\Repository\ClassementRepository;
+use App\Reglement\EditionReglement;
+use App\Repository\ReglementRepository;
 use App\Service\ClassementService;
 use App\Tests\Support\TestIntegration;
 use PHPUnit\Framework\Attributes\TestDox;
 
-/** CPS-01 à CPS-03 : nouvelle saison par copie d'une saison existante (App\Competition\CopieSaison, D10, D22). */
+/** CPS-01 à CPS-04 : nouvelle saison par copie d'une saison existante (App\Competition\CopieSaison, D10, D22). */
 final class CopieSaisonTest extends TestIntegration
 {
     private object $source;
@@ -79,8 +80,7 @@ final class CopieSaisonTest extends TestIntegration
     {
         $em = self::service('doctrine')->getManager();
         $em->clear();
-        // Construit à la main tant qu'aucun écran ne l'utilise (service retiré du conteneur de test)
-        $copie = new CopieSaison($em, self::service(ClassementRepository::class));
+        $copie = self::service(CopieSaison::class);
         $resultat = $copie->copier($em->find(Saison::class, $this->source->getId()), 'Saison copie',
             new \DateTimeImmutable('2026-09-01'), new \DateTimeImmutable('2027-07-31'));
         $em->clear();
@@ -150,5 +150,22 @@ final class CopieSaisonTest extends TestIntegration
                 self::assertSame([], self::noms($poule), $phase->getNom().' / '.$poule->getNom());
             }
         }
+    }
+
+    #[TestDox('CPS-04 Le texte du règlement est recopié dans la nouvelle saison, sans ses versions précédentes')]
+    public function test_reglement(): void
+    {
+        $em = self::service('doctrine')->getManager();
+        $edition = self::service(EditionReglement::class);
+        $source = $em->find(Saison::class, $this->source->getId());
+        $edition->enregistrer($source, '<p>Première version</p>', null);
+        $edition->enregistrer($source, '<h2>Barème</h2><p>[bareme phase=P1]</p>', null);
+
+        [$copie] = $this->copier();
+
+        $reglement = self::service(ReglementRepository::class)->findDeSaison($copie);
+        self::assertNotNull($reglement);
+        self::assertSame('<h2>Barème</h2><p>[bareme phase=P1]</p>', $reglement->getContenu());
+        self::assertCount(0, $reglement->getVersions());
     }
 }

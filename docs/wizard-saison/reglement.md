@@ -16,7 +16,7 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
   `[code phase=P2]` (`phase` facultatif : une phase par son code, D20, sinon toute la saison) : `[schema_phases]`,
   `[bareme]`, `[departage]`, `[calendrier]`. À l'affichage, `RenduReglement` remplace chaque code court par le rendu
   du bloc ; un code inapplicable (code inconnu, phase absente, élément sans objet) n'affiche rien au public ; un admin
-  connecté voit à sa place un encart d'avertissement avec la raison, et la page d'édition les liste en tête. Un code court entre accents graves (`` `[bareme]` ``) n'est pas remplacé, pour pouvoir en parler.
+  connecté voit à sa place un encart d'avertissement avec la raison, et la page d'édition les liste en tête. Un code court mis en forme « code » (`<code>[bareme]</code>`) n'est pas remplacé, pour pouvoir en parler.
 - **Blocs** : interface `BlocReglement` (`code`, `libelle`, `rendre(Saison, ?Phase)`), services tagués comme
   `GenerateurFormat` ; un gabarit Twig par bloc dans `templates/reglement/blocs/`.
   Chaque bloc déclare ses paramètres (nom, rôle, valeurs possibles calculées pour la saison, valeur par défaut) ;
@@ -47,7 +47,7 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 
 | # | Contenu | État |
 |---|---|---|
-| R1 | Données : `Reglement`, `ReglementVersion`, migration ; nettoyage HTML ; copie dans `CopieSaison` ; tests | ⬜ |
+| R1 | Données : `Reglement`, `ReglementVersion`, migration `Version20261020164942` ; nettoyage HTML (`App\Reglement\EditionReglement`, sanitizer `app.reglement`) ; copie dans `CopieSaison` ; RGL-01 à RGL-03, CPS-04 | ✅ |
 | R2 | Blocs : interface, registre, 4 blocs, `RenduReglement` (codes courts, ancres) ; tests unitaires et d'intégration | ⬜ |
 | R3 | Page publique : `/reglement` selon la saison affichée, brouillon refusé, saison sans règlement (message), sommaire, lien `#regle-1r` de la fenêtre de score ; relu ergonome + webdesigner | ⬜ |
 | R4 | Édition admin : page par saison, éditeur, panneau « Éléments calculés » (codes courts et rendus), aperçu, envoi d'images, historique et restauration, liens depuis la saison et le wizard ; relu ergonome + webdesigner + sécurité | ⬜ |

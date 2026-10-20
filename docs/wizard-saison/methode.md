@@ -346,6 +346,17 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   conserve ces règles dans toutes ses branches (simple, détaillé, « Rétablir », « mode simple »). 569 tests verts + 2 lents.
 - **Reste du lot 6** : vérifier dans le navigateur la fenêtre de saisie en format court et la mise en place d'une phase de barrages.
 
+### 2026-10-20 : règlement par saison, étape R1
+
+- Branche `reglement` créée depuis `formats-competition-lot6` (tient lieu de lot 11) ; spécifications recueillies auprès
+  de l'utilisateur : D55 à D57 ; plan dans `reglement.md`.
+- **R1 fait** : entités `Reglement` (une par saison, suppression en cascade avec la saison) et `ReglementVersion`,
+  migration `Version20261020164942` ; `App\Reglement\EditionReglement` (nettoyage par `symfony/html-sanitizer`,
+  nouvelle dépendance, configuration `config/packages/html_sanitizer.yaml` ; enregistrement, versions, restauration,
+  copie) ; `CopieSaison` recopie le texte. Le sanitizer encode « = » : rétabli pour garder les codes courts lisibles.
+  `CopieSaison` et `EditionReglement` rendus publics dans le conteneur de test. 574 tests verts.
+- **Suite** : R2 (éléments calculés), maquettes du webdesigner à montrer à l'utilisateur avant de coder les rendus.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition-lot6 && git pull` (lot en cours, pas
