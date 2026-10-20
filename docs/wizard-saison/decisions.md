@@ -566,6 +566,20 @@ rendu pour la saison.
 - **Jours fériés** : texte libre (une semaine entière sans match se saisit comme fermeture).
 *(2026-10-20, règlement)*
 
+## D59. Règlement : page d'édition des admins (R4)
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes-r4.md`) :
+- **Brouillon** : le règlement d'une saison en brouillon se rédige dès le wizard ; aperçu seulement (jamais public, D57) ;
+  statut « Brouillon : visible par le public quand la saison sera lancée », bouton « Enregistrer ». Saison visible :
+  « Enregistrer et publier ».
+- **Voir la page publique** : pour un admin, `/reglement?saison=<id>` ouvre la saison modifiée (saison visible
+  seulement).
+- **Deux admins en même temps** : à l'enregistrement, si une autre version a été publiée depuis l'ouverture de la page,
+  avertir (« A. Moulin a publié une autre version à 14 h 40 ») et laisser choisir « Publier la mienne quand même »
+  (l'autre reste dans l'historique) ou « Annuler ».
+- **Conservation** : toutes les versions sont gardées ; les images envoyées restent sur le serveur (nettoyage plus tard,
+  sans jamais supprimer une image citée dans l'historique) ; description d'image obligatoire, ou case « Image décorative ».
+*(2026-10-20, règlement)*
+
 ---
 
 ## Points ouverts

@@ -1,7 +1,7 @@
 # Règlement par saison : plan de mise en œuvre
 
 Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; elle tient lieu de lot 11
-(`lots.md`). Décisions : D14, D55 à D58 ; maquettes : `reglement-maquettes.md`.
+(`lots.md`). Décisions : D14, D55 à D59 ; maquettes : `reglement-maquettes.md` (éléments calculés), `reglement-maquettes-r4.md` (édition).
 
 États : ⬜ à faire · 🟡 en cours · ✅ terminé
 
