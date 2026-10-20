@@ -1,0 +1,80 @@
+{# [schema_phases] (App\Reglement\Bloc\SchemaPhases, D58, docs/wizard-saison/reglement-maquettes.md) : une phase par
+   élément de liste ; poules en cartes (2 colonnes au plus), barrages par match, tableaux finaux en tours (colonnes
+   quand la place le permet, .tableau-final). Titres internes h3 / h4 sans ancre ni entrée de sommaire. #}
+<section class="reglement-bloc" data-bloc="schema_phases" aria-label="Schéma des phases">
+    <ol class="reglement-schema">
+        {% for phase in phases %}
+            <li class="reglement-schema-phase">
+                <h3 class="reglement-bloc-titre">{{ phase.nom }}</h3>
+                <p class="reglement-bloc-infos">{{ phase.infos }}</p>
+
+                {% if phase.poules is not empty %}
+                    <ul class="reglement-cartes">
+                        {% for poule in phase.poules %}
+                            <li class="reglement-carte">
+                                <p class="reglement-carte-titre">{{ poule.nom }}{% if poule.effectif %}<span class="reglement-carte-effectif"> · {{ poule.effectif }}</span>{% endif %}</p>
+                                {% for groupe in poule.groupes %}
+                                    <p class="reglement-carte-groupe">{{ groupe.titre }}</p>
+                                    <ul class="reglement-sorties">
+                                        {% for sortie in groupe.sorties %}<li>{{ sortie }}</li>{% endfor %}
+                                    </ul>
+                                {% endfor %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if phase.barrages is not empty %}
+                    {% if phase.reception %}<p class="reglement-bloc-infos">{{ phase.reception }}</p>{% endif %}
+                    <ul class="reglement-cartes">
+                        {% for barrage in phase.barrages %}
+                            <li class="reglement-carte">
+                                <p class="reglement-carte-titre">{{ barrage.nom }}</p>
+                                {% if barrage.adversaires %}<p>{{ barrage.adversaires }}</p>{% endif %}
+                                {% if barrage.issues is not empty %}
+                                    <ul class="reglement-sorties">
+                                        {% for issue in barrage.issues %}<li>{{ issue }}</li>{% endfor %}
+                                    </ul>
+                                {% endif %}
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                {% if phase.terminale %}
+                    <p class="reglement-bloc-infos">La phase finale ne compte pas pour les montées et descentes.</p>
+                {% endif %}
+
+                {% for tableau in phase.tableaux %}
+                    <div class="reglement-tableau">
+                        <h4 class="reglement-bloc-titre">{{ tableau.nom }}</h4>
+                        {% if tableau.legende %}<p class="reglement-bloc-infos">{{ tableau.legende }}</p>{% endif %}
+                        {% if tableau.exemption %}<p class="reglement-bloc-infos">{{ tableau.exemption }}</p>{% endif %}
+                        {% if tableau.tours is empty %}
+                            <p class="reglement-bloc-infos">Le tableau sera établi à la fin de la phase précédente.</p>
+                        {% else %}
+                            <ol class="tableau-final" data-tours="{{ tableau.colonnes }}">
+                                {% for tour in tableau.tours %}
+                                    <li class="tableau-final-tour">
+                                        <p class="tableau-final-nom">{{ tour.nom }}</p>
+                                        {% if tour.date %}<p class="tableau-final-date">{{ tour.date }}</p>{% endif %}
+                                        <ol class="tableau-final-matchs">
+                                            {% for match in tour.matchs %}
+                                                <li class="match-tableau">
+                                                    <span class="match-tableau-nom">{{ match.nom }}<span class="sr-only"> :</span></span>
+                                                    <span class="match-tableau-equipe">{{ match.equipes[0] }}</span>
+                                                    <span class="sr-only"> contre </span>
+                                                    <span class="match-tableau-equipe">{{ match.equipes[1] }}</span>
+                                                </li>
+                                            {% endfor %}
+                                        </ol>
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </li>
+        {% endfor %}
+    </ol>
+</section>

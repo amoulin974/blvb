@@ -550,8 +550,8 @@ rendu pour la saison.
   (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
   numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
 - **Barème** : un tableau par format de match ; lignes « Victoire par forfait » et « Forfait (équipe absente) » ; ligne
-  « Match interrompu à égalité (règle 1R) » avec lien vers la règle quand la saison donne des points au nul ; le texte de
-  la règle 1R n'écrit plus les points en dur. Phase à élimination : une phrase, pas de tableau.
+  « Match interrompu (règle 1R) », points fixés par le règlement (`Volley::pointsInterrompus`, selon le format de match),
+  avec lien vers la règle ; le texte de la règle 1R n'écrit plus les points en dur. Phase à élimination : une phrase, pas de tableau.
 - **Départage** : liste numérotée, aides du wizard.
 - **Calendrier** : tableau « semaine / programme » par phase, fermetures, journée des finales, « Cette semaine » ; les tours
   d'une phase à élimination s'affichent « à jouer avant le … » (date limite du tour), sauf la journée des finales.

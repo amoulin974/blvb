@@ -60,6 +60,8 @@ services:
     # Règlement d'une saison : enregistrement, éléments calculés (docs/wizard-saison/decisions.md, D55 à D57)
     App\Reglement\:
         resource: '../src/Reglement/'
+        # Valeurs et textes, pas des services
+        exclude: '../src/Reglement/{ParametreBloc.php,BlocInapplicable.php,Texte.php,Bloc/TableauElimination.php}'
 
     # --------------------------------------------------------
     # Contrôleurs
@@ -91,3 +93,4 @@ when@test:
         # Services utilisés une seule fois, donc retirés du conteneur de test : rendus accessibles aux tests
         App\Competition\CopieSaison: { autowire: true, public: true }
         App\Reglement\EditionReglement: { autowire: true, public: true }
+        App\Reglement\RenduReglement: { autowire: true, public: true }

@@ -128,6 +128,17 @@ final class Volley implements RegleSport
         return $setsGagnants === 2;
     }
 
+    /**
+     * Points d'un match interrompu (règle 1R) selon le score, pour l'équipe qui a le premier nombre de sets ;
+     * affichés par le barème du règlement (App\Reglement\Bloc\BlocBareme).
+     *
+     * @return array<string, int>
+     */
+    public static function pointsInterrompus(int $setsGagnants): array
+    {
+        return self::interrompus($setsGagnants);
+    }
+
     /** @return array<string, int> */
     private static function interrompus(int $setsGagnants): array
     {

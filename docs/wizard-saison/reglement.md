@@ -48,7 +48,7 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 | # | Contenu | État |
 |---|---|---|
 | R1 | Données : `Reglement`, `ReglementVersion`, migration `Version20261020164942` ; nettoyage HTML (`App\Reglement\EditionReglement`, sanitizer `app.reglement`) ; copie dans `CopieSaison` ; RGL-01 à RGL-03, CPS-04 | ✅ |
-| R2 | Blocs : interface, registre, 4 blocs, `RenduReglement` (codes courts, ancres) ; tests unitaires et d'intégration | ⬜ |
+| R2 | Blocs : `BlocReglement`, `BlocsReglement`, `SchemaPhases` (avec `TableauElimination`), `BlocBareme`, `BlocDepartage`, `BlocCalendrier`, `RenduReglement` (codes courts, ancres, codes inapplicables), `Texte` (mots publics) ; RGL-04 à RGL-11 | ✅ |
 | R3 | Page publique : `/reglement` selon la saison affichée, brouillon refusé, saison sans règlement (message), sommaire, lien `#regle-1r` de la fenêtre de score ; relu ergonome + webdesigner | ⬜ |
 | R4 | Édition admin : page par saison, éditeur, panneau « Éléments calculés » (codes courts et rendus), aperçu, envoi d'images, historique et restauration, liens depuis la saison et le wizard ; relu ergonome + webdesigner + sécurité | ⬜ |
 | R5 | Reprise : commande `app:reglement:importer` (simulation puis application) qui verse le gabarit actuel dans la saison en cours, images conservées ; suppression du gabarit en dur ; checklist de déploiement (agent `deploiement`) | ⬜ |
@@ -56,6 +56,15 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal de `methode.md`.
 
 ## Points à trancher en cours de route
+
+- **Reportés des relectures de R2** (20/10/2026) : bouton « Modifier le règlement » dans l'encart des codes
+  inapplicables (R4, quand la page d'édition existe) ; ancre `#regle-1r` présente dans le texte importé (R5), sinon le
+  lien du barème est mort ; nom et « Mis à jour le … » imprimés (R3) ; dates courtes sur téléphone dans le calendrier
+  (facultatif). Ergonome : « Phase Finale » → « Phase finale » dans les modèles `ModeleBlvbActuel` et
+  `ModeleBlvbAvecBarrages` (hors règlement, touche le wizard et ses tests : à décider).
+- **Données 2025 à corriger dans le back-office** (relevé à l'aperçu) : journées de la phase finale aux noms et dates
+  incohérents (avant le début de la phase, dates limites identiques d'un tour à l'autre) ; journée 3 des poules C et D le
+  16/02/2026, pendant « Vacance d'hiver » ; noms des fermetures ; tableaux nommés « Poule A » à « Poule D ».
 
 - Texte de la règle 1R en 2 sets gagnants (validation du comité attendue, lot 6f-1) : reste du texte libre.
 - Rendu du schéma des phases sur téléphone (webdesigner).

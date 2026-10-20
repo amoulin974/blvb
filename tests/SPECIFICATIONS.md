@@ -63,11 +63,12 @@ tests/
 ├── Unitaire/                      ← classes isolées, sans noyau ni base (millisecondes)
 │   ├── Competition/                  notation des places, règles du sport et barème (Sport/), choix du format (Format/),
 │   │                                 critères de départage (Classement/) — §4.3 et §4.16
+│   ├── Reglement/                    mots publics et tableau à élimination du règlement — §4.17
 │   ├── Service/                      CalendrierAnalyseService, calculs purs extraits…
 │   └── Twig/
 ├── Integration/                   ← KernelTestCase + base de test (services réels, Doctrine réel)
 │   ├── Service/                      ClassementService, JourneeService, PartieService, PhaseService,
-│   │                                 CalendarIcsGenerator, ContactCapitaineService, EditionReglement (§4.17)
+│   │                                 CalendarIcsGenerator, ContactCapitaineService, EditionReglement, RenduReglement (§4.17)
 │   ├── Repository/                   MembreEquipeRepository (estCapitaine, definirCapitaine…)
 │   └── Import/                       import Excel des utilisateurs
 ├── Fonctionnel/                   ← WebTestCase : requêtes HTTP de bout en bout, sans navigateur
@@ -511,12 +512,24 @@ L'aller simple (MAT-01 à MAT-06) est inchangé : mêmes tests, mêmes résultat
 - **SET-05** *`Unitaire/Entity/PhaseDureeMatchTest`* et *`WizardFormatMatchTest`* : durée d'un match proposée pour la journée des finales selon le format (120 minutes en 3 sets gagnants, 75 en 2 sets), conservée si elle est enregistrée ; le champ de l'étape 3 est pré-rempli en conséquence.
 La fenêtre de saisie elle-même (champs 0 à 2, aide du match interrompu, résumé des points) s'exécute dans le navigateur : à couvrir par E2E-01.
 
-### 4.17 Règlement par saison — `Integration/Service/EditionReglementTest` (P1, branche `reglement`, D55 à D57)
+### 4.17 Règlement par saison — `Integration/Service/EditionReglementTest`, `RenduReglementTest`, `Unitaire/Reglement/` (P1, branche `reglement`, D55 à D58)
 
 **RGL-01 à RGL-03 — Enregistrement du règlement** ✅ (`App\Reglement\EditionReglement`) :
 - **RGL-01** : nettoyage du HTML de l'éditeur (sanitizer `app.reglement`) : scripts, attributs d'événement, styles, `id`, cadres, images externes et liens `javascript:` retirés ; titres, mise en forme, liens `https`, images du site (adresse relative) et codes courts (« [bareme phase=P2] », « = » rétabli) conservés.
 - **RGL-02** : enregistrer publie le contenu (date, auteur) et garde le contenu précédent comme version, avec sa date et son auteur ; un enregistrement identique ne crée pas de version.
 - **RGL-03** : restaurer une version la republie ; le contenu remplacé devient à son tour une version.
+
+**RGL-04 à RGL-09 — Affichage du règlement et éléments calculés** ✅ *`Integration/Service/RenduReglementTest`* (`App\Reglement\RenduReglement`, blocs `App\Reglement\Bloc\*`, modèle « BLVB avec barrages », D58) :
+- **RGL-04** : ancre sur chaque titre : code de la règle (« RÈGLE 1R » → `#regle-1r`, lien de la fenêtre de score), sinon titre sans accents ; doublons numérotés.
+- **RGL-05** : un code court seul dans son paragraphe remplace le paragraphe ; au fil du texte, remplacé sur place ; dans `<code>`, laissé tel quel.
+- **RGL-06** : code inapplicable (code inconnu, paramètre inconnu, valeur absente de la saison, paramètre sur un élément qui n'en a pas) : rien pour le public ; un admin voit un encart avec la raison et les valeurs possibles ; liste des codes inapplicables rendue ; un encart n'est jamais relu comme du texte.
+- **RGL-07** : `[schema_phases]` : informations de la phase (format, période, sets gagnants) ; sorties de chaque poule en mots publics (« Du 1er au 6e : restent en poule A », « 8e : descend en poule B », « 7e : joue le barrage A / B »), groupées par phase d'arrivée, rangs voisins vers la même destination fusionnés (aussi sans effectif connu : « Tous sauf les 2 derniers ») ; barrages par leur composition (« 7e de la poule A (Phase 1) contre 2e de la poule B (Phase 1) »), issues et réception ; tableau final calculé depuis les règles (« 8 équipes de la poule A (Phase 2) », quarts au placement standard), tableau sans effectif « établi à la fin de la phase précédente », phase finale terminale ; jamais « antépénultième » ni notation.
+- **RGL-08** : `[bareme]` : un tableau par format de match (3 et 2 sets gagnants), victoire par forfait et forfait, match interrompu (règle 1R, lien `#regle-1r`) avec les points du règlement ; phases sans classement en une phrase.
+- **RGL-09** : `[departage]` dans l'ordre de la saison ; `[calendrier]` : journées par semaine (« Journée 1, toutes les poules », « Poules A et B : journée 2 · poules C et D : journée 3 »), semaine sans match, journée des finales (date, heure, gymnase), « Cette semaine ».
+
+**RGL-10, RGL-11 — Mots publics et tableau à élimination** ✅ *`Unitaire/Reglement/TexteTest`*, *`Unitaire/Reglement/TableauEliminationTest`* :
+- **RGL-10** : rangs en mots publics, avec ou sans effectif (« du 2e au 6e », « les 2 derniers », « tous sauf les 2 derniers », « à partir du 3e, sauf les 2 derniers », « toutes les équipes ») ; énumération, heure, période, date en français.
+- **RGL-11** : déroulé d'un tableau de 9, 6, 4 et 2 équipes : barrages numérotés (un seul : non numéroté), exemptés, placement standard (1-8, 4-5, 2-7, 3-6), renvois « vainqueur du quart de finale 1 », petite finale (« perdant de la demi-finale 1 »).
 
 ---
 
@@ -605,7 +618,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Formats de compétition, lot 4** (en cours) | SPT-02, MOD-01, CPS-01 à CPS-03, WIZ-01 (§4.16) : sport de la saison, modèle « Format BLVB actuel » (fin de `config/app/saison.yaml`), copie d'une saison, brouillon, wizard complet (WIZ-02 à WIZ-17), modification d'une saison créée, fin de `SaisonListener`, relectures ergonome, webdesigner et sécurité (WIZ-14 à WIZ-17) | 385 tests verts + 2 lents (branche `formats-competition-lot4`) | en cours |
 | **Formats de compétition, lot 5** ✅ | MEP-01 à MEP-24 (étapes Poules, Journées, Matchs, replacement des matchs à venir, clôture sans création automatique) ; WIZ-18 à WIZ-21 ; PHA-10 et PHA-11 ; MEP-01 à MEP-08 (détail) : mise en place, étape « Poules » (composition de la phase, origine des équipes, équipes à placer, phase lancée en lecture seule, sécurité) ; MEP-09 à MEP-15 : étape « Journées » ; MEP-16 à MEP-23 : étape « Matchs » (dont replacement des matchs à venir, D41) ; PHA-03 mis à jour, PHA-10 et PHA-11 : clôture sans création automatique, avertissements avant clôture, conditions côté serveur (D37, D40) (génération, régénération, phase trop courte, régénération impossible sans perte, fermetures, sécurité et verrou) ; WIZ-11 mis à jour | 418 tests verts + 2 lents (branche `formats-competition-lot5`) | ✅ |
 | **Formats de compétition, lot 6** (en cours) | BAR-01 à BAR-06, MOD-02, WIZ-22 à WIZ-29, ELI-01 à ELI-04, JFI-01 à JFI-05, SET-01 à SET-05, ALR-01 à ALR-07, BAR-07 à BAR-09, VER-02, ADJ-01 à ADJ-09, FIN-01 à FIN-07 (§4.16), SCO-17 (§4.2) : wizard en mode ajout d'une saison lancée (6h, D51), barrages de fin de saison sans effet sur la phase finale (6g, D50), championnat aller-retour (6f-2), format de match à 2 ou 3 sets gagnants (6f-1), journée des finales (6e), tableau à élimination complet (têtes de série, exemptions, petite finale), phase de barrages (`PhaseType::BARRAGE`, `Phase.options`, générateur `Barrage`, issues de match, vérification des passages), modèle « BLVB avec barrages » proposé dans le wizard (étapes Phases, Passages, vérification) ; migrations `Version20261015100000` et `Version20261015110000` | 569 tests verts + 2 lents (branche `formats-competition-lot6`, avec MAI-01 et MAI-02 venus de `main`) | étapes 6a à 6d le 15/10/2026, 6e le 16/10/2026, 6f-1 (SET-01 à SET-05), 6f-2 (ALR-01 à ALR-07) et 6g (BAR-07 à BAR-09, VER-02) le 19/10/2026 |
-| **Règlement par saison** (en cours) | RGL-01 à RGL-03 (§4.17), CPS-04 : étape R1, tables `reglement` et `reglement_version` (migration `Version20261020164942`), nettoyage du HTML, versions, copie avec la saison | 574 tests verts + 2 lents (branche `reglement`) | R1 le 20/10/2026 |
+| **Règlement par saison** (en cours) | RGL-01 à RGL-03 (§4.17), CPS-04 : étape R1, tables `reglement` et `reglement_version` (migration `Version20261020164942`), nettoyage du HTML, versions, copie avec la saison ; RGL-04 à RGL-11 : étape R2, codes courts, ancres, codes inapplicables, quatre éléments calculés | 599 tests verts + 2 lents (branche `reglement`) | R1 et R2 le 20/10/2026 |
 | **Expéditeur des e-mails** ✅ | MAI-01 : un seul expéditeur, `blvb@vblc.fr` (anciennement `admin@blvb.fr` et `tech@vblc.fr`, refusés par le SMTP d'OVH) | 259 tests verts + 2 lents (`main`) | fait le 16/10/2026 |
 | **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |

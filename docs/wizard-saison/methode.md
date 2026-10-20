@@ -355,7 +355,16 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   nouvelle dépendance, configuration `config/packages/html_sanitizer.yaml` ; enregistrement, versions, restauration,
   copie) ; `CopieSaison` recopie le texte. Le sanitizer encode « = » : rétabli pour garder les codes courts lisibles.
   `CopieSaison` et `EditionReglement` rendus publics dans le conteneur de test. 574 tests verts.
-- **Suite** : R2 (éléments calculés), maquettes du webdesigner à montrer à l'utilisateur avant de coder les rendus.
+- Maquettes des éléments calculés (webdesigner), relues par l'ergonome, validées par l'utilisateur : D58,
+  `reglement-maquettes.md`.
+- **R2 fait** : `App\Reglement\RenduReglement` (ancres, codes courts, codes inapplicables : encart admin, rien au public),
+  registre `BlocsReglement` (tag `app.bloc_reglement`), blocs `SchemaPhases` (avec `TableauElimination`, déroulé d'un
+  tableau sans rien enregistrer), `BlocBareme`, `BlocDepartage`, `BlocCalendrier` ; mots publics dans `Texte` ; gabarits
+  `templates/reglement/` ; styles hors couche dans `app.css` ; `Volley::pointsInterrompus` ; `_alerte.html.twig` accepte
+  `role`. Relu par l'ergonome et le webdesigner sur un aperçu des données locales, retours intégrés (voir « Points à
+  trancher » de `reglement.md` pour les reports). Piège : un encart ou un élément rendu doit être mis de côté avant de
+  chercher d'autres codes courts (sinon le `<code>[…]</code>` de l'encart est remplacé à son tour). 600 tests verts.
+- **Suite** : R3, page publique.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
