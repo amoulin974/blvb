@@ -507,6 +507,9 @@ format des matchs, départage, calendrier (remplace `calendrier-2025.jpg`). Trav
 depuis `formats-competition-lot6` (elle tient lieu de lot 11).
 **Pourquoi** : le texte (règles de jeu, arbitrage, joueurs) change peu et reste l'affaire du bureau ; les parties qui
 dépendent des paramètres ne peuvent plus être en décalage avec ce que fait l'application.
+**Précision** (utilisateur, 20/10/2026) : le marqueur est un **code court** écrit dans le texte (ex. `[bareme]`,
+`[bareme phase=P2]`) ; la page d'édition montre la liste des éléments calculés, chacun avec son code court et son
+rendu pour la saison.
 *(2026-10-20, règlement)*
 
 ## D56. Règlement : reprise d'une saison à l'autre, publication et historique
