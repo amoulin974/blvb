@@ -239,11 +239,12 @@ body{
 .reglement-cette-semaine { color: var(--color-primary); }
 .reglement-calendrier tbody { break-inside: avoid; }
 .reglement-inapplicable p:last-child { margin-bottom: 0; }
+@media print { #article-reglement h2, #article-reglement h3 { break-after: avoid; } }
 
-/* Sommaire du règlement : tocbot recopie le texte des h2 tel qu'affiché (en capitales), on le remet en casse normale.
-   Hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
-.js-toc .toc-link { display: block; padding: 0.25rem 0; text-decoration: none; text-transform: lowercase; color: var(--color-primary); }
-.js-toc .toc-link::first-letter { text-transform: uppercase; }
+/* Sommaire du règlement : tocbot recopie le texte des titres tel qu'il est écrit (les capitales des h2 ne viennent que du
+   CSS) ; hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
+.js-toc .toc-link { display: block; padding: 0.25rem 0; text-decoration: none; color: var(--color-primary); }
+@media (width < 64rem) { .js-toc .toc-link { padding-block: 0.625rem; } }
 .js-toc .toc-link:hover { text-decoration: underline; }
 .js-toc .is-active-link { font-weight: 700; }
 

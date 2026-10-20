@@ -364,7 +364,15 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   `role`. Relu par l'ergonome et le webdesigner sur un aperçu des données locales, retours intégrés (voir « Points à
   trancher » de `reglement.md` pour les reports). Piège : un encart ou un élément rendu doit être mis de côté avant de
   chercher d'autres codes courts (sinon le `<code>[…]</code>` de l'encart est remplacé à son tour). 600 tests verts.
-- **Suite** : R3, page publique.
+- « Phase Finale » écrit « Phase finale » dans les modèles, la recette et les fixtures (choix de l'utilisateur).
+- **R3 fait** : `/reglement` rend le règlement de la saison choisie (nettoyé une seconde fois à l'affichage), titre,
+  « Mis à jour le … », saison passée signalée, message sans règlement ; sommaire h2/h3 sans les titres des éléments
+  calculés (`.js-toc-ignore`), refermé au choix d'un lien sur téléphone ; impression sans en-tête, menu ni pied (toutes les
+  pages publiques) ; `POST /set-saison` revient à la page d'origine (champ `retour`, chemin interne seulement). Un règlement
+  recopié avec la saison est daté de la copie. Relu par l'ergonome, le webdesigner et la sécurité (aucun constat critique
+  ni important ; codes courts ignorés dans les attributs, marqueurs internes retirés, `retour` plus strict). 605 tests verts.
+  Un règlement de démonstration est enregistré dans la base locale (saisons 1 et 3), à remplacer par l'import (R5).
+- **Suite** : R4, édition par les admins.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 

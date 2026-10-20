@@ -17,7 +17,10 @@ use App\Repository\MembreEquipeRepository;
 use App\Repository\PartieRepository;
 use App\Repository\ClubRepository;
 use App\Repository\EquipeRepository;
+use App\Repository\ReglementRepository;
 use App\Repository\SaisonRepository;
+use App\Reglement\EditionReglement;
+use App\Reglement\RenduReglement;
 use App\Service\CalendrierAnalyseService;
 use App\Security\ScoreVoter;
 use App\Service\ClassementService;
@@ -110,20 +113,28 @@ final class FrontController extends AbstractController
     //Route pour une page de réglement
     #[Route('/reglement', name: 'reglement', methods: ['GET'])]
     public function reglement(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-                                               $saisonRepository, ClassementService $classementService): Response
+                                               $saisonRepository, ReglementRepository $reglementRepository, RenduReglement $renduReglement, EditionReglement $editionReglement): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
         if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
             return $redirect;
         }
-        $saison=$saisonRepository->find($this->idSaisonSelected);
-        //Déterminer la phase à ouvrir
-        $phaseouverte=$this->getPhaseActuelle($saison);
+        // Règlement de la saison affichée sur le site (D57) : jamais celui d'un brouillon (getSaisonSession l'écarte) ;
+        // texte nettoyé de nouveau (contenu repris ou importé), éléments calculés à chaque affichage, encarts des codes
+        // inapplicables pour les admins seulement
+        $saison = $saisonRepository->find($this->idSaisonSelected);
+        $reglement = $reglementRepository->findDeSaison($saison);
+        $contenu = $reglement !== null && $reglement->getContenu() !== ''
+            ? $renduReglement->rendre($saison, $editionReglement->nettoyer($reglement->getContenu()), $this->isGranted('ROLE_ADMIN'))['html']
+            : null;
 
         return $this->render('front/reglement.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
+            'saison' => $saison,
+            'reglement' => $reglement,
+            'contenu' => $contenu,
         ]);
     }
 
@@ -429,6 +440,14 @@ final class FrontController extends AbstractController
         if ($saison) {
             $session->set('idSaisonSelected', $saison->getId());   // stocke la saison dans la session
         }
+        // Retour à la page d'où vient le choix (ex. le règlement, relecture de l'ergonome) : chemin interne seulement,
+        // relatif à l'application (« /reglement »), jamais une autre adresse (« //exemple.org », « /\exemple.org »)
+        $retour = (string) $request->request->get('retour', '');
+        // (adresse de la page = base de l'application + chemin, comme la requête d'origine ; « .. » refusé)
+        if (preg_match('#^/(?![/\\\\])[A-Za-z0-9/_.\-]*\z#', $retour) && !str_contains($retour, '..') && $retour !== '/set-saison') {
+            return $this->redirect($request->getBaseUrl().$retour);
+        }
+
         return $this->redirectToRoute('front_index');  // retourne vers la page principale
     }
 

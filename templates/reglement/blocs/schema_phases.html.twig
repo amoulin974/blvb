@@ -5,7 +5,7 @@
     <ol class="reglement-schema">
         {% for phase in phases %}
             <li class="reglement-schema-phase">
-                <h3 class="reglement-bloc-titre">{{ phase.nom }}</h3>
+                <h3 class="reglement-bloc-titre js-toc-ignore">{{ phase.nom }}</h3>
                 <p class="reglement-bloc-infos">{{ phase.infos }}</p>
 
                 {% if phase.poules is not empty %}
@@ -47,7 +47,7 @@
 
                 {% for tableau in phase.tableaux %}
                     <div class="reglement-tableau">
-                        <h4 class="reglement-bloc-titre">{{ tableau.nom }}</h4>
+                        <h4 class="reglement-bloc-titre js-toc-ignore">{{ tableau.nom }}</h4>
                         {% if tableau.legende %}<p class="reglement-bloc-infos">{{ tableau.legende }}</p>{% endif %}
                         {% if tableau.exemption %}<p class="reglement-bloc-infos">{{ tableau.exemption }}</p>{% endif %}
                         {% if tableau.tours is empty %}

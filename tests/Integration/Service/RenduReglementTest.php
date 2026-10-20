@@ -94,6 +94,17 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringNotContainsString('data-bloc="bareme"', $html);
     }
 
+    #[TestDox('RGL-05 Un code court dans un attribut (title, alt) n\'est pas remplacé ; les marqueurs internes saisis dans le texte sont ignorés')]
+    public function test_code_court_dans_un_attribut(): void
+    {
+        $html = $this->rendre('<p><a href="https://ex.org/" title="[departage]">lien</a> <img src="/a.png" alt="[bareme]" /> '."\u{E000}0\u{E001}".'</p>', true)['html'];
+
+        self::assertStringContainsString('<a href="https://ex.org/" title="[departage]">lien</a>', $html);
+        self::assertStringContainsString('alt="[bareme]"', $html);
+        self::assertStringNotContainsString('data-bloc', $html);
+        self::assertStringNotContainsString("\u{E000}", $html);
+    }
+
     #[TestDox('RGL-06 Code inapplicable : rien pour le public ; pour un admin, un encart qui en donne la raison ; liste des codes inapplicables')]
     public function test_inapplicables(): void
     {

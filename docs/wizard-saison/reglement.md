@@ -49,7 +49,7 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 |---|---|---|
 | R1 | Données : `Reglement`, `ReglementVersion`, migration `Version20261020164942` ; nettoyage HTML (`App\Reglement\EditionReglement`, sanitizer `app.reglement`) ; copie dans `CopieSaison` ; RGL-01 à RGL-03, CPS-04 | ✅ |
 | R2 | Blocs : `BlocReglement`, `BlocsReglement`, `SchemaPhases` (avec `TableauElimination`), `BlocBareme`, `BlocDepartage`, `BlocCalendrier`, `RenduReglement` (codes courts, ancres, codes inapplicables), `Texte` (mots publics) ; RGL-04 à RGL-11 | ✅ |
-| R3 | Page publique : `/reglement` selon la saison affichée, brouillon refusé, saison sans règlement (message), sommaire, lien `#regle-1r` de la fenêtre de score ; relu ergonome + webdesigner | ⬜ |
+| R3 | Page publique : `/reglement` selon la saison affichée (`FrontController::reglement`), brouillon refusé, saison sans règlement (message), saison passée signalée, sommaire h2 et h3 (`tocbotController.js`), impression (en-tête, menu et pied masqués sur tout le site), retour à la page d'origine après un changement de saison ; ancien gabarit gardé dans `front/reglement_2025.html.twig` pour R5 ; relu ergonome + webdesigner + sécurité ; RGL-12 à RGL-15 | ✅ |
 | R4 | Édition admin : page par saison, éditeur, panneau « Éléments calculés » (codes courts et rendus), aperçu, envoi d'images, historique et restauration, liens depuis la saison et le wizard ; relu ergonome + webdesigner + sécurité | ⬜ |
 | R5 | Reprise : commande `app:reglement:importer` (simulation puis application) qui verse le gabarit actuel dans la saison en cours, images conservées ; suppression du gabarit en dur ; checklist de déploiement (agent `deploiement`) | ⬜ |
 
@@ -63,6 +63,10 @@ Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal d
   (facultatif). Ergonome : « Phase Finale » écrit « Phase finale » dans les modèles `ModeleBlvbActuel` et
   `ModeleBlvbAvecBarrages`, la recette et les fixtures (fait le 20/10/2026, choix de l'utilisateur ; les saisons déjà
   créées gardent leur nom).
+- **Reportés de R3** : jeton CSRF sur `POST /set-saison` (absent avant la branche ; sans conséquence avec le cookie de
+  session `samesite=lax`, facultatif) ; au déploiement, vérifier que le retour du sélecteur de saison reste sous `/blvb`
+  (redirection vers `getBaseUrl()` + chemin, proxy avec `x-forwarded-prefix`) ; état vide : lien « Rédiger le
+  règlement » pour un admin (R4).
 - **Données 2025 à corriger dans le back-office** (relevé à l'aperçu) : journées de la phase finale aux noms et dates
   incohérents (avant le début de la phase, dates limites identiques d'un tour à l'autre) ; journée 3 des poules C et D le
   16/02/2026, pendant « Vacance d'hiver » ; noms des fermetures ; tableaux nommés « Poule A » à « Poule D ».

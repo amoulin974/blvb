@@ -29,7 +29,8 @@ final class RenduReglement
     public function rendre(Saison $saison, string $contenu, bool $admin = false): array
     {
         $inapplicables = [];
-        $html = $this->ancrer($contenu);
+        // Marqueurs internes de mise de côté : jamais repris du texte saisi
+        $html = $this->ancrer(str_replace(["\u{E000}", "\u{E001}"], '', $contenu));
 
         // Les codes cités dans <code> et les éléments déjà rendus sont mis de côté jusqu'à la fin : jamais relus
         $deCote = [];
@@ -57,9 +58,14 @@ final class RenduReglement
         // Code seul dans son paragraphe : l'élément remplace le paragraphe (un bloc ne va pas dans un <p>)
         $html = preg_replace_callback('#<p>(?:\s|&nbsp;|<br />)*('.self::MOTIF.')(?:\s|&nbsp;|<br />)*</p>#u',
             fn (array $m) => $remplacer($m[1]), $html);
+        // Au fil du texte seulement : les balises (et leurs attributs, ex. title="[bareme]") sont mises de côté
+        $html = preg_replace_callback('#<[^>]+>#', fn (array $m) => $mettreDeCote($m[0]), $html);
         $html = preg_replace_callback('/'.self::MOTIF.'/u', fn (array $m) => $remplacer($m[0]), $html);
 
-        $html = preg_replace_callback("/\u{E000}(\\d+)\u{E001}/u", fn (array $m) => $deCote[(int) $m[1]], $html);
+        // Restitution (les morceaux mis de côté peuvent en contenir d'autres)
+        do {
+            $html = preg_replace_callback("/\u{E000}(\\d+)\u{E001}/u", fn (array $m) => $deCote[(int) $m[1]] ?? '', $html, -1, $restitues);
+        } while ($restitues > 0);
 
         return ['html' => $html, 'inapplicables' => $inapplicables];
     }

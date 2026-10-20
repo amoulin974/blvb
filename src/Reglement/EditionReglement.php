@@ -36,7 +36,8 @@ final class EditionReglement
     {
         // Le sanitizer encode « = » dans le texte : rétabli pour garder les codes courts lisibles (« [bareme phase=P2] ») ;
         // sans risque hors d'une balise, et les valeurs d'attributs restent entre guillemets
-        return trim(str_replace('&#61;', '=', $this->sanitizer->sanitize($html)));
+        // Les caractères privés U+E000 et U+E001 servent de marqueurs au rendu (RenduReglement) : retirés du texte
+        return trim(str_replace(['&#61;', "\u{E000}", "\u{E001}"], ['=', '', ''], $this->sanitizer->sanitize($html)));
     }
 
     /** Enregistre le contenu (nettoyé) ; rend false si rien n'a changé. */
@@ -74,6 +75,7 @@ final class EditionReglement
             return null;
         }
 
-        return (new Reglement())->setSaison($cible)->setContenu($reglement->getContenu());
+        // Daté de la copie : la page affiche « Mis à jour le … », et la première modification garde ce texte comme version
+        return (new Reglement())->setSaison($cible)->setContenu($reglement->getContenu())->setModifieLe(new \DateTimeImmutable());
     }
 }
