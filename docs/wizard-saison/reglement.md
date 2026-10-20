@@ -15,12 +15,16 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 - **Codes courts** (D55) : chaque élément calculé s'insère par un code court écrit dans le texte, `[code]` ou
   `[code phase=P2]` (`phase` facultatif : une phase par son code, D20, sinon toute la saison) : `[schema_phases]`,
   `[bareme]`, `[departage]`, `[calendrier]`. À l'affichage, `RenduReglement` remplace chaque code court par le rendu
-  du bloc ; un code inconnu ou sans objet (pas de journée des finales…) n'affiche rien au public et un encart discret
-  pour les admins. Un code court entre accents graves (`` `[bareme]` ``) n'est pas remplacé, pour pouvoir en parler.
+  du bloc ; un code inapplicable (code inconnu, phase absente, élément sans objet) n'affiche rien au public ; un admin
+  connecté voit à sa place un encart d'avertissement avec la raison, et la page d'édition les liste en tête. Un code court entre accents graves (`` `[bareme]` ``) n'est pas remplacé, pour pouvoir en parler.
 - **Blocs** : interface `BlocReglement` (`code`, `libelle`, `rendre(Saison, ?Phase)`), services tagués comme
   `GenerateurFormat` ; un gabarit Twig par bloc dans `templates/reglement/blocs/`.
+  Chaque bloc déclare ses paramètres (nom, rôle, valeurs possibles calculées pour la saison, valeur par défaut) ;
+  un paramètre inconnu ou une valeur invalide rend le code inapplicable. Rendu en HTML et CSS, aucune image générée.
   - `schema_phases` : phases dans l'ordre, poules et niveaux, passages en clair (`RegleDePassage::__toString`),
-    barrages, tableaux finaux ; reprend le schéma vertical du récapitulatif du wizard (D29) ;
+    barrages, et tableaux des phases finales (de gauche à droite, provenance de chaque place, petite finale) ;
+    `phase=` limite à une phase (`[schema_phases phase=FIN]` : tableaux finaux seuls) ; reprend le schéma vertical
+    du récapitulatif du wizard (D29) ;
   - `bareme` : points par résultat et forfait (`Bareme::dePhase`), nombre de sets gagnants ; un tableau par format
     distinct, phases regroupées ;
   - `departage` : critères de `Saison.departage` dans l'ordre, avec l'aide courte du wizard ;
@@ -29,7 +33,8 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 - **Éditeur** : TipTap par l'importmap (contrôleur Stimulus `reglement_editeur`), barre d'outils réduite ; les codes
   courts s'écrivent comme du texte. Bouton « Aperçu » qui rend la page publique.
 - **Panneau « Éléments calculés »** de la page d'édition (demande de l'utilisateur) : pour chaque bloc, son nom, son
-  code court (avec les variantes par phase de la saison), un bouton « Copier » et un bouton « Insérer » (à la position du
+  code court (avec les variantes par phase de la saison), **la liste de ses paramètres** (nom, rôle, valeurs possibles
+  dans la saison, valeur par défaut), un bouton « Copier » et un bouton « Insérer » (à la position du
   curseur), et son rendu actuel pour la saison, repliable. Sur téléphone, le panneau passe sous l'éditeur.
 - **Images** : envoi en AJAX depuis l'éditeur (jeton CSRF, ROLE_ADMIN), contrôle du type réel, 2 Mo maximum, nom
   aléatoire, dossier `public/uploads/reglement` (paramètre comme `app.dossier_images_clubs`).

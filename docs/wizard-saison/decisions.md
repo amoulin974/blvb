@@ -510,6 +510,15 @@ dépendent des paramètres ne peuvent plus être en décalage avec ce que fait l
 **Précision** (utilisateur, 20/10/2026) : le marqueur est un **code court** écrit dans le texte (ex. `[bareme]`,
 `[bareme phase=P2]`) ; la page d'édition montre la liste des éléments calculés, chacun avec son code court et son
 rendu pour la saison.
+**Précisions** (utilisateur, 20/10/2026) :
+- **Code inapplicable** (code inconnu, phase absente de la saison, élément sans objet) : rien n'est affiché au public ;
+  un admin connecté voit à sa place un encart d'avertissement qui en donne la raison ; la page d'édition les liste en tête.
+- **Éléments graphiques** : rendus en HTML et CSS par des gabarits Twig (aucune image générée), relus par le webdesigner
+  et l'ergonome.
+- **Tableaux des phases finales** : compris dans `[schema_phases]` ; le paramètre `phase` limite le schéma à une phase
+  (`[schema_phases phase=FIN]` : les tableaux finaux seuls).
+- **Panneau de la page d'édition** : pour chaque élément, la liste de ses paramètres (nom, rôle, valeurs possibles dans
+  la saison, valeur par défaut).
 *(2026-10-20, règlement)*
 
 ## D56. Règlement : reprise d'une saison à l'autre, publication et historique
