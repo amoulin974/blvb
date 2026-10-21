@@ -4,6 +4,14 @@ import { Editor, Extension, mergeAttributes } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
+import Underline from '@tiptap/extension-underline'
+import Highlight from '@tiptap/extension-highlight'
+import Subscript from '@tiptap/extension-subscript'
+import Superscript from '@tiptap/extension-superscript'
+import Table from '@tiptap/extension-table'
+import TableRow from '@tiptap/extension-table-row'
+import TableHeader from '@tiptap/extension-table-header'
+import TableCell from '@tiptap/extension-table-cell'
 import { Plugin } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 
@@ -36,15 +44,49 @@ async function envoyer(url, donnees) {
     return { reponse, resultat }
 }
 
+// HTML de l'éditeur (une seule ligne) présenté un bloc par ligne pour l'onglet HTML
+function formaterHtml(html) {
+    return html
+        // fin d'un bloc, ouverture d'une liste ou d'un tableau, ligne de tableau, image (seule ou dans son lien)
+        .replace(/(<\/(?:p|h[2-4]|li|ul|ol|blockquote|tr|tbody|table)>|<(?:ul|ol|table|tbody|tr)(?:\s[^>]*)?>|<hr[^>]*>|<img[^>]*><\/a>|<img[^>]*>(?!<\/a>))/g, '$1\n')
+        .replace(/\n+/g, '\n')
+        .trim()
+}
+
+// Balises et attributs que l'éditeur sait garder ; le reste disparaît quand le code de l'onglet HTML repasse dans l'éditeur
+const BALISES_GARDEES = new Set(['H2', 'H3', 'H4', 'P', 'BR', 'HR', 'STRONG', 'B', 'EM', 'I', 'U', 'MARK', 'SUB', 'SUP', 'CODE',
+    'BLOCKQUOTE', 'UL', 'OL', 'LI', 'A', 'IMG', 'TABLE', 'THEAD', 'TBODY', 'TR', 'TH', 'TD', 'COLGROUP', 'COL'])
+const ATTRIBUTS_GARDES = new Set(['href', 'src', 'alt', 'title', 'start', 'class', 'colspan', 'rowspan'])
+// Largeurs que l'éditeur écrit lui-même sur un tableau (retirées par le nettoyage, sans conséquence)
+const STYLE_DE_TABLEAU = new Set(['TABLE', 'COLGROUP', 'COL'])
+
+function contientNonPrisEnCharge(html) {
+    // Document inerte (DOMParser) : aucun script exécuté, aucune image chargée
+    const corps = new DOMParser().parseFromString(html, 'text/html').body
+    return [...corps.querySelectorAll('*')].some((element) => !BALISES_GARDEES.has(element.tagName)
+        || [...element.attributes].some((attribut) => !ATTRIBUTS_GARDES.has(attribut.name)
+            && !(attribut.name === 'style' && STYLE_DE_TABLEAU.has(element.tagName))))
+}
+
 // Image cliquable : une marque de lien ne s'applique pas à un nœud image ; le lien est donc un attribut de l'image,
 // écrit <a href="…"><img …></a> (forme gardée par le nettoyage côté serveur) et relu depuis le <a> parent
+// Comme le nettoyage serveur : images du site seulement (adresse relative, pas d'image externe chargée dans la session de
+// l'admin depuis un code collé ou saisi dans l'onglet HTML) ; lien http(s), mailto, ancre ou chemin du site
+const ADRESSE_IMAGE = /^\/(?!\/)/
+const ADRESSE_LIEN = /^(https?:\/\/|mailto:|#|\/(?!\/))/i
 const ImageLien = Image.extend({
+    parseHTML() {
+        return [{ tag: 'img[src]', getAttrs: (element) => (ADRESSE_IMAGE.test(element.getAttribute('src') ?? '') ? null : false) }]
+    },
     addAttributes() {
         return {
             ...this.parent?.(),
             href: {
                 default: null,
-                parseHTML: (element) => element.closest('a')?.getAttribute('href') ?? null,
+                parseHTML: (element) => {
+                    const href = element.closest('a')?.getAttribute('href') ?? ''
+                    return ADRESSE_LIEN.test(href) ? href : null
+                },
                 renderHTML: () => ({}),
             },
         }
@@ -52,6 +94,27 @@ const ImageLien = Image.extend({
     renderHTML({ node, HTMLAttributes }) {
         const image = ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
         return node.attrs.href ? ['a', { href: node.attrs.href }, image] : image
+    },
+})
+
+// Alignement d'un paragraphe, d'un titre (centre, droite, justifié) ou d'une image (centre, droite) : classes
+// « aligne-… », les seules gardées par le nettoyage côté serveur (App\Reglement\ClasseAlignement) ; pas de style en
+// ligne (l'extension TextAlign de TipTap en écrit, le nettoyage les retire). Sans classe : aligné à gauche.
+const ALIGNEMENTS = { centre: 'aligne-centre', droite: 'aligne-droite', justifie: 'aligne-justifie' }
+const attributAlignement = (permis) => ({
+    alignement: {
+        default: null,
+        parseHTML: (element) => permis.find((nom) => element.classList.contains(ALIGNEMENTS[nom])) ?? null,
+        renderHTML: (attributs) => (permis.includes(attributs.alignement) ? { class: ALIGNEMENTS[attributs.alignement] } : {}),
+    },
+})
+const Alignement = Extension.create({
+    name: 'alignement',
+    addGlobalAttributes() {
+        return [
+            { types: ['paragraph', 'heading'], attributes: attributAlignement(['centre', 'droite', 'justifie']) },
+            { types: ['image'], attributes: attributAlignement(['centre', 'droite']) },
+        ]
     },
 })
 
@@ -82,8 +145,8 @@ const CodesCourts = Extension.create({
 })
 
 export default class extends Controller {
-    static targets = ['editeur', 'contenu', 'barre', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
-        'ongletRediger', 'ongletApercu', 'panneauRediger', 'panneauApercu', 'apercu', 'fichier', 'element',
+    static targets = ['editeur', 'contenu', 'barre', 'barreTableau', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
+        'ongletRediger', 'ongletApercu', 'ongletHtml', 'panneauRediger', 'panneauApercu', 'panneauHtml', 'apercu', 'source', 'fichier', 'element',
         'dialogueLien', 'adresse', 'erreurLien', 'retirerLien', 'dialogueImage', 'vignette', 'description', 'decorative', 'erreurImage',
         'dialogueConflit', 'messageConflit']
     static values = { enregistrerUrl: String, apercuUrl: String, imageUrl: String, elementUrl: String, jeton: String, token: String,
@@ -92,6 +155,7 @@ export default class extends Controller {
     connect() {
         this.modifie = false
         this.positionInsertion = null
+        this.onglet = 'rediger'
         this.editor = new Editor({
             element: this.editeurTarget,
             content: this.contenuTarget.innerHTML,
@@ -99,11 +163,29 @@ export default class extends Controller {
                 StarterKit.configure({ heading: { levels: [2, 3, 4] }, codeBlock: false, strike: false }),
                 Link.configure({ openOnClick: false, autolink: false, HTMLAttributes: { rel: null, target: null } }),
                 ImageLien,
+                Alignement,
+                Underline,
+                Highlight,
+                Subscript,
+                Superscript,
+                Table.configure({ resizable: false }),
+                TableRow,
+                TableHeader,
+                TableCell,
                 CodesCourts,
             ],
             editorProps: {
                 attributes: { role: 'textbox', 'aria-multiline': 'true', 'aria-label': 'Texte du règlement' },
                 handleKeyDown: (_, evenement) => this.raccourci(evenement),
+                // Dans l'éditeur, un lien (texte ou image) ne s'ouvre pas : un clic sélectionne, pour modifier ou centrer
+                handleDOMEvents: {
+                    click: (_, evenement) => {
+                        if (evenement.target.closest('a')) {
+                            evenement.preventDefault()
+                        }
+                        return false
+                    },
+                },
             },
             onUpdate: () => this.marquerModifie(true),
             onSelectionUpdate: () => this.majBarre(),
@@ -150,34 +232,89 @@ export default class extends Controller {
             case 'regle': chaine.toggleHeading({ level: 3 }).run(); break
             case 'gras': chaine.toggleBold().run(); break
             case 'italique': chaine.toggleItalic().run(); break
+            case 'souligne': chaine.toggleUnderline().run(); break
+            case 'surligne': chaine.toggleHighlight().run(); break
+            case 'exposant': chaine.toggleSuperscript().run(); break
+            case 'indice': chaine.toggleSubscript().run(); break
             case 'code': chaine.toggleCode().run(); break
             case 'puces': chaine.toggleBulletList().run(); break
             case 'numeros': chaine.toggleOrderedList().run(); break
+            case 'citation': chaine.toggleBlockquote().run(); break
+            case 'separation': chaine.setHorizontalRule().run(); break
+            case 'saut': chaine.setHardBreak().run(); break
+            case 'gauche': this.aligner(null); break
+            case 'centrer': this.aligner('centre'); break
+            case 'droite': this.aligner('droite'); break
+            case 'justifier': this.aligner('justifie'); break
+            case 'tableau': chaine.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); break
+            case 'ligne-ajouter': chaine.addRowAfter().run(); break
+            case 'colonne-ajouter': chaine.addColumnAfter().run(); break
+            case 'ligne-supprimer': chaine.deleteRow().run(); break
+            case 'colonne-supprimer': chaine.deleteColumn().run(); break
+            case 'entete': chaine.toggleHeaderRow().run(); break
+            case 'tableau-supprimer':
+                chaine.deleteTable().run()
+                this.annonceTarget.textContent = 'Tableau supprimé. Annuler pour le récupérer.'
+                break
+            case 'annuler': chaine.undo().run(); break
+            case 'retablir': chaine.redo().run(); break
             case 'lien': this.ouvrirLien(); break
             case 'image': this.fichierTarget.click(); break
         }
+    }
+
+    // Aligne l'image sélectionnée (centre ou droite), sinon les paragraphes et titres de la sélection ; un second clic
+    // sur l'alignement en cours revient à gauche
+    aligner(valeur) {
+        const nouvelle = valeur !== null && this.alignementActuel() === valeur ? null : valeur
+        const chaine = this.editor.chain().focus()
+        if (this.imageChoisie()) {
+            if (nouvelle !== 'justifie') {
+                chaine.updateAttributes('image', { alignement: nouvelle }).run()
+            }
+            return
+        }
+        chaine.updateAttributes('paragraph', { alignement: nouvelle }).updateAttributes('heading', { alignement: nouvelle }).run()
+    }
+
+    alignementActuel() {
+        if (this.imageChoisie()) {
+            return this.editor.getAttributes('image').alignement ?? null
+        }
+        return Object.keys(ALIGNEMENTS).find((valeur) => this.editor.isActive({ alignement: valeur })) ?? null
     }
 
     majBarre() {
         if (!this.editor) {
             return
         }
+        const e = this.editor
+        const alignement = this.alignementActuel()
         const actif = {
-            partie: this.editor.isActive('heading', { level: 2 }), regle: this.editor.isActive('heading', { level: 3 }),
-            gras: this.editor.isActive('bold'), italique: this.editor.isActive('italic'), code: this.editor.isActive('code'),
-            puces: this.editor.isActive('bulletList'), numeros: this.editor.isActive('orderedList'),
-            lien: this.imageChoisie() ? Boolean(this.editor.getAttributes('image').href) : this.editor.isActive('link'),
+            partie: e.isActive('heading', { level: 2 }), regle: e.isActive('heading', { level: 3 }),
+            gras: e.isActive('bold'), italique: e.isActive('italic'), souligne: e.isActive('underline'), surligne: e.isActive('highlight'),
+            exposant: e.isActive('superscript'), indice: e.isActive('subscript'), code: e.isActive('code'),
+            puces: e.isActive('bulletList'), numeros: e.isActive('orderedList'), citation: e.isActive('blockquote'),
+            gauche: alignement === null, centrer: alignement === 'centre', droite: alignement === 'droite', justifier: alignement === 'justifie',
+            entete: e.isActive('tableHeader'),
+            lien: this.imageChoisie() ? Boolean(e.getAttributes('image').href) : e.isActive('link'),
         }
         this.barreTarget.querySelectorAll('[data-commande]').forEach((bouton) => {
             if (bouton.dataset.commande in actif) {
                 bouton.setAttribute('aria-pressed', actif[bouton.dataset.commande] ? 'true' : 'false')
             }
         })
+        // Justifier n'a pas de sens pour une image ; les actions de tableau n'apparaissent que dans un tableau
+        this.barreTarget.querySelector('[data-commande="justifier"]').disabled = this.imageChoisie()
+        this.barreTarget.querySelector('[data-commande="annuler"]').disabled = !e.can().undo()
+        this.barreTarget.querySelector('[data-commande="retablir"]').disabled = !e.can().redo()
+        this.barreTableauTarget.hidden = !e.isActive('table')
     }
 
-    // Une seule tabulation pour la barre ; flèches, Origine et Fin pour passer d'un bouton à l'autre ; Échap revient au texte
+    // Une seule tabulation pour la barre ; flèches, Origine et Fin pour passer d'un bouton à l'autre (boutons visibles et
+    // actifs) ; Échap revient au texte
     flecheBarre(evenement) {
-        const boutons = [...this.barreTarget.querySelectorAll('button[data-commande]')]
+        const boutons = [...this.barreTarget.querySelectorAll('button[data-commande]')].filter((b) => b.offsetParent !== null && !b.disabled)
         const index = boutons.indexOf(document.activeElement)
         const cible = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: boutons.length - 1 }[evenement.key]
         if (evenement.key === 'Escape') {
@@ -205,6 +342,12 @@ export default class extends Controller {
             this.ouvrirLien()
             return true
         }
+        // Centrer : Ctrl+Maj+E (les autres alignements n'ont pas de raccourci : Ctrl+Maj+R, J… sont pris par les navigateurs)
+        if (ctrl && evenement.shiftKey && evenement.key.toLowerCase() === 'e') {
+            evenement.preventDefault()
+            this.aligner('centre')
+            return true
+        }
         return false
     }
 
@@ -220,6 +363,8 @@ export default class extends Controller {
     }
 
     async enregistrer(evenement, forcer = false) {
+        // Depuis l'onglet HTML : le code saisi passe d'abord dans l'éditeur
+        this.appliquerSource()
         if (!this.modifie && !forcer) {
             return
         }
@@ -257,15 +402,42 @@ export default class extends Controller {
         this.enregistrer(null, true)
     }
 
-    // --- Onglets Rédiger / Aperçu -----------------------------------------------------------------------------------
+    // --- Onglets Rédiger / Aperçu / HTML ----------------------------------------------------------------------------
 
     rediger() {
-        this.choisirOnglet(false)
+        this.appliquerSource()
+        this.choisirOnglet('rediger')
         this.editor.commands.focus()
     }
 
+    // Code HTML du texte, modifiable ; il repasse dans l'éditeur en quittant l'onglet (et sera nettoyé à l'enregistrement)
+    html() {
+        if (this.onglet !== 'html') {
+            this.sourceAffichee = formaterHtml(this.editor.getHTML())
+            this.sourceTarget.value = this.sourceAffichee
+        }
+        this.choisirOnglet('html')
+    }
+
+    sourceModifiee() {
+        this.marquerModifie(true)
+    }
+
+    // L'éditeur ne garde que ce qu'il sait afficher (titres, paragraphes, listes, mise en forme, liens, images)
+    appliquerSource() {
+        if (this.onglet !== 'html' || this.sourceTarget.value === this.sourceAffichee) {
+            return
+        }
+        if (contientNonPrisEnCharge(this.sourceTarget.value)) {
+            this.annonceTarget.textContent = 'Des éléments non pris en charge (styles, scripts…) ont été retirés.'
+        }
+        this.editor.commands.setContent(this.sourceTarget.value, true)
+        this.sourceAffichee = this.sourceTarget.value
+    }
+
     async apercu() {
-        this.choisirOnglet(true)
+        this.appliquerSource()
+        this.choisirOnglet('apercu')
         this.apercuTarget.textContent = 'Préparation de l\'aperçu…'
         const donnees = new FormData()
         donnees.append('_token', this.tokenValue)
@@ -279,15 +451,23 @@ export default class extends Controller {
         }
     }
 
-    choisirOnglet(apercu) {
-        this.ongletRedigerTarget.setAttribute('aria-selected', apercu ? 'false' : 'true')
-        this.ongletApercuTarget.setAttribute('aria-selected', apercu ? 'true' : 'false')
-        this.ongletRedigerTarget.classList.toggle('tab-active', !apercu)
-        this.ongletApercuTarget.classList.toggle('tab-active', apercu)
-        this.ongletRedigerTarget.tabIndex = apercu ? -1 : 0
-        this.ongletApercuTarget.tabIndex = apercu ? 0 : -1
-        this.panneauRedigerTarget.classList.toggle('hidden', apercu)
-        this.panneauApercuTarget.classList.toggle('hidden', !apercu)
+    onglets() {
+        return [
+            ['rediger', this.ongletRedigerTarget, this.panneauRedigerTarget],
+            ['apercu', this.ongletApercuTarget, this.panneauApercuTarget],
+            ['html', this.ongletHtmlTarget, this.panneauHtmlTarget],
+        ]
+    }
+
+    choisirOnglet(nom) {
+        this.onglet = nom
+        for (const [cle, onglet, panneau] of this.onglets()) {
+            const choisi = cle === nom
+            onglet.setAttribute('aria-selected', choisi ? 'true' : 'false')
+            onglet.classList.toggle('tab-active', choisi)
+            onglet.tabIndex = choisi ? 0 : -1
+            panneau.classList.toggle('hidden', !choisi)
+        }
     }
 
     flecheOnglet(evenement) {
@@ -295,10 +475,18 @@ export default class extends Controller {
             return
         }
         evenement.preventDefault()
-        const versApercu = evenement.currentTarget === this.ongletRedigerTarget
-        const cible = versApercu ? this.ongletApercuTarget : this.ongletRedigerTarget
+        const onglets = this.onglets()
+        const index = onglets.findIndex(([, onglet]) => onglet === evenement.currentTarget)
+        const [cle, cible] = onglets[(index + (evenement.key === 'ArrowRight' ? 1 : -1) + onglets.length) % onglets.length]
         // Le focus reste sur l'onglet (rediger() le donnerait au texte)
-        versApercu ? this.apercu() : this.choisirOnglet(false)
+        if (cle === 'apercu') {
+            this.apercu()
+        } else if (cle === 'html') {
+            this.html()
+        } else {
+            this.appliquerSource()
+            this.choisirOnglet('rediger')
+        }
         cible.focus()
     }
 
@@ -376,7 +564,8 @@ export default class extends Controller {
     // --- Codes inapplicables : aller au code --------------------------------------------------------------------------
 
     allerAuCode(evenement) {
-        this.choisirOnglet(false)
+        this.appliquerSource()
+        this.choisirOnglet('rediger')
         this.trouverCode(evenement.params.code)
     }
 

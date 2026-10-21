@@ -298,6 +298,30 @@ details[data-code][open] > summary svg { rotate: 180deg; }
 .js-toc .is-active-link::before { background-color: var(--color-primary); width: 3px; }
 .js-toc .toc-list .toc-list { padding-left: 0.75rem; }
 .js-toc .toc-list .toc-list .toc-link { font-size: 0.875rem; }
+/* Alignements posés dans l'éditeur (classes aligne-…, seules classes gardées par le nettoyage) : sur toute la largeur de
+   l'article (pas seulement dans les 70ch d'un paragraphe) ; une image alignée, seule ou dans son lien, passe en bloc */
+.reglement-article .aligne-centre { text-align: center; }
+.reglement-article .aligne-droite { text-align: right; }
+.reglement-article .aligne-justifie { text-align: justify; hyphens: auto; }
+.reglement-article p:is(.aligne-centre, .aligne-droite) { max-width: none; }
+.reglement-article img.aligne-centre { display: block; margin-inline: auto; }
+.reglement-article img.aligne-droite { display: block; margin-left: auto; margin-right: 0; }
+.reglement-article a:has(> img.aligne-centre) { display: table; margin-inline: auto; }
+.reglement-article a:has(> img.aligne-droite) { display: table; margin-left: auto; }
+/* Mise en forme de l'éditeur dans le texte libre (hors éléments calculés) : surligné, citation, séparation, tableaux.
+   Exception à la charte (jaune réservé au logo et aux boutons) : le surligné reprend le jaune accent, pâli à 35 %,
+   convention du surligneur connue de tous ; texte foncé dessus bien au-delà de AA. */
+.reglement-article mark { background-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-base-100)); color: inherit; padding-inline: 0.125rem; border-radius: 0.125rem; }
+.reglement-article blockquote { margin: 0 0 0.75rem; padding: 0.25rem 0 0.25rem 1rem; border-left: 3px solid var(--color-primary); color: color-mix(in oklab, var(--color-base-content) 85%, transparent); }
+.reglement-article hr { margin: 1.5rem 0; border: 0; border-top: 1px solid var(--color-base-300); }
+.reglement-article sup, .reglement-article sub { font-size: 0.75em; line-height: 0; }
+.reglement-article table:not(.reglement-bloc table) { border-collapse: collapse; width: 100%; }
+.reglement-article :is(td, th):not(.reglement-bloc *) { border: 1px solid var(--color-base-300); padding: 0.375rem 0.5rem; vertical-align: top; text-align: left; overflow-wrap: anywhere; }
+.reglement-article :is(td, th):not(.reglement-bloc *) p { margin: 0; max-width: none; }
+.reglement-article th:not(.reglement-bloc *) { background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); }
+/* Éditeur : tableau qui défile s'il est trop large, cellules sélectionnées visibles */
+.reglement-editeur .tableWrapper { overflow-x: auto; }
+.reglement-editeur .selectedCell { background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100)); }
 /* Image cliquable : focus clavier visible autour de l'image ; dans l'éditeur, contour pointillé qui signale le lien */
 .reglement-article a:has(> img) { display: inline-block; border-radius: var(--radius-box); }
 .reglement-article a:has(> img):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

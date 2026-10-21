@@ -122,8 +122,9 @@ final class RenduReglement
         $slugger = new AsciiSlugger('fr');
         $pris = [];
 
-        return preg_replace_callback('#<h([234])>(.*?)</h\1>#s', function (array $m) use ($slugger, &$pris) {
-            $texte = trim(html_entity_decode(strip_tags($m[2]), ENT_QUOTES | ENT_HTML5));
+        // Titre nettoyé : sans attribut, ou avec la seule classe de centrage (ClasseAlignement), gardée à côté de l'ancre
+        return preg_replace_callback('#<h([234])(?: class="([a-z -]*)")?>(.*?)</h\1>#s', function (array $m) use ($slugger, &$pris) {
+            $texte = trim(html_entity_decode(strip_tags($m[3]), ENT_QUOTES | ENT_HTML5));
             $ancre = preg_match('/^r[èeÈE]gle\s+([0-9a-z]+)\b/iu', $texte, $regle)
                 ? 'regle-'.mb_strtolower($regle[1])
                 : $slugger->slug($texte)->lower()->toString();
@@ -134,7 +135,7 @@ final class RenduReglement
             }
             $pris[$unique] = true;
 
-            return sprintf('<h%1$s id="%2$s" class="scroll-mt-24">%3$s</h%1$s>', $m[1], $unique, $m[2]);
+            return sprintf('<h%1$s id="%2$s" class="%3$s">%4$s</h%1$s>', $m[1], $unique, trim('scroll-mt-24 '.$m[2]), $m[3]);
         }, $html);
     }
 }

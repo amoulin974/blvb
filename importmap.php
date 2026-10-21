@@ -208,4 +208,38 @@ return [
         'version' => '1.3.2',
         'type' => 'css',
     ],
+    '@tiptap/extension-underline' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-highlight' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-subscript' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-superscript' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-table' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-table-row' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-table-header' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/extension-table-cell' => [
+        'version' => '2.11.5',
+    ],
+    '@tiptap/pm/tables' => [
+        'version' => '2.11.4',
+    ],
+    'prosemirror-tables' => [
+        'version' => '1.6.2',
+    ],
+    'prosemirror-tables/style/tables.min.css' => [
+        'version' => '1.6.2',
+        'type' => 'css',
+    ],
 ];

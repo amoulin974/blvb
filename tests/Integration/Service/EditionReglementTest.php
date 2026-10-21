@@ -43,6 +43,14 @@ final class EditionReglementTest extends TestIntegration
             .'<a href="https://www.ffvb.org"><img src="/uploads/reglement/c.png" alt="Logo"></a>'
             .'<a href="javascript:alert(1)"><img src="/uploads/reglement/d.png" alt=""></a>'
             .'<img src="/uploads/reglement/e.png" alt="&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;">'
+            // Centrage de l'éditeur gardé ; toute autre classe retirée (styles du site)
+            .'<h3 class="aligne-centre">Centré</h3><p class="aligne-centre btn btn-error">Texte</p><p class="hidden">Caché</p>'
+            .'<img class="aligne-centre" src="/uploads/reglement/f.png" alt="Centrée">'
+            // Autres options de la barre d'outils : alignements, souligné, surligné, exposant, indice, citation, séparation,
+            // tableau (largeurs en style et colgroup écrites par l'éditeur : retirées)
+            .'<p class="aligne-droite">D</p><p class="aligne-justifie">J</p><img class="aligne-droite" src="/uploads/reglement/g.png" alt="D">'
+            .'<p><u>s</u> <mark>m</mark> 1<sup>er</sup> H<sub>2</sub>O</p><blockquote><p>c</p></blockquote><hr>'
+            .'<table style="min-width: 50px"><colgroup><col style="min-width: 25px"></colgroup><tbody><tr><th colspan="1" rowspan="1"><p>T</p></th></tr><tr><td colspan="1" rowspan="1"><p>V</p></td></tr></tbody></table>'
         );
 
         self::assertSame(
@@ -52,7 +60,12 @@ final class EditionReglementTest extends TestIntegration
             .'<a>piège</a><a href="https://www.ffvb.org">FFVB</a>'
             .'<a href="https://www.ffvb.org"><img src="/uploads/reglement/c.png" alt="Logo" /></a>'
             .'<a><img src="/uploads/reglement/d.png" alt /></a>'
-            .'<img src="/uploads/reglement/e.png" alt="&#34;&gt;&lt;script&gt;alert(1)&lt;/script&gt;" />',
+            .'<img src="/uploads/reglement/e.png" alt="&#34;&gt;&lt;script&gt;alert(1)&lt;/script&gt;" />'
+            .'<h3 class="aligne-centre">Centré</h3><p class="aligne-centre">Texte</p><p>Caché</p>'
+            .'<img class="aligne-centre" src="/uploads/reglement/f.png" alt="Centrée" />'
+            .'<p class="aligne-droite">D</p><p class="aligne-justifie">J</p><img class="aligne-droite" src="/uploads/reglement/g.png" alt="D" />'
+            .'<p><u>s</u> <mark>m</mark> 1<sup>er</sup> H<sub>2</sub>O</p><blockquote><p>c</p></blockquote><hr />'
+            .'<table><tbody><tr><th colspan="1" rowspan="1"><p>T</p></th></tr><tr><td colspan="1" rowspan="1"><p>V</p></td></tr></tbody></table>',
             $propre
         );
     }

@@ -3,10 +3,16 @@
    éditeur TipTap (reglement_editeur_controller.js), aperçu du texte non enregistré, panneau des éléments calculés. #}
 {% import 'admin/_icones.html.twig' as icone %}
 
+{# Bouton de la barre d'outils. bascule : état enfoncé (aria-pressed) ; carre : bouton carré à icône (44 px sur téléphone) #}
+{% macro outil(commande, libelle, titre, contenu, classe = '', bascule = true, carre = true) %}
+    <button type="button" class="btn btn-ghost btn-sm {{ carre ? 'btn-square max-sm:size-11' }} {{ classe }}" data-commande="{{ commande }}"{% if bascule %} aria-pressed="false"{% endif %} tabindex="-1" aria-label="{{ libelle }}" title="{{ titre }}">{{ contenu }}</button>
+{% endmacro %}
+
 {% block title %}Règlement · {{ saison.nom }}{% endblock %}
 {% block container_width %}max-w-7xl{% endblock %}
 
 {% block body %}
+    {% import _self as m %}
     {% set publie = not saison.brouillon %}
     {% set auteur = reglement.modifiePar ? (reglement.modifiePar.prenom ? reglement.modifiePar.prenom|first ~ '. ' : '') ~ reglement.modifiePar.nom : null %}
     {% set misAJour = reglement.modifieLe ? 'mis à jour le ' ~ reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ reglement.modifieLe|date('G \\h i') ~ (auteur ? ' par ' ~ auteur : '') : null %}
@@ -47,6 +53,8 @@
                             data-reglement-editeur-target="ongletRediger" data-action="reglement-editeur#rediger keydown->reglement-editeur#flecheOnglet">Rédiger</button>
                     <button type="button" role="tab" id="onglet-apercu" class="tab min-h-11" aria-selected="false" aria-controls="panneau-apercu" tabindex="-1"
                             data-reglement-editeur-target="ongletApercu" data-action="reglement-editeur#apercu keydown->reglement-editeur#flecheOnglet">Aperçu</button>
+                    <button type="button" role="tab" id="onglet-html" class="tab min-h-11" aria-selected="false" aria-controls="panneau-html" tabindex="-1"
+                            data-reglement-editeur-target="ongletHtml" data-action="reglement-editeur#html keydown->reglement-editeur#flecheOnglet">HTML</button>
                 </div>
 
                 <div id="panneau-rediger" role="tabpanel" aria-labelledby="onglet-rediger" data-reglement-editeur-target="panneauRediger">
@@ -56,19 +64,53 @@
                         {# Libellés complets à partir de sm, abrégés sur téléphone ; aria-label donne le nom complet partout #}
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="partie" aria-pressed="false" aria-label="Titre de partie" title="Titre de partie"><span class="sm:hidden">Partie</span><span class="max-sm:hidden">Titre de partie</span></button>
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="regle" aria-pressed="false" tabindex="-1" aria-label="Titre de règle" title="Titre de règle (ex. « RÈGLE 1R : Partie interrompue »)"><span class="sm:hidden">Règle</span><span class="max-sm:hidden">Titre de règle</span></button>
-                        <span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300"></span>
-                        <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11 font-bold" data-commande="gras" aria-pressed="false" tabindex="-1" aria-label="Gras" title="Gras (Ctrl+B)">G</button>
-                        <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11 italic" data-commande="italique" aria-pressed="false" tabindex="-1" aria-label="Italique" title="Italique (Ctrl+I)">I</button>
-                        <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11" data-commande="code" aria-pressed="false" tabindex="-1" aria-label="Code (écrit tel quel)" title="Code, écrit tel quel : un code court mis en forme « code » n'est pas remplacé (Ctrl+E)">{{ icone.i('code') }}</button>
-                        <span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300"></span>
-                        <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11" data-commande="puces" aria-pressed="false" tabindex="-1" aria-label="Liste à puces" title="Liste à puces (Ctrl+Maj+8)">{{ icone.i('liste') }}</button>
-                        <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11" data-commande="numeros" aria-pressed="false" tabindex="-1" aria-label="Liste numérotée" title="Liste numérotée (Ctrl+Maj+7)">{{ icone.i('liste-numerotee') }}</button>
-                        <span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300"></span>
+                        {# Séparateurs masqués sur téléphone : le retour à la ligne suffit à grouper, la barre y prend moins de hauteur #}
+                        {% set separateur %}<span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300 max-sm:hidden"></span>{% endset %}
+                        {{ separateur }}
+                        {# Annuler et rétablir (indispensables sur téléphone, sans Ctrl+Z) #}
+                        {{ m.outil('annuler', 'Annuler', 'Annuler (Ctrl+Z)', icone.i('annuler'), '', false) }}
+                        {{ m.outil('retablir', 'Rétablir', 'Rétablir (Ctrl+Maj+Z)', icone.i('retablir'), '', false) }}
+                        {{ separateur }}
+                        {# Mise en forme du texte #}
+                        {{ m.outil('gras', 'Gras', 'Gras (Ctrl+B)', 'G', 'font-bold') }}
+                        {{ m.outil('italique', 'Italique', 'Italique (Ctrl+I)', 'I', 'italic') }}
+                        {{ m.outil('souligne', 'Souligné', 'Souligné (Ctrl+U)', 'S', 'underline') }}
+                        {{ m.outil('surligne', 'Surligné', 'Surligné', '<mark class="px-0.5 bg-accent/35 text-inherit">ab</mark>'|raw) }}
+                        {{ m.outil('exposant', 'Exposant', 'Exposant, ex. 1er (Ctrl+.)', 'x<sup>2</sup>'|raw) }}
+                        {{ m.outil('indice', 'Indice', 'Indice (Ctrl+,)', 'x<sub>2</sub>'|raw) }}
+                        {{ m.outil('code', 'Code (écrit tel quel)', 'Code, écrit tel quel : un code court mis en forme « code » n\'est pas remplacé (Ctrl+E)', icone.i('code')) }}
+                        {{ separateur }}
+                        {# Blocs #}
+                        {{ m.outil('puces', 'Liste à puces', 'Liste à puces (Ctrl+Maj+8)', icone.i('liste')) }}
+                        {{ m.outil('numeros', 'Liste numérotée', 'Liste numérotée (Ctrl+Maj+7)', icone.i('liste-numerotee')) }}
+                        {{ m.outil('citation', 'Citation', 'Citation (Ctrl+Maj+B)', '«&#8239;»'|raw) }}
+                        {{ m.outil('separation', 'Ligne de séparation', 'Ligne de séparation', icone.i('separation'), '', false) }}
+                        {{ m.outil('saut', 'Saut de ligne', 'Saut de ligne dans le même paragraphe (Maj+Entrée)', icone.i('saut-ligne'), '', false) }}
+                        {{ separateur }}
+                        {# Alignement : paragraphe, titre ou image sélectionnée #}
+                        {{ m.outil('gauche', 'Aligner à gauche', 'Aligner à gauche', icone.i('aligne-gauche')) }}
+                        {{ m.outil('centrer', 'Centrer', 'Centrer (Ctrl+Maj+E) : placez le curseur dans un paragraphe ou un titre, ou cliquez sur une image', icone.i('centrer')) }}
+                        {{ m.outil('droite', 'Aligner à droite', 'Aligner à droite', icone.i('aligne-droite')) }}
+                        {{ m.outil('justifier', 'Justifier', 'Justifier, pour un paragraphe ou un titre', icone.i('justifier')) }}
+                        {{ separateur }}
+                        {{ m.outil('tableau', 'Insérer un tableau', 'Insérer un tableau (3 lignes, 3 colonnes, avec ligne d\'en-tête)', icone.i('tableau'), '', false) }}
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} Lien</button>
-                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="image" aria-pressed="false" tabindex="-1" title="Image (JPG, PNG ou WebP, 2 Mo au plus)">{{ icone.i('image') }} Image</button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="image" tabindex="-1" title="Image (JPG, PNG ou WebP, 2 Mo au plus)">{{ icone.i('image') }} Image</button>
                         <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" data-reglement-editeur-target="fichier" data-action="change->reglement-editeur#envoyerImage" tabindex="-1" aria-hidden="true">
+                        {# Actions de tableau, seulement quand le curseur est dans un tableau #}
+                        <div role="group" aria-label="Tableau" class="flex w-full flex-wrap items-center gap-1 border-t border-base-300 pt-1" hidden data-reglement-editeur-target="barreTableau">
+                            <span class="px-1 text-sm text-(--color-base-content)/80">Tableau :</span>
+                            {{ m.outil('ligne-ajouter', 'Ajouter une ligne en dessous', 'Ajouter une ligne en dessous', '+ Ligne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('colonne-ajouter', 'Ajouter une colonne à droite', 'Ajouter une colonne à droite', '+ Colonne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('ligne-supprimer', 'Supprimer la ligne', 'Supprimer la ligne', '− Ligne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('colonne-supprimer', 'Supprimer la colonne', 'Supprimer la colonne', '− Colonne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('entete', 'Ligne d\'en-tête', 'Première ligne en en-tête (titres de colonnes)', 'En-tête', 'max-sm:min-h-11', true, false) }}
+                            {{ separateur }}
+                            {{ m.outil('tableau-supprimer', 'Supprimer le tableau', 'Supprimer le tableau', 'Supprimer le tableau', 'btn-danger-discret max-sm:min-h-11', false, false) }}
+                        </div>
                     </div>
-                    <div id="texte-reglement" class="reglement-editeur reglement-article" data-reglement-editeur-target="editeur"></div>
+                    {# data-turbo="false" : un lien du texte ne déclenche jamais de navigation pendant l'édition #}
+                    <div id="texte-reglement" class="reglement-editeur reglement-article" data-turbo="false" data-reglement-editeur-target="editeur"></div>
                     <template data-reglement-editeur-target="contenu">{{ contenu|raw }}</template>
                     <noscript><p class="p-4">L'éditeur a besoin de JavaScript.</p></noscript>
                 </div>
@@ -76,6 +118,13 @@
                 <div id="panneau-apercu" role="tabpanel" aria-labelledby="onglet-apercu" tabindex="0" class="hidden p-4 md:p-8" data-reglement-editeur-target="panneauApercu">
                     <p class="reglement-bloc-infos mb-4">Aperçu du texte non enregistré.{% if publie %} Le public voit la version publiée.{% endif %}</p>
                     <div class="reglement-article" data-reglement-editeur-target="apercu"></div>
+                </div>
+
+                <div id="panneau-html" role="tabpanel" aria-labelledby="onglet-html" class="hidden p-4 space-y-2" data-reglement-editeur-target="panneauHtml">
+                    <p id="aide-html" class="text-sm text-(--color-base-content)/80">Code du texte, un bloc par ligne. En quittant cet onglet ou en enregistrant, seule la mise en forme proposée par la barre d'outils est gardée. Le reste (styles, scripts…) est retiré.</p>
+                    <label for="source-html" class="sr-only">Code HTML du règlement</label>
+                    <textarea id="source-html" class="textarea w-full min-h-[60vh] font-mono text-base sm:text-sm leading-relaxed focus:outline-primary" spellcheck="false" aria-describedby="aide-html"
+                              data-reglement-editeur-target="source" data-action="input->reglement-editeur#sourceModifiee"></textarea>
                 </div>
 
                 <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-base-300 bg-base-100 p-2">

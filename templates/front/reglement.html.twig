@@ -14,7 +14,9 @@
                         Sommaire
                     </button>
                 </div>
-                <div id="toc" class="toc js-toc hidden lg:block bg-base-100 border border-base-300 rounded-box p-4"></div>
+                {# data-turbo="false" : un lien du sommaire saute à l'ancre ; sans cela, Turbo rechargeait toute la page à chaque
+                   clic (sommaire reconstruit, mauvais titre marqué selon le navigateur) #}
+                <div id="toc" class="toc js-toc hidden lg:block bg-base-100 border border-base-300 rounded-box p-4" data-turbo="false"></div>
             </nav>
         {% endif %}
         <article id="article-reglement" class="reglement-article js-toc-content col-span-8 {{ contenu ? 'lg:col-span-6 lg:col-start-3' : 'lg:col-span-6 lg:col-start-2' }} bg-base-100 border border-base-300 rounded-box p-4 md:p-8 print:border-0 print:p-0">

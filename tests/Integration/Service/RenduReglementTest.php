@@ -81,6 +81,10 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringContainsString('<h2 id="regle-1r" class="scroll-mt-24">RÈGLE 1R : Partie interrompue</h2>', $html);
         self::assertStringContainsString('<h3 id="decompte-des-points" class="scroll-mt-24">', $html);
         self::assertStringContainsString('<h3 id="decompte-des-points-2" class="scroll-mt-24">', $html);
+
+        // Titre centré dans l'éditeur : ancre posée, centrage gardé
+        $html = $this->rendre('<h2 class="aligne-centre">Calendrier</h2>')['html'];
+        self::assertStringContainsString('<h2 id="calendrier" class="scroll-mt-24 aligne-centre">Calendrier</h2>', $html);
     }
 
     #[TestDox('RGL-05 Code court seul dans son paragraphe : l\'élément remplace le paragraphe ; au fil du texte : remplacé sur place ; dans <code> : laissé tel quel')]

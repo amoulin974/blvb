@@ -20,19 +20,29 @@ export default class extends Controller {
             ignoreSelector: '.js-toc-ignore',
             // Tout le sommaire déplié (titres h2 et h3)
             collapseDepth: 6,
-            scrollSmooth: true,
-            headingsOffset: 80,
-            scrollSmoothOffset: -80,
+            // Saut natif du navigateur vers l'ancre : il respecte la marge des titres (scroll-mt-24, 96 px, sous l'en-tête
+            // collant). Le défilement animé de tocbot s'arrêtait avant le titre sous Firefox et ne marchait pas sous Safari.
+            scrollSmooth: false,
+            // Titre « atteint » à moins de 100 + 10 px du haut : un titre posé à 96 px par le saut compte comme atteint
+            headingsOffset: 100,
             extraLinkClasses: 'link',
             // Le sommaire défile seul sur grand écran (nav à hauteur bornée) : le lien marqué y reste visible
             tocScrollingWrapper: tocContainer.closest('nav'),
-            onClick: (event) => { this.choisi = event.target.closest('a')?.getAttribute('href') },
-            // En bas de page, un titre suivi de peu de texte ne peut pas monter jusqu'en haut de l'écran : tocbot marque
-            // alors le titre précédent. Après un clic, le lien choisi reste marqué jusqu'au prochain défilement.
-            scrollEndCallback: () => setTimeout(() => this.marquerChoisi(tocContainer), 100),
+            // Lien choisi, remarqué même si la page ne défile pas (titre déjà à sa place)
+            onClick: (event) => {
+                this.choisi = event.target.closest('a')?.getAttribute('href')
+                this.finDefilement()
+            },
         })
-        // Défilement par l'utilisateur : tocbot reprend la main
+        // En bas de page, un titre suivi de peu de texte ne peut pas monter jusqu'en haut de l'écran : tocbot marque alors
+        // le titre précédent. Après un clic, le lien choisi est remarqué à la fin du défilement (après la mise à jour de
+        // tocbot), jusqu'à ce que l'utilisateur fasse défiler lui-même la page.
+        this.finDefilement = () => {
+            clearTimeout(this.minuteur)
+            this.minuteur = setTimeout(() => this.marquerChoisi(tocContainer), 120)
+        }
         this.defilement = () => { this.choisi = null }
+        window.addEventListener('scroll', this.finDefilement, { passive: true })
         window.addEventListener('wheel', this.defilement, { passive: true })
         window.addEventListener('touchmove', this.defilement, { passive: true })
         window.addEventListener('keydown', this.defilement)
@@ -62,12 +72,23 @@ export default class extends Controller {
         toc.querySelectorAll('.is-active-li').forEach((li) => li.classList.remove('is-active-li'))
         lien.classList.add('is-active-link')
         lien.closest('li')?.classList.add('is-active-li')
-        lien.scrollIntoView({ block: 'nearest' })
+        // Le lien reste visible dans le sommaire : seul le sommaire défile (scrollIntoView ferait défiler toute la page
+        // sous Firefox et Safari, le sommaire étant collant)
+        const nav = toc.closest('nav')
+        if (nav && nav.scrollHeight > nav.clientHeight) {
+            const cadre = nav.getBoundingClientRect()
+            const position = lien.getBoundingClientRect()
+            if (position.top < cadre.top || position.bottom > cadre.bottom) {
+                nav.scrollTop += position.top - cadre.top - nav.clientHeight / 2
+            }
+        }
     }
 
     disconnect() {
         // Important si la page change via Turbo
         tocbot.destroy()
+        clearTimeout(this.minuteur)
+        window.removeEventListener('scroll', this.finDefilement)
         window.removeEventListener('wheel', this.defilement)
         window.removeEventListener('touchmove', this.defilement)
         window.removeEventListener('keydown', this.defilement)

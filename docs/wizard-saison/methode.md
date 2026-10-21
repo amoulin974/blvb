@@ -415,6 +415,19 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   pas monter en haut de l'écran) ; lien sur une image dans l'éditeur (attribut `href` de l'image, rendu
   `<a href><img></a>`, gardé par le nettoyage, RGL-01), aides « cliquez sur l'image puis sur Lien ». Une description
   d'image `"><script>…` reste du texte encodé (RGL-01). Relu par l'ergonome et le webdesigner.
+- **Sommaire, vraie cause** : chaque clic dans le sommaire déclenchait une visite Turbo (page rechargée, sommaire
+  reconstruit) ; selon le navigateur, le titre précédent restait marqué. `data-turbo="false"` sur le sommaire ; saut
+  natif vers l'ancre (marge `scroll-mt-24`), `headingsOffset` 100. Constaté avec Playwright (Chromium, Firefox, WebKit),
+  dans Docker (`mcr.microsoft.com/playwright`, `--network host`). Piège : `scrollIntoView` d'un lien du sommaire collant
+  faisait défiler toute la page sous Firefox et Safari.
+- **Éditeur, toutes les options de TipTap sauf la couleur** (demande de l'utilisateur) : annuler / rétablir, souligné,
+  surligné, exposant, indice, citation, ligne de séparation, saut de ligne, alignements (gauche, centre, droite,
+  justifié ; classes `aligne-…`, seules classes gardées par `App\Reglement\ClasseAlignement`), tableaux (barre « Tableau »
+  contextuelle), onglet « HTML » (code modifiable, avertissement si des éléments sont retirés), clic sur un lien sans
+  navigation. Extensions TipTap 2.11.5 ajoutées à l'importmap (`importmap:install` au déploiement ; Symfony avait
+  rétrogradé `@tiptap/pm/state` et `/view` en 2.11.4, remis en 2.11.5). Relu par l'ergonome, le webdesigner et la
+  sécurité (images externes et liens d'image filtrés à l'analyse). **Ouvert** : regrouper l'alignement dans un menu
+  pour alléger la barre sur téléphone (proposé par l'ergonome).
 
 ## 5. Reprendre le travail sur un autre ordinateur
 

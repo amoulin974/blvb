@@ -3,12 +3,15 @@ framework:
         sanitizers:
             # Règlement d'une saison (App\Reglement\EditionReglement, D55 à D57) : mise en forme de l'éditeur seulement ;
             # images du site uniquement (adresses relatives), liens http, https et mailto. Les codes courts sont du texte.
+            # Attribut class : seulement les classes de l'éditeur (App\Reglement\ClasseAlignement, alignements).
             app.reglement:
+                with_attribute_sanitizers:
+                    - App\Reglement\ClasseAlignement
                 allow_elements:
-                    h2: []
-                    h3: []
-                    h4: []
-                    p: []
+                    h2: [class]
+                    h3: [class]
+                    h4: [class]
+                    p: [class]
                     br: []
                     hr: []
                     strong: []
@@ -17,13 +20,16 @@ framework:
                     i: []
                     u: []
                     s: []
+                    mark: []
+                    sub: []
+                    sup: []
                     code: []
                     blockquote: []
                     ul: []
                     ol: [start]
                     li: []
                     a: [href, title]
-                    img: [src, alt, width, height]
+                    img: [src, alt, width, height, class]
                     table: []
                     thead: []
                     tbody: []

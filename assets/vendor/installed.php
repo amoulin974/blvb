@@ -203,28 +203,6 @@
     array (
     ),
   ),
-  '@tiptap/pm/state' => 
-  array (
-    'version' => '2.11.5',
-    'dependencies' => 
-    array (
-      0 => 'prosemirror-state',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  '@tiptap/pm/view' => 
-  array (
-    'version' => '2.11.5',
-    'dependencies' => 
-    array (
-      0 => 'prosemirror-view',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
   '@tiptap/pm/keymap' => 
   array (
     'version' => '2.11.4',
@@ -695,6 +673,154 @@
     'version' => '1.3.2',
     'dependencies' => 
     array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-underline' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-highlight' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-subscript' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-superscript' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-table' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+      1 => '@tiptap/pm/state',
+      2 => '@tiptap/pm/tables',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-table-row' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-table-header' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/extension-table-cell' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => '@tiptap/core',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/pm/tables' => 
+  array (
+    'version' => '2.11.4',
+    'dependencies' => 
+    array (
+      0 => 'prosemirror-tables',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'prosemirror-tables' => 
+  array (
+    'version' => '1.6.2',
+    'dependencies' => 
+    array (
+      0 => 'prosemirror-state',
+      1 => 'prosemirror-model',
+      2 => 'prosemirror-view',
+      3 => 'prosemirror-keymap',
+      4 => 'prosemirror-transform',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  'prosemirror-tables/style/tables.min.css' => 
+  array (
+    'version' => '1.6.2',
+    'dependencies' => 
+    array (
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/pm/state' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => 'prosemirror-state',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/pm/view' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => 'prosemirror-view',
     ),
     'extraFiles' => 
     array (
