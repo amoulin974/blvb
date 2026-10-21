@@ -18,23 +18,24 @@
         {% if reglement.id is null %}
             <p>Le règlement de cette saison n'est pas encore rédigé.</p>
         {% else %}
-            <table class="table table-admin">
+            {# td plutôt que th pour la date : .table-admin th met les en-têtes en petites capitales ; cartes sur téléphone #}
+            <table class="table table-admin table-empilee">
                 <caption class="sr-only">Versions du règlement, de la plus récente à la plus ancienne</caption>
                 <thead><tr><th scope="col">Date</th><th scope="col">Auteur</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
                 <tbody>
                     <tr>
-                        <th scope="row" class="font-normal">{{ reglement.modifieLe ? reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ reglement.modifieLe|date('G \\h i') : '—' }}</th>
-                        <td>{{ m.auteur(reglement.modifiePar) }}</td>
-                        <td><span class="font-semibold">{{ saison.brouillon ? 'Version actuelle' : 'Version publiée' }}</span></td>
+                        <td data-label="Date">{{ reglement.modifieLe ? reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ reglement.modifieLe|date('G \\h i') : '—' }}</td>
+                        <td data-label="Auteur">{{ m.auteur(reglement.modifiePar) }}</td>
+                        <td class="pleine-largeur"><span class="font-semibold">{{ saison.brouillon ? 'Version actuelle' : 'Version publiée' }}</span></td>
                     </tr>
                     {% for version in reglement.versions %}
                         {% set date = version.enregistreLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ version.enregistreLe|date('G \\h i') %}
                         <tr>
-                            <th scope="row" class="font-normal">{{ date }}</th>
-                            <td>{{ m.auteur(version.auteur) }}</td>
-                            <td>
+                            <td data-label="Date">{{ date }}</td>
+                            <td data-label="Auteur">{{ m.auteur(version.auteur) }}</td>
+                            <td class="pleine-largeur">
                                 <div class="flex flex-wrap gap-2">
-                                    <a class="btn btn-ghost btn-sm" href="{{ path('admin_reglement_version', {id: saison.id, version: version.id}) }}">Consulter<span class="sr-only"> la version du {{ date }}</span></a>
+                                    <a class="btn btn-ghost btn-sm max-sm:min-h-11" href="{{ path('admin_reglement_version', {id: saison.id, version: version.id}) }}">Consulter<span class="sr-only"> la version du {{ date }}</span></a>
                                     {% include 'admin/_confirmation.html.twig' with {
                                         action: path('admin_reglement_restaurer', {id: saison.id, version: version.id}),
                                         token: csrf_token('restaurer' ~ version.id),
@@ -49,14 +50,14 @@
                                         irreversible: false,
                                         declencheur: 'Restaurer',
                                         declencheur_sr: 'la version du ' ~ date,
-                                        declencheur_classe: 'btn btn-ghost btn-sm',
+                                        declencheur_classe: 'btn btn-ghost btn-sm max-sm:min-h-11',
                                         declencheur_icone: 'restaurer',
                                     } %}
                                 </div>
                             </td>
                         </tr>
                     {% else %}
-                        <tr><td colspan="3">Aucune version précédente.</td></tr>
+                        <tr><td colspan="3" class="pleine-largeur">Aucune version précédente.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>

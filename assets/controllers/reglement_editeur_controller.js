@@ -13,6 +13,28 @@ import { Decoration, DecorationSet } from '@tiptap/pm/view'
 // Code court, comme App\Reglement\RenduReglement::MOTIF
 const CODE_COURT = /\[[a-z_]+(?:[  ]+[a-z_]+=[^\s\]<]+)*[  ]*\]/g
 const TAILLE_MAX = 2 * 1024 * 1024
+const SESSION_EXPIREE = 'Votre session a peut-être expiré : reconnectez-vous dans un autre onglet, puis réessayez.'
+
+// Réponse JSON du serveur ; une page HTML (session expirée : page de connexion) ou une coupure réseau donnent un
+// message en français, jamais « Failed to fetch » ni une erreur d'analyse
+class ErreurServeur extends Error {}
+
+async function envoyer(url, donnees) {
+    let reponse
+    try {
+        reponse = await fetch(url, { method: 'POST', body: donnees, headers: { Accept: 'application/json' } })
+    } catch {
+        throw new ErreurServeur('La connexion au site a échoué : vérifiez votre accès à Internet, puis réessayez.')
+    }
+    if (reponse.redirected || !(reponse.headers.get('Content-Type') ?? '').includes('application/json')) {
+        throw new ErreurServeur(SESSION_EXPIREE)
+    }
+    const resultat = await reponse.json()
+    if (!reponse.ok && reponse.status !== 409) {
+        throw new ErreurServeur(resultat.message || SESSION_EXPIREE)
+    }
+    return { reponse, resultat }
+}
 
 // Codes courts reconnus mis en évidence pendant la frappe (sauf ceux mis en forme « code », qui restent écrits tels quels)
 const CodesCourts = Extension.create({
@@ -191,24 +213,20 @@ export default class extends Controller {
             donnees.append('forcer', '1')
         }
         try {
-            const reponse = await fetch(this.enregistrerUrlValue, { method: 'POST', body: donnees, headers: { Accept: 'application/json' } })
-            const resultat = await reponse.json()
+            const { reponse, resultat } = await envoyer(this.enregistrerUrlValue, donnees)
             if (reponse.status === 409) {
                 this.etatTarget.textContent = 'Modifications non enregistrées'
                 this.messageConflitTarget.textContent = resultat.message
                 this.dialogueConflitTarget.showModal()
                 return
             }
-            if (!reponse.ok) {
-                throw new Error(resultat.message)
-            }
             this.jetonValue = resultat.jeton
             this.inapplicablesTarget.innerHTML = resultat.inapplicables
             this.marquerModifie(false)
-            this.etatTarget.textContent = (this.publieValue ? 'Mis à jour et publié à ' : 'Enregistré à ') + resultat.heure
+            this.etatTarget.textContent = (this.publieValue ? 'Publié · mis à jour à ' : 'Enregistré à ') + resultat.heure
         } catch (erreur) {
             this.etatTarget.textContent = 'Modifications non enregistrées'
-            this.erreurTarget.textContent = erreur.message && erreur.message !== 'Failed to fetch'
+            this.erreurTarget.textContent = erreur instanceof ErreurServeur
                 ? erreur.message
                 : 'Échec de l\'enregistrement : vos modifications sont toujours dans l\'éditeur. Réessayez.'
         }
@@ -233,15 +251,11 @@ export default class extends Controller {
         donnees.append('_token', this.tokenValue)
         donnees.append('contenu', this.editor.getHTML())
         try {
-            const reponse = await fetch(this.apercuUrlValue, { method: 'POST', body: donnees, headers: { Accept: 'application/json' } })
-            const resultat = await reponse.json()
-            if (!reponse.ok) {
-                throw new Error(resultat.message)
-            }
+            const { resultat } = await envoyer(this.apercuUrlValue, donnees)
             this.apercuTarget.innerHTML = resultat.html
             this.inapplicablesTarget.innerHTML = resultat.inapplicables
         } catch (erreur) {
-            this.apercuTarget.textContent = erreur.message || 'L\'aperçu n\'a pas pu être préparé, réessayez.'
+            this.apercuTarget.textContent = erreur instanceof ErreurServeur ? erreur.message : 'L\'aperçu n\'a pas pu être préparé, réessayez.'
         }
     }
 
@@ -263,8 +277,9 @@ export default class extends Controller {
         evenement.preventDefault()
         const versApercu = evenement.currentTarget === this.ongletRedigerTarget
         const cible = versApercu ? this.ongletApercuTarget : this.ongletRedigerTarget
+        // Le focus reste sur l'onglet (rediger() le donnerait au texte)
+        versApercu ? this.apercu() : this.choisirOnglet(false)
         cible.focus()
-        versApercu ? this.apercu() : this.rediger()
     }
 
     // --- Éléments calculés -----------------------------------------------------------------------------------------
@@ -326,12 +341,15 @@ export default class extends Controller {
         try {
             const url = this.elementUrlValue.replace('CODE', element.dataset.code) + (variante ? '?phase=' + encodeURIComponent(variante) : '')
             const reponse = await fetch(url)
+            if (reponse.redirected) {
+                throw new ErreurServeur(SESSION_EXPIREE)
+            }
             if (!reponse.ok) {
                 throw new Error()
             }
             zone.innerHTML = await reponse.text()
-        } catch {
-            zone.textContent = 'Le résultat n\'a pas pu être chargé, réessayez.'
+        } catch (erreur) {
+            zone.textContent = erreur instanceof ErreurServeur ? erreur.message : 'Le résultat n\'a pas pu être chargé, réessayez.'
         }
     }
 
@@ -353,8 +371,8 @@ export default class extends Controller {
             }
         })
         if (trouve === null) {
-            this.annonceTarget.textContent = 'Ce code n\'est plus dans le texte ; enregistrez pour mettre la liste à jour.'
-            this.erreurTarget.textContent = this.annonceTarget.textContent
+            // Annoncé une seule fois, par la zone role="alert"
+            this.erreurTarget.textContent = 'Ce code n\'est plus dans le texte ; enregistrez pour mettre la liste à jour.'
             return
         }
         // Défiler d'abord, puis donner le focus (sur téléphone, le clavier s'ouvre)
@@ -388,6 +406,12 @@ export default class extends Controller {
             return
         }
         this.dialogueLienTarget.close()
+        if (this.editor.state.selection.empty && !this.editor.isActive('link')) {
+            // Aucun texte sélectionné : l'adresse devient le texte du lien (sans « mailto: »)
+            const texte = adresse.replace(/^mailto:/i, '')
+            this.editor.chain().focus().insertContent({ type: 'text', text: texte, marks: [{ type: 'link', attrs: { href: adresse } }] }).run()
+            return
+        }
         this.editor.chain().focus().extendMarkRange('link').setLink({ href: adresse }).run()
     }
 
@@ -413,27 +437,25 @@ export default class extends Controller {
             this.erreurTarget.textContent = 'L\'image pèse ' + (fichier.size / 1024 / 1024).toFixed(1).replace('.', ',') + ' Mo, le maximum est 2 Mo. Réduisez-la avant de l\'envoyer.'
             return
         }
+        // L'état d'avant l'envoi revient ensuite, que l'image soit insérée, abandonnée ou refusée
+        const etatPrecedent = this.etatTarget.textContent
         this.etatTarget.textContent = 'Envoi de l\'image…'
         const donnees = new FormData()
         donnees.append('_token', this.tokenValue)
         donnees.append('image', fichier)
         try {
-            const reponse = await fetch(this.imageUrlValue, { method: 'POST', body: donnees, headers: { Accept: 'application/json' } })
-            const resultat = await reponse.json()
-            if (!reponse.ok) {
-                throw new Error(resultat.message)
-            }
+            const { resultat } = await envoyer(this.imageUrlValue, donnees)
+            this.etatTarget.textContent = etatPrecedent
             this.imageEnvoyee = resultat.url
             this.vignetteTarget.src = resultat.url
             this.descriptionTarget.value = ''
             this.decorativeTarget.checked = false
             this.erreurImageTarget.textContent = ''
-            this.etatTarget.textContent = this.modifie ? 'Modifications non enregistrées' : this.etatTarget.textContent
             this.dialogueImageTarget.showModal()
             this.descriptionTarget.focus()
         } catch (erreur) {
-            this.etatTarget.textContent = this.modifie ? 'Modifications non enregistrées' : ''
-            this.erreurTarget.textContent = erreur.message || 'L\'envoi a échoué, réessayez.'
+            this.etatTarget.textContent = etatPrecedent
+            this.erreurTarget.textContent = erreur instanceof ErreurServeur ? erreur.message : 'L\'envoi a échoué, réessayez.'
         }
     }
 

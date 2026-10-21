@@ -117,7 +117,7 @@ final class RenduReglementTest extends TestIntegration
         self::assertStringStartsWith('aucun élément calculé ne s\'appelle « inconnu ». Codes possibles : schema_phases, bareme, departage, calendrier.', $inconnu);
         self::assertSame('paramètre « saison » inconnu. Paramètres possibles : phase.', $parametre);
         self::assertStringStartsWith('« FIN » n\'est pas une valeur possible pour « phase » dans cette saison. Valeurs possibles : P1 (Phase 1), BAR (Barrages), P2 (Phase 2), F (Phase finale)', $valeur);
-        self::assertSame('« departage » n\'accepte aucun paramètre.', $sansParametre);
+        self::assertSame('cet élément n\'accepte pas de paramètre : écrivez [departage].', $sansParametre);
 
         $admin = self::texte($this->rendre($contenu, true)['html']);
         self::assertSame(4, substr_count($admin, 'Élément calculé non affiché au public'));

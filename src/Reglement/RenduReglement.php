@@ -88,7 +88,7 @@ final class RenduReglement
         foreach ($parametres as $nom => $valeur) {
             if (!isset($declares[$nom])) {
                 throw new BlocInapplicable($declares === []
-                    ? sprintf('« %s » n\'accepte aucun paramètre.', $code)
+                    ? sprintf('cet élément n\'accepte pas de paramètre : écrivez [%s].', $code)
                     : sprintf('paramètre « %s » inconnu. Paramètres possibles : %s.', $nom, implode(', ', array_keys($declares))));
             }
             if (!\array_key_exists($valeur, $declares[$nom]->valeurs)) {

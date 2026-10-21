@@ -536,11 +536,11 @@ Le lien « Lire la règle 1R » de la fenêtre de saisie (`SaisieScoreTest::test
 
 **RGL-16 à RGL-22 — Page d'édition du règlement** ✅ *`Fonctionnel/Admin/ReglementAdminTest`* (`ReglementController`, D59) :
 - **RGL-16** : réservée aux admins (visiteur renvoyé à la connexion, capitaine refusé) ; éditeur, panneau des quatre éléments calculés dans l'ordre avec leur code, bouton « Enregistrer et publier » ; liens « Rédiger le règlement » depuis la page de la saison et entrée « Règlement » du menu.
-- **RGL-17** : enregistrer publie le texte nettoyé ; jeton CSRF exigé (403) ; une autre version publiée depuis l'ouverture de la page (jeton de version périmé) : 409 avec l'auteur et l'heure, rien d'enregistré ; « forcer » publie et garde l'autre version dans l'historique.
+- **RGL-17** : enregistrer publie le texte nettoyé ; jeton CSRF exigé (403) ; une autre version publiée depuis l'ouverture de la page (jeton de version périmé) : 409 avec l'auteur et l'heure, rien d'enregistré ; « forcer » publie et garde l'autre version dans l'historique ; texte plus long que la limite du nettoyage (`EditionReglement::TAILLE_MAX`) refusé en 422 avec un message, à l'enregistrement comme à l'aperçu, au lieu d'être tronqué ; contenu enregistré sans nettoyage (reprise, import) nettoyé de nouveau dans la page d'édition (pas de `</template><script>`).
 - **RGL-18** : aperçu du texte non enregistré : éléments calculés, encart et liste des codes inapplicables (« 1 code n'est pas affiché au public ») ; rien n'est enregistré.
 - **RGL-19** : résultat d'un élément calculé (« Voir le résultat ») ; phase absente : encart ; code inconnu : 404.
 - **RGL-20** : envoi d'image : PNG accepté, adresse `/uploads/reglement/<24 hex>.png`, fichier enregistré ; contenu qui n'est pas une image (même nommé .png) : 422 « Format non accepté : JPG, PNG ou WebP. » ; jeton CSRF exigé.
-- **RGL-21** : historique (« Version publiée », versions précédentes), consulter une version, la restaurer (jeton CSRF exigé) la republie.
+- **RGL-21** : historique (« Version publiée », versions précédentes), consulter une version, la restaurer (jeton CSRF exigé) la republie ; une version d'une autre saison, consultée ou restaurée par l'adresse de cette saison : 404, rien n'est restauré.
 - **RGL-22** : saison en brouillon : bouton « Enregistrer », statut « Brouillon : visible par le public quand la saison sera lancée », pas de « Voir la page publique » ; `/reglement?saison=<id>` d'un admin ouvre la saison demandée, jamais un brouillon ; sans effet pour un visiteur.
 `Securite/AccesAdminTest` couvre aussi les nouvelles routes `admin_reglement_*`.
 L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, conflit, raccourcis) s'exécute dans le navigateur : à couvrir par E2E-01.

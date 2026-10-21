@@ -87,7 +87,8 @@
                         <span class="flex flex-col leading-tight"><span>Règlement</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
                     </a></li>
                 {% endif %}
-                {% set actif = route starts with 'admin_saison_' and not surSaisonCourante %}
+                {# Règlement d'une autre saison que la saison en cours : rangé sous « Toutes les saisons » #}
+                {% set actif = (route starts with 'admin_saison_' and not surSaisonCourante) or (route starts with 'admin_reglement_' and not surReglement|default(false)) %}
                 <li><a href="{{ path('admin_saison_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('saison', 'size-5') }} Toutes les saisons</a></li>
             </ul>
 

@@ -388,6 +388,27 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - Tests lancés pendant que l'application est sur la base de recette : `docker compose exec -e DATABASE_URL=…blvb_new… php
   composer tests` (sinon la base de test `blvb_recette_test` n'existe pas).
 
+### 2026-10-21 : règlement, relectures de R4
+
+- Branche locale `reglement` créée depuis `origin/reglement` ; le `vendor` du conteneur n'avait pas
+  `symfony/html-sanitizer` (application en erreur) : `composer install` à faire après tout pull de cette branche.
+- **Sécurité** : aucun constat critique ni important ; trois mineurs corrigés : texte plus long que la limite du sanitizer
+  refusé en 422 (`EditionReglement::TAILLE_MAX`, au lieu d'être tronqué sans prévenir), contenu renettoyé dans la page
+  d'édition (comme la page publique), test de la version d'une autre saison (404) ; RGL-17 et RGL-21 complétés.
+- **Ergonome** : messages d'erreur en français (réseau coupé, session expirée : plus de « Failed to fetch » ni d'erreur
+  d'analyse JSON), raison « cet élément n'accepte pas de paramètre : écrivez [departage]. », conflit en brouillon
+  (« enregistrée »), état avec la date et rétabli après un envoi d'image, libellés « Titre de partie / Titre de règle »
+  (abrégés sur téléphone), cibles de 44 px, lien inséré sans sélection, focus des onglets, annonce unique, dates en
+  toutes lettres, retour d'un brouillon vers l'étape Vérification du wizard.
+- **Webdesigner** : listes numérotées, historique en cartes sur téléphone (date en `td`, sans toucher aux autres
+  tableaux), lien « Aller aux éléments calculés » avant l'éditeur, état « activé » contrasté, chevrons du panneau, codes
+  courts sans capitales, séparateurs verticaux, fenêtres fermées par un clic à l'extérieur, menu actif,
+  `reglement_2025.html.twig` avec `.reglement-article`.
+- Contre-relectures : ergonome « oui », webdesigner « conforme » ; leurs dernières retouches intégrées. 613 tests verts.
+- **Piège** : un commentaire Twig `{# … #}` à l'intérieur d'une balise (`{% include … with { … } %}`) casse le lexer, avec
+  une erreur « Unexpected character » signalée bien plus loin dans le fichier.
+- **Suite** : essai de l'éditeur dans un navigateur (`reglement.md`, « Reste à faire » 2), puis R5.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition-lot6 && git pull` (lot en cours, pas

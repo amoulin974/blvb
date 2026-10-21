@@ -35,4 +35,4 @@ framework:
                 allowed_media_schemes: []
                 allowed_media_hosts: []
                 allow_relative_medias: true
-                max_input_length: 500000
+                max_input_length: 500000 # = EditionReglement::TAILLE_MAX

@@ -73,7 +73,7 @@ final class ReglementAdminTest extends TestFonctionnel
         self::assertGreaterThanOrEqual(1, $crawler->filter('nav a[href="'.$this->url().'"]')->count(), 'entrée « Règlement » du menu');
     }
 
-    #[TestDox('RGL-17 Enregistrer publie le texte nettoyé ; une autre version publiée entre-temps : 409 avec l\'auteur, sauf « forcer » ; jeton CSRF exigé')]
+    #[TestDox('RGL-17 Enregistrer publie le texte nettoyé ; une autre version publiée entre-temps : 409 avec l\'auteur, sauf « forcer » ; jeton CSRF exigé ; texte trop long refusé (422) ; contenu non nettoyé en base nettoyé dans la page d\'édition')]
     public function test_enregistrer_et_conflit(): void
     {
         $this->connecter('admin');
@@ -98,7 +98,24 @@ final class ReglementAdminTest extends TestFonctionnel
         self::assertResponseIsSuccessful();
         self::assertSame('<p>V2</p>', $this->reglement()->getContenu());
         self::assertCount(1, $this->reglement()->getVersions());
-        self::assertNotSame($jetonV1, $this->ouvrir()[1]);
+        [, $jetonV2] = $this->ouvrir();
+        self::assertNotSame($jetonV1, $jetonV2);
+
+        // Texte plus long que ce que le sanitizer accepte : refusé avec un message, au lieu d'être tronqué sans prévenir
+        $long = '<p>'.str_repeat('a', EditionReglement::TAILLE_MAX).'</p>';
+        $reponse = $this->poster('/enregistrer', ['_token' => $token, 'contenu' => $long, 'jeton' => $jetonV2]);
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('Le texte est trop long', $reponse['message']);
+        self::assertSame('<p>V2</p>', $this->reglement()->getContenu());
+        $this->poster('/apercu', ['_token' => $token, 'contenu' => $long]);
+        self::assertResponseStatusCodeSame(422);
+
+        // Contenu enregistré sans passer par le nettoyage (reprise, import) : nettoyé de nouveau dans la page d'édition
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $em->persist($this->reglement()->setContenu('<p>V3</p></template><script>alert(1)</script>'));
+        $em->flush();
+        $this->client->request('GET', $this->url());
+        self::assertStringNotContainsString('<script>alert(1)</script>', (string) $this->client->getResponse()->getContent());
     }
 
     #[TestDox('RGL-18 Aperçu du texte non enregistré : éléments calculés et codes inapplicables, rien n\'est enregistré')]
@@ -157,7 +174,7 @@ final class ReglementAdminTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(403);
     }
 
-    #[TestDox('RGL-21 Historique : version publiée et versions précédentes ; consulter une version ; la restaurer la republie (jeton CSRF)')]
+    #[TestDox('RGL-21 Historique : version publiée et versions précédentes ; consulter une version ; la restaurer la republie (jeton CSRF) ; version d\'une autre saison : 404')]
     public function test_historique_et_restauration(): void
     {
         $edition = self::getContainer()->get(EditionReglement::class);
@@ -180,6 +197,18 @@ final class ReglementAdminTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(403);
         $this->client->request('POST', $restaurer->attr('data-confirmation-action-param'), ['_token' => $restaurer->attr('data-confirmation-token-param')]);
         self::assertResponseRedirects($this->url());
+        self::assertSame('<p>Ancienne version</p>', $this->reglement()->getContenu());
+
+        // Version d'une autre saison passée dans l'adresse de cette saison : 404, rien n'est restauré
+        $autre = ChampionnatDeTest::get('saison.precedente')->getId();
+        $edition->enregistrer($em->find(Saison::class, $autre), '<p>Autre saison, ancienne</p>', null);
+        $edition->enregistrer($em->find(Saison::class, $autre), '<p>Autre saison, actuelle</p>', null);
+        $em->clear();
+        $versionAutre = self::getContainer()->get(ReglementRepository::class)->findDeSaison($em->find(Saison::class, $autre))->getVersions()->first();
+        $this->client->request('GET', $this->url('/version/'.$versionAutre->getId()));
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', $this->url('/version/'.$versionAutre->getId().'/restaurer'), ['_token' => 'faux']);
+        self::assertResponseStatusCodeSame(404);
         self::assertSame('<p>Ancienne version</p>', $this->reglement()->getContenu());
     }
 

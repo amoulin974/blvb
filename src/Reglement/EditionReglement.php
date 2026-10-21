@@ -18,6 +18,9 @@ use Symfony\Component\HtmlSanitizer\HtmlSanitizerInterface;
  */
 final class EditionReglement
 {
+    /** Longueur maximale du HTML reçu : celle du sanitizer (max_input_length), qui tronquerait sans prévenir au-delà */
+    public const TAILLE_MAX = 500000;
+
     public function __construct(
         private EntityManagerInterface $em,
         private ReglementRepository $reglementRepository,

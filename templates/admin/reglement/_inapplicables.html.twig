@@ -9,7 +9,7 @@
                 {% for i in inapplicables %}
                     <li class="flex flex-wrap items-center gap-x-2">
                         <span><code>{{ i.code }}</code> : {{ i.raison }}</span>
-                        <button type="button" class="btn btn-ghost btn-sm" data-action="reglement-editeur#allerAuCode" data-reglement-editeur-code-param="{{ i.code }}">Aller au code<span class="sr-only"> {{ i.code }}</span></button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-action="reglement-editeur#allerAuCode" data-reglement-editeur-code-param="{{ i.code }}">Aller au code<span class="sr-only"> {{ i.code }}</span></button>
                     </li>
                 {% endfor %}
             </ul>

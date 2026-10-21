@@ -173,6 +173,7 @@ body{
     .reglement-article h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
     .reglement-article p { margin-bottom: 0.75rem; max-width: 70ch; }
     .reglement-article ul, .reglement-article ol { margin: 0 0 0.75rem 1.25rem; list-style: disc; }
+    .reglement-article ol { list-style: decimal; }
     .reglement-article li { margin-bottom: 0.25rem; }
     .reglement-article img { max-width: 100%; height: auto; margin: 1rem auto; border-radius: var(--radius-box); }
     .reglement-article table { margin: 1rem 0; border: 1px solid var(--color-base-300); }
@@ -275,8 +276,16 @@ body{
 .reglement-editeur .ProseMirror img { max-width: 100%; }
 .reglement-editeur .ProseMirror img.ProseMirror-selectednode { outline: 3px solid var(--color-primary); }
 /* Code court qui sera remplacé par un élément calculé : filet turquoise (jamais en couleur de texte), fond, police mono */
-.reglement-code-court { font-family: ui-monospace, monospace; background-color: var(--color-base-200); border-left: 3px solid var(--color-secondary); padding: 0 0.25rem; }
-[role="toolbar"] .btn[aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); }
+/* Casse et espacement normaux même dans un titre (h2 en capitales) ; fond et filet répétés si le code passe à la ligne */
+.reglement-code-court { font-family: ui-monospace, monospace; background-color: var(--color-base-200); border-left: 3px solid var(--color-secondary); padding: 0 0.25rem; text-transform: none; letter-spacing: normal; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+/* Bouton de mise en forme actif : fond teinté et soulignement marine (indice contrasté, WCAG 1.4.11) */
+[role="toolbar"] .btn[aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); box-shadow: inset 0 -2px 0 var(--color-primary); }
+/* Panneau des éléments calculés : chevron qui pivote à l'ouverture, sans triangle du navigateur */
+details[data-code] > summary { list-style: none; }
+details[data-code] > summary::-webkit-details-marker { display: none; }
+details[data-code] > summary svg { transition: rotate 0.15s; }
+@media (prefers-reduced-motion: reduce) { details[data-code] > summary svg { transition: none; } }
+details[data-code][open] > summary svg { rotate: 180deg; }
 
 /* Sommaire du règlement : tocbot recopie le texte des titres tel qu'il est écrit (les capitales des h2 ne viennent que du
    CSS) ; hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
