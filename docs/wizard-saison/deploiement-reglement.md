@@ -7,10 +7,8 @@ Seul Francis fusionne dans `prod`.
 ## Préalables, côté développement
 
 1. Fusionner selon D15 : `formats-competition-lot6` et `reglement` → `formats-competition` → `main`.
-2. **Vulnérabilités JavaScript** (`importmap:audit`) : `prosemirror-view` monté en 1.42.3 le 21/10/2026 (XSS au collage,
-   gravité haute, corrigée). Reste `@tiptap/core` 2.11.5 (`__proto__` dans `mergeAttributes`, gravité moyenne, corrigée
-   seulement en TipTap 3) : seul l'éditeur des admins est concerné et le HTML est nettoyé côté serveur ; acceptable pour
-   la mise en production, montée de TipTap à prévoir.
+2. **Vulnérabilités JavaScript** (`importmap:audit`) : aucune depuis le 22/10/2026 (TipTap 3.31.4, `prosemirror-view`
+   1.42.6). Les paquets de l'éditeur ont changé : `importmap:install` est indispensable au déploiement.
 3. **Secret** : le `.env` de `prod` contient le mot de passe SMTP en clair ; le déplacer dans `.env.local` (ou un secret
    Symfony), puis changer ce mot de passe.
 

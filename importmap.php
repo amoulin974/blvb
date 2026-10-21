@@ -62,184 +62,172 @@ return [
     'moment/locale/fr' => [
         'version' => '2.31.0',
     ],
-    '@tiptap/core' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/starter-kit' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-link' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-image' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/pm/state' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/pm/view' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/pm/keymap' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/pm/model' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/pm/transform' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/pm/commands' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/pm/schema-list' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/extension-blockquote' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-bold' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-bullet-list' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-code' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-code-block' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-document' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-dropcursor' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-gapcursor' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-hard-break' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-heading' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-history' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-horizontal-rule' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-italic' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-list-item' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-ordered-list' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-paragraph' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-strike' => [
-        'version' => '2.11.5',
-    ],
-    '@tiptap/extension-text' => [
-        'version' => '2.11.5',
-    ],
-    'linkifyjs' => [
-        'version' => '4.2.0',
-    ],
-    'prosemirror-state' => [
-        'version' => '1.4.3',
-    ],
     'prosemirror-view' => [
-        'version' => '1.42.3',
-    ],
-    'prosemirror-keymap' => [
-        'version' => '1.2.2',
+        'version' => '1.42.6',
     ],
     'prosemirror-model' => [
-        'version' => '1.24.1',
+        'version' => '1.25.12',
     ],
-    'prosemirror-transform' => [
-        'version' => '1.10.2',
+    'prosemirror-state' => [
+        'version' => '1.4.4',
+    ],
+    'prosemirror-keymap' => [
+        'version' => '1.2.3',
+    ],
+    'prosemirror-tables' => [
+        'version' => '1.8.5',
+    ],
+    'prosemirror-history' => [
+        'version' => '1.5.1',
     ],
     'prosemirror-commands' => [
-        'version' => '1.6.2',
+        'version' => '1.7.2',
+    ],
+    'prosemirror-changeset' => [
+        'version' => '2.4.4',
+    ],
+    'prosemirror-gapcursor' => [
+        'version' => '1.4.1',
+    ],
+    'prosemirror-transform' => [
+        'version' => '1.12.2',
+    ],
+    'prosemirror-dropcursor' => [
+        'version' => '1.8.4',
+    ],
+    'prosemirror-inputrules' => [
+        'version' => '1.5.1',
     ],
     'prosemirror-schema-list' => [
-        'version' => '1.5.0',
+        'version' => '1.5.1',
     ],
-    '@tiptap/pm/dropcursor' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/pm/gapcursor' => [
-        'version' => '2.11.4',
-    ],
-    '@tiptap/pm/history' => [
-        'version' => '2.11.4',
-    ],
-    'prosemirror-view/style/prosemirror.min.css' => [
-        'version' => '1.42.3',
-        'type' => 'css',
-    ],
-    'w3c-keyname' => [
-        'version' => '2.2.7',
+    'linkifyjs' => [
+        'version' => '4.3.3',
     ],
     'orderedmap' => [
         'version' => '2.1.1',
     ],
-    'prosemirror-dropcursor' => [
-        'version' => '1.8.1',
-    ],
-    'prosemirror-gapcursor' => [
-        'version' => '1.3.2',
-    ],
-    'prosemirror-history' => [
-        'version' => '1.4.1',
+    'w3c-keyname' => [
+        'version' => '2.2.8',
     ],
     'rope-sequence' => [
         'version' => '1.3.4',
     ],
-    'prosemirror-gapcursor/style/gapcursor.min.css' => [
-        'version' => '1.3.2',
-        'type' => 'css',
+    '@tiptap/core' => [
+        'version' => '3.31.4',
     ],
-    '@tiptap/extension-underline' => [
-        'version' => '2.11.5',
+    '@tiptap/starter-kit' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-image' => [
+        'version' => '3.31.4',
     ],
     '@tiptap/extension-highlight' => [
-        'version' => '2.11.5',
+        'version' => '3.31.4',
     ],
     '@tiptap/extension-subscript' => [
-        'version' => '2.11.5',
+        'version' => '3.31.4',
     ],
     '@tiptap/extension-superscript' => [
-        'version' => '2.11.5',
+        'version' => '3.31.4',
     ],
     '@tiptap/extension-table' => [
-        'version' => '2.11.5',
+        'version' => '3.31.4',
     ],
-    '@tiptap/extension-table-row' => [
-        'version' => '2.11.5',
+    '@tiptap/pm/state' => [
+        'version' => '3.31.4',
     ],
-    '@tiptap/extension-table-header' => [
-        'version' => '2.11.5',
+    '@tiptap/pm/view' => [
+        'version' => '3.31.4',
     ],
-    '@tiptap/extension-table-cell' => [
-        'version' => '2.11.5',
+    '@tiptap/pm/transform' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/commands' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/model' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/schema-list' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/keymap' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/history' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-blockquote' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-bold' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-code' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-code-block' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-document' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-hard-break' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-heading' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-horizontal-rule' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-italic' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-link' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-list' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-paragraph' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-strike' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-text' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extension-underline' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/extensions' => [
+        'version' => '3.31.4',
     ],
     '@tiptap/pm/tables' => [
-        'version' => '2.11.4',
+        'version' => '3.31.4',
     ],
-    'prosemirror-tables' => [
-        'version' => '1.6.2',
+    'prosemirror-view/style/prosemirror.min.css' => [
+        'version' => '1.42.6',
+        'type' => 'css',
     ],
     'prosemirror-tables/style/tables.min.css' => [
-        'version' => '1.6.2',
+        'version' => '1.8.5',
         'type' => 'css',
+    ],
+    'prosemirror-gapcursor/style/gapcursor.min.css' => [
+        'version' => '1.4.1',
+        'type' => 'css',
+    ],
+    '@tiptap/core/jsx-runtime' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/dropcursor' => [
+        'version' => '3.31.4',
+    ],
+    '@tiptap/pm/gapcursor' => [
+        'version' => '3.31.4',
     ],
 ];

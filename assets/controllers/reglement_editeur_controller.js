@@ -1,17 +1,13 @@
 /* stimulusFetch: 'lazy' */
 import { Controller } from '@hotwired/stimulus'
 import { Editor, Extension, mergeAttributes } from '@tiptap/core'
-import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
-import Underline from '@tiptap/extension-underline'
-import Highlight from '@tiptap/extension-highlight'
-import Subscript from '@tiptap/extension-subscript'
-import Superscript from '@tiptap/extension-superscript'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
+// TipTap 3 : le lien et le souligné font partie du kit de base ; les tableaux sont dans un seul paquet
+import { StarterKit } from '@tiptap/starter-kit'
+import { Image } from '@tiptap/extension-image'
+import { Highlight } from '@tiptap/extension-highlight'
+import { Subscript } from '@tiptap/extension-subscript'
+import { Superscript } from '@tiptap/extension-superscript'
+import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import { Plugin } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
 
@@ -210,11 +206,14 @@ export default class extends Controller {
             element: this.editeurTarget,
             content: this.contenuTarget.innerHTML,
             extensions: [
-                StarterKit.configure({ heading: { levels: [2, 3, 4] }, codeBlock: false, strike: false }),
-                Link.configure({ openOnClick: false, autolink: false, HTMLAttributes: { rel: null, target: null } }),
+                // Pas de paragraphe vide ajouté en fin de texte (trailingNode, nouveau en TipTap 3) : le HTML enregistré
+                // reste celui que l'admin a écrit
+                StarterKit.configure({
+                    heading: { levels: [2, 3, 4] }, codeBlock: false, strike: false, trailingNode: false,
+                    link: { openOnClick: false, autolink: false, HTMLAttributes: { rel: null, target: null } },
+                }),
                 ImageLien,
                 Alignement,
-                Underline,
                 Highlight,
                 Subscript,
                 Superscript,
@@ -516,7 +515,7 @@ export default class extends Controller {
         if (contientNonPrisEnCharge(this.sourceTarget.value)) {
             this.annonceTarget.textContent = 'Des éléments non pris en charge (styles, scripts…) ont été retirés.'
         }
-        this.editor.commands.setContent(this.sourceTarget.value, true)
+        this.editor.commands.setContent(this.sourceTarget.value, { emitUpdate: true })
         this.sourceAffichee = this.sourceTarget.value
     }
 

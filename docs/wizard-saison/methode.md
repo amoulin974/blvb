@@ -446,6 +446,23 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - **Suite** (détail dans `reglement.md`, « Reste à faire », et `lots.md`) : R6 (schémas dessinés) ; essais restants dans
   un navigateur ; reste du lot 6 (6c bis, bilan) ; fusion selon D15 ; en production, données 2025 puis import.
 
+### 2026-10-22 : règlement, TipTap 3
+
+- **TipTap monté de 2.11.5 en 3.31.4** (demande de l'utilisateur ; faille moyenne GHSA-cp6q-959q-f8rh de `@tiptap/core`,
+  corrigée à partir de 3.30.4) ; `importmap:audit` : aucune vulnérabilité. Changements : le lien et le souligné font
+  partie de `StarterKit` (configurés par ses options `link`, `underline`), tableaux importés de `@tiptap/extension-table`
+  (`{ Table, TableRow, TableHeader, TableCell }`), imports nommés, `setContent(html, { emitUpdate: true })`,
+  `trailingNode: false` (TipTap 3 ajouterait un paragraphe vide en fin de texte).
+- **Piège de l'importmap** : le résolveur de jsDelivr n'arrive pas à trouver seul les dépendances de ProseMirror
+  (« Unable to find the latest version for package "orderedmap" ») : retirer toutes les entrées `@tiptap/*` et
+  `prosemirror-*`, puis les redemander avec leurs versions explicites (dernières versions compatibles avec
+  `@tiptap/pm` 3.31.4 et vieilles de deux semaines : `prosemirror-view` 1.42.6, `prosemirror-model` 1.25.12…).
+- **Essai dans un navigateur** (Playwright 1.49 dans Docker, `--network host`, base de recette, scénario `barrages`) :
+  Chromium, Firefox et WebKit : chargement sans erreur, gras, code court mis en évidence, tableau, annuler / rétablir, lien
+  relatif `#regle-1r`, aller-retour par l'onglet HTML, aperçu, enregistrement, rechargement sans paragraphe vide final.
+  Piège du test : cliquer un bouton de la barre puis taper aussitôt perd les premières lettres (le focus revient à
+  l'éditeur au rafraîchissement suivant) ; attendre un instant. 614 tests verts.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout reglement && git pull`. La branche `reglement` (lot 11, en cours)
