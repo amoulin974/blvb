@@ -97,7 +97,7 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 
 Mode d'emploi complet des commandes de test : [`tests/README.md`](../../tests/README.md).
 
-Tests automatisés, dans le conteneur `php` (613 tests verts + 2 lents au 2026-10-21, branche `reglement` ; toujours par `composer tests`) :
+Tests automatisés, dans le conteneur `php` (614 tests verts + 2 lents au 2026-10-21, branche `reglement` ; toujours par `composer tests`) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
@@ -428,6 +428,17 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   rétrogradé `@tiptap/pm/state` et `/view` en 2.11.4, remis en 2.11.5). Relu par l'ergonome, le webdesigner et la
   sécurité (images externes et liens d'image filtrés à l'analyse). **Ouvert** : regrouper l'alignement dans un menu
   pour alléger la barre sur téléphone (proposé par l'ergonome).
+- Alignements regroupés dans un menu (fait). Pièges : un `|raw` passé en argument d'une macro Twig ne la traverse pas
+  (contenu réaffiché échappé) ; daisyUI rend un `summary` à `tabindex` insensible aux clics quand il a le focus
+  (`pointer-events: none`), et la carte `overflow-clip` rognait le menu (sens d'ouverture calculé, `placerMenu`).
+- Souhaits de l'ergonome faits : images de plus de 2 Mo réduites dans le navigateur avant l'envoi, barre « Image : »
+  (description, retirer), codes courts inapplicables marqués « à vérifier » dans l'éditeur (`codes` rendus par l'aperçu
+  et l'enregistrement, RGL-18).
+- **R5** : `app:reglement:importer` (RGL-23) verse le règlement 2025 (`src/Reglement/Reprise/reglement-2025.html`,
+  balisage corrigé, texte inchangé, images avec description) dans la saison en cours ; ancien gabarit supprimé. Essayée
+  sur la base de recette : 11 parties, 15 règles, 2 tableaux, 6 images, ancre `#regle-1r`, rien perdu à l'ouverture dans
+  l'éditeur. Les `<li><hr></li>` de la règle 1D, que l'éditeur ne garde pas, ont été retirés de la source. Piège : une
+  image dans un `<p>` disparaît de l'éditeur (image en bloc). Reste en production : données 2025, puis la commande.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 

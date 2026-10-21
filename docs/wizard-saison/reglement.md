@@ -50,8 +50,8 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 | R1 | Données : `Reglement`, `ReglementVersion`, migration `Version20261020164942` ; nettoyage HTML (`App\Reglement\EditionReglement`, sanitizer `app.reglement`) ; copie dans `CopieSaison` ; RGL-01 à RGL-03, CPS-04 | ✅ |
 | R2 | Blocs : `BlocReglement`, `BlocsReglement`, `SchemaPhases` (avec `TableauElimination`), `BlocBareme`, `BlocDepartage`, `BlocCalendrier`, `RenduReglement` (codes courts, ancres, codes inapplicables), `Texte` (mots publics) ; RGL-04 à RGL-11 | ✅ |
 | R3 | Page publique : `/reglement` selon la saison affichée (`FrontController::reglement`), brouillon refusé, saison sans règlement (message), saison passée signalée, sommaire h2 et h3 (`tocbotController.js`), impression (en-tête, menu et pied masqués sur tout le site), retour à la page d'origine après un changement de saison ; ancien gabarit gardé dans `front/reglement_2025.html.twig` pour R5 ; relu ergonome + webdesigner + sécurité ; RGL-12 à RGL-15 | ✅ |
-| R4 | Édition admin (`ReglementController`, `admin/reglement/*.html.twig`, `reglement_editeur_controller.js` avec TipTap 2.11.5 par l'importmap, `ImagesReglement`, `ReglementExtension`) : éditeur, aperçu, panneau « Éléments calculés », images, historique et restauration, conflit entre deux admins, accès (saison, menu, wizard, encart public, état vide) ; RGL-16 à RGL-22. **Relu par la sécurité, l'ergonome et le webdesigner, retours intégrés (21/10/2026, 613 tests verts) ; reste l'essai dans un navigateur : voir « Reste à faire »** | 🟡 |
-| R5 | Reprise : commande `app:reglement:importer` (simulation puis application) qui verse le gabarit actuel dans la saison en cours, images conservées ; suppression du gabarit en dur ; checklist de déploiement (agent `deploiement`) | ⬜ |
+| R4 | Édition admin (`ReglementController`, `admin/reglement/*.html.twig`, `reglement_editeur_controller.js` avec TipTap 2.11.5 par l'importmap, `ImagesReglement`, `ReglementExtension`) : éditeur, aperçu, panneau « Éléments calculés », images, historique et restauration, conflit entre deux admins, accès (saison, menu, wizard, encart public, état vide) ; RGL-16 à RGL-22. Relu par la sécurité, l'ergonome et le webdesigner (21/10/2026). Complété le 21/10 à la demande de l'utilisateur : toutes les options de TipTap sauf la couleur (alignements en menu, tableaux, souligné, surligné, exposant, indice, citation, séparation, annuler / rétablir), onglet HTML, image cliquable, images réduites avant l'envoi, description modifiable, codes inapplicables marqués « à vérifier » ; vérifié dans Chromium (Playwright) | ✅ |
+| R5 | Reprise : commande `app:reglement:importer` (simulation, puis `--force` ; `--remplacer` si un règlement est déjà rédigé, l'ancien restant dans l'historique) qui verse le règlement 2025 (`src/Reglement/Reprise/reglement-2025.html`, balisage corrigé, texte inchangé ; images de `public/images/reglement` centrées avec leur description) dans la saison en cours ; ancien gabarit `front/reglement_2025.html.twig` supprimé ; RGL-23. **À faire en production** : corriger d'abord les données 2025 (ci-dessous), puis lancer la commande (checklist de l'agent `deploiement`) | 🟡 |
 | R6 | Schémas dessinés : générer les schémas du règlement (enchaînement des phases, tableaux à élimination, éventuellement calendrier) avec une bibliothèque JavaScript qui dessine dans un canvas, à partir des mêmes données que les éléments calculés (exposées en JSON par la page) ; bibliothèque à choisir et décision à consigner (demande de l'utilisateur, 20/10/2026) ; relu ergonome + webdesigner (accessibilité : le HTML actuel reste l'alternative textuelle, impression) | ⬜ |
 
 Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal de `methode.md`.
@@ -63,17 +63,18 @@ Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal d
    journal de `methode.md`. Points laissés ouverts : les boutons Précédent / Suivant du navigateur ne préviennent pas
    d'une perte de modifications (ni `beforeunload` ni `turbo:before-visit`) ; « Historique (N) » ne compte que les versions
    précédentes.
-2. **Essai dans un navigateur** de la page d'édition (l'éditeur TipTap n'est couvert par aucun test) : base de recette
-   (`bin/recette reinitialiser --scenario=barrages`, `bin/recette utiliser`), compte `admin@blvb.test`, mot de passe
-   `Recette-2026!`, menu « Règlement ». Vérifier : chargement de TipTap (console), barre d'outils, insertion des codes,
-   aperçu, enregistrement et conflit (deux onglets), image, lien, historique, téléphone.
-3. **Non réalisé (souhaitable, ergonome)** : réduction automatique des images trop lourdes ; modifier la description d'une
-   image ou la retirer après insertion (une aide dans la fenêtre Image dit de la supprimer et de la réinsérer) ; style
-   « à vérifier » des codes inapplicables dans l'éditeur.
-4. **R5** : import du règlement actuel (`templates/front/reglement_2025.html.twig`) dans la saison en cours, images
-   conservées, ancre `#regle-1r` présente ; puis suppression de l'ancien gabarit ; données 2025 à corriger avant (voir
-   ci-dessous) ; checklist de déploiement par l'agent `deploiement` (migrations `Version20261020164942`,
-   `importmap:install` pour TipTap, dossier `public/uploads/reglement` accessible en écriture, `tailwind:build`).
+2. **Essai dans un navigateur** : fait en partie par l'utilisateur et par Playwright dans Chromium (Docker,
+   `mcr.microsoft.com/playwright`, `--network host`) : barre d'outils, alignements, liens, images (réduction, description),
+   onglet HTML, codes à vérifier, reprise du règlement 2025 (titres, tableaux, images, liens conservés). Reste : conflit
+   entre deux onglets, historique et restauration, Firefox et Safari pour les dernières versions.
+3. ~~Souhaits de l'ergonome~~ : faits le 21/10/2026 (images réduites avant l'envoi, description modifiable et image
+   retirable, codes inapplicables marqués « à vérifier »). Ouvert : menu « Plus » sur téléphone (exposant, indice, code)
+   pour alléger la barre ; boutons Précédent / Suivant du navigateur sans avertissement ; « Historique (N) ».
+4. **R5** : commande et source faites (RGL-23), ancien gabarit supprimé. **En production** : corriger les données 2025
+   (ci-dessous), puis `app:reglement:importer` (simulation, puis `--force`) ; checklist de l'agent `deploiement` dans
+   `deploiement-reglement.md` (dont : monter `prosemirror-view` avant la production, faille XSS au collage).
+   Coquilles du texte 2025 gardées telles quelles (à corriger dans l'éditeur par le bureau) : « Point perdnant »,
+   « l'equipe emputée », « troisème », « palier à », « pour enforcer », « envoi le résultat ».
 5. **R6** : schémas dessinés dans un canvas (bibliothèque à choisir, décision à consigner).
 6. Fin de branche : fusion de `reglement` (avec le lot 6) selon D15, mise à jour de `lots.md` et du journal.
 
