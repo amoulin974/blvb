@@ -130,6 +130,9 @@ final class ReglementAdminTest extends TestFonctionnel
         self::assertStringContainsString('data-bloc="departage"', $reponse['html']);
         self::assertStringContainsString('Élément calculé non affiché au public', $reponse['html']);
         self::assertStringContainsString('1 code n\'est pas affiché au public', $reponse['inapplicables']);
+        // Codes et raisons, pour les marquer « à vérifier » dans l'éditeur
+        self::assertSame(['[bareme phase=ZZ]'], array_column($reponse['codes'], 'code'));
+        self::assertNotSame('', $reponse['codes'][0]['raison']);
         self::assertNull($this->reglement());
     }
 

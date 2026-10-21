@@ -278,6 +278,9 @@ body{
 /* Code court qui sera remplacé par un élément calculé : filet turquoise (jamais en couleur de texte), fond, police mono */
 /* Casse et espacement normaux même dans un titre (h2 en capitales) ; fond et filet répétés si le code passe à la ligne */
 .reglement-code-court { font-family: ui-monospace, monospace; background-color: var(--color-base-200); border-left: 3px solid var(--color-secondary); padding: 0 0.25rem; text-transform: none; letter-spacing: normal; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+/* Code court jugé inapplicable au dernier enregistrement ou aperçu : « à vérifier » (filet et soulignement ondulé
+   orange, la raison en infobulle) ; jamais la couleur seule : l'encart en tête de page liste aussi ces codes */
+.reglement-code-court.reglement-code-inapplicable { border-left-color: var(--color-warning); background-color: color-mix(in oklab, var(--color-warning) 15%, var(--color-base-100)); text-decoration: underline wavy color-mix(in oklab, var(--color-warning) 70%, black); text-underline-offset: 3px; cursor: help; }
 /* Bouton de mise en forme actif : fond teinté et soulignement marine (indice contrasté, WCAG 1.4.11) */
 [role="toolbar"] .btn[aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); box-shadow: inset 0 -2px 0 var(--color-primary); }
 /* Panneau des éléments calculés : chevron qui pivote à l'ouverture, sans triangle du navigateur */

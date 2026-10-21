@@ -75,11 +75,14 @@ final class ReglementController extends AbstractController
         $user = $this->getUser();
         $this->edition->enregistrer($saison, $request->getPayload()->getString('contenu'), $user instanceof User ? $user : null);
         $reglement = $this->edition->reglementDe($saison);
+        $inapplicables = $this->rendu->rendre($saison, $reglement->getContenu(), true)['inapplicables'];
 
         return new JsonResponse([
             'jeton' => $this->edition->jeton($reglement),
             'heure' => $reglement->getModifieLe()?->format('G \h i'),
-            'inapplicables' => $this->inapplicables($this->rendu->rendre($saison, $reglement->getContenu(), true)['inapplicables']),
+            'inapplicables' => $this->inapplicables($inapplicables),
+            // Codes et raisons, pour les signaler dans l'éditeur (style « à vérifier »)
+            'codes' => $inapplicables,
         ]);
     }
 
@@ -95,7 +98,7 @@ final class ReglementController extends AbstractController
         }
         $rendu = $this->rendu->rendre($saison, $this->edition->nettoyer($request->getPayload()->getString('contenu')), true);
 
-        return new JsonResponse(['html' => $rendu['html'], 'inapplicables' => $this->inapplicables($rendu['inapplicables'])]);
+        return new JsonResponse(['html' => $rendu['html'], 'inapplicables' => $this->inapplicables($rendu['inapplicables']), 'codes' => $rendu['inapplicables']]);
     }
 
     /** Résultat d'un élément calculé pour la saison (« Voir le résultat » du panneau) */

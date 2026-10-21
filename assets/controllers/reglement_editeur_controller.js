@@ -44,6 +44,45 @@ async function envoyer(url, donnees) {
     return { reponse, resultat }
 }
 
+// Image de plus de 2 Mo réduite dans le navigateur avant l'envoi : côté le plus long ramené à 2400, 2000, 1600 puis
+// 1200 px, qualité 85 puis 70 %, jusqu'à passer sous 2 Mo. WebP si le navigateur sait l'écrire (transparence gardée),
+// sinon JPEG sur fond blanc. Rend null si l'image reste trop lourde ou ne peut pas être lue.
+async function reduireImage(fichier) {
+    let image
+    try {
+        image = await createImageBitmap(fichier)
+    } catch {
+        return null
+    }
+    const enBlob = (canvas, type, qualite) => new Promise((resoudre) => canvas.toBlob(resoudre, type, qualite))
+    for (const cote of [2400, 2000, 1600, 1200]) {
+        const echelle = Math.min(1, cote / Math.max(image.width, image.height))
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(image.width * echelle)
+        canvas.height = Math.round(image.height * echelle)
+        const contexte = canvas.getContext('2d')
+        contexte.drawImage(image, 0, 0, canvas.width, canvas.height)
+        const webp = await enBlob(canvas, 'image/webp', 0.85)
+        const sansWebp = !webp || webp.type !== 'image/webp'
+        if (sansWebp) {
+            // JPEG : pas de transparence, fond blanc sous l'image
+            contexte.globalCompositeOperation = 'destination-over'
+            contexte.fillStyle = '#ffffff'
+            contexte.fillRect(0, 0, canvas.width, canvas.height)
+        }
+        for (const qualite of [0.85, 0.7]) {
+            const blob = sansWebp ? await enBlob(canvas, 'image/jpeg', qualite) : (qualite === 0.85 ? webp : await enBlob(canvas, 'image/webp', qualite))
+            if (blob && blob.size <= TAILLE_MAX) {
+                const extension = blob.type === 'image/webp' ? 'webp' : 'jpg'
+                return new File([blob], fichier.name.replace(/\.[^.]+$/, '') + '.' + extension, { type: blob.type })
+            }
+        }
+    }
+    return null
+}
+
+const enMo = (octets) => (octets / 1024 / 1024).toFixed(1).replace('.', ',') + ' Mo'
+
 // HTML de l'éditeur (une seule ligne) présenté un bloc par ligne pour l'onglet HTML
 function formaterHtml(html) {
     return html
@@ -118,10 +157,17 @@ const Alignement = Extension.create({
     },
 })
 
-// Codes courts reconnus mis en évidence pendant la frappe (sauf ceux mis en forme « code », qui restent écrits tels quels)
+// Codes courts reconnus mis en évidence pendant la frappe (sauf ceux mis en forme « code », qui restent écrits tels quels) ;
+// ceux que le dernier enregistrement ou aperçu a jugés inapplicables (stockage « inapplicables » : code → raison) sont
+// marqués « à vérifier », avec la raison en infobulle
+const CODES_A_JOUR = 'codesInapplicables'
 const CodesCourts = Extension.create({
     name: 'codesCourts',
+    addStorage() {
+        return { inapplicables: new Map() }
+    },
     addProseMirrorPlugins() {
+        const stockage = this.storage
         const decorer = (doc) => {
             const decorations = []
             doc.descendants((noeud, position) => {
@@ -129,7 +175,11 @@ const CodesCourts = Extension.create({
                     return
                 }
                 for (const trouve of noeud.text.matchAll(CODE_COURT)) {
-                    decorations.push(Decoration.inline(position + trouve.index, position + trouve.index + trouve[0].length, { class: 'reglement-code-court' }))
+                    const raison = stockage.inapplicables.get(trouve[0].replace(/ /g, ' '))
+                    const attributs = raison
+                        ? { class: 'reglement-code-court reglement-code-inapplicable', title: 'Non affiché au public : ' + raison }
+                        : { class: 'reglement-code-court' }
+                    decorations.push(Decoration.inline(position + trouve.index, position + trouve.index + trouve[0].length, attributs))
                 }
             })
             return DecorationSet.create(doc, decorations)
@@ -137,7 +187,7 @@ const CodesCourts = Extension.create({
         return [new Plugin({
             state: {
                 init: (_, { doc }) => decorer(doc),
-                apply: (transaction, ancien) => (transaction.docChanged ? decorer(transaction.doc) : ancien),
+                apply: (transaction, ancien) => (transaction.docChanged || transaction.getMeta(CODES_A_JOUR) ? decorer(transaction.doc) : ancien),
             },
             props: { decorations(state) { return this.getState(state) } },
         })]
@@ -145,12 +195,12 @@ const CodesCourts = Extension.create({
 })
 
 export default class extends Controller {
-    static targets = ['editeur', 'contenu', 'barre', 'barreTableau', 'alignement', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
+    static targets = ['editeur', 'contenu', 'barre', 'barreTableau', 'barreImage', 'infoImage', 'alignement', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
         'ongletRediger', 'ongletApercu', 'ongletHtml', 'panneauRediger', 'panneauApercu', 'panneauHtml', 'apercu', 'source', 'fichier', 'element',
         'dialogueLien', 'adresse', 'erreurLien', 'retirerLien', 'dialogueImage', 'vignette', 'description', 'decorative', 'erreurImage',
         'dialogueConflit', 'messageConflit']
     static values = { enregistrerUrl: String, apercuUrl: String, imageUrl: String, elementUrl: String, jeton: String, token: String,
-        publie: Boolean, code: String }
+        publie: Boolean, code: String, inapplicables: Array }
 
     connect() {
         this.modifie = false
@@ -192,6 +242,7 @@ export default class extends Controller {
             onTransaction: () => this.majBarre(),
             onBlur: ({ editor }) => { this.positionInsertion = editor.state.selection.$from },
         })
+        this.signalerInapplicables(this.inapplicablesValue)
         this.barreTarget.addEventListener('click', (evenement) => {
             const bouton = evenement.target.closest('[data-commande]')
             if (bouton) {
@@ -256,6 +307,8 @@ export default class extends Controller {
                 chaine.deleteTable().run()
                 this.annonceTarget.textContent = 'Tableau supprimé. Annuler pour le récupérer.'
                 break
+            case 'image-description': this.decrireImage(); break
+            case 'image-retirer': this.retirerImage(); break
             case 'annuler': chaine.undo().run(); break
             case 'retablir': chaine.redo().run(); break
             case 'lien': this.ouvrirLien(); break
@@ -334,6 +387,7 @@ export default class extends Controller {
         this.barreTarget.querySelector('[data-commande="annuler"]').disabled = !e.can().undo()
         this.barreTarget.querySelector('[data-commande="retablir"]').disabled = !e.can().redo()
         this.barreTableauTarget.hidden = !e.isActive('table')
+        this.barreImageTarget.hidden = !this.imageChoisie()
     }
 
     // Une seule tabulation pour la barre ; flèches, Origine et Fin pour passer d'un bouton à l'autre (boutons visibles et
@@ -417,6 +471,7 @@ export default class extends Controller {
             }
             this.jetonValue = resultat.jeton
             this.inapplicablesTarget.innerHTML = resultat.inapplicables
+            this.signalerInapplicables(resultat.codes)
             this.marquerModifie(false)
             this.etatTarget.textContent = (this.publieValue ? 'Publié · mis à jour à ' : 'Enregistré à ') + resultat.heure
         } catch (erreur) {
@@ -476,6 +531,7 @@ export default class extends Controller {
             const { resultat } = await envoyer(this.apercuUrlValue, donnees)
             this.apercuTarget.innerHTML = resultat.html
             this.inapplicablesTarget.innerHTML = resultat.inapplicables
+            this.signalerInapplicables(resultat.codes)
         } catch (erreur) {
             this.apercuTarget.textContent = erreur instanceof ErreurServeur ? erreur.message : 'L\'aperçu n\'a pas pu être préparé, réessayez.'
         }
@@ -591,7 +647,13 @@ export default class extends Controller {
         }
     }
 
-    // --- Codes inapplicables : aller au code --------------------------------------------------------------------------
+    // --- Codes inapplicables : signalés dans le texte, aller au code ---------------------------------------------------
+
+    // Liste établie par le serveur (enregistrement, aperçu, ouverture de la page) : [{code, raison}]
+    signalerInapplicables(codes) {
+        this.editor.storage.codesCourts.inapplicables = new Map((codes ?? []).map((i) => [i.code.replace(/ /g, ' '), i.raison]))
+        this.editor.view.dispatch(this.editor.state.tr.setMeta(CODES_A_JOUR, true))
+    }
 
     allerAuCode(evenement) {
         this.appliquerSource()
@@ -676,7 +738,7 @@ export default class extends Controller {
     // --- Image ------------------------------------------------------------------------------------------------------
 
     async envoyerImage() {
-        const fichier = this.fichierTarget.files[0]
+        let fichier = this.fichierTarget.files[0]
         this.fichierTarget.value = ''
         if (!fichier) {
             return
@@ -686,12 +748,21 @@ export default class extends Controller {
             this.erreurTarget.textContent = 'Format non accepté : JPG, PNG ou WebP.'
             return
         }
-        if (fichier.size > TAILLE_MAX) {
-            this.erreurTarget.textContent = 'L\'image pèse ' + (fichier.size / 1024 / 1024).toFixed(1).replace('.', ',') + ' Mo, le maximum est 2 Mo. Réduisez-la avant de l\'envoyer.'
-            return
-        }
         // L'état d'avant l'envoi revient ensuite, que l'image soit insérée, abandonnée ou refusée
         const etatPrecedent = this.etatTarget.textContent
+        let infoReduction = ''
+        if (fichier.size > TAILLE_MAX) {
+            this.etatTarget.textContent = 'Réduction de l\'image…'
+            const reduite = await reduireImage(fichier)
+            if (!reduite) {
+                this.etatTarget.textContent = etatPrecedent
+                this.erreurTarget.textContent = 'L\'image pèse ' + enMo(fichier.size) + ' et n\'a pas pu être réduite automatiquement. Envoyez une version plus légère (moins de 2 Mo).'
+                return
+            }
+            // Affiché sous la vignette de la fenêtre Image (et donc lu avec elle)
+            infoReduction = 'Image réduite de ' + enMo(fichier.size) + ' à ' + enMo(reduite.size) + '.'
+            fichier = reduite
+        }
         this.etatTarget.textContent = 'Envoi de l\'image…'
         const donnees = new FormData()
         donnees.append('_token', this.tokenValue)
@@ -700,15 +771,39 @@ export default class extends Controller {
             const { resultat } = await envoyer(this.imageUrlValue, donnees)
             this.etatTarget.textContent = etatPrecedent
             this.imageEnvoyee = resultat.url
-            this.vignetteTarget.src = resultat.url
-            this.descriptionTarget.value = ''
-            this.decorativeTarget.checked = false
-            this.erreurImageTarget.textContent = ''
-            this.dialogueImageTarget.showModal()
-            this.descriptionTarget.focus()
+            this.ouvrirDialogueImage(resultat.url, null, infoReduction)
         } catch (erreur) {
             this.etatTarget.textContent = etatPrecedent
             this.erreurTarget.textContent = erreur instanceof ErreurServeur ? erreur.message : 'L\'envoi a échoué, réessayez.'
+        }
+    }
+
+    // Fenêtre Image : nouvelle image (description = null), ou description d'une image déjà insérée et sélectionnée
+    ouvrirDialogueImage(src, description, info = '') {
+        this.modifierDescription = description !== null
+        this.dialogueImageTarget.querySelector('#titre-image').textContent = this.modifierDescription ? 'Description de l\'image' : 'Image'
+        this.dialogueImageTarget.querySelector('[data-role="aide-description"]').hidden = this.modifierDescription
+        this.infoImageTarget.textContent = info
+        this.vignetteTarget.src = src
+        this.descriptionTarget.value = description ?? ''
+        this.decorativeTarget.checked = description === ''
+        this.erreurImageTarget.textContent = ''
+        this.dialogueImageTarget.querySelector('[type="submit"]').textContent = this.modifierDescription ? 'Enregistrer la description' : 'Insérer l\'image'
+        this.dialogueImageTarget.showModal()
+        this.descriptionTarget.focus()
+    }
+
+    decrireImage() {
+        if (this.imageChoisie()) {
+            const image = this.editor.getAttributes('image')
+            this.ouvrirDialogueImage(image.src, image.alt ?? '')
+        }
+    }
+
+    retirerImage() {
+        if (this.imageChoisie()) {
+            this.editor.chain().focus().deleteSelection().run()
+            this.annonceTarget.textContent = 'Image retirée. Annuler pour la récupérer.'
         }
     }
 
@@ -720,8 +815,13 @@ export default class extends Controller {
             this.descriptionTarget.focus()
             return
         }
+        const alt = this.decorativeTarget.checked ? '' : description
         this.dialogueImageTarget.close()
-        this.editor.chain().focus().setImage({ src: this.imageEnvoyee, alt: this.decorativeTarget.checked ? '' : description }).run()
+        if (this.modifierDescription) {
+            this.editor.chain().focus().updateAttributes('image', { alt }).run()
+            return
+        }
+        this.editor.chain().focus().setImage({ src: this.imageEnvoyee, alt }).run()
     }
 
     fermerDialogue(evenement) {

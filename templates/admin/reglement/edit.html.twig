@@ -42,7 +42,8 @@
          data-reglement-editeur-jeton-value="{{ jeton }}"
          data-reglement-editeur-token-value="{{ csrf_token('reglement' ~ saison.id) }}"
          data-reglement-editeur-publie-value="{{ publie ? 'true' : 'false' }}"
-         data-reglement-editeur-code-value="{{ app.request.query.get('code', '') }}">
+         data-reglement-editeur-code-value="{{ app.request.query.get('code', '') }}"
+         data-reglement-editeur-inapplicables-value="{{ inapplicables|json_encode }}">
 
         <div data-reglement-editeur-target="inapplicables">{% include 'admin/reglement/_inapplicables.html.twig' %}</div>
 
@@ -113,8 +114,14 @@
                         {{ separateur }}
                         {{ m.outil('tableau', 'Insérer un tableau', 'Insérer un tableau (3 lignes, 3 colonnes, avec ligne d\'en-tête)', icone.i('tableau'), '', false) }}
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} Lien</button>
-                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="image" tabindex="-1" title="Image (JPG, PNG ou WebP, 2 Mo au plus)">{{ icone.i('image') }} Image</button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="image" tabindex="-1" title="Image (JPG, PNG ou WebP ; au-delà de 2 Mo, elle est réduite automatiquement)">{{ icone.i('image') }} Image</button>
                         <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" data-reglement-editeur-target="fichier" data-action="change->reglement-editeur#envoyerImage" tabindex="-1" aria-hidden="true">
+                        {# Actions sur l'image sélectionnée (clic sur l'image) #}
+                        <div role="group" aria-label="Image" class="flex w-full flex-wrap items-center gap-1 border-t border-base-300 pt-1" hidden data-reglement-editeur-target="barreImage">
+                            <span class="px-1 text-sm text-(--color-base-content)/80">Image :</span>
+                            {{ m.outil('image-description', "Modifier la description de l'image", 'Description lue aux personnes malvoyantes', 'Description', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('image-retirer', "Retirer l'image", "Retirer l'image du texte (Annuler pour la récupérer)", "Retirer l'image", 'btn-danger-discret max-sm:min-h-11', false, false) }}
+                        </div>
                         {# Actions de tableau, seulement quand le curseur est dans un tableau #}
                         <div role="group" aria-label="Tableau" class="flex w-full flex-wrap items-center gap-1 border-t border-base-300 pt-1" hidden data-reglement-editeur-target="barreTableau">
                             <span class="px-1 text-sm text-(--color-base-content)/80">Tableau :</span>
@@ -229,12 +236,13 @@
             <form method="dialog" class="modal-box flex flex-col gap-3" data-action="submit->reglement-editeur#validerImage">
                 <h2 id="titre-image" class="text-lg">Image</h2>
                 <img alt="" class="max-h-40 self-start rounded-box border border-base-300" data-reglement-editeur-target="vignette">
+                <p class="text-sm text-(--color-base-content)/80 empty:hidden" data-reglement-editeur-target="infoImage"></p>
                 <label class="flex flex-col gap-1">
                     <span>Description de l'image (lue aux personnes malvoyantes)</span>
                     <input type="text" class="input w-full" data-reglement-editeur-target="description" autocomplete="off">
                 </label>
                 <label class="flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" data-reglement-editeur-target="decorative"> Image décorative (pas de description)</label>
-                <p class="text-sm text-(--color-base-content)/80">Pour changer la description plus tard, supprimez l'image et insérez-la de nouveau.</p>
+                <p data-role="aide-description" class="text-sm text-(--color-base-content)/80">Pour changer la description plus tard, cliquez sur l'image puis sur « Description ».</p>
                 <p class="text-sm text-(--color-base-content)/80">Pour rendre l'image cliquable, cliquez dessus puis sur Lien.</p>
                 <p role="alert" class="form-erreur empty:hidden" data-reglement-editeur-target="erreurImage"></p>
                 <div class="modal-action">
