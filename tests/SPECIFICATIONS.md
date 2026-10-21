@@ -555,6 +555,11 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **RGL-10** : rangs en mots publics, avec ou sans effectif, et en sujet de phrase (« le 7e », « l'avant-dernier ») (« du 2e au 6e », « les 2 derniers », « tous sauf les 2 derniers », « à partir du 3e, sauf les 2 derniers », « toutes les équipes ») ; énumération, heure, période, date en français.
 - **RGL-11** : déroulé d'un tableau de 9, 6, 4 et 2 équipes : barrages numérotés (un seul : non numéroté), exemptés, placement standard (1-8, 4-5, 2-7, 3-6), renvois « vainqueur du quart de finale 1 », petite finale (« perdant de la demi-finale 1 »).
 
+### 4.18 Conditions d'utilisation — `Fonctionnel/Front/ConditionsTest` (P2, branche `conditions-utilisation-v2`)
+
+**CGU-01** ✅ : la page `/conditions-utilisation` est publique et liée depuis le pied de page de toutes les pages ; sections mentions légales (hébergeur OVH SAS et son adresse), utilisation, données personnelles (CNIL), cookies (`PHPSESSID`). (L'inscription libre étant fermée, le formulaire d'inscription n'est plus affiché : pas de lien à y tester.)
+Les informations sur l'éditeur (`editeur` dans `templates/front/conditions.html.twig`) sont à renseigner avant la mise en production : tant qu'elles valent `null`, la page affiche « À compléter » (contrôle de l'agent `deploiement`, point 10).
+
 ---
 
 ## 5. Analyse statique et qualité du code

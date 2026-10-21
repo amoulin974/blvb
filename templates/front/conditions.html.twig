@@ -1,0 +1,190 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Conditions d'utilisation - BLVB{% endblock %}
+
+{#
+   Conditions d'utilisation du site : mentions légales (loi pour la confiance dans l'économie numérique, art. 6 III),
+   règles d'utilisation, données personnelles (RGPD) et cookies.
+
+   Informations sur l'éditeur : à renseigner ci-dessous. Tant qu'une valeur vaut null, la page affiche « À compléter »
+   en évidence ; aucune ne doit rester vide en production.
+     nom                    ex. « Association Championnat Basco Landais Volley-Ball »
+     statut                 ex. « association loi 1901, RNA W640000000 »
+     adresse                adresse du siège
+     contact                adresse e-mail de contact, aussi utilisée pour les demandes liées aux données personnelles
+     directeur_publication  nom de la personne responsable de la publication
+   Mettre à jour « mise_a_jour » à chaque modification du contenu.
+#}
+{% set editeur = {
+    nom: null,
+    statut: null,
+    adresse: null,
+    contact: null,
+    directeur_publication: null,
+} %}
+{% set mise_a_jour = '11 octobre 2026' %}
+
+{% macro valeur(texte, libelle) %}
+    {%- if texte -%}{{ texte }}{%- else -%}<mark class="bg-(--color-warning)/20 px-1 rounded">À compléter : {{ libelle }}</mark>{%- endif -%}
+{% endmacro %}
+{% from _self import valeur %}
+
+{% block body %}
+<div class="container mx-auto max-w-3xl md:px-4 flex flex-col gap-8">
+    <div>
+        <h1>Conditions d'utilisation</h1>
+        <p class="mt-1 text-sm text-(--color-base-content)/70">Dernière mise à jour : {{ mise_a_jour }}</p>
+        <nav aria-label="Sommaire" class="mt-4">
+            <ul class="flex flex-wrap gap-2">
+                <li><a class="btn btn-sm btn-ghost" href="#mentions-legales">Mentions légales</a></li>
+                <li><a class="btn btn-sm btn-ghost" href="#utilisation">Utilisation du site</a></li>
+                <li><a class="btn btn-sm btn-ghost" href="#donnees-personnelles">Données personnelles</a></li>
+                <li><a class="btn btn-sm btn-ghost" href="#cookies">Cookies</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <section id="mentions-legales" aria-labelledby="titre-mentions" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6 flex flex-col gap-3">
+        <h2 id="titre-mentions" class="text-2xl uppercase tracking-wide">Mentions légales</h2>
+        <h3 class="text-lg font-semibold">Éditeur du site</h3>
+        <p>
+            Le site blvb.fr est édité par {{ valeur(editeur.nom, "nom de l'éditeur") }}, {{ valeur(editeur.statut, 'statut et numéro RNA') }},
+            dont le siège est situé {{ valeur(editeur.adresse, 'adresse du siège') }}.<br>
+            Contact : {{ valeur(editeur.contact, 'adresse e-mail de contact') }}.<br>
+            Directeur ou directrice de la publication : {{ valeur(editeur.directeur_publication, 'nom du directeur de la publication') }}.
+        </p>
+        <h3 class="text-lg font-semibold">Hébergeur</h3>
+        <p>
+            OVH SAS, société par actions simplifiée au capital de 50 000 000 €, RCS Lille Métropole 424 761 419 00045,
+            2 rue Kellermann, 59100 Roubaix, France. Site : <a class="link link-primary" href="https://www.ovhcloud.com" rel="noopener noreferrer" target="_blank">www.ovhcloud.com</a>.
+        </p>
+    </section>
+
+    <section id="utilisation" aria-labelledby="titre-utilisation" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6 flex flex-col gap-3">
+        <h2 id="titre-utilisation" class="text-2xl uppercase tracking-wide">Utilisation du site</h2>
+        <p>
+            Le site présente le championnat de volley-ball loisir Basco Landais : équipes, calendrier, résultats et classements.
+            Sa consultation est libre et gratuite. Utiliser le site vaut acceptation des présentes conditions.
+        </p>
+        <h3 class="text-lg font-semibold">Comptes</h3>
+        <p>
+            Les comptes sont réservés aux joueurs, capitaines et organisateurs du championnat. Chacun est responsable de la
+            confidentialité de son mot de passe et des actions faites avec son compte. En cas d'usage frauduleux, prévenez
+            les organisateurs sans attendre.
+        </p>
+        <h3 class="text-lg font-semibold">Saisie des résultats</h3>
+        <p>
+            Les capitaines saisissent le résultat des matchs que leur équipe reçoit, les responsables de club celui des matchs
+            des équipes de leur club, et les administrateurs peuvent les corriger.
+            Les résultats doivent être exacts et conformes au <a class="link link-primary" href="{{ path('front_reglement') }}">règlement</a>.
+            Les organisateurs peuvent corriger un résultat erroné et suspendre un compte en cas d'abus.
+        </p>
+        <h3 class="text-lg font-semibold">Fiches des clubs</h3>
+        <p>
+            La présentation, le lien et le logo d'un club sont publiés par ses responsables, sous leur responsabilité :
+            en ajoutant un logo, ils garantissent que le club en a les droits. Les organisateurs peuvent retirer un contenu
+            inexact ou inapproprié.
+        </p>
+        <h3 class="text-lg font-semibold">Coordonnées des joueurs</h3>
+        <p>
+            Les coordonnées affichées sur le site servent uniquement à l'organisation des matchs. Il est interdit de les
+            réutiliser à d'autres fins (prospection, diffusion, revente…).
+        </p>
+        <h3 class="text-lg font-semibold">Contenus et responsabilité</h3>
+        <p>
+            Les textes, la mise en page et le logo du site ne peuvent pas être reproduits sans autorisation de l'éditeur.
+            Les organisateurs font leur possible pour que les informations publiées soient exactes et à jour, sans pouvoir
+            le garantir : en cas de doute sur un horaire ou un lieu, rapprochez-vous de votre capitaine.
+            Les liens vers d'autres sites (plans, sites des clubs) sont fournis pour information ; l'éditeur n'est pas
+            responsable de leur contenu.
+        </p>
+        <p>
+            Ces conditions peuvent évoluer ; la date de dernière mise à jour figure en haut de la page.
+            Elles sont soumises au droit français.
+        </p>
+    </section>
+
+    <section id="donnees-personnelles" aria-labelledby="titre-donnees" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6 flex flex-col gap-3">
+        <h2 id="titre-donnees" class="text-2xl uppercase tracking-wide">Données personnelles</h2>
+        <p>
+            Le responsable du traitement est l'éditeur du site ({{ valeur(editeur.nom, "nom de l'éditeur") }}).
+            Les données sont traitées conformément au règlement général sur la protection des données (RGPD) et à la loi
+            Informatique et Libertés.
+        </p>
+
+        <h3 class="text-lg font-semibold">Données traitées</h3>
+        <ul class="list-disc pl-5 space-y-1">
+            <li><strong>Compte</strong> : adresse e-mail, prénom, nom, téléphone (facultatif), mot de passe (enregistré sous une forme chiffrée qui ne permet pas de le retrouver).</li>
+            <li><strong>Fiche joueur</strong> : prénom, nom, adresse e-mail et téléphone, équipe(s) et rôle de capitaine pour chaque saison.</li>
+            <li><strong>Clubs</strong> : comptes désignés comme responsables d'un club.</li>
+            <li><strong>Vie du championnat</strong> : équipes, matchs, résultats et classements, conservés comme archives des saisons.</li>
+            <li><strong>Données techniques</strong> : adresse IP et pages consultées, enregistrées par le serveur dans ses journaux pour sa sécurité et son bon fonctionnement.</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold">Pourquoi</h3>
+        <p>
+            Ces données servent uniquement à organiser le championnat : gérer les comptes, composer les équipes, publier le
+            calendrier et les résultats, permettre aux capitaines de se contacter pour organiser les matchs, et envoyer les
+            e-mails utiles au compte (confirmation de l'adresse, nouveau mot de passe). Ce traitement repose sur l'intérêt
+            légitime de l'éditeur à organiser le championnat auquel les joueurs participent. Aucune donnée n'est vendue,
+            ni utilisée à des fins publicitaires.
+        </p>
+
+        <h3 class="text-lg font-semibold">Qui y a accès</h3>
+        <ul class="list-disc pl-5 space-y-1">
+            <li>Les noms des équipes, les calendriers, les résultats, les classements et les fiches des clubs sont publics. Les noms des responsables de club ne sont pas publiés.</li>
+            <li>Les coordonnées du capitaine d'une équipe sont visibles par les capitaines de la même poule, les membres de l'équipe et les administrateurs.</li>
+            <li>La composition d'une équipe, avec les coordonnées de ses joueurs, est visible par les membres de l'équipe et les administrateurs.</li>
+            <li>Les administrateurs bénévoles du championnat accèdent à l'ensemble des données pour l'organiser.</li>
+            <li>OVH, hébergeur du site et de sa messagerie, les traite pour le compte de l'éditeur, comme sous-traitant.</li>
+        </ul>
+
+        <h3 class="text-lg font-semibold">Durée de conservation</h3>
+        <p>
+            Les données des comptes et des fiches joueurs sont conservées tant que la personne participe au championnat, puis
+            {{ valeur(null, 'durée de conservation après la dernière saison jouée, ex. supprimées 3 ans après') }}.
+            Les résultats et classements sont conservés comme archives du championnat. Les demandes de nouveau mot de passe
+            expirent au bout d'une heure.
+        </p>
+
+        <h3 class="text-lg font-semibold">Vos droits</h3>
+        <p>
+            Vous pouvez accéder à vos données, les faire rectifier ou effacer, vous opposer à leur traitement, en demander
+            la limitation ou les récupérer dans un format courant. Vous modifiez vous-même vos informations de compte dans
+            <a class="link link-primary" href="{{ path('front_profile_edit') }}">Mon profil</a> ; pour toute autre demande,
+            écrivez à {{ valeur(editeur.contact, 'adresse e-mail de contact') }}. Une réponse vous est apportée dans un délai d'un mois.
+        </p>
+        <p>
+            Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL
+            (<a class="link link-primary" href="https://www.cnil.fr/fr/plaintes" rel="noopener noreferrer" target="_blank">www.cnil.fr/fr/plaintes</a>).
+        </p>
+    </section>
+
+    <section id="cookies" aria-labelledby="titre-cookies" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6 flex flex-col gap-3">
+        <h2 id="titre-cookies" class="text-2xl uppercase tracking-wide">Cookies</h2>
+        <p>
+            Le site n'utilise ni cookie publicitaire, ni outil de mesure d'audience, ni service tiers (réseaux sociaux,
+            cartes intégrées, polices externes). Il ne dépose que les cookies strictement nécessaires à son fonctionnement,
+            qui ne demandent pas de consentement :
+        </p>
+        <div class="overflow-x-auto">
+            <table class="table table-sm">
+                <thead><tr><th>Nom</th><th>Rôle</th><th>Durée</th></tr></thead>
+                <tbody>
+                    <tr><td class="whitespace-nowrap">PHPSESSID</td><td>Cookie de session : garde la connexion et la saison choisie pendant la visite.</td><td>Jusqu'à la fermeture du navigateur</td></tr>
+                    <tr><td class="whitespace-nowrap">__Host-csrf-token_…</td><td>Sécurité : protège les formulaires de connexion et de déconnexion contre les envois frauduleux.</td><td>Le temps de l'envoi du formulaire</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p>
+            Le choix de « Mon équipe » est enregistré dans votre navigateur (stockage local), à votre demande ; il n'est
+            jamais transmis au site. Vous pouvez l'effacer avec le bouton de la fiche équipe ou en effaçant les données
+            du site dans votre navigateur.
+        </p>
+        <p>
+            Les liens « plan » des gymnases ouvrent Google Maps dans un nouvel onglet : ce service applique alors ses
+            propres règles de confidentialité.
+        </p>
+    </section>
+</div>
+{% endblock %}
