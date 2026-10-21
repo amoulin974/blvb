@@ -8,7 +8,7 @@ use App\Competition\NotationInvalide;
 use App\Entity\Poule;
 
 /**
- * Mots du règlement public (relecture de l'ergonome, docs/wizard-saison/reglement-maquettes.md) : rangs en chiffres
+ * Mots du règlement public (relecture de l'ergonome, docs/wizard-saison/archive/reglement-maquettes.md) : rangs en chiffres
  * quand l'effectif est connu, jamais « antépénultième » ni notation (« P2.A#1..-3 »), énumérations à la française.
  */
 final class Texte

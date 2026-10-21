@@ -8,7 +8,7 @@ use Symfony\Component\DependencyInjection\Attribute\AutoconfigureTag;
 
 /**
  * Génération du calendrier d'une poule selon le format de sa phase (championnat, élimination…) : journées, puis
- * matchs. Une implémentation par format (docs/wizard-saison/plan.md) ; Formats choisit celle d'une phase.
+ * matchs. Une implémentation par format (docs/wizard-saison/archive/plan.md) ; Formats choisit celle d'une phase.
  */
 #[AutoconfigureTag(self::TAG)]
 interface GenerateurFormat

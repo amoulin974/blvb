@@ -7,6 +7,71 @@ en gardant la trace de l'ancienne.
 
 ---
 
+## Sommaire
+
+Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (recherche « ## D42. » par exemple).
+
+- D1. Rôle de l'outil
+- D2. Méthode de travail
+- D3. Une saison = une copie de son format
+- D4. Règles de passage écrites avec la notation des places
+- D5. Vérification avant validation
+- D6. Fin de `config/app/saison.yaml` et de la création automatique
+- D7. Ordre des formats : BLVB d'abord
+- D8. Stockage mixte
+- D9. Migration des saisons existantes
+- D10. Point de départ : copie ou modèle
+- D11. Le wizard couvre toute la création
+- D12. Pas de places provisoires dans les calendriers
+- D13. Choix du sport, volley-ball d'abord
+- D14. Règlement généré
+- D15. Une branche par lot
+- D16. Égalité à 3 équipes ou plus : deux critères distincts
+- D17. Critères de départage proposés
+- D18. Équipe exempte : aucun point, sans option
+- D19. Pas d'écran avant le wizard
+- D20. Codes des phases et des poules : automatiques, modifiables
+- D21. Règles des saisons existantes : le schéma 2025 (F1)
+- D22. Montées et descentes pour la saison suivante : enregistrées au lot 3, appliquées au lot 4
+- D23. Points conservés : le champ existe, seule la remise à zéro est appliquée
+- D24. Vérification en échec : avertir et continuer
+- D25. Zones ▲ ▼ du classement : colonnes conservées jusqu'au wizard
+- D26. Phase sans règles enregistrées : règles par défaut
+- D27. Champ `format` de la phase : reporté au lot 4
+- D28. Message de clôture : relu par l'ergonome et le webdesigner
+- D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
+- D30. Effectif d'une poule différent du nombre prévu : avertissement
+- D31. Code d'une phase de barrages : BAR, BAR2…
+- D32. Barrages à l'écran : une carte par match
+- D33. Champ `format` de la phase : reporté au lot 6 (modifie D27)
+- D34. Modifier une saison créée : jusqu'à son lancement, enregistrement à chaque étape (précise D29)
+- D35. Mise en place : écrans dédiés dans le wizard
+- D36. Composition des poules : pré-remplie, ajustable
+- D37. Enchaînement des phases : retour au wizard
+- D38. Étape Poules : version relue du wireframe retenue
+- D39. Étape Journées : version relue du wireframe retenue
+- D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
+- D41. Optimisation des matchs : priorités fixes, replacement des matchs à venir, poule par poule
+- D42. Lot 6 : le type de la phase est son format ; barrage = une poule de deux équipes par match (modifie D33)
+- D43. Barrage de montée et descente : réception par la poule supérieure
+- D44. Modèle « BLVB avec barrages » : 1 montée directe, 1 barrage, 1 descente directe
+- D45. Journée des finales (C3) : derniers tours au choix, dans un gymnase et à une date
+- D46. Journée des finales : planning calculé
+- D47. Championnat aller-retour (A2) : retour en miroir
+- D48. Format de match par phase : 3 ou 2 sets gagnants, barème adapté
+- D49. Durée d'un match : réglable pour la journée des finales, proposée selon le format
+- D50. Barrages de fin de phase 2 : sans effet sur la phase finale, ils décident de la saison suivante
+- D51. Saison lancée : le wizard rouvre en mode ajout (modifie D29, D34)
+- D52. Page « Modifier la poule » : retouches seulement, la composition reste dans la mise en place
+- D53. Barrages de fin de saison : une section dédiée à l'étape Passages (précise D50)
+- D54. Page « Piloter une saison » : suppressions d'une poule dans un menu « Supprimer », refusées une fois la phase jouée
+- D55. Règlement par saison : texte libre édité par les admins, blocs générés insérés par marqueurs (précise D14)
+- D56. Règlement : reprise d'une saison à l'autre, publication et historique
+- D57. Règlement : page publique, accès et liens
+- D58. Règlement : rendu des éléments calculés
+- D59. Règlement : page d'édition des admins (R4)
+- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
+
 ## D1. Rôle de l'outil
 **Décision** : le wizard sert à **créer** une saison. Il doit savoir proposer tous les formats du
 catalogue ; l'administrateur choisit au moment de la création. Les « points à trancher » de la
@@ -219,7 +284,7 @@ icône des messages de succès (modification à part) ; avertissements affichés
 *(2026-10-13, lot 3)*
 
 ## D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
-**Décision** : `ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
+**Décision** : `archive/ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
 comme recommandé (13/10/2026) :
 1. brouillon créé dès l'étape 1, enregistré à chaque changement d'étape ;
 2. à la copie, dates et périodes de fermeture décalées d'un an, bandeau « à vérifier » ;
@@ -307,7 +372,7 @@ suivante. Les avertissements des règles de passage s'affichent **avant** de cli
 *(2026-10-14, lot 5)*
 
 ## D38. Étape Poules : version relue du wireframe retenue
-**Décision** : `ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
+**Décision** : `archive/ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
 déplie une liste et un bouton « Valider » (ergonome), tableau de synthèse des effectifs au-delà de
 4 poules (webdesigner), « Retirer de la poule », pas d'action « Ne participe plus », équipes de la
 saison copiée proposées d'abord.
@@ -316,7 +381,7 @@ l'utilisateur.
 *(2026-10-14, lot 5)*
 
 ## D39. Étape Journées : version relue du wireframe retenue
-**Décision** : `ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
+**Décision** : `archive/ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
 « Régénérer les journées » (confirmation chiffrée, `btn-ghost`) et « Ajuster dans le calendrier » ; dates
 « 14/09 → 20/09 » ; calendrier existant renvoyé tel quel, lien conservé sur téléphone avec une aide ;
 aucune génération à l'ouverture de l'écran.
@@ -325,7 +390,7 @@ l'utilisateur.
 *(2026-10-14, lot 5)*
 
 ## D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
-**Décision** : `ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
+**Décision** : `archive/ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
 traitement en arrière-plan, rapport recalculé à l'affichage, génération par poule limitée aux poules sans
 match, équipe sans gymnase en avertissement). La clôture d'une phase applique les règles de passage puis
 renvoie à l'étape Poules de la phase suivante ; elle **ne crée plus** les journées ni les matchs (D37).
@@ -545,7 +610,7 @@ rendu pour la saison.
 *(2026-10-20, règlement)*
 
 ## D58. Règlement : rendu des éléments calculés
-**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes.md`) :
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `archive/reglement-maquettes.md`) :
 - **Schéma des phases** : chaque poule liste ses sorties dans l'ordre du classement, en une seule liste, chacune avec sa
   phase d'arrivée ; un barrage dit son adversaire et son enjeu (précision de l'utilisateur, 20/10/2026) : « Du 1er au 6e
   restent en poule A dans la phase 2 », « Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s'il reste en
@@ -567,7 +632,7 @@ rendu pour la saison.
 *(2026-10-20, règlement)*
 
 ## D59. Règlement : page d'édition des admins (R4)
-**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes-r4.md`) :
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `archive/reglement-maquettes-r4.md`) :
 - **Brouillon** : le règlement d'une saison en brouillon se rédige dès le wizard ; aperçu seulement (jamais public, D57) ;
   statut « Brouillon : visible par le public quand la saison sera lancée », bouton « Enregistrer ». Saison visible :
   « Enregistrer et publier ».

@@ -9,9 +9,12 @@ Branches `formats-competition` et `formats-competition-lotN`. Lots 1 à 6 et lot
 fusionnés dans `main` le 22/10/2026 ; R6 (schémas dessinés) en attente sur la branche `reglement`. Mise en production :
 `docs/wizard-saison/deploiement-reglement.md` (Francis).
 **Avant de reprendre ce chantier**, lire dans l'ordre :
-1. `docs/wizard-saison/methode.md` (objectif, méthode, journal, reprise sur un autre poste) ;
-2. `docs/wizard-saison/decisions.md` (aucune décision de conception rediscutée sans raison nouvelle) ;
-3. `docs/wizard-saison/lots.md` (état des lots), puis `plan.md`.
+1. `docs/wizard-saison/methode.md` (objectif, méthode, dernière entrée du journal, reprise sur un autre poste) ;
+2. `docs/wizard-saison/decisions.md` : le sommaire en tête, puis les seules décisions du sujet traité (aucune décision
+   de conception rediscutée sans raison nouvelle) ;
+3. `docs/wizard-saison/lots.md` (état des lots, lot en cours), et `reglement.md` pour le règlement.
+L'historique (journal complet, détail des lots 0 à 6, maquettes, état des lieux initial) est dans
+`docs/wizard-saison/archive/` : à ne lire qu'au besoin.
 
 Le catalogue des formats est dans `docs/formats-competition.md`. La version de référence du journal est celle de la
 branche du lot en cours ; la copie sur `main` peut être en retard. Règlement par saison : `docs/wizard-saison/reglement.md`.

@@ -17,7 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Matchs d'une phase, étape « Matchs » de la mise en place du wizard (docs/wizard-saison/ecrans-mise-en-place.md,
+ * Matchs d'une phase, étape « Matchs » de la mise en place du wizard (docs/wizard-saison/archive/ecrans-mise-en-place.md,
  * §15 à §21, D35 à D40) : état affiché (matchs créés et prévus, déplacements de suite, surcharges de gymnase, équipes
  * sans gymnase) recalculé à partir des matchs existants, et actions (générer la phase, générer ou régénérer une poule).
  * La génération elle-même est celle de PartieService (optimiseur pour le championnat).

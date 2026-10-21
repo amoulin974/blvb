@@ -10,7 +10,7 @@ use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
-/** Étape 1 du wizard : copier une saison existante ou partir d'un modèle (docs/wizard-saison/ecrans.md, D10, D29). */
+/** Étape 1 du wizard : copier une saison existante ou partir d'un modèle (docs/wizard-saison/archive/ecrans.md, D10, D29). */
 class DepartType extends AbstractType
 {
     public function buildForm(FormBuilderInterface $builder, array $options): void
