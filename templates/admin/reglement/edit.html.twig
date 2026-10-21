@@ -91,7 +91,7 @@
                         {{ separateur }}
                         {# Alignement du paragraphe, du titre ou de l'image sélectionnée : un menu (menu-deroulant), dont le bouton montre
                            l'alignement en cours #}
-                        <details class="dropdown dropdown-end" data-controller="menu-deroulant">
+                        <details class="dropdown" data-controller="menu-deroulant" data-action="toggle->reglement-editeur#placerMenu">
                             <summary class="btn btn-ghost btn-sm max-sm:min-h-11 gap-0.5" tabindex="-1"
                                      title="Alignement du paragraphe, du titre ou de l'image sélectionnée" data-reglement-editeur-target="alignement">
                                 {# Contenu transparent aux clics : la cible du clic reste le summary, même quand l'icône change #}

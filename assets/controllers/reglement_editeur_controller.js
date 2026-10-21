@@ -277,6 +277,21 @@ export default class extends Controller {
         chaine.updateAttributes('paragraph', { alignement: nouvelle }).updateAttributes('heading', { alignement: nouvelle }).run()
     }
 
+    // La carte de l'éditeur rogne ce qui dépasse (overflow-clip) : le menu s'ouvre vers la droite, ou vers la gauche
+    // (dropdown-end) s'il dépasserait le bord droit de la carte, selon la place du bouton dans la barre repliée
+    placerMenu(evenement) {
+        const menu = evenement.currentTarget
+        if (!menu.open) {
+            return
+        }
+        menu.classList.remove('dropdown-end')
+        const carte = menu.closest('.admin-carte')?.getBoundingClientRect()
+        const liste = menu.querySelector('.dropdown-content').getBoundingClientRect()
+        if (carte && liste.right > carte.right) {
+            menu.classList.add('dropdown-end')
+        }
+    }
+
     alignementActuel() {
         if (this.imageChoisie()) {
             return this.editor.getAttributes('image').alignement ?? null
