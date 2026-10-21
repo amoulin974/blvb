@@ -439,12 +439,20 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   sur la base de recette : 11 parties, 15 règles, 2 tableaux, 6 images, ancre `#regle-1r`, rien perdu à l'ouverture dans
   l'éditeur. Les `<li><hr></li>` de la règle 1D, que l'éditeur ne garde pas, ont été retirés de la source. Piège : une
   image dans un `<p>` disparaît de l'éditeur (image en bloc). Reste en production : données 2025, puis la commande.
+- Checklist de mise en production par l'agent `deploiement` : `deploiement-reglement.md` (composer install avant le
+  redémarrage, migrations à l'entrypoint, sauvegarde, secret SMTP du `.env` de `prod`). `prosemirror-view` monté en
+  1.42.3 (faille XSS au collage) ; reste une faille moyenne de `@tiptap/core`, corrigée seulement en TipTap 3.
+- Mode d'emploi des commandes de test écrit : `tests/README.md`. 614 tests verts + 2 lents. Branche poussée.
+- **Suite** (détail dans `reglement.md`, « Reste à faire », et `lots.md`) : R6 (schémas dessinés) ; essais restants dans
+  un navigateur ; reste du lot 6 (6c bis, bilan) ; fusion selon D15 ; en production, données 2025 puis import.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
-1. **Récupérer le code** : `git fetch && git checkout formats-competition-lot6 && git pull` (lot en cours, pas
-   encore fusionné dans `formats-competition`). Pour un nouveau lot, créer `formats-competition-lotN` depuis
-   `formats-competition` une fois le lot précédent fusionné.
+1. **Récupérer le code** : `git fetch && git checkout reglement && git pull`. La branche `reglement` (lot 11, en cours)
+   part de `formats-competition-lot6` (lot 6, pas encore terminé) : les deux se fusionneront ensemble dans
+   `formats-competition` (D15). Pour un nouveau lot, créer `formats-competition-lotN` depuis `formats-competition` une
+   fois le lot précédent fusionné. Après un pull qui change `composer.lock` : `composer install` dans le conteneur
+   (sinon l'application ne démarre pas, par exemple sans `symfony/html-sanitizer`).
 2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,
    `docker compose exec php composer install`, droits MySQL des bases de test, `gh auth login` puis
    `gh auth setup-git` pour pousser et suivre la CI (`gh run list`).
@@ -454,10 +462,11 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
    changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
    en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
    manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
-5. **Vérifier l'état** : `docker compose exec php composer tests` (455 tests verts attendus ; `php bin/phpunit` lancé seul dépasse les 128 Mo de PHP, passer par `composer tests`) et
+5. **Vérifier l'état** : `docker compose exec php composer tests` (614 tests verts attendus ; `php bin/phpunit` lancé
+   seul dépasse les 128 Mo de PHP, passer par `composer tests` ; mode d'emploi complet : `tests/README.md`) et
    `docker compose exec php composer qualite`.
-6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D48), `lots.md`
-   (lot 6) puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à
+6. **Reprendre** : lire dans l'ordre `methode.md` (ce fichier), `decisions.md` (D1 à D59), `lots.md`
+   (lots 6 et 11), `reglement.md` (« Reste à faire ») puis `plan.md`. Règles permanentes de l'utilisateur : voir §3 (documentation des tests à
    jour dans le même commit, ergonome et webdesigner avant tout commit d'interface, sécurité pour les
    formulaires, agent `deploiement` avant tout passage en production, pas de décision de conception
    sans l'avoir consignée). Les agents `.claude/agents/*.md` se lancent comme agents généraux qui lisent

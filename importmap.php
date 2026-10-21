@@ -156,7 +156,7 @@ return [
         'version' => '1.4.3',
     ],
     'prosemirror-view' => [
-        'version' => '1.37.2',
+        'version' => '1.42.3',
     ],
     'prosemirror-keymap' => [
         'version' => '1.2.2',
@@ -183,7 +183,7 @@ return [
         'version' => '2.11.4',
     ],
     'prosemirror-view/style/prosemirror.min.css' => [
-        'version' => '1.37.2',
+        'version' => '1.42.3',
         'type' => 'css',
     ],
     'w3c-keyname' => [

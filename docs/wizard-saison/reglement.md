@@ -51,48 +51,49 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 | R2 | Blocs : `BlocReglement`, `BlocsReglement`, `SchemaPhases` (avec `TableauElimination`), `BlocBareme`, `BlocDepartage`, `BlocCalendrier`, `RenduReglement` (codes courts, ancres, codes inapplicables), `Texte` (mots publics) ; RGL-04 à RGL-11 | ✅ |
 | R3 | Page publique : `/reglement` selon la saison affichée (`FrontController::reglement`), brouillon refusé, saison sans règlement (message), saison passée signalée, sommaire h2 et h3 (`tocbotController.js`), impression (en-tête, menu et pied masqués sur tout le site), retour à la page d'origine après un changement de saison ; ancien gabarit gardé dans `front/reglement_2025.html.twig` pour R5 ; relu ergonome + webdesigner + sécurité ; RGL-12 à RGL-15 | ✅ |
 | R4 | Édition admin (`ReglementController`, `admin/reglement/*.html.twig`, `reglement_editeur_controller.js` avec TipTap 2.11.5 par l'importmap, `ImagesReglement`, `ReglementExtension`) : éditeur, aperçu, panneau « Éléments calculés », images, historique et restauration, conflit entre deux admins, accès (saison, menu, wizard, encart public, état vide) ; RGL-16 à RGL-22. Relu par la sécurité, l'ergonome et le webdesigner (21/10/2026). Complété le 21/10 à la demande de l'utilisateur : toutes les options de TipTap sauf la couleur (alignements en menu, tableaux, souligné, surligné, exposant, indice, citation, séparation, annuler / rétablir), onglet HTML, image cliquable, images réduites avant l'envoi, description modifiable, codes inapplicables marqués « à vérifier » ; vérifié dans Chromium (Playwright) | ✅ |
-| R5 | Reprise : commande `app:reglement:importer` (simulation, puis `--force` ; `--remplacer` si un règlement est déjà rédigé, l'ancien restant dans l'historique) qui verse le règlement 2025 (`src/Reglement/Reprise/reglement-2025.html`, balisage corrigé, texte inchangé ; images de `public/images/reglement` centrées avec leur description) dans la saison en cours ; ancien gabarit `front/reglement_2025.html.twig` supprimé ; RGL-23. **À faire en production** : corriger d'abord les données 2025 (ci-dessous), puis lancer la commande (checklist de l'agent `deploiement`) | 🟡 |
+| R5 | Reprise : commande `app:reglement:importer` (simulation, puis `--force` ; `--remplacer` si un règlement est déjà rédigé, l'ancien restant dans l'historique) qui verse le règlement 2025 (`src/Reglement/Reprise/reglement-2025.html`, balisage corrigé, texte inchangé ; images de `public/images/reglement` centrées avec leur description) dans la saison en cours ; ancien gabarit `front/reglement_2025.html.twig` supprimé ; RGL-23. Fait sur la branche ; reste à la lancer en production (voir « Reste à faire ») | ✅ |
 | R6 | Schémas dessinés : générer les schémas du règlement (enchaînement des phases, tableaux à élimination, éventuellement calendrier) avec une bibliothèque JavaScript qui dessine dans un canvas, à partir des mêmes données que les éléments calculés (exposées en JSON par la page) ; bibliothèque à choisir et décision à consigner (demande de l'utilisateur, 20/10/2026) ; relu ergonome + webdesigner (accessibilité : le HTML actuel reste l'alternative textuelle, impression) | ⬜ |
 
 Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal de `methode.md`.
 
-## Reste à faire (mis à jour le 21/10/2026)
 
-1. ~~Relectures de R4~~ : faites le 21/10/2026 (sécurité : aucun constat critique ni important ; ergonome et webdesigner :
-   « oui avec conditions »), retours intégrés puis contre-relus (ergonome « oui », webdesigner « conforme »). Voir le
-   journal de `methode.md`. Points laissés ouverts : les boutons Précédent / Suivant du navigateur ne préviennent pas
-   d'une perte de modifications (ni `beforeunload` ni `turbo:before-visit`) ; « Historique (N) » ne compte que les versions
-   précédentes.
-2. **Essai dans un navigateur** : fait en partie par l'utilisateur et par Playwright dans Chromium (Docker,
-   `mcr.microsoft.com/playwright`, `--network host`) : barre d'outils, alignements, liens, images (réduction, description),
-   onglet HTML, codes à vérifier, reprise du règlement 2025 (titres, tableaux, images, liens conservés). Reste : conflit
-   entre deux onglets, historique et restauration, Firefox et Safari pour les dernières versions.
-3. ~~Souhaits de l'ergonome~~ : faits le 21/10/2026 (images réduites avant l'envoi, description modifiable et image
-   retirable, codes inapplicables marqués « à vérifier »). Ouvert : menu « Plus » sur téléphone (exposant, indice, code)
-   pour alléger la barre ; boutons Précédent / Suivant du navigateur sans avertissement ; « Historique (N) ».
-4. **R5** : commande et source faites (RGL-23), ancien gabarit supprimé. **En production** : corriger les données 2025
-   (ci-dessous), puis `app:reglement:importer` (simulation, puis `--force`) ; checklist de l'agent `deploiement` dans
-   `deploiement-reglement.md` (dont : monter `prosemirror-view` avant la production, faille XSS au collage).
-   Coquilles du texte 2025 gardées telles quelles (à corriger dans l'éditeur par le bureau) : « Point perdnant »,
-   « l'equipe emputée », « troisème », « palier à », « pour enforcer », « envoi le résultat ».
-5. **R6** : schémas dessinés dans un canvas (bibliothèque à choisir, décision à consigner).
-6. Fin de branche : fusion de `reglement` (avec le lot 6) selon D15, mise à jour de `lots.md` et du journal.
+## Reste à faire (mis à jour le 21/10/2026, soir)
 
-## Points à trancher en cours de route
+R1 à R5 sont faits sur la branche `reglement` (8 commits, poussée le 21/10/2026). Par ordre de priorité :
 
-- **Reportés des relectures de R2** (20/10/2026) : bouton « Modifier le règlement » dans l'encart des codes
-  inapplicables (R4, quand la page d'édition existe) ; ancre `#regle-1r` présente dans le texte importé (R5), sinon le
-  lien du barème est mort ; nom et « Mis à jour le … » imprimés (R3) ; dates courtes sur téléphone dans le calendrier
-  (facultatif). Ergonome : « Phase Finale » écrit « Phase finale » dans les modèles `ModeleBlvbActuel` et
-  `ModeleBlvbAvecBarrages`, la recette et les fixtures (fait le 20/10/2026, choix de l'utilisateur ; les saisons déjà
-  créées gardent leur nom).
-- **Reportés de R3** : jeton CSRF sur `POST /set-saison` (absent avant la branche ; sans conséquence avec le cookie de
-  session `samesite=lax`, facultatif) ; au déploiement, vérifier que le retour du sélecteur de saison reste sous `/blvb`
-  (redirection vers `getBaseUrl()` + chemin, proxy avec `x-forwarded-prefix`) ; état vide : lien « Rédiger le
-  règlement » pour un admin (R4).
-- **Données 2025 à corriger dans le back-office** (relevé à l'aperçu) : journées de la phase finale aux noms et dates
-  incohérents (avant le début de la phase, dates limites identiques d'un tour à l'autre) ; journée 3 des poules C et D le
-  16/02/2026, pendant « Vacance d'hiver » ; noms des fermetures ; tableaux nommés « Poule A » à « Poule D ».
+1. **R6, schémas dessinés** : bibliothèque JavaScript à choisir (canvas), décision à consigner dans `decisions.md` ;
+   mêmes données que les éléments calculés, exposées en JSON ; le HTML actuel reste l'alternative textuelle et la version
+   imprimée ; relecture ergonome + webdesigner.
+2. **Essais dans un navigateur restants** (Playwright dans Docker, voir `tests/README.md`, ou à la main sur la base de
+   recette `bin/recette reinitialiser --scenario=barrages`) : conflit entre deux onglets, historique et restauration,
+   Firefox et Safari pour les dernières versions de l'éditeur (vérifiées seulement dans Chromium).
+3. **Éditeur, points ouverts** :
+   - menu « Plus » sur téléphone (exposant, indice, code) : la barre y occupe encore 4 lignes (proposé par l'ergonome) ;
+   - les boutons Précédent / Suivant du navigateur ne préviennent pas d'une perte de modifications ;
+   - « Historique (N) » ne compte que les versions précédentes, pas la version publiée ;
+   - vulnérabilité moyenne de `@tiptap/core` 2.11.5 (`__proto__` dans `mergeAttributes`, GHSA-cp6q-959q-f8rh), corrigée
+     seulement en TipTap 3 : montée de version majeure à prévoir (risque limité : éditeur des admins, HTML nettoyé côté
+     serveur). `prosemirror-view` est déjà monté en 1.42.3 (faille XSS au collage corrigée).
+4. **Fin de branche** : fusion de `reglement` (avec le lot 6, voir `lots.md`) selon D15, puis `main` ; mise à jour de
+   `lots.md` et du journal.
+5. **En production, après la fusion par Francis** (checklist complète : `deploiement-reglement.md`) :
+   - corriger d'abord les données 2025 dans le back-office : journées de la phase finale aux noms et dates incohérents
+     (avant le début de la phase, dates limites identiques d'un tour à l'autre), journée 3 des poules C et D le 16/02/2026
+     pendant « Vacance d'hiver », noms des fermetures, tableaux nommés « Poule A » à « Poule D », date et gymnase de la
+     journée des finales ;
+   - puis `app:reglement:importer` (simulation, puis `--force`), juste après le redémarrage (page publique vide avant) ;
+   - vérifier que le retour du sélecteur de saison reste sous `/blvb` ;
+   - retirer le mot de passe SMTP du `.env` de `prod` et le changer (avec Francis).
+6. **Pour le bureau, dans l'éditeur** : corriger les coquilles du texte 2025, gardées telles quelles à l'import (« Point
+   perdnant », « l'equipe emputée », « troisème », « palier à », « pour enforcer », « envoi le résultat ») ; remplacer à
+   terme les images 2025 (schémas, calendrier) par les éléments calculés `[schema_phases]` et `[calendrier]`.
 
-- Texte de la règle 1R en 2 sets gagnants (validation du comité attendue, lot 6f-1) : reste du texte libre.
-- Rendu du schéma des phases sur téléphone (webdesigner).
+## Points à trancher
+
+- Texte de la règle 1R en 2 sets gagnants : validation du comité attendue (lot 6f-1).
+- Rendu du schéma des phases sur téléphone (webdesigner) ; dates courtes sur téléphone dans le calendrier (facultatif).
+- Nom de la saison et « Mis à jour le … » sur la version imprimée (report de R2).
+- Jeton CSRF sur `POST /set-saison` (facultatif : le cookie de session est `samesite=lax`).
+
+Faits depuis les reports de R2 et R3 : bouton « Modifier le règlement » dans l'encart public des codes inapplicables,
+lien « Rédiger le règlement » sur la page vide pour un admin, ancre `#regle-1r` dans le texte importé.

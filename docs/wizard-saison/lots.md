@@ -20,7 +20,7 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 8 | Autres éliminations et hybrides : classement intégral (B3), consolante (B4), aller-retour et set en or (B6), play-offs et play-downs (C2), meilleurs Xe (C5) | ⬜ |
 | 9 | Formats particuliers : plateaux (A7), suisse (A8), échelle (A9), double élimination (B5), handicap (C6) | ⬜ |
 | 10 | Autres sports : représentation neutre du score ; sports à buts (match nul), sports à points, sports de raquette en match simple ; saisie et affichages par sport | ⬜ |
-| 11 | Règlement en ligne généré à partir des paramètres : branche `reglement`, voir `reglement.md` (D55 à D57) | 🟡 |
+| 11 | Règlement en ligne généré à partir des paramètres : branche `reglement`, voir `reglement.md` (D55 à D59) ; R1 à R5 faits, R6 à faire | 🟡 |
 
 Étude à part, hors lots : rencontres par équipes des sports de raquette (une rencontre = plusieurs
 matchs individuels), qui changent le modèle lui-même (D13).
@@ -187,6 +187,18 @@ matchs individuels), qui changent le modèle lui-même (D13).
       barrage, même équipe sous deux libellés) ; chaque section n'enregistre que ses propres règles ; case « saison
       suivante » masquée ; relu par l'ergonome, le webdesigner et la sécurité ; FIN-01 à FIN-07
 - [ ] Bilan de fin de lot : relecture globale et journal
+
+## Lot 11 : règlement par saison 🟡 (branche `reglement`, détail dans `reglement.md`)
+La branche `reglement` part de `formats-competition-lot6` : elle contient le lot 6 et se fusionnera avec lui (D15).
+- [x] R1 à R4 : données, éléments calculés, page publique, page d'édition (TipTap complet, onglet HTML, images) ; relus
+- [x] R5 : reprise du règlement 2025 (`app:reglement:importer`, RGL-23), ancien gabarit supprimé ; checklist de mise en
+      production dans `deploiement-reglement.md`
+- [x] `prosemirror-view` monté en 1.42.3 (faille XSS au collage)
+- [ ] R6 : schémas dessinés dans un canvas (bibliothèque à choisir, décision à consigner)
+- [ ] Essais restants dans un navigateur : conflit entre deux onglets, historique et restauration, Firefox et Safari
+- [ ] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique,
+      montée de TipTap en version 3 (faille moyenne de `@tiptap/core`)
+- [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
 ## À faire hors lots (relevé en relecture)
 - [x] Page « Modifier la poule » refaite (D52) : nom et niveau, équipes en lecture seule avec lien vers la mise en place,

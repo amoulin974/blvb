@@ -203,6 +203,28 @@
     array (
     ),
   ),
+  '@tiptap/pm/state' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => 'prosemirror-state',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
+  '@tiptap/pm/view' => 
+  array (
+    'version' => '2.11.5',
+    'dependencies' => 
+    array (
+      0 => 'prosemirror-view',
+    ),
+    'extraFiles' => 
+    array (
+    ),
+  ),
   '@tiptap/pm/keymap' => 
   array (
     'version' => '2.11.4',
@@ -483,19 +505,6 @@
     array (
     ),
   ),
-  'prosemirror-view' => 
-  array (
-    'version' => '1.37.2',
-    'dependencies' => 
-    array (
-      0 => 'prosemirror-state',
-      1 => 'prosemirror-model',
-      2 => 'prosemirror-transform',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
   'prosemirror-keymap' => 
   array (
     'version' => '1.2.2',
@@ -584,16 +593,6 @@
     'dependencies' => 
     array (
       0 => 'prosemirror-history',
-    ),
-    'extraFiles' => 
-    array (
-    ),
-  ),
-  'prosemirror-view/style/prosemirror.min.css' => 
-  array (
-    'version' => '1.37.2',
-    'dependencies' => 
-    array (
     ),
     'extraFiles' => 
     array (
@@ -804,23 +803,24 @@
     array (
     ),
   ),
-  '@tiptap/pm/state' => 
+  'prosemirror-view' => 
   array (
-    'version' => '2.11.5',
+    'version' => '1.42.3',
     'dependencies' => 
     array (
       0 => 'prosemirror-state',
+      1 => 'prosemirror-model',
+      2 => 'prosemirror-transform',
     ),
     'extraFiles' => 
     array (
     ),
   ),
-  '@tiptap/pm/view' => 
+  'prosemirror-view/style/prosemirror.min.css' => 
   array (
-    'version' => '2.11.5',
+    'version' => '1.42.3',
     'dependencies' => 
     array (
-      0 => 'prosemirror-view',
     ),
     'extraFiles' => 
     array (
