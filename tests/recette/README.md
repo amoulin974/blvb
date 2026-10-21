@@ -123,3 +123,5 @@ Totaux attendus : **4 comptes créés, 1 fiche créée, 2 fiches reliées, 1 ave
 - `bin/recette reinitialiser` **écrase** `blvb_recette` ; la base de développement n'est jamais modifiée.
 - Après `utiliser` ou `dev`, le cache de l'application est vidé (la liste des saisons y est mise en cache).
 - Les tests automatisés (PHPUnit, dossier `tests/`) utilisent leur propre base (`blvb_new_test`), indépendante de celle-ci.
+  Tant que l'application est sur la recette, revenir par `bin/recette dev` avant de les lancer, ou voir
+  [`../README.md`](../README.md), §4.

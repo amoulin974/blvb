@@ -576,6 +576,8 @@ composer securite  → composer audit + importmap:audit
 En local, dans Docker : docker compose exec php composer tests
 ```
 
+Mode d'emploi détaillé (prérequis, cibler un test, base de recette, scripts) : [`README.md`](README.md).
+
 ---
 
 ## 6. Intégration continue (GitHub Actions)

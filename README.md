@@ -119,6 +119,14 @@ bin/base rappel        # une fois : après chaque changement de branche, git sig
 Pour annuler une migration venue d'une autre branche, `aligner` reprend son fichier dans l'historique git le temps
 de l'annulation. Usage local uniquement ; en production, les migrations s'appliquent au déploiement.
 
+### 10. Lancer les tests
+
+```bash
+docker compose exec php composer tests     # tests automatisés (hors tests lents)
+docker compose exec php composer qualite   # Twig, YAML, conteneur de services
+```
+Mode d'emploi complet (première installation, cibler un test, base de recette, CI) : [`tests/README.md`](tests/README.md).
+
 
 ---
 

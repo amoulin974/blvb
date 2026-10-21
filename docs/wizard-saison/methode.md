@@ -95,7 +95,9 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 | Données | fabriquées par les tests (factories, stories) | `app:recette:charger`, scénarios `en-cours`, `phase1-terminee`, `vierge` |
 | Référence | `tests/SPECIFICATIONS.md` | `tests/recette/README.md` |
 
-Tests automatisés, dans le conteneur `php` (455 tests verts + 2 lents au 2026-10-16, lot 6e ; toujours par `composer tests`) :
+Mode d'emploi complet des commandes de test : [`tests/README.md`](../../tests/README.md).
+
+Tests automatisés, dans le conteneur `php` (613 tests verts + 2 lents au 2026-10-21, branche `reglement` ; toujours par `composer tests`) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
