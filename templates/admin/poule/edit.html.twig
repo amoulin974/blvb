@@ -80,7 +80,7 @@
                 {% if equipes is empty %}
                     <p class="text-(--color-base-content)/80">Aucune équipe.</p>
                 {% else %}
-                    <ul class="divide-y divide-base-300">
+                    <ul class="divide-y divide-(--color-base-300)">
                         {% for equipe in equipes %}
                             <li class="py-2"><a class="font-display font-medium tracking-wide break-words hover:underline" href="{{ path('admin_equipe_show', {id: equipe.id}) }}">{{ equipe.nom }}</a></li>
                         {% endfor %}

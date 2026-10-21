@@ -97,3 +97,6 @@ when@test:
         App\Competition\CopieSaison: { autowire: true, public: true }
         App\Reglement\EditionReglement: { autowire: true, public: true }
         App\Reglement\RenduReglement: { autowire: true, public: true }
+        App\Competition\CompositionPoules: { autowire: true, public: true }
+        App\Competition\MiseEnPlaceJournees: { autowire: true, public: true }
+        App\Competition\MiseEnPlaceMatchs: { autowire: true, public: true }

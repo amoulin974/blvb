@@ -24,7 +24,9 @@ class Saison
     /**
      * @var Collection<int, Phase>
      */
+    // Dans l'ordre de la saison : la page de la saison les affiche ainsi et ne propose « Clôturer » qu'avant la dernière
     #[ORM\OneToMany(targetEntity: Phase::class, mappedBy: 'saison', orphanRemoval: true)]
+    #[ORM\OrderBy(['ordre' => 'ASC', 'id' => 'ASC'])]
     private Collection $phases;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]

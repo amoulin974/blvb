@@ -153,9 +153,12 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] 6b. Modèle « BLVB avec barrages » (D44) et vérification (D5) des passages par barrage
 - [x] 6c. Wizard : phase de barrages (étape Phases), carte par match à l'étape Passages (D32), modèle proposé
       au départ ; relu par l'ergonome, le webdesigner et la sécurité
-- [ ] 6c bis. Mise en place (Poules, Journées, Matchs) d'une phase de barrages : fonctionne par les générateurs
-      (BAR-01 à BAR-06) mais n'a pas été relue écran par écran dans le navigateur (« Barrage 1 » à 2 équipes,
-      textes des bilans)
+- [x] 6c bis. Mise en place (Poules, Journées, Matchs) d'une phase de barrages relue dans le navigateur (22/10/2026,
+      Playwright, scénario de recette `barrages` : clôture de la phase 2 depuis l'admin puis barrages de fin de saison) ;
+      corrigé : phases de la saison triées par ordre (la phase 2 n'avait pas de bouton « Clôturer »), « 0 journée créée »,
+      origine « Vient de la poule A », textes propres aux barrages (« Match unique : A reçoit B. », placement d'après le
+      classement, un match la première semaine, « 3 journées créées pour 3 barrages »), article des noms (« Le barrage… »),
+      séparateurs `divide-(--color-base-300)` ; relu par l'ergonome et le webdesigner ; BAR-10
 - [x] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
       1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
 - [x] 6e. Journée des finales (C3) : derniers tours au choix (finales seules, ou demi-finales et finales) de tous les
@@ -174,7 +177,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       temps, alimentée par la phase 2 (avant-dernier du haut, 2e du bas) sans effet sur le tableau final ; aucun passage
       vers la saison suivante (poules remplies à la main). Une phase finale est terminale (clôture sans répartition),
       une équipe peut avoir une destination par phase d'arrivée ; BAR-07 à BAR-09, VER-02
-- [ ] Vérifier dans le navigateur la mise en place des deux phases de barrages du modèle (Poules, Journées, Matchs)
+- [x] Vérifier dans le navigateur la mise en place des deux phases de barrages du modèle (Poules, Journées, Matchs) : voir 6c bis (même format pour les deux)
 - [x] Relecture sécurité de 6f et 6g (19/10/2026) : aucune faille critique ni importante ; corps JSON forgé de l'API de
       score refusé en 400 (SCO-17, défaut déjà présent avant le lot). Le match sans poule est impossible en base
 - [x] 6h. Wizard en mode ajout pour une saison lancée (D51) : étapes Phases, Passages, Vérification ; phases

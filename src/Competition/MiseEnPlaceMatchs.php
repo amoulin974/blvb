@@ -12,6 +12,7 @@ use App\Enum\PhaseType;
 use App\Service\CalendrierAnalyseService;
 use App\Service\OptimisationService;
 use App\Service\PartieService;
+use App\Reglement\Texte;
 use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -95,14 +96,14 @@ final class MiseEnPlaceMatchs
                 ++$sansMatch;
                 if ($effectif < 2) {
                     $statut = 'impossible';
-                    $texte = sprintf('La %s n\'a pas assez d\'équipes (deux au moins) pour avoir des matchs.', $poule->getNom());
+                    $texte = sprintf('%s n\'a pas assez d\'équipes (deux au moins) pour avoir des matchs.', Texte::lePoule($poule));
                 } elseif (!$journeesOk) {
                     $statut = 'sans_journees';
                     $journeesManquantes = true;
-                    $texte = sprintf('La %s n\'a pas toutes ses journées.', $poule->getNom());
+                    $texte = sprintf('%s n\'a pas toutes ses journées.', Texte::lePoule($poule));
                 } else {
                     $statut = 'aucun';
-                    $texte = sprintf('La %s n\'a aucun match. Générez-les pour continuer.', $poule->getNom());
+                    $texte = sprintf('%s n\'a aucun match. Générez-les pour continuer.', Texte::lePoule($poule));
                 }
                 $raison ??= $texte;
             } else {
@@ -126,6 +127,7 @@ final class MiseEnPlaceMatchs
             $lignes[] = [
                 'poule' => $poule, 'effectif' => $effectif, 'prevus' => $prevus, 'crees' => $crees,
                 'deplacements' => $elimination ? null : ($deplacements[$poule->getId()] ?? 0),
+                'reception' => $phase->getType() === PhaseType::BARRAGE ? self::reception($phase, $poule) : null,
                 'statut' => $statut, 'sansGymnase' => $sansGymnase,
                 'joues' => $joues, 'aVenir' => $crees - $joues, 'verrouillee' => $this->pouleVerrouillee($poule),
                 'aVenirPasses' => $this->nbPasses($poule),
@@ -248,7 +250,7 @@ final class MiseEnPlaceMatchs
                 return $this->echec('Poule introuvable : rien n\'a été modifié.');
             }
             if ($mode === 'generer' && \count($poule->getParties()) > 0) {
-                return $this->echec(sprintf('La %s a déjà ses matchs : utilisez « Régénérer les matchs de la poule » pour les refaire.', $poule->getNom()), 'poule-'.$poule->getId());
+                return $this->echec(sprintf('%s a déjà ses matchs : utilisez « Régénérer les matchs de la poule » pour les refaire.', Texte::lePoule($poule)), 'poule-'.$poule->getId());
             }
         }
         $ancre = $poule === null ? null : 'poule-'.$poule->getId();
@@ -264,7 +266,7 @@ final class MiseEnPlaceMatchs
             $aVenir = 0;
             foreach ($concernees as $c) {
                 if (\count($c->getEquipes()) >= 2 && \count($c->getJournees()) === 0) {
-                    return $this->echec(sprintf('La %s n\'a aucune journée : créez-les à l\'étape Journées. Rien n\'a été modifié.', $c->getNom()), 'poule-'.$c->getId());
+                    return $this->echec(sprintf('%s n\'a aucune journée : créez-les à l\'étape Journées. Rien n\'a été modifié.', Texte::lePoule($c)), 'poule-'.$c->getId());
                 }
                 foreach ($c->getParties() as $partie) {
                     if (!$this->estJoue($partie)) {
@@ -278,7 +280,7 @@ final class MiseEnPlaceMatchs
         } elseif ($poule === null && $this->journees->verrouillee($phase)) {
             return $this->echec('Cette phase est lancée (scores saisis) : ses matchs joués sont figés. Utilisez « Replacer les matchs à venir ».');
         } elseif ($poule !== null && $this->pouleVerrouillee($poule)) {
-            return $this->echec(sprintf('La %s a des matchs joués : ses matchs ne peuvent plus être refaits en entier. Utilisez « Replacer les matchs à venir ».', $poule->getNom()), $ancre);
+            return $this->echec(sprintf('%s a des matchs joués : ses matchs ne peuvent plus être refaits en entier. Utilisez « Replacer les matchs à venir ».', Texte::lePoule($poule)), $ancre);
         }
 
         $generateur = $this->formats->pourPhase($phase);
@@ -286,7 +288,7 @@ final class MiseEnPlaceMatchs
             $effectif = \count($concernee->getEquipes());
             if ($effectif < 2) {
                 if ($poule !== null) {
-                    return $this->echec(sprintf('La %s n\'a pas assez d\'équipes (deux au moins) pour avoir des matchs.', $concernee->getNom()), 'poule-'.$concernee->getId());
+                    return $this->echec(sprintf('%s n\'a pas assez d\'équipes (deux au moins) pour avoir des matchs.', Texte::lePoule($concernee)), 'poule-'.$concernee->getId());
                 }
                 continue;
             }
@@ -295,7 +297,7 @@ final class MiseEnPlaceMatchs
             }
             $attendues = $generateur?->nombreJournees($concernee) ?? 0;
             if (\count($concernee->getJournees()) !== $attendues || $attendues === 0) {
-                return $this->echec(sprintf('La %s n\'a pas toutes ses journées : créez-les à l\'étape Journées avant de générer les matchs.', $concernee->getNom()), 'poule-'.$concernee->getId());
+                return $this->echec(sprintf('%s n\'a pas toutes ses journées : créez-les à l\'étape Journées avant de générer les matchs.', Texte::lePoule($concernee)), 'poule-'.$concernee->getId());
             }
         }
 
@@ -307,7 +309,7 @@ final class MiseEnPlaceMatchs
             if ($poule !== null && $mode === 'generer' && $this->nbMatchsEnBase($poule) > 0) {
                 $connexion->rollBack();
 
-                return $this->echec(sprintf('La %s a déjà ses matchs : utilisez « Régénérer les matchs de la poule » pour les refaire.', $poule->getNom()), 'poule-'.$poule->getId());
+                return $this->echec(sprintf('%s a déjà ses matchs : utilisez « Régénérer les matchs de la poule » pour les refaire.', Texte::lePoule($poule)), 'poule-'.$poule->getId());
             }
             if ($mode === 'replacer') {
                 $rapport = $this->parties->replacerMatchsAVenir($phase, $poule);
@@ -373,7 +375,9 @@ final class MiseEnPlaceMatchs
             }
         }
 
-        return ['ok' => true, 'message' => sprintf('%d match%s créé%s pour %d poule%s.', $n, $n > 1 ? 's' : '', $n > 1 ? 's' : '', $nbPoules, $nbPoules > 1 ? 's' : ''),
+        $unite = $phase->getType() === PhaseType::BARRAGE ? 'barrage' : 'poule';
+
+        return ['ok' => true, 'message' => sprintf('%d match%s créé%s pour %d %s%s.', $n, $n > 1 ? 's' : '', $n > 1 ? 's' : '', $nbPoules, $unite, $nbPoules > 1 ? 's' : ''),
             'ancre' => null, 'avertissement' => $avertissement];
     }
 
@@ -420,5 +424,19 @@ final class MiseEnPlaceMatchs
     private function echec(string $message, ?string $ancre = null): array
     {
         return ['ok' => false, 'message' => $message, 'ancre' => $ancre, 'avertissement' => null];
+    }
+
+    /** Match d'un barrage (D43) : « Match unique : A reçoit B. », sur terrain neutre, ou en attente des matchs */
+    private static function reception(Phase $phase, Poule $poule): string
+    {
+        $match = $poule->getParties()->first() ?: null;
+        if ($phase->getReception() === Phase::RECEPTION_NEUTRE) {
+            return 'Match unique, sur terrain neutre.';
+        }
+        if ($match === null || $match->getIdEquipeRecoit() === null || $match->getIdEquipeDeplace() === null) {
+            return 'Match unique.';
+        }
+
+        return sprintf('Match unique : %s reçoit %s.', $match->getIdEquipeRecoit()->getNom(), $match->getIdEquipeDeplace()->getNom());
     }
 }

@@ -9,6 +9,7 @@ use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Enum\PhaseType;
 use App\Service\JourneeService;
+use App\Reglement\Texte;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -78,8 +79,8 @@ final class MiseEnPlaceJournees
                 ++$sansJournee;
                 $statut = $effectif < 2 ? 'impossible' : 'aucune';
                 $raison ??= $effectif < 2
-                    ? sprintf('%s n\'a pas assez d\'équipes (deux au moins) pour avoir des journées.', $poule->getNom())
-                    : sprintf('%s n\'a aucune journée. Générez-les pour continuer.', $poule->getNom());
+                    ? sprintf('%s n\'a pas assez d\'équipes (deux au moins) pour avoir des journées.', Texte::lePoule($poule))
+                    : sprintf('%s n\'a aucune journée. Générez-les pour continuer.', Texte::lePoule($poule));
             } else {
                 ++$avecJournee;
                 $statut = $creees === $attendues ? 'ok' : 'ecart';
@@ -142,17 +143,17 @@ final class MiseEnPlaceJournees
         $derniere = $journees[\count($journees) - 1];
         if ($derniere->getDateFin() > $fin) {
             $problemes[] = ['niveau' => 'warning', 'ancre' => $ancre, 'lien' => null,
-                'texte' => sprintf('La %s se termine le %s, après la fin de la phase (%s).', $poule->getNom(), $derniere->getDateFin()->format('d/m/Y'), $fin->format('d/m/Y'))];
+                'texte' => sprintf('%s se termine le %s, après la fin de la phase (%s).', Texte::lePoule($poule), $derniere->getDateFin()->format('d/m/Y'), $fin->format('d/m/Y'))];
         }
         if ($journees[0]->getDateDebut() < $debut->modify('monday this week')) {
             $problemes[] = ['niveau' => 'warning', 'ancre' => $ancre, 'lien' => null,
-                'texte' => sprintf('La %s commence le %s, avant le début de la phase (%s).', $poule->getNom(), $journees[0]->getDateDebut()->format('d/m/Y'), $debut->format('d/m/Y'))];
+                'texte' => sprintf('%s commence le %s, avant le début de la phase (%s).', Texte::lePoule($poule), $journees[0]->getDateDebut()->format('d/m/Y'), $debut->format('d/m/Y'))];
         }
         foreach ($journees as $journee) {
             $fermeture = Semaines::fermeture($journee->getDateDebut(), $fermetures);
             if ($fermeture !== null) {
                 $problemes[] = ['niveau' => 'warning', 'ancre' => $ancre, 'lien' => null,
-                    'texte' => sprintf('La journée %d de la %s tombe pendant la fermeture « %s » (du %s au %s).', $journee->getNumero(), $poule->getNom(), $fermeture->getNom(), $fermeture->getDateDebut()->format('d/m/Y'), $fermeture->getDateFin()->format('d/m/Y'))];
+                    'texte' => sprintf('%s : la journée %d tombe pendant la fermeture « %s » (du %s au %s).', $poule->getNom(), $journee->getNumero(), $fermeture->getNom(), $fermeture->getDateDebut()->format('d/m/Y'), $fermeture->getDateFin()->format('d/m/Y'))];
             }
         }
     }
@@ -184,6 +185,7 @@ final class MiseEnPlaceJournees
         }
         if ($action === 'generer-toutes') {
             $faites = [];
+            $creees = [];
             $erreurs = [];
             foreach ($phase->getPoules() as $poule) {
                 if (\count($poule->getJournees()) > 0) {
@@ -191,7 +193,8 @@ final class MiseEnPlaceJournees
                 }
                 $erreur = $this->creer($poule);
                 if ($erreur === null) {
-                    $n = \count($poule->getJournees());
+                    $n = $this->nbJournees($poule);
+                    $creees[] = $poule;
                     $faites[] = sprintf('%s : %d journée%s créée%s.', $poule->getNom(), $n, $n > 1 ? 's' : '', $n > 1 ? 's' : '');
                 } else {
                     $erreurs[] = $erreur;
@@ -199,6 +202,14 @@ final class MiseEnPlaceJournees
             }
             if ($faites === [] && $erreurs === []) {
                 return ['ok' => true, 'message' => 'Toutes les poules ont déjà leurs journées.', 'ancre' => null];
+            }
+            // Toutes réussies : une phrase (« 3 journées créées pour 3 barrages. ») ; sinon le détail par poule
+            if ($erreurs === []) {
+                $total = array_sum(array_map(fn (Poule $p) => $this->nbJournees($p), $creees));
+                $unite = $phase->getType() === PhaseType::BARRAGE ? 'barrage' : 'poule';
+
+                return ['ok' => true, 'message' => sprintf('%d journée%s créée%s pour %d %s%s.', $total, $total > 1 ? 's' : '', $total > 1 ? 's' : '',
+                    \count($creees), $unite, \count($creees) > 1 ? 's' : ''), 'ancre' => null];
             }
             $message = $faites === [] ? '' : implode(' ', $faites).' ';
 
@@ -223,9 +234,15 @@ final class MiseEnPlaceJournees
         if ($erreur !== null) {
             return ['ok' => false, 'message' => $erreur, 'ancre' => 'poule-'.$poule->getId()];
         }
-        $n = \count($poule->getJournees());
+        $n = $this->nbJournees($poule);
 
         return ['ok' => true, 'message' => sprintf('%d journée%s créée%s pour %s.', $n, $n > 1 ? 's' : '', $n > 1 ? 's' : '', $poule->getNom()), 'ancre' => 'poule-'.$poule->getId()];
+    }
+
+    /** Journées enregistrées (un générateur peut les créer sans les ajouter à la collection de la poule, ex. Barrage) */
+    private function nbJournees(Poule $poule): int
+    {
+        return $this->em->getRepository(Journee::class)->count(['poule' => $poule]);
     }
 
     /** Crée les journées de la poule ; en cas d'erreur du générateur, ne laisse aucune journée partielle. */

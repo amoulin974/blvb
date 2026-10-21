@@ -102,6 +102,22 @@ final class Texte
         return '« '.$nom.' »';
     }
 
+    /**
+     * Avec l'article : « La poule A », « Le barrage A / B », « Le tableau 1 », sinon « « Élite » » ; en milieu de phrase
+     * ($majuscule = false) : « la poule A », « le barrage A / B »
+     */
+    public static function lePoule(Poule $poule, bool $majuscule = true): string
+    {
+        $nom = self::poule($poule);
+        $article = match (true) {
+            str_starts_with($nom, 'poule') => 'la ',
+            str_starts_with($nom, 'tableau'), str_starts_with($nom, 'barrage') => 'le ',
+            default => '',
+        };
+
+        return $majuscule ? mb_strtoupper(mb_substr($article.$nom, 0, 1)).mb_substr($article.$nom, 1) : $article.$nom;
+    }
+
     /** « en poule A », « dans le tableau 1 », « dans « Élite des as » » */
     public static function dansPoule(Poule $poule): string
     {

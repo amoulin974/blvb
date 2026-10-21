@@ -93,7 +93,7 @@ final class MiseEnPlacePoulesTest extends TestFonctionnel
         self::assertSelectorTextContains('#a-placer', 'Équipes à placer (3)');
         self::assertSelectorTextContains('#a-placer', 'Une équipe laissée ici ne jouera pas cette phase.');
         self::assertSelectorTextContains('body', 'Poule A : 3 équipes pour 4 prévues.');
-        self::assertSelectorTextContains('body', 'La poule « Poule C » n\'a aucune équipe. Ajoutez-en une pour continuer.');
+        self::assertSelectorTextContains('body', 'La poule C n\'a aucune équipe. Ajoutez-en une pour continuer.');
         self::assertSelectorTextContains('body', 'Vérifiez ce placement.');
         self::assertSelectorExists('button[value="suivant"][aria-disabled="true"]');
     }
@@ -152,7 +152,7 @@ final class MiseEnPlacePoulesTest extends TestFonctionnel
         $this->cliquer($s['url'], 'suivant');
         self::assertResponseRedirects($s['url'].'?phase='.$s['phase']);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.admin-alerte', 'La poule « Poule C » n\'a aucune équipe');
+        self::assertSelectorTextContains('.admin-alerte', 'La poule C n\'a aucune équipe');
 
         $this->em()->clear();
         $avec = $this->saison(false);

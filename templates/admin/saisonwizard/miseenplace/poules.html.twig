@@ -82,7 +82,7 @@
         {% endif %}
 
         {% if etat.copie and not etat.verrouillee %}
-            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Les équipes ont été placées d'après leur poule précédente (montées, descentes, même niveau). Vérifiez ce placement.{% endblock %}{% endembed %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}{% if phase.type.name == 'BARRAGE' %}Les équipes ont été placées d'après leur classement de la phase précédente.{% else %}Les équipes ont été placées d'après leur poule précédente (montées, descentes, même niveau).{% endif %} Vérifiez ce placement.{% endblock %}{% endembed %}
         {% endif %}
 
         {% if etat.problemes is not empty %}
@@ -121,7 +121,7 @@
                 <section id="a-placer" class="mb-6 rounded-box border-2 border-(--color-primary) p-3 scroll-mt-20" aria-labelledby="titre-a-placer">
                     <h3 id="titre-a-placer" class="font-display text-lg uppercase tracking-wide text-(--color-primary)">Équipes à placer ({{ nb_a_placer }})</h3>
                     <p class="text-sm text-(--color-base-content)/80">Une équipe laissée ici ne jouera pas cette phase.</p>
-                    <ul class="divide-y divide-base-300">
+                    <ul class="divide-y divide-(--color-base-300)">
                         {% for l in etat.aPlacer %}{{ m.ligne(l, null, etat.poules|map(p => p.poule), etat.verrouillee) }}{% endfor %}
                     </ul>
                 </section>
@@ -143,13 +143,13 @@
                         {% if p.equipes is empty %}
                             <p class="mt-2 text-sm">Aucune équipe dans cette poule.</p>
                         {% else %}
-                            <ul class="mt-2 divide-y divide-base-300">
+                            <ul class="mt-2 divide-y divide-(--color-base-300)">
                                 {% for l in p.equipes %}{{ m.ligne(l, poule, etat.poules|map(q => q.poule), etat.verrouillee) }}{% endfor %}
                             </ul>
                         {% endif %}
                         {% if not etat.verrouillee %}
                             <div class="mt-3 flex flex-col gap-2 border-t border-base-300 pt-3 sm:flex-row sm:items-center">
-                                <label class="sr-only" for="ajout-{{ poule.id }}">Équipe à ajouter à la {{ poule.nom }}</label>
+                                <label class="sr-only" for="ajout-{{ poule.id }}">Équipe à ajouter : {{ poule.nom }}</label>
                                 <select id="ajout-{{ poule.id }}" name="ajout[{{ poule.id }}]" class="select select-bordered w-full sm:w-auto">
                                     <option value="">Ajouter une équipe…</option>
                                     {% if nb_a_placer > 0 %}<optgroup label="Équipes à placer">{% for l in etat.aPlacer %}<option value="{{ l.equipe.id }}">{{ l.equipe.nom }}</option>{% endfor %}</optgroup>{% endif %}

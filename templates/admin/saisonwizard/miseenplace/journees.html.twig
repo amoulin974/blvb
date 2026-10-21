@@ -46,14 +46,14 @@
     <div class="admin-carte">
         <h2 id="titre-etape" class="mb-2" tabindex="-1">Journées de {{ phase.nom }}</h2>
         <p class="mb-2">
-            Une journée correspond à une semaine de matchs.
+            Une journée correspond à une semaine de matchs.{% if phase.type.name == 'BARRAGE' %} Chaque barrage se joue en un seul match, la première semaine de la phase.{% endif %}
             La phase va du {{ phase.datedebut|date('d/m/Y') }} au {{ phase.datefin|date('d/m/Y') }}{% if etat.semaines is not null %} : {{ etat.semaines.total }} semaine{{ etat.semaines.total > 1 ? 's' : '' }}{% if etat.semaines.fermees > 0 %}, dont {{ etat.semaines.fermees }} de fermeture ({{ etat.semaines.utilisables }} utilisable{{ etat.semaines.utilisables > 1 ? 's' : '' }}){% endif %}{% endif %}.
             {% if etat.semaines is not null and etat.semaines.fermees > 0 and not etat.verrouillee %}<a class="underline" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 2}) }}">Modifier les fermetures</a>{% endif %}
         </p>
         {% if nb_poules > 0 and etat.avecJournee > 0 %}
             <p class="mb-4">
                 {% if etat.sansJournee == 0 %}
-                    {{ nb_poules == 1 ? 'La poule a ses journées.' : 'Les ' ~ nb_poules ~ ' poules ont leurs journées.' }}
+                    {% set unite = phase.type.name == 'BARRAGE' ? 'barrage' : 'poule' %}{{ nb_poules == 1 ? (unite == 'barrage' ? 'Le barrage a ses journées.' : 'La poule a ses journées.') : 'Les ' ~ nb_poules ~ ' ' ~ unite ~ 's ont leurs journées.' }}
                 {% else %}
                     {{ etat.avecJournee }} poule{{ etat.avecJournee > 1 ? 's' : '' }} sur {{ nb_poules }} {{ etat.avecJournee > 1 ? 'ont' : 'a' }} ses journées ; {{ etat.sansJournee }} {{ etat.sansJournee > 1 ? 'n\'en ont' : 'n\'en a' }} pas encore.
                 {% endif %}
@@ -123,13 +123,13 @@
                             <span class="ml-auto text-(--color-primary) lg:hidden">{{ icone.i('fleche-bas', 'size-5 transition-transform group-open:rotate-180') }}<span class="sr-only">Afficher ou masquer les journées</span></span>
                         </summary>
 
-                        {% if p.memeQue %}<p class="mt-2 text-sm text-(--color-base-content)/80">Mêmes dates que {{ p.memeQue.nom }}.</p>{% endif %}
+                        {% if p.memeQue and p.journees|length > 1 %}<p class="mt-2 text-sm text-(--color-base-content)/80">Mêmes dates que {{ le_poule(p.memeQue) }}.</p>{% endif %}
 
                         {% if vide %}
                             <p class="mt-2 text-sm">{{ p.statut == 'impossible' ? 'Il faut au moins deux équipes dans la poule pour créer des journées.' : 'Aucune journée pour l\'instant.' }}</p>
                         {% else %}
                             {% if phase.type.name == 'FINALE' %}<p class="mt-2 text-sm text-(--color-base-content)/80">Une journée par tour : les barrages, s'il y en a, puis les tours jusqu'à la finale.</p>{% endif %}
-                            <ul class="mt-2 divide-y divide-base-300">
+                            <ul class="mt-2 divide-y divide-(--color-base-300)">
                                 {% for j in p.journees %}
                                     <li class="flex items-baseline gap-2 py-2">
                                         <span class="w-10 shrink-0 font-display uppercase tracking-wide">J{{ j.numero }}</span>

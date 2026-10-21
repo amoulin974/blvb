@@ -89,7 +89,7 @@ final class MiseEnPlaceJourneesTest extends TestFonctionnel
         self::assertSelectorExists('button[value="generer-toutes"]');
         self::assertSelectorExists('button[value="generer-'.$s['poules']['A'].'"]');
         self::assertSelectorExists('button[value="suivant"][aria-disabled="true"]');
-        self::assertSelectorTextContains('#raison-validation', 'Poule A n\'a aucune journée. Générez-les pour continuer.');
+        self::assertSelectorTextContains('#raison-validation', 'La poule A n\'a aucune journée. Générez-les pour continuer.');
     }
 
     #[TestDox('MEP-10 Générer les journées manquantes : une par semaine, 3 pour 4 équipes et 3 pour 3 équipes ; ensuite plus de bouton groupé et « Suivant » possible')]
@@ -101,7 +101,7 @@ final class MiseEnPlaceJourneesTest extends TestFonctionnel
 
         self::assertResponseRedirects($s['url'].'?phase='.$s['phase']);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.admin-alerte', 'Poule A : 3 journées créées. Poule B : 3 journées créées.');
+        self::assertSelectorTextContains('.admin-alerte', '6 journées créées pour 2 poules.');
         self::assertSelectorTextContains('#poule-'.$s['poules']['A'], '3 journées sur 3 prévues');
         self::assertSelectorExists('#poule-'.$s['poules']['A'].' a[href*="/getjourneecalendar"]');
         self::assertSelectorNotExists('button[value="generer-toutes"]');

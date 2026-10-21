@@ -85,7 +85,7 @@ final class MiseEnPlaceMatchsTest extends TestFonctionnel
         self::assertSelectorExists('.admin-alerte a[href="'.$s['journees'].'?phase='.$s['phase'].'"]');
         self::assertSelectorNotExists('[data-confirmation-action-param]');
         self::assertSelectorExists('button[value="terminer"][aria-disabled="true"]');
-        self::assertSelectorTextContains('#raison-validation', 'La Poule A n\'a pas toutes ses journées.');
+        self::assertSelectorTextContains('#raison-validation', 'La poule A n\'a pas toutes ses journées.');
     }
 
     #[TestDox('MEP-17 Générer les matchs de la phase : 6 + 3 matchs, message de succès, bilan, déplacements, équipe sans gymnase signalée, « Terminer » possible')]
@@ -269,7 +269,7 @@ final class MiseEnPlaceMatchsTest extends TestFonctionnel
 
         $this->envoyer($s, 'regenerer-'.$s['poules']['A']);
         $this->client->followRedirect();
-        self::assertSelectorTextContains('.admin-alerte', 'La Poule A a des matchs joués');
+        self::assertSelectorTextContains('.admin-alerte', 'La poule A a des matchs joués');
 
         $this->envoyer($s, 'regenerer-'.$s['poules']['B']);
         $this->client->followRedirect();

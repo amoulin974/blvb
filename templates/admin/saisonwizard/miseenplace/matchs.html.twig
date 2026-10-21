@@ -195,7 +195,7 @@
                             </p>
                         {% else %}
                             <p class="mt-2 text-sm text-(--color-base-content)/80">
-                                {% if p.deplacements is not null %}{{ p.deplacements }} déplacement{{ p.deplacements > 1 ? 's' : '' }} de suite.{% else %}Tableau placé dans l'ordre des équipes de la poule : les premières sont exemptées des barrages.{% endif %}
+                                {% if p.deplacements is not null %}{{ p.deplacements }} déplacement{{ p.deplacements > 1 ? 's' : '' }} de suite.{% elseif p.reception %}{{ p.reception }}{% else %}Tableau placé dans l'ordre des équipes de la poule : les premières sont exemptées des barrages.{% endif %}
                             </p>
                         {% endif %}
 

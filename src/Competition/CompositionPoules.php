@@ -7,6 +7,7 @@ use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Saison;
 use App\Enum\PhaseType;
+use App\Reglement\Texte;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
@@ -107,7 +108,7 @@ final class CompositionPoules
             ];
             if ($effectif === 0) {
                 $bloquant = true;
-                $texte = sprintf('La poule « %s » n\'a aucune équipe. Ajoutez-en une pour continuer.', $poule->getNom());
+                $texte = sprintf('%s n\'a aucune équipe. Ajoutez-en une pour continuer.', Texte::lePoule($poule));
                 $raison ??= $texte;
                 $problemes[] = ['niveau' => 'error', 'texte' => $texte, 'ancre' => 'poule-'.$poule->getId()];
             } elseif ($ecart) {
@@ -313,6 +314,10 @@ final class CompositionPoules
         }
         if ($maintenant === null) {
             return ['type' => 'avant', 'texte' => sprintf('Jouait en %s', $avant->getNom())];
+        }
+        // Barrage : l'équipe y vient de sa poule (montée et descente se décident au barrage)
+        if ($maintenant->getPhase()?->getType() === PhaseType::BARRAGE) {
+            return ['type' => 'barrage', 'texte' => 'Vient '.Texte::dePoule($avant)];
         }
         $niveauAvant = (int) $avant->getNiveau();
         $niveauMaintenant = (int) $maintenant->getNiveau();

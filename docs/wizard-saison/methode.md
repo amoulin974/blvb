@@ -471,6 +471,20 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   (focus parti de l'éditeur) perdait la mise en forme en attente au retour du focus : focus rendu d'abord, commande à
   l'image suivante. Relu par l'ergonome et le webdesigner ; vérifié dans Chromium, Firefox et WebKit. 614 tests verts.
 
+### 2026-10-22 : lot 6, 6c bis
+
+- Parcours réel dans le navigateur (Playwright, base de recette, scénario `barrages`, scores de la phase 2 saisis en
+  base) : clôture de la phase 2 depuis la page de la saison, puis mise en place des barrages de fin de saison (Poules,
+  Journées, Matchs), captures ordinateur et téléphone, relues par l'ergonome et le webdesigner.
+- **Défaut bloquant trouvé** : `Saison::phases` n'avait pas d'ordre ; la page de la saison affichait les phases dans le
+  désordre et ne proposait pas « Clôturer » pour la dernière de la liste (ici la phase 2). `OrderBy(ordre, id)` ajouté.
+- Autres corrections : « 0 journée créée » (le générateur de barrages crée les journées sans les ajouter à la collection
+  de la poule : compte en base), origine « Vient de la poule A », textes propres à un barrage, article des noms de poule
+  dans les messages (`Texte::lePoule`, fonction Twig `le_poule`), message groupé « 3 journées créées pour 3 barrages »,
+  séparateurs `divide-base-300` jamais générés (daisyUI importé en CSS : `divide-(--color-base-300)`). BAR-10. 615 tests verts.
+- **Ajouter des barrages à une saison existante** : aucune commande ; l'interface le permet (mode ajout, D51 : « Modifier
+  la saison » → « Ajouter des phases ») tant que la phase 2 n'a pas commencé pour des barrages entre les phases 1 et 2.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout reglement && git pull`. La branche `reglement` (lot 11, en cours)
