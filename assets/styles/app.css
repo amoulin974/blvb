@@ -311,7 +311,7 @@ details[data-code][open] > summary svg { rotate: 180deg; }
 /* Mise en forme de l'éditeur dans le texte libre (hors éléments calculés) : surligné, citation, séparation, tableaux.
    Exception à la charte (jaune réservé au logo et aux boutons) : le surligné reprend le jaune accent, pâli à 35 %,
    convention du surligneur connue de tous ; texte foncé dessus bien au-delà de AA. */
-.reglement-article mark { background-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-base-100)); color: inherit; padding-inline: 0.125rem; border-radius: 0.125rem; }
+.reglement-article mark, [role="toolbar"] mark { background-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-base-100)); color: inherit; padding-inline: 0.125rem; border-radius: 0.125rem; }
 .reglement-article blockquote { margin: 0 0 0.75rem; padding: 0.25rem 0 0.25rem 1rem; border-left: 3px solid var(--color-primary); color: color-mix(in oklab, var(--color-base-content) 85%, transparent); }
 .reglement-article hr { margin: 1.5rem 0; border: 0; border-top: 1px solid var(--color-base-300); }
 .reglement-article sup, .reglement-article sub { font-size: 0.75em; line-height: 0; }
@@ -375,6 +375,12 @@ details[data-code][open] > summary svg { rotate: 180deg; }
 .dropdown > summary { list-style: none; }
 .dropdown > summary::-webkit-details-marker { display: none; }
 .dropdown[open] > summary svg:last-child { rotate: 180deg; }
+/* Menu d'une barre d'outils (éditeur du règlement) : son summary porte un tabindex (navigation aux flèches) ; daisyUI rend
+   alors ce déclencheur insensible aux clics dès qu'il a le focus, et le menu ne s'ouvrait jamais à la souris */
+[role="toolbar"] .dropdown > summary { pointer-events: auto; }
+[role="toolbar"] .dropdown-content button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Entrée en cours du menu d'alignement : même repère qu'un bouton enfoncé (fond teinté, filet marine) */
+[role="toolbar"] .dropdown-content [aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); font-weight: 600; box-shadow: inset 3px 0 0 var(--color-primary); }
 /* Bouton de suppression discret : rouge foncé, contraste AA même sur le fond gris du survol de .btn-ghost (D54) */
 .btn-danger-discret { color: color-mix(in oklab, var(--color-error) 70%, black); }
 /* Entrée destructive d'un menu (D54) : rouge foncé, contraste AA même au survol ; 44 px */

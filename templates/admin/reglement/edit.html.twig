@@ -3,9 +3,11 @@
    éditeur TipTap (reglement_editeur_controller.js), aperçu du texte non enregistré, panneau des éléments calculés. #}
 {% import 'admin/_icones.html.twig' as icone %}
 
-{# Bouton de la barre d'outils. bascule : état enfoncé (aria-pressed) ; carre : bouton carré à icône (44 px sur téléphone) #}
+{# Bouton de la barre d'outils. bascule : état enfoncé (aria-pressed) ; carre : bouton carré à icône (44 px sur téléphone).
+   contenu : HTML écrit dans ce gabarit seulement (icône, « x<sup>2</sup> »…), jamais une donnée saisie : affiché tel quel
+   (un |raw posé par l'appelant ne traverse pas la macro) #}
 {% macro outil(commande, libelle, titre, contenu, classe = '', bascule = true, carre = true) %}
-    <button type="button" class="btn btn-ghost btn-sm {{ carre ? 'btn-square max-sm:size-11' }} {{ classe }}" data-commande="{{ commande }}"{% if bascule %} aria-pressed="false"{% endif %} tabindex="-1" aria-label="{{ libelle }}" title="{{ titre }}">{{ contenu }}</button>
+    <button type="button" class="btn btn-ghost btn-sm {{ carre ? 'btn-square max-sm:size-11' }} {{ classe }}" data-commande="{{ commande }}"{% if bascule %} aria-pressed="false"{% endif %} tabindex="-1" aria-label="{{ libelle }}" title="{{ titre }}">{{ contenu|raw }}</button>
 {% endmacro %}
 
 {% block title %}Règlement · {{ saison.nom }}{% endblock %}
@@ -75,23 +77,39 @@
                         {{ m.outil('gras', 'Gras', 'Gras (Ctrl+B)', 'G', 'font-bold') }}
                         {{ m.outil('italique', 'Italique', 'Italique (Ctrl+I)', 'I', 'italic') }}
                         {{ m.outil('souligne', 'Souligné', 'Souligné (Ctrl+U)', 'S', 'underline') }}
-                        {{ m.outil('surligne', 'Surligné', 'Surligné', '<mark class="px-0.5 bg-accent/35 text-inherit">ab</mark>'|raw) }}
-                        {{ m.outil('exposant', 'Exposant', 'Exposant, ex. 1er (Ctrl+.)', 'x<sup>2</sup>'|raw) }}
-                        {{ m.outil('indice', 'Indice', 'Indice (Ctrl+,)', 'x<sub>2</sub>'|raw) }}
+                        {{ m.outil('surligne', 'Surligné', 'Surligné', '<mark>ab</mark>') }}
+                        {{ m.outil('exposant', 'Exposant', 'Exposant, ex. 1er (Ctrl+.)', 'x<sup>2</sup>') }}
+                        {{ m.outil('indice', 'Indice', 'Indice (Ctrl+,)', 'x<sub>2</sub>') }}
                         {{ m.outil('code', 'Code (écrit tel quel)', 'Code, écrit tel quel : un code court mis en forme « code » n\'est pas remplacé (Ctrl+E)', icone.i('code')) }}
                         {{ separateur }}
                         {# Blocs #}
                         {{ m.outil('puces', 'Liste à puces', 'Liste à puces (Ctrl+Maj+8)', icone.i('liste')) }}
                         {{ m.outil('numeros', 'Liste numérotée', 'Liste numérotée (Ctrl+Maj+7)', icone.i('liste-numerotee')) }}
-                        {{ m.outil('citation', 'Citation', 'Citation (Ctrl+Maj+B)', '«&#8239;»'|raw) }}
+                        {{ m.outil('citation', 'Citation', 'Citation (Ctrl+Maj+B)', icone.i('citation')) }}
                         {{ m.outil('separation', 'Ligne de séparation', 'Ligne de séparation', icone.i('separation'), '', false) }}
                         {{ m.outil('saut', 'Saut de ligne', 'Saut de ligne dans le même paragraphe (Maj+Entrée)', icone.i('saut-ligne'), '', false) }}
                         {{ separateur }}
-                        {# Alignement : paragraphe, titre ou image sélectionnée #}
-                        {{ m.outil('gauche', 'Aligner à gauche', 'Aligner à gauche', icone.i('aligne-gauche')) }}
-                        {{ m.outil('centrer', 'Centrer', 'Centrer (Ctrl+Maj+E) : placez le curseur dans un paragraphe ou un titre, ou cliquez sur une image', icone.i('centrer')) }}
-                        {{ m.outil('droite', 'Aligner à droite', 'Aligner à droite', icone.i('aligne-droite')) }}
-                        {{ m.outil('justifier', 'Justifier', 'Justifier, pour un paragraphe ou un titre', icone.i('justifier')) }}
+                        {# Alignement du paragraphe, du titre ou de l'image sélectionnée : un menu (menu-deroulant), dont le bouton montre
+                           l'alignement en cours #}
+                        <details class="dropdown dropdown-end" data-controller="menu-deroulant">
+                            <summary class="btn btn-ghost btn-sm max-sm:min-h-11 gap-0.5" tabindex="-1"
+                                     title="Alignement du paragraphe, du titre ou de l'image sélectionnée" data-reglement-editeur-target="alignement">
+                                {# Contenu transparent aux clics : la cible du clic reste le summary, même quand l'icône change #}
+                                <span class="pointer-events-none" data-role="icone-alignement">{{ icone.i('aligne-gauche') }}</span>
+                                <span class="sr-only" data-role="libelle-alignement">Alignement : à gauche</span>
+                                <span class="pointer-events-none">{{ icone.i('fleche-bas', 'size-3') }}</span>
+                            </summary>
+                            <ul class="menu dropdown-content z-20 mt-1 w-56 rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+                                {% for commande, a in {
+                                    gauche: {libelle: 'À gauche', court: 'à gauche', icone: 'aligne-gauche'},
+                                    centrer: {libelle: 'Centré', court: 'centré', icone: 'centrer', titre: 'Centrer (Ctrl+Maj+E)'},
+                                    droite: {libelle: 'À droite', court: 'à droite', icone: 'aligne-droite'},
+                                    justifier: {libelle: 'Justifié', court: 'justifié', icone: 'justifier', titre: 'Justifier (paragraphe ou titre seulement)'},
+                                } %}
+                                    <li><button type="button" class="min-h-11" data-commande="{{ commande }}" aria-pressed="false" data-icone="{{ commande }}" data-libelle="{{ a.court }}"{% if a.titre is defined %} title="{{ a.titre }}"{% endif %}>{{ icone.i(a.icone) }} {{ a.libelle }}</button></li>
+                                {% endfor %}
+                            </ul>
+                        </details>
                         {{ separateur }}
                         {{ m.outil('tableau', 'Insérer un tableau', 'Insérer un tableau (3 lignes, 3 colonnes, avec ligne d\'en-tête)', icone.i('tableau'), '', false) }}
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} Lien</button>

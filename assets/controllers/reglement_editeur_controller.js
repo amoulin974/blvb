@@ -145,7 +145,7 @@ const CodesCourts = Extension.create({
 })
 
 export default class extends Controller {
-    static targets = ['editeur', 'contenu', 'barre', 'barreTableau', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
+    static targets = ['editeur', 'contenu', 'barre', 'barreTableau', 'alignement', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
         'ongletRediger', 'ongletApercu', 'ongletHtml', 'panneauRediger', 'panneauApercu', 'panneauHtml', 'apercu', 'source', 'fichier', 'element',
         'dialogueLien', 'adresse', 'erreurLien', 'retirerLien', 'dialogueImage', 'vignette', 'description', 'decorative', 'erreurImage',
         'dialogueConflit', 'messageConflit']
@@ -304,6 +304,16 @@ export default class extends Controller {
                 bouton.setAttribute('aria-pressed', actif[bouton.dataset.commande] ? 'true' : 'false')
             }
         })
+        // Bouton du menu d'alignement : icône et nom de l'alignement en cours
+        // (seulement s'il change : remplacer l'icône pendant le clic qui ouvre le menu la sortirait du document, et le menu
+        // se refermerait aussitôt, croyant à un clic à l'extérieur)
+        const commandeAlignement = { centre: 'centrer', droite: 'droite', justifie: 'justifier' }[alignement] ?? 'gauche'
+        if (this.alignementTarget.dataset.affiche !== commandeAlignement) {
+            this.alignementTarget.dataset.affiche = commandeAlignement
+            const entree = this.barreTarget.querySelector(`[data-icone="${commandeAlignement}"]`)
+            this.alignementTarget.querySelector('[data-role="icone-alignement"]').innerHTML = entree.querySelector('svg').outerHTML
+            this.alignementTarget.querySelector('[data-role="libelle-alignement"]').textContent = 'Alignement : ' + entree.dataset.libelle
+        }
         // Justifier n'a pas de sens pour une image ; les actions de tableau n'apparaissent que dans un tableau
         this.barreTarget.querySelector('[data-commande="justifier"]').disabled = this.imageChoisie()
         this.barreTarget.querySelector('[data-commande="annuler"]').disabled = !e.can().undo()
@@ -314,7 +324,12 @@ export default class extends Controller {
     // Une seule tabulation pour la barre ; flèches, Origine et Fin pour passer d'un bouton à l'autre (boutons visibles et
     // actifs) ; Échap revient au texte
     flecheBarre(evenement) {
-        const boutons = [...this.barreTarget.querySelectorAll('button[data-commande]')].filter((b) => b.offsetParent !== null && !b.disabled)
+        // Le menu d'alignement compte pour un bouton (son summary) ; ses entrées se parcourent au clavier dans le menu ouvert
+        if (evenement.target.closest('.dropdown-content')) {
+            return
+        }
+        const boutons = [...this.barreTarget.querySelectorAll('button[data-commande], summary')]
+            .filter((b) => b.offsetParent !== null && !b.disabled && !b.closest('.dropdown-content'))
         const index = boutons.indexOf(document.activeElement)
         const cible = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: boutons.length - 1 }[evenement.key]
         if (evenement.key === 'Escape') {
