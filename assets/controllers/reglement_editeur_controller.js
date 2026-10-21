@@ -1,6 +1,6 @@
 /* stimulusFetch: 'lazy' */
 import { Controller } from '@hotwired/stimulus'
-import { Editor, Extension } from '@tiptap/core'
+import { Editor, Extension, mergeAttributes } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
@@ -35,6 +35,25 @@ async function envoyer(url, donnees) {
     }
     return { reponse, resultat }
 }
+
+// Image cliquable : une marque de lien ne s'applique pas à un nœud image ; le lien est donc un attribut de l'image,
+// écrit <a href="…"><img …></a> (forme gardée par le nettoyage côté serveur) et relu depuis le <a> parent
+const ImageLien = Image.extend({
+    addAttributes() {
+        return {
+            ...this.parent?.(),
+            href: {
+                default: null,
+                parseHTML: (element) => element.closest('a')?.getAttribute('href') ?? null,
+                renderHTML: () => ({}),
+            },
+        }
+    },
+    renderHTML({ node, HTMLAttributes }) {
+        const image = ['img', mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)]
+        return node.attrs.href ? ['a', { href: node.attrs.href }, image] : image
+    },
+})
 
 // Codes courts reconnus mis en évidence pendant la frappe (sauf ceux mis en forme « code », qui restent écrits tels quels)
 const CodesCourts = Extension.create({
@@ -79,7 +98,7 @@ export default class extends Controller {
             extensions: [
                 StarterKit.configure({ heading: { levels: [2, 3, 4] }, codeBlock: false, strike: false }),
                 Link.configure({ openOnClick: false, autolink: false, HTMLAttributes: { rel: null, target: null } }),
-                Image,
+                ImageLien,
                 CodesCourts,
             ],
             editorProps: {
@@ -146,7 +165,8 @@ export default class extends Controller {
         const actif = {
             partie: this.editor.isActive('heading', { level: 2 }), regle: this.editor.isActive('heading', { level: 3 }),
             gras: this.editor.isActive('bold'), italique: this.editor.isActive('italic'), code: this.editor.isActive('code'),
-            puces: this.editor.isActive('bulletList'), numeros: this.editor.isActive('orderedList'), lien: this.editor.isActive('link'),
+            puces: this.editor.isActive('bulletList'), numeros: this.editor.isActive('orderedList'),
+            lien: this.imageChoisie() ? Boolean(this.editor.getAttributes('image').href) : this.editor.isActive('link'),
         }
         this.barreTarget.querySelectorAll('[data-commande]').forEach((bouton) => {
             if (bouton.dataset.commande in actif) {
@@ -383,11 +403,17 @@ export default class extends Controller {
 
     // --- Lien -------------------------------------------------------------------------------------------------------
 
+    // Image sélectionnée (clic sur l'image) : le lien porte sur elle
+    imageChoisie() {
+        return this.editor.state.selection.node?.type.name === 'image'
+    }
+
     ouvrirLien() {
-        const actuel = this.editor.getAttributes('link').href ?? ''
+        const actuel = (this.imageChoisie() ? this.editor.getAttributes('image').href : this.editor.getAttributes('link').href) ?? ''
         this.adresseTarget.value = actuel
         this.erreurLienTarget.textContent = ''
         this.retirerLienTarget.classList.toggle('hidden', actuel === '')
+        this.dialogueLienTarget.querySelector('#titre-lien').textContent = this.imageChoisie() ? 'Lien de l\'image' : 'Lien'
         this.dialogueLienTarget.showModal()
         this.adresseTarget.focus()
     }
@@ -406,6 +432,10 @@ export default class extends Controller {
             return
         }
         this.dialogueLienTarget.close()
+        if (this.imageChoisie()) {
+            this.editor.chain().focus().updateAttributes('image', { href: adresse }).run()
+            return
+        }
         if (this.editor.state.selection.empty && !this.editor.isActive('link')) {
             // Aucun texte sélectionné : l'adresse devient le texte du lien (sans « mailto: »)
             const texte = adresse.replace(/^mailto:/i, '')
@@ -417,6 +447,10 @@ export default class extends Controller {
 
     retirerLien() {
         this.dialogueLienTarget.close()
+        if (this.imageChoisie()) {
+            this.editor.chain().focus().updateAttributes('image', { href: null }).run()
+            return
+        }
         this.editor.chain().focus().extendMarkRange('link').unsetLink().run()
     }
 

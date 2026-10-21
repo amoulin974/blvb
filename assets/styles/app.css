@@ -293,6 +293,15 @@ details[data-code][open] > summary svg { rotate: 180deg; }
 @media (width < 64rem) { .js-toc .toc-link { padding-block: 0.625rem; } }
 .js-toc .toc-link:hover { text-decoration: underline; }
 .js-toc .is-active-link { font-weight: 700; }
+/* Barre de position aux couleurs de la charte (tocbot la met en vert) ; règles (h3) en retrait et plus petites */
+.js-toc .toc-link::before { background-color: var(--color-base-300); }
+.js-toc .is-active-link::before { background-color: var(--color-primary); width: 3px; }
+.js-toc .toc-list .toc-list { padding-left: 0.75rem; }
+.js-toc .toc-list .toc-list .toc-link { font-size: 0.875rem; }
+/* Image cliquable : focus clavier visible autour de l'image ; dans l'éditeur, contour pointillé qui signale le lien */
+.reglement-article a:has(> img) { display: inline-block; border-radius: var(--radius-box); }
+.reglement-article a:has(> img):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.reglement-editeur .ProseMirror a > img { outline: 2px dashed var(--color-primary); outline-offset: 2px; }
 
 /* « Mon équipe » (mon_equipe_controller.js) : lignes et cartes de l'équipe suivie, teintées du jaune d'accent.
    Hors couche pour passer devant les fonds utilitaires (zones de montée/descente, survol). */

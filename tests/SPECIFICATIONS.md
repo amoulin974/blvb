@@ -515,7 +515,7 @@ La fenêtre de saisie elle-même (champs 0 à 2, aide du match interrompu, résu
 ### 4.17 Règlement par saison — `Integration/Service/EditionReglementTest`, `RenduReglementTest`, `Fonctionnel/Front/ReglementPageTest`, `Fonctionnel/Admin/ReglementAdminTest`, `Unitaire/Reglement/` (P1, branche `reglement`, D55 à D59)
 
 **RGL-01 à RGL-03 — Enregistrement du règlement** ✅ (`App\Reglement\EditionReglement`) :
-- **RGL-01** : nettoyage du HTML de l'éditeur (sanitizer `app.reglement`) : scripts, attributs d'événement, styles, `id`, cadres, images externes et liens `javascript:` retirés ; titres, mise en forme, liens `https`, images du site (adresse relative) et codes courts (« [bareme phase=P2] », « = » rétabli) conservés.
+- **RGL-01** : nettoyage du HTML de l'éditeur (sanitizer `app.reglement`) : scripts, attributs d'événement, styles, `id`, cadres, images externes et liens `javascript:` retirés ; titres, mise en forme, liens `https`, images du site (adresse relative), image entourée d'un lien (image cliquable de l'éditeur ; lien `javascript:` retiré, image gardée) et codes courts (« [bareme phase=P2] », « = » rétabli) conservés ; une description d'image qui tente de fermer l'attribut (`"><script>…`) reste du texte encodé.
 - **RGL-02** : enregistrer publie le contenu (date, auteur) et garde le contenu précédent comme version, avec sa date et son auteur ; un enregistrement identique ne crée pas de version.
 - **RGL-03** : restaurer une version la republie ; le contenu remplacé devient à son tour une version.
 

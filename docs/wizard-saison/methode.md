@@ -410,6 +410,11 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - **Piège** : un commentaire Twig `{# … #}` à l'intérieur d'une balise (`{% include … with { … } %}`) casse le lexer, avec
   une erreur « Unexpected character » signalée bien plus loin dans le fichier.
 - **Suite** : essai de l'éditeur dans un navigateur (`reglement.md`, « Reste à faire » 2), puis R5.
+- Retours de l'essai (utilisateur) : sommaire de `/reglement` entièrement déplié, barre de position aux couleurs de la charte,
+  règles en retrait ; le lien cliqué reste marqué (en bas de page, tocbot marquait le titre précédent, qui ne pouvait
+  pas monter en haut de l'écran) ; lien sur une image dans l'éditeur (attribut `href` de l'image, rendu
+  `<a href><img></a>`, gardé par le nettoyage, RGL-01), aides « cliquez sur l'image puis sur Lien ». Une description
+  d'image `"><script>…` reste du texte encodé (RGL-01). Relu par l'ergonome et le webdesigner.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 

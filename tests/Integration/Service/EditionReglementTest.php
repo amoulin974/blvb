@@ -30,7 +30,7 @@ final class EditionReglementTest extends TestIntegration
         return self::service(EditionReglement::class);
     }
 
-    #[TestDox('RGL-01 Nettoyage : scripts, attributs d\'événement, styles, cadres, images externes et liens javascript retirés ; mise en forme, images du site et codes courts conservés')]
+    #[TestDox('RGL-01 Nettoyage : scripts, attributs d\'événement, styles, cadres, images externes et liens javascript retirés ; mise en forme, images du site (cliquables ou non) et codes courts conservés ; description d\'image encodée')]
     public function test_nettoyage(): void
     {
         $propre = $this->edition()->nettoyer(
@@ -39,13 +39,20 @@ final class EditionReglementTest extends TestIntegration
             .'<script>alert(1)</script><iframe src="https://exemple.org"></iframe>'
             .'<img src="/uploads/reglement/a.webp" alt="Filet"><img src="https://exemple.org/b.png" alt="externe">'
             .'<a href="javascript:alert(1)">piège</a><a href="https://www.ffvb.org">FFVB</a>'
+            // Image cliquable (lien posé sur l'image dans l'éditeur) ; description qui tente de fermer l'attribut
+            .'<a href="https://www.ffvb.org"><img src="/uploads/reglement/c.png" alt="Logo"></a>'
+            .'<a href="javascript:alert(1)"><img src="/uploads/reglement/d.png" alt=""></a>'
+            .'<img src="/uploads/reglement/e.png" alt="&quot;&gt;&lt;script&gt;alert(1)&lt;/script&gt;">'
         );
 
         self::assertSame(
             '<h2>RÈGLE 1R : Partie interrompue</h2>'
             .'<p>Texte <strong>gras</strong> [bareme phase=P2]</p>'
             .'<img src="/uploads/reglement/a.webp" alt="Filet" /><img alt="externe" />'
-            .'<a>piège</a><a href="https://www.ffvb.org">FFVB</a>',
+            .'<a>piège</a><a href="https://www.ffvb.org">FFVB</a>'
+            .'<a href="https://www.ffvb.org"><img src="/uploads/reglement/c.png" alt="Logo" /></a>'
+            .'<a><img src="/uploads/reglement/d.png" alt /></a>'
+            .'<img src="/uploads/reglement/e.png" alt="&#34;&gt;&lt;script&gt;alert(1)&lt;/script&gt;" />',
             $propre
         );
     }

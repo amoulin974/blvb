@@ -64,7 +64,7 @@
                         <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11" data-commande="puces" aria-pressed="false" tabindex="-1" aria-label="Liste à puces" title="Liste à puces (Ctrl+Maj+8)">{{ icone.i('liste') }}</button>
                         <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11" data-commande="numeros" aria-pressed="false" tabindex="-1" aria-label="Liste numérotée" title="Liste numérotée (Ctrl+Maj+7)">{{ icone.i('liste-numerotee') }}</button>
                         <span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300"></span>
-                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K)">{{ icone.i('lien') }} Lien</button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} Lien</button>
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="image" aria-pressed="false" tabindex="-1" title="Image (JPG, PNG ou WebP, 2 Mo au plus)">{{ icone.i('image') }} Image</button>
                         <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" data-reglement-editeur-target="fichier" data-action="change->reglement-editeur#envoyerImage" tabindex="-1" aria-hidden="true">
                     </div>
@@ -168,6 +168,7 @@
                 </label>
                 <label class="flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" data-reglement-editeur-target="decorative"> Image décorative (pas de description)</label>
                 <p class="text-sm text-(--color-base-content)/80">Pour changer la description plus tard, supprimez l'image et insérez-la de nouveau.</p>
+                <p class="text-sm text-(--color-base-content)/80">Pour rendre l'image cliquable, cliquez dessus puis sur Lien.</p>
                 <p role="alert" class="form-erreur empty:hidden" data-reglement-editeur-target="erreurImage"></p>
                 <div class="modal-action">
                     <button type="button" class="btn btn-ghost" data-action="reglement-editeur#fermerDialogue">Annuler</button>
