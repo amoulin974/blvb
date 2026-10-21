@@ -197,7 +197,7 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [ ] R6 : schémas dessinés dans un canvas (bibliothèque à choisir, décision à consigner)
 - [ ] Essais restants dans un navigateur : conflit entre deux onglets, historique et restauration, Firefox et Safari
 - [x] TipTap monté en version 3 (3.31.4, faille moyenne de `@tiptap/core` corrigée), vérifié dans Chromium, Firefox et WebKit
-- [ ] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
+- [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
 - [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
 ## À faire hors lots (relevé en relecture)

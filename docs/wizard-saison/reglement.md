@@ -68,9 +68,11 @@ R1 à R5 sont faits sur la branche `reglement` (8 commits, poussée le 21/10/202
    recette `bin/recette reinitialiser --scenario=barrages`) : conflit entre deux onglets, historique et restauration,
    Firefox et Safari pour les dernières versions de l'éditeur (vérifiées seulement dans Chromium).
 3. **Éditeur, points ouverts** :
-   - menu « Plus » sur téléphone (exposant, indice, code) : la barre y occupe encore 4 lignes (proposé par l'ergonome) ;
-   - les boutons Précédent / Suivant du navigateur ne préviennent pas d'une perte de modifications ;
-   - « Historique (N) » ne compte que les versions précédentes, pas la version publiée ;
+   - fait le 22/10/2026 : menu « Plus » sur téléphone (souligné, surligné, exposant, indice, code, citation, séparation,
+     saut de ligne, tableau ; signale une mise en forme active), barre en 2 lignes à 375 px ; page d'édition toujours
+     chargée entièrement (Précédent / Suivant déclenchent l'avertissement du navigateur) ; « Historique (N) » compte la
+     version publiée ; menus ouverts vers le haut et défilants s'ils manquent de place ; relu par l'ergonome et le
+     webdesigner, vérifié dans Chromium, Firefox et WebKit ;
    - fait le 22/10/2026 : TipTap monté en 3.31.4 (faille moyenne de `@tiptap/core` 2.x corrigée, `importmap:audit`
      propre) ; éditeur vérifié dans Chromium, Firefox et WebKit (voir le journal de `methode.md`).
 4. **Fin de branche** : fusion de `reglement` (avec le lot 6, voir `lots.md`) selon D15, puis `main` ; mise à jour de

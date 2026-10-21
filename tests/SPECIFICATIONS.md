@@ -540,7 +540,7 @@ Le lien « Lire la règle 1R » de la fenêtre de saisie (`SaisieScoreTest::test
 - **RGL-18** : aperçu du texte non enregistré : éléments calculés, encart et liste des codes inapplicables (« 1 code n'est pas affiché au public ») ; codes et raisons rendus aussi en données (`codes`), pour les marquer « à vérifier » dans l'éditeur ; rien n'est enregistré.
 - **RGL-19** : résultat d'un élément calculé (« Voir le résultat ») ; phase absente : encart ; code inconnu : 404.
 - **RGL-20** : envoi d'image : PNG accepté, adresse `/uploads/reglement/<24 hex>.png`, fichier enregistré ; contenu qui n'est pas une image (même nommé .png) : 422 « Format non accepté : JPG, PNG ou WebP. » ; jeton CSRF exigé.
-- **RGL-21** : historique (« Version publiée », versions précédentes), consulter une version, la restaurer (jeton CSRF exigé) la republie ; une version d'une autre saison, consultée ou restaurée par l'adresse de cette saison : 404, rien n'est restauré.
+- **RGL-21** : compteur « Historique (N) » qui compte la version publiée ; page d'édition toujours chargée entièrement (`turbo-visit-control` : Précédent / Suivant déclenchent l'avertissement de modifications perdues) ; historique (« Version publiée », versions précédentes), consulter une version, la restaurer (jeton CSRF exigé) la republie ; une version d'une autre saison, consultée ou restaurée par l'adresse de cette saison : 404, rien n'est restauré.
 - **RGL-22** : saison en brouillon : bouton « Enregistrer », statut « Brouillon : visible par le public quand la saison sera lancée », pas de « Voir la page publique » ; `/reglement?saison=<id>` d'un admin ouvre la saison demandée, jamais un brouillon ; sans effet pour un visiteur.
 `Securite/AccesAdminTest` couvre aussi les nouvelles routes `admin_reglement_*`.
 

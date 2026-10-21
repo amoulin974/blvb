@@ -12,13 +12,17 @@
 
 {% block title %}Règlement · {{ saison.nom }}{% endblock %}
 {% block container_width %}max-w-7xl{% endblock %}
+{# Page toujours chargée entièrement, jamais par une visite Turbo : les boutons Précédent / Suivant du navigateur quittent
+   alors vraiment la page et déclenchent l'avertissement « beforeunload » quand des modifications ne sont pas enregistrées
+   (une visite Turbo de retour n'est pas annulable) #}
+{% block stylesheets %}{{ parent() }}<meta name="turbo-visit-control" content="reload">{% endblock %}
 
 {% block body %}
     {% import _self as m %}
     {% set publie = not saison.brouillon %}
     {% set auteur = reglement.modifiePar ? (reglement.modifiePar.prenom ? reglement.modifiePar.prenom|first ~ '. ' : '') ~ reglement.modifiePar.nom : null %}
     {% set misAJour = reglement.modifieLe ? 'mis à jour le ' ~ reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ reglement.modifieLe|date('G \\h i') ~ (auteur ? ' par ' ~ auteur : '') : null %}
-    {% set actions = [{url: path('admin_reglement_historique', {id: saison.id}), label: 'Historique (' ~ reglement.versions|length ~ ')', icone: 'historique'}] %}
+    {% set actions = [{url: path('admin_reglement_historique', {id: saison.id}), label: 'Historique (' ~ (reglement.versions|length + (reglement.id ? 1 : 0)) ~ ')', icone: 'historique'}] %}
     {% if publie %}
         {% set actions = actions|merge([{url: path('front_reglement', {saison: saison.id}), label: 'Voir la page publique', icone: 'externe'}]) %}
     {% endif %}
@@ -62,7 +66,7 @@
 
                 <div id="panneau-rediger" role="tabpanel" aria-labelledby="onglet-rediger" data-reglement-editeur-target="panneauRediger">
                     <div role="toolbar" aria-label="Mise en forme" aria-controls="texte-reglement"
-                         class="sticky top-0 z-10 flex flex-wrap items-center gap-1 border-y border-base-300 bg-base-100 p-1"
+                         class="sticky top-0 z-10 flex flex-wrap items-center gap-1 max-sm:gap-0.5 border-y border-base-300 bg-base-100 p-1"
                          data-reglement-editeur-target="barre" data-action="keydown->reglement-editeur#flecheBarre">
                         {# Libellés complets à partir de sm, abrégés sur téléphone ; aria-label donne le nom complet partout #}
                         <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="partie" aria-pressed="false" aria-label="Titre de partie" title="Titre de partie"><span class="sm:hidden">Partie</span><span class="max-sm:hidden">Titre de partie</span></button>
@@ -77,44 +81,65 @@
                         {# Mise en forme du texte #}
                         {{ m.outil('gras', 'Gras', 'Gras (Ctrl+B)', 'G', 'font-bold') }}
                         {{ m.outil('italique', 'Italique', 'Italique (Ctrl+I)', 'I', 'italic') }}
-                        {{ m.outil('souligne', 'Souligné', 'Souligné (Ctrl+U)', 'S', 'underline') }}
-                        {{ m.outil('surligne', 'Surligné', 'Surligné', '<mark>ab</mark>') }}
-                        {{ m.outil('exposant', 'Exposant', 'Exposant, ex. 1er (Ctrl+.)', 'x<sup>2</sup>') }}
-                        {{ m.outil('indice', 'Indice', 'Indice (Ctrl+,)', 'x<sub>2</sub>') }}
-                        {{ m.outil('code', 'Code (écrit tel quel)', 'Code, écrit tel quel : un code court mis en forme « code » n\'est pas remplacé (Ctrl+E)', icone.i('code')) }}
+                        {{ m.outil('souligne', 'Souligné', 'Souligné (Ctrl+U)', 'S', 'underline max-sm:hidden') }}
+                        {# Sur téléphone, les outils moins courants passent dans le menu « Plus » (fin de la barre) #}
+                        {{ m.outil('surligne', 'Surligné', 'Surligné', '<mark>ab</mark>', 'max-sm:hidden') }}
+                        {{ m.outil('exposant', 'Exposant', 'Exposant, ex. 1er (Ctrl+.)', 'x<sup>2</sup>', 'max-sm:hidden') }}
+                        {{ m.outil('indice', 'Indice', 'Indice (Ctrl+,)', 'x<sub>2</sub>', 'max-sm:hidden') }}
+                        {{ m.outil('code', 'Code (écrit tel quel)', 'Code, écrit tel quel : un code court mis en forme « code » n\'est pas remplacé (Ctrl+E)', icone.i('code'), 'max-sm:hidden') }}
                         {{ separateur }}
                         {# Blocs #}
                         {{ m.outil('puces', 'Liste à puces', 'Liste à puces (Ctrl+Maj+8)', icone.i('liste')) }}
                         {{ m.outil('numeros', 'Liste numérotée', 'Liste numérotée (Ctrl+Maj+7)', icone.i('liste-numerotee')) }}
-                        {{ m.outil('citation', 'Citation', 'Citation (Ctrl+Maj+B)', icone.i('citation')) }}
-                        {{ m.outil('separation', 'Ligne de séparation', 'Ligne de séparation', icone.i('separation'), '', false) }}
-                        {{ m.outil('saut', 'Saut de ligne', 'Saut de ligne dans le même paragraphe (Maj+Entrée)', icone.i('saut-ligne'), '', false) }}
+                        {{ m.outil('citation', 'Citation', 'Citation (Ctrl+Maj+B)', icone.i('citation'), 'max-sm:hidden') }}
+                        {{ m.outil('separation', 'Ligne de séparation', 'Ligne de séparation', icone.i('separation'), 'max-sm:hidden', false) }}
+                        {{ m.outil('saut', 'Saut de ligne', 'Saut de ligne dans le même paragraphe (Maj+Entrée)', icone.i('saut-ligne'), 'max-sm:hidden', false) }}
                         {{ separateur }}
                         {# Alignement du paragraphe, du titre ou de l'image sélectionnée : un menu (menu-deroulant), dont le bouton montre
                            l'alignement en cours #}
                         <details class="dropdown" data-controller="menu-deroulant" data-action="toggle->reglement-editeur#placerMenu">
-                            <summary class="btn btn-ghost btn-sm max-sm:min-h-11 gap-0.5" tabindex="-1"
+                            <summary class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:px-2 gap-0.5" tabindex="-1"
                                      title="Alignement du paragraphe, du titre ou de l'image sélectionnée" data-reglement-editeur-target="alignement">
                                 {# Contenu transparent aux clics : la cible du clic reste le summary, même quand l'icône change #}
                                 <span class="pointer-events-none" data-role="icone-alignement">{{ icone.i('aligne-gauche') }}</span>
                                 <span class="sr-only" data-role="libelle-alignement">Alignement : à gauche</span>
                                 <span class="pointer-events-none">{{ icone.i('fleche-bas', 'size-3') }}</span>
                             </summary>
-                            <ul class="menu dropdown-content z-20 mt-1 w-56 rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+                            <ul class="menu dropdown-content z-20 mt-1 w-56 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
                                 {% for commande, a in {
                                     gauche: {libelle: 'À gauche', court: 'à gauche', icone: 'aligne-gauche'},
                                     centrer: {libelle: 'Centré', court: 'centré', icone: 'centrer', titre: 'Centrer (Ctrl+Maj+E)'},
                                     droite: {libelle: 'À droite', court: 'à droite', icone: 'aligne-droite'},
                                     justifier: {libelle: 'Justifié', court: 'justifié', icone: 'justifier', titre: 'Justifier (paragraphe ou titre seulement)'},
                                 } %}
-                                    <li><button type="button" class="min-h-11" data-commande="{{ commande }}" aria-pressed="false" data-icone="{{ commande }}" data-libelle="{{ a.court }}"{% if a.titre is defined %} title="{{ a.titre }}"{% endif %}>{{ icone.i(a.icone) }} {{ a.libelle }}</button></li>
+                                    <li><button type="button" class="min-h-11" data-commande="{{ commande }}" aria-pressed="false" data-icone="{{ commande }}" data-libelle="{{ a.court }}"{% if a.titre is defined %} title="{{ a.titre }}"{% endif %}><span class="inline-flex w-6 justify-center">{{ icone.i(a.icone) }}</span> {{ a.libelle }}</button></li>
                                 {% endfor %}
                             </ul>
                         </details>
                         {{ separateur }}
-                        {{ m.outil('tableau', 'Insérer un tableau', 'Insérer un tableau (3 lignes, 3 colonnes, avec ligne d\'en-tête)', icone.i('tableau'), '', false) }}
-                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} Lien</button>
-                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="image" tabindex="-1" title="Image (JPG, PNG ou WebP ; au-delà de 2 Mo, elle est réduite automatiquement)">{{ icone.i('image') }} Image</button>
+                        {{ m.outil('tableau', 'Insérer un tableau', 'Insérer un tableau (3 lignes, 3 colonnes, avec ligne d\'en-tête)', icone.i('tableau'), 'max-sm:hidden', false) }}
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} <span class="max-sm:sr-only">Lien</span></button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="image" tabindex="-1" title="Image (JPG, PNG ou WebP ; au-delà de 2 Mo, elle est réduite automatiquement)">{{ icone.i('image') }} <span class="max-sm:sr-only">Image</span></button>
+                        {# Menu « Plus », sur téléphone seulement : outils moins courants ; Lien et Image en icône seule, menus resserrés : la
+                           barre tient en deux lignes à 375 px #}
+                        <details class="dropdown sm:hidden" data-controller="menu-deroulant" data-action="toggle->reglement-editeur#placerMenu">
+                            <summary class="btn btn-ghost btn-sm min-h-11 px-2 gap-0.5" tabindex="-1" title="Autres outils" aria-label="Plus d'outils" data-reglement-editeur-target="plus">Plus <span class="pointer-events-none">{{ icone.i('fleche-bas', 'size-3') }}</span><span class="sr-only" data-role="plus-actif"></span></summary>
+                            <ul class="menu dropdown-content z-20 mt-1 w-60 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+                                {% for commande, o in {
+                                    souligne: {libelle: 'Souligné', icone: '<span class="underline">S</span>'},
+                                    surligne: {libelle: 'Surligné', icone: '<mark>ab</mark>'},
+                                    exposant: {libelle: 'Exposant (ex. 1er)', icone: 'x<sup>2</sup>'},
+                                    indice: {libelle: 'Indice', icone: 'x<sub>2</sub>'},
+                                    code: {libelle: 'Code (écrit tel quel)', icone: icone.i('code')},
+                                    citation: {libelle: 'Citation', icone: icone.i('citation')},
+                                    separation: {libelle: 'Ligne de séparation', icone: icone.i('separation'), action: true},
+                                    saut: {libelle: 'Saut de ligne', icone: icone.i('saut-ligne'), action: true},
+                                    tableau: {libelle: 'Insérer un tableau', icone: icone.i('tableau'), action: true},
+                                } %}
+                                    <li><button type="button" class="min-h-11" data-commande="{{ commande }}"{% if o.action is not defined %} aria-pressed="false"{% endif %}><span class="inline-flex w-6 justify-center" aria-hidden="true">{{ o.icone|raw }}</span> {{ o.libelle }}</button></li>
+                                {% endfor %}
+                            </ul>
+                        </details>
                         <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" data-reglement-editeur-target="fichier" data-action="change->reglement-editeur#envoyerImage" tabindex="-1" aria-hidden="true">
                         {# Actions sur l'image sélectionnée (clic sur l'image) #}
                         <div role="group" aria-label="Image" class="flex w-full flex-wrap items-center gap-1 border-t border-base-300 pt-1" hidden data-reglement-editeur-target="barreImage">

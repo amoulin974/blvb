@@ -187,6 +187,11 @@ final class ReglementAdminTest extends TestFonctionnel
         $version = $this->reglement()->getVersions()->first();
 
         $this->connecter('admin');
+        // Compteur : la version publiée et les versions précédentes
+        $this->client->request('GET', $this->url());
+        self::assertSelectorTextContains('a[href="'.$this->url('/historique').'"]', 'Historique (2)');
+        // Page toujours chargée entièrement (Précédent / Suivant déclenchent l'avertissement de modifications perdues)
+        self::assertSelectorExists('meta[name="turbo-visit-control"][content="reload"]');
         $crawler = $this->client->request('GET', $this->url('/historique'));
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('table', 'Version publiée');

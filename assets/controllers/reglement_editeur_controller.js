@@ -191,7 +191,7 @@ const CodesCourts = Extension.create({
 })
 
 export default class extends Controller {
-    static targets = ['editeur', 'contenu', 'barre', 'barreTableau', 'barreImage', 'infoImage', 'alignement', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
+    static targets = ['editeur', 'contenu', 'barre', 'plus', 'barreTableau', 'barreImage', 'infoImage', 'alignement', 'etat', 'bouton', 'aucuneModification', 'erreur', 'inapplicables', 'annonce',
         'ongletRediger', 'ongletApercu', 'ongletHtml', 'panneauRediger', 'panneauApercu', 'panneauHtml', 'apercu', 'source', 'fichier', 'element',
         'dialogueLien', 'adresse', 'erreurLien', 'retirerLien', 'dialogueImage', 'vignette', 'description', 'decorative', 'erreurImage',
         'dialogueConflit', 'messageConflit']
@@ -245,7 +245,7 @@ export default class extends Controller {
         this.barreTarget.addEventListener('click', (evenement) => {
             const bouton = evenement.target.closest('[data-commande]')
             if (bouton) {
-                this.commande(bouton.dataset.commande)
+                this.commande(bouton.dataset.commande, bouton.closest('.dropdown-content') !== null)
             }
         })
         this.avantDepart = (evenement) => {
@@ -275,7 +275,14 @@ export default class extends Controller {
 
     // --- Barre d'outils -------------------------------------------------------------------------------------------
 
-    commande(nom) {
+    commande(nom, depuisMenu = false) {
+        // Commande venue d'un menu (« Plus », alignement) : le focus est parti de l'éditeur ; le lui rendre d'abord, puis
+        // agir à l'image suivante (sous Safari, le retour du focus efface sinon une mise en forme en attente, ex. exposant)
+        if (depuisMenu && !this.editor.isFocused) {
+            this.editor.view.focus()
+            requestAnimationFrame(() => requestAnimationFrame(() => this.commande(nom)))
+            return
+        }
         const chaine = this.editor.chain().focus()
         switch (nom) {
             case 'partie': chaine.toggleHeading({ level: 2 }).run(); break
@@ -336,11 +343,25 @@ export default class extends Controller {
         if (!menu.open) {
             return
         }
-        menu.classList.remove('dropdown-end')
+        menu.classList.remove('dropdown-end', 'dropdown-top')
+        const contenu = menu.querySelector('.dropdown-content')
+        contenu.style.maxHeight = ''
         const carte = menu.closest('.admin-carte')?.getBoundingClientRect()
-        const liste = menu.querySelector('.dropdown-content').getBoundingClientRect()
-        if (carte && liste.right > carte.right) {
+        if (!carte) {
+            return
+        }
+        const liste = contenu.getBoundingClientRect()
+        if (liste.right > carte.right) {
             menu.classList.add('dropdown-end')
+        }
+        // Trop bas (barre collée en fin de texte) : vers le haut s'il y a plus de place, et défilement si besoin
+        if (liste.bottom > carte.bottom) {
+            const dessous = carte.bottom - liste.top
+            const dessus = menu.getBoundingClientRect().top - carte.top
+            if (dessus > dessous) {
+                menu.classList.add('dropdown-top')
+            }
+            contenu.style.maxHeight = Math.max(dessus, dessous) - 8 + 'px'
         }
     }
 
@@ -385,6 +406,12 @@ export default class extends Controller {
         this.barreTarget.querySelector('[data-commande="justifier"]').disabled = this.imageChoisie()
         this.barreTarget.querySelector('[data-commande="annuler"]').disabled = !e.can().undo()
         this.barreTarget.querySelector('[data-commande="retablir"]').disabled = !e.can().redo()
+        // « Plus » (téléphone) signale une mise en forme active parmi ses entrées
+        if (this.hasPlusTarget) {
+            const actifs = [...this.plusTarget.closest('details').querySelectorAll('[aria-pressed="true"]')]
+            this.plusTarget.toggleAttribute('data-actif', actifs.length > 0)
+            this.plusTarget.querySelector('[data-role="plus-actif"]').textContent = actifs.length > 0 ? ' (une mise en forme active)' : ''
+        }
         this.barreTableauTarget.hidden = !e.isActive('table')
         this.barreImageTarget.hidden = !this.imageChoisie()
     }

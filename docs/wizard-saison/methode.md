@@ -463,6 +463,14 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   Piège du test : cliquer un bouton de la barre puis taper aussitôt perd les premières lettres (le focus revient à
   l'éditeur au rafraîchissement suivant) ; attendre un instant. 614 tests verts.
 
+- **Éditeur, trois points ouverts faits** : menu « Plus » sur téléphone (barre en 2 lignes à 375 px : espacement de 2 px,
+  « Lien » et « Image » en icône seule, menus resserrés ; « Plus » marqué quand une de ses entrées est active) ; page
+  d'édition toujours chargée entièrement (`turbo-visit-control` : une visite Turbo de retour n'est pas annulable, une
+  vraie navigation déclenche `beforeunload`) ; « Historique (N) » compte la version publiée ; menus de la barre ouverts
+  vers le haut et défilants s'ils manquent de place (`placerMenu`). Piège Safari : une commande choisie dans un menu
+  (focus parti de l'éditeur) perdait la mise en forme en attente au retour du focus : focus rendu d'abord, commande à
+  l'image suivante. Relu par l'ergonome et le webdesigner ; vérifié dans Chromium, Firefox et WebKit. 614 tests verts.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout reglement && git pull`. La branche `reglement` (lot 11, en cours)
