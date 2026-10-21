@@ -1,0 +1,66 @@
+{% extends 'base_admin.html.twig' %}
+{# Historique du règlement d'une saison (D56, D59) : version publiée, puis versions précédentes (consulter, restaurer). #}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% macro auteur(user) %}{{ user ? (user.prenom ? user.prenom|first ~ '. ' : '') ~ user.nom : 'Compte supprimé' }}{% endmacro %}
+
+{% block title %}Historique du règlement · {{ saison.nom }}{% endblock %}
+
+{% block body %}
+    {% import _self as m %}
+    {% include 'admin/_entete.html.twig' with {
+        titre: 'Historique du règlement',
+        sous_titre: saison.nom,
+        retour: {url: path('admin_reglement_edit', {id: saison.id}), label: 'Règlement de la saison'},
+    } %}
+
+    <div class="admin-carte">
+        {% if reglement.id is null %}
+            <p>Le règlement de cette saison n'est pas encore rédigé.</p>
+        {% else %}
+            {# td plutôt que th pour la date : .table-admin th met les en-têtes en petites capitales ; cartes sur téléphone #}
+            <table class="table table-admin table-empilee">
+                <caption class="sr-only">Versions du règlement, de la plus récente à la plus ancienne</caption>
+                <thead><tr><th scope="col">Date</th><th scope="col">Auteur</th><th scope="col"><span class="sr-only">Actions</span></th></tr></thead>
+                <tbody>
+                    <tr>
+                        <td data-label="Date">{{ reglement.modifieLe ? reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ reglement.modifieLe|date('G \\h i') : '—' }}</td>
+                        <td data-label="Auteur">{{ m.auteur(reglement.modifiePar) }}</td>
+                        <td class="pleine-largeur"><span class="font-semibold">{{ saison.brouillon ? 'Version actuelle' : 'Version publiée' }}</span></td>
+                    </tr>
+                    {% for version in reglement.versions %}
+                        {% set date = version.enregistreLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ version.enregistreLe|date('G \\h i') %}
+                        <tr>
+                            <td data-label="Date">{{ date }}</td>
+                            <td data-label="Auteur">{{ m.auteur(version.auteur) }}</td>
+                            <td class="pleine-largeur">
+                                <div class="flex flex-wrap gap-2">
+                                    <a class="btn btn-ghost btn-sm max-sm:min-h-11" href="{{ path('admin_reglement_version', {id: saison.id, version: version.id}) }}">Consulter<span class="sr-only"> la version du {{ date }}</span></a>
+                                    {% include 'admin/_confirmation.html.twig' with {
+                                        action: path('admin_reglement_restaurer', {id: saison.id, version: version.id}),
+                                        token: csrf_token('restaurer' ~ version.id),
+                                        titre: 'Restaurer la version du ' ~ date ~ ' (' ~ m.auteur(version.auteur) ~ ') ?',
+                                        consequences: [
+                                            'La version choisie remplace le texte actuel' ~ (saison.brouillon ? '.' : ' et est publiée aussitôt.'),
+                                            'Le texte actuel reste dans l\'historique.',
+                                            'Les éléments calculés suivent les paramètres actuels de la saison.',
+                                        ],
+                                        bouton: saison.brouillon ? 'Restaurer' : 'Restaurer et publier',
+                                        ton: 'warning',
+                                        irreversible: false,
+                                        declencheur: 'Restaurer',
+                                        declencheur_sr: 'la version du ' ~ date,
+                                        declencheur_classe: 'btn btn-ghost btn-sm max-sm:min-h-11',
+                                        declencheur_icone: 'restaurer',
+                                    } %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td colspan="3" class="pleine-largeur">Aucune version précédente.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+{% endblock %}

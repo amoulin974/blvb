@@ -7,7 +7,7 @@
     {{ include('admin/_entete.html.twig', {
         titre: 'Saisons',
         sous_titre: 'Une seule saison est affichée sur le site public ; les autres restent consultables par les visiteurs dans le sélecteur de saison.',
-        actions: [{url: path('admin_saison_new'), label: 'Créer une saison', icone: 'plus', principal: true}],
+        actions: [{url: path('admin_saison_wizard_nouvelle'), label: 'Créer une saison', icone: 'plus', principal: true}],
     }) }}
     <div class="admin-carte max-lg:overflow-x-auto">
         <table class="table table-admin">
@@ -23,7 +23,9 @@
                 <tr>
                     <td><a class="font-display text-lg font-semibold tracking-wide text-(--color-primary) hover:underline" href="{{ path('admin_saison_show', {id: saison.id}) }}">{{ saison.nom }}</a></td>
                     <td>
-                        {% if saison.favori %}
+                        {% if saison.brouillon %}
+                            <span class="badge badge-outline">Brouillon · étape {{ saison.etapeWizard|default(2) }} sur 6</span>
+                        {% elseif saison.favori %}
                             <span class="badge badge-accent gap-1">{{ icone.i('etoile', 'size-3.5') }} Affichée sur le site</span>
                         {% else %}
                             <form method="post" action="{{ path('admin_saison_favorite', {id: saison.id}) }}">
@@ -33,8 +35,19 @@
                         {% endif %}
                     </td>
                     <td class="text-right whitespace-nowrap">
-                        <a href="{{ path('admin_saison_show', {id: saison.id}) }}" class="btn btn-ghost btn-sm">Piloter</a>
-                        <a href="{{ path('admin_saison_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier {{ saison.nom }}">{{ icone.i('crayon') }} Modifier</a>
+                        {% if saison.brouillon %}
+                            {# Brouillon (D29) : on le reprend ou on le supprime ; il n'a encore rien à piloter #}
+                            <div class="inline-flex gap-2">
+                                <a href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: saison.etapeWizard|default(2)}) }}" class="btn btn-primary btn-sm">Reprendre<span class="sr-only"> la création de {{ saison.nom }}</span></a>
+                                <form method="post" action="{{ path('admin_saison_delete', {id: saison.id}) }}" data-turbo-confirm="Supprimer le brouillon {{ saison.nom }} ? Ses phases, poules et passages seront supprimés.">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ saison.id) }}">
+                                    <button type="submit" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer le brouillon {{ saison.nom }}">{{ icone.i('poubelle') }} Supprimer</button>
+                                </form>
+                            </div>
+                        {% else %}
+                            <a href="{{ path('admin_saison_show', {id: saison.id}) }}" class="btn btn-ghost btn-sm">Piloter</a>
+                            <a href="{{ path('admin_saison_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier {{ saison.nom }}">{{ icone.i('crayon') }} Modifier</a>
+                        {% endif %}
                     </td>
                 </tr>
             {% else %}

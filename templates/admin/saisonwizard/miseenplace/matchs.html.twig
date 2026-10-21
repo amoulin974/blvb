@@ -1,0 +1,267 @@
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{# Mise en place, étape « Matchs » (docs/wizard-saison/ecrans-mise-en-place.md, §15 à §21). Variables : saison, phase,
+   phases, etat (MiseEnPlaceMatchs::etat). Chaque action est un envoi du formulaire unique qui enregistre et réaffiche
+   l'étape ; la génération passe par la fenêtre de confirmation partagée (qui annonce l'attente du calcul). #}
+{% block title %}Étape 9 sur 9 : Matchs · {{ saison.nom }}{% endblock %}
+
+{# « Replacer les matchs à venir » : ne touche pas aux matchs joués. La case est lue côté serveur (confirme-{cible}) ;
+   le bloc reste ouvert après un refus (ouvert). cadre : bordure propre (hors carte de poule, déjà cadrée). #}
+{% macro replacer(cible, nom, aVenir, joues, passes, ouvert, cadre) %}
+    {% import 'admin/_icones.html.twig' as icone %}
+    {% if aVenir == 0 %}
+        <p class="text-sm text-(--color-base-content)/80">Aucun match à venir à replacer.</p>
+    {% else %}
+        <details class="w-full sm:w-auto open:sm:w-full {{ cadre ? 'rounded-box border border-base-300 p-3' : '' }}" {% if ouvert %}open{% endif %}>
+            <summary class="btn btn-ghost btn-sm min-h-11 w-full sm:w-auto">{{ icone.i('calendrier') }} Replacer les matchs à venir<span class="sr-only"> {{ nom }}</span></summary>
+            <div class="mt-3 space-y-3 text-sm">
+                <p id="replacer-aide-{{ cible }}">Seuls les matchs sans score sont refaits ; les matchs joués ne changent pas.</p>
+                <ul class="list-disc space-y-1 pl-5">
+                    <li>{{ aVenir }} match{{ aVenir > 1 ? 's' : '' }} à venir {{ aVenir > 1 ? 'seront supprimés' : 'sera supprimé' }}, puis {{ aVenir > 1 ? 'replacés' : 'replacé' }} dans la même journée.</li>
+                    <li>{{ joues }} match{{ joues > 1 ? 's' : '' }} déjà joué{{ joues > 1 ? 's' : '' }} ne {{ joues > 1 ? 'changent' : 'change' }} pas.</li>
+                    <li>Les dates et les gymnases modifiés à la main seront perdus.</li>
+                </ul>
+                {% if passes > 0 %}
+                    <p><strong class="font-semibold">{{ passes }} match{{ passes > 1 ? 's' : '' }} sans score {{ passes > 1 ? 'ont' : 'a' }} une date déjà passée.</strong> Vérifiez {{ passes > 1 ? 'qu\'ils n\'ont' : 'qu\'il n\'a' }} pas été joué{{ passes > 1 ? 's' : '' }} sans que le score soit saisi.</p>
+                {% endif %}
+                <label class="flex min-h-11 cursor-pointer items-center gap-3">
+                    <input type="checkbox" class="checkbox" name="confirme-{{ cible }}" value="1" aria-describedby="replacer-aide-{{ cible }}">
+                    <span>J'ai saisi tous les scores des matchs déjà joués.</span>
+                </label>
+                <button type="submit" name="action" value="replacer-{{ cible }}" class="btn btn-warning btn-sm min-h-11 w-full sm:w-auto">Confirmer le replacement<span class="sr-only"> {{ nom }}</span></button>
+            </div>
+        </details>
+    {% endif %}
+{% endmacro %}
+
+{% block body %}
+    {% import _self as m %}
+    {% set url = path('admin_saison_miseenplace_matchs', {id: saison.id, phase: phase.id}) %}
+    {% set nb_poules = etat.poules|length %}
+    {% set des_matchs = etat.crees > 0 %}
+    {% set erreurs = etat.problemes|filter(p => p.niveau == 'error') %}
+    {% set avertissements = etat.problemes|filter(p => p.niveau != 'error') %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Créer les matchs : ' ~ saison.nom,
+        sous_titre: phase.nom ~ ' · générez les matchs, puis ajustez-les poule par poule.',
+        retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom},
+    }) }}
+
+    <nav aria-label="Étapes de la saison" class="mb-6">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Mise en place</p>
+        <ol class="steps steps-wizard w-full">
+            <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 6}) }}"><span class="max-md:sr-only">Organisation</span><span class="sr-only"> (étapes 1 à 6, faites)</span></a></li>
+            <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_miseenplace_poules', {id: saison.id, phase: phase.id}) }}"><span class="max-md:sr-only">Poules</span><span class="sr-only"> (étape 7, faite)</span></a></li>
+            <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_miseenplace_journees', {id: saison.id, phase: phase.id}) }}"><span class="max-md:sr-only">Journées</span><span class="sr-only"> (étape 8, faite)</span></a></li>
+            <li class="step step-primary" data-content="9" aria-current="step"><span class="max-md:sr-only font-semibold">Matchs</span></li>
+        </ol>
+        <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape 9 sur 9 · Matchs</p>
+    </nav>
+
+    {% if phases|length > 1 %}
+        <nav aria-label="Phase à organiser" class="mb-4">
+            <ul class="flex flex-wrap gap-2">
+                {% for p in phases %}
+                    <li><a href="{{ path('admin_saison_miseenplace_matchs', {id: saison.id, phase: p.id}) }}" class="btn btn-sm {{ p.id == phase.id ? 'btn-primary' : 'btn-ghost' }} min-h-11" {% if p.id == phase.id %}aria-current="page"{% endif %}>{{ p.nom }}{% if p.close %} <span class="sr-only">(clôturée)</span>{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+    {% endif %}
+
+    <div class="admin-carte">
+        <h2 id="titre-etape" class="mb-2" tabindex="-1">Matchs de {{ phase.nom }}</h2>
+        {% if nb_poules > 0 %}
+            <p class="mb-4">
+                {{ etat.crees }} match{{ etat.crees > 1 ? 's' : '' }} créé{{ etat.crees > 1 ? 's' : '' }} sur {{ etat.prevus }} prévu{{ etat.prevus > 1 ? 's' : '' }}.
+                {% if etat.sansMatch > 0 and des_matchs %}{{ etat.sansMatch }} poule{{ etat.sansMatch > 1 ? 's' : '' }} sans match.{% endif %}
+            </p>
+        {% endif %}
+
+        {% if etat.cloturee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est clôturée : ses matchs ne peuvent plus être modifiés ici.{% endblock %}{% endembed %}
+        {% elseif etat.verrouillee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est lancée : les matchs joués sont figés. Vous pouvez replacer les matchs à venir.{% endblock %}{% endembed %}
+        {% elseif nb_poules > 0 and not des_matchs and not etat.journeesManquantes %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Les matchs ne sont pas encore créés.{% endblock %}{% endembed %}
+        {% endif %}
+
+        {# Erreurs (elles bloquent « Terminer ») et avertissements dans deux alertes, pour que seuls les blocages soient rouges #}
+        {% if erreurs is not empty %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">À corriger : {{ phase.nom }}</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for p in erreurs %}
+                        <li>
+                            {% if p.ancre %}<a class="underline" href="#{{ p.ancre }}">{{ p.texte }}</a>{% else %}{{ p.texte }}{% endif %}
+                            {% if p.lien == 'journees' and not etat.verrouillee %} <a class="underline" href="{{ path('admin_saison_miseenplace_journees', {id: saison.id, phase: phase.id}) }}">Modifier les journées</a>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+        {% if avertissements is not empty %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'warning', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">À vérifier : {{ phase.nom }}</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for p in avertissements %}
+                        <li>
+                            {% if p.ancre %}<a class="underline" href="#{{ p.ancre }}">{{ p.texte }}</a>{% else %}{{ p.texte }}{% endif %}
+                            {% if p.lien == 'equipes' %} <a class="underline" href="{{ path('admin_equipe_index') }}">Voir les équipes</a>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+
+        {% if etat.poules|length > 4 %}
+            <table class="table-admin table-empilee mb-4 max-lg:hidden">
+                <caption class="sr-only">Matchs des poules de {{ phase.nom }}</caption>
+                <thead><tr><th scope="col">Poule</th><th scope="col">Équipes</th><th scope="col">Créés</th><th scope="col">Prévus</th><th scope="col">État</th></tr></thead>
+                <tbody>
+                    {% for p in etat.poules %}
+                        <tr>
+                            <th scope="row" data-label="Poule"><a class="underline" href="#poule-{{ p.poule.id }}">{{ p.poule.nom }}</a></th>
+                            <td data-label="Équipes">{{ p.effectif }}</td>
+                            <td data-label="Créés">{{ p.crees }}</td>
+                            <td data-label="Prévus">{{ p.prevus }}</td>
+                            <td data-label="État">{% if p.statut == 'ok' %}{{ icone.i('coche', 'size-3.5') }} Complet{% elseif p.statut == 'ecart' %}{{ icone.i('alerte', 'size-3.5') }} Écart à vérifier{% elseif p.statut == 'impossible' %}{{ icone.i('erreur', 'size-3.5') }} Pas assez d'équipes{% elseif p.statut == 'sans_journees' %}{{ icone.i('erreur', 'size-3.5') }} Journées manquantes{% else %}{{ icone.i('erreur', 'size-3.5') }} Aucun match{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <form id="wizard-form" method="post" action="{{ url }}" data-controller="poules-pliables position-defilement" data-action="submit->position-defilement#memoriser">
+            <input type="hidden" name="_token" value="{{ csrf_token('miseenplace' ~ saison.id) }}">
+
+            {% if not etat.verrouillee and nb_poules > 0 and not etat.journeesManquantes %}
+                <div class="mb-3">
+                    {{ include('admin/_confirmation.html.twig', {
+                        declencheur: des_matchs ? 'Régénérer les matchs de la phase' : 'Générer les matchs de la phase',
+                        declencheur_classe: 'btn ' ~ (des_matchs ? 'btn-ghost' : 'btn-primary') ~ ' min-h-11 w-full sm:w-auto',
+                        declencheur_icone: 'calendrier',
+                        titre: (des_matchs ? 'Régénérer' : 'Générer') ~ ' les matchs de ' ~ phase.nom ~ ' ?',
+                        consequences: des_matchs ? [
+                            etat.crees ~ ' match' ~ (etat.crees > 1 ? 's' : '') ~ ' de toutes les poules ' ~ (etat.crees > 1 ? 'seront supprimés' : 'sera supprimé') ~ ', puis recréés.',
+                            'Les dates et les gymnases modifiés à la main seront perdus.',
+                            'Priorités du calcul : aucun gymnase surchargé, puis alternance domicile / extérieur, puis moins de déplacements de suite.',
+                            'Le calcul peut prendre une dizaine de secondes : patientez sans recharger la page.',
+                        ] : [
+                            'Les poules sont calculées ensemble pour partager au mieux les gymnases.',
+                            'Priorités du calcul : aucun gymnase surchargé, puis alternance domicile / extérieur, puis moins de déplacements de suite.',
+                            'Le calcul peut prendre une dizaine de secondes : patientez sans recharger la page.',
+                        ],
+                        action: url,
+                        token: csrf_token('miseenplace' ~ saison.id),
+                        bouton: des_matchs ? 'Supprimer et régénérer' : 'Lancer le calcul',
+                        champs: {action: 'generer-phase'},
+                        irreversible: false,
+                        ton: des_matchs ? 'warning' : 'primary',
+                        attente: 'Calcul en cours',
+                    }) }}
+                </div>
+            {% endif %}
+            {% if not etat.cloturee and etat.verrouillee and etat.joues > 0 %}
+                <div class="mb-3">{{ m.replacer('phase', 'de la phase', etat.aVenir, etat.joues, etat.poules|map(q => q.aVenirPasses)|reduce((a, b) => a + b, 0), app.request.query.get('replacer') == 'phase', true) }}</div>
+            {% endif %}
+            {% if nb_poules > 0 %}
+                <p class="mb-1 min-h-11 text-sm">
+                    <a class="inline-flex min-h-11 items-center underline" href="{{ path('admin_phase_optimiser', {id: phase.id}) }}">Analyser l'alternance et la charge des gymnases</a>
+                </p>
+                {% if des_matchs %}<p class="mb-4 text-sm text-(--color-base-content)/80 lg:hidden">Le calendrier et l'analyse s'utilisent mieux sur un grand écran.</p>{% endif %}
+            {% endif %}
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                {% for p in etat.poules %}
+                    {% set poule = p.poule %}
+                    {% set vide = p.crees == 0 %}
+                    <details id="poule-{{ poule.id }}" name="poules" data-poule class="group rounded-box p-3 scroll-mt-20 {{ vide ? 'border-2 border-(--color-primary)' : 'border border-base-300' }}" {% if vide or loop.first %}open{% endif %}>
+                        <summary class="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-2 gap-y-1">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ poule.nom }}</strong>
+                            <span class="text-sm text-(--color-base-content)/80">{{ p.effectif }} équipe{{ p.effectif > 1 ? 's' : '' }}</span>
+                            <span class="badge badge-outline h-auto py-1 {{ p.statut != 'ok' ? 'badge-ecart' : '' }}">
+                                {% if vide %}Aucun match{% else %}{{ p.crees }} match{{ p.crees > 1 ? 's' : '' }} sur {{ p.prevus }} prévu{{ p.prevus > 1 ? 's' : '' }}{% endif %}
+                                {% if p.statut == 'ok' %}{{ icone.i('coche', 'size-3.5') }}<span class="sr-only">(conforme)</span>{% elseif p.statut == 'ecart' %}{{ icone.i('alerte', 'size-3.5') }}<span class="sr-only">(écart à vérifier)</span>{% else %}{{ icone.i('erreur', 'size-3.5') }}{% endif %}
+                            </span>
+                            <span class="ml-auto text-(--color-primary) lg:hidden">{{ icone.i('fleche-bas', 'size-5 transition-transform group-open:rotate-180') }}<span class="sr-only">Afficher ou masquer les détails</span></span>
+                        </summary>
+
+                        {% if vide %}
+                            <p class="mt-2 text-sm">
+                                {% if p.statut == 'impossible' %}Il faut au moins deux équipes dans la poule pour créer des matchs.
+                                {% elseif p.statut == 'sans_journees' %}Les journées de cette poule ne sont pas toutes créées : <a class="underline" href="{{ path('admin_saison_miseenplace_journees', {id: saison.id, phase: phase.id}) }}">créez-les d'abord</a>.
+                                {% else %}Aucun match pour l'instant.{% endif %}
+                            </p>
+                        {% else %}
+                            <p class="mt-2 text-sm text-(--color-base-content)/80">
+                                {% if p.deplacements is not null %}{{ p.deplacements }} déplacement{{ p.deplacements > 1 ? 's' : '' }} de suite.{% elseif p.reception %}{{ p.reception }}{% else %}Tableau placé dans l'ordre des équipes de la poule : les premières sont exemptées des barrages.{% endif %}
+                            </p>
+                        {% endif %}
+
+                        {% if not etat.cloturee and (not vide or (des_matchs and p.statut == 'aucun')) %}
+                            <div class="mt-3 flex flex-col gap-2 border-t border-base-300 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
+                                {% if vide %}
+                                    {{ include('admin/_confirmation.html.twig', {
+                                        declencheur: 'Générer les matchs de la poule',
+                                        declencheur_sr: poule.nom,
+                                        declencheur_classe: 'btn btn-primary btn-sm min-h-11 w-full sm:w-auto',
+                                        declencheur_icone: false,
+                                        titre: 'Générer les matchs de ' ~ poule.nom ~ ' ?',
+                                        consequences: [
+                                            'Ce calcul tient compte des matchs déjà créés dans les autres poules.',
+                                            'Le calcul peut prendre quelques secondes : patientez sans recharger la page.',
+                                        ],
+                                        action: url,
+                                        token: csrf_token('miseenplace' ~ saison.id),
+                                        bouton: 'Lancer le calcul',
+                                        champs: {action: 'generer-' ~ poule.id},
+                                        irreversible: false,
+                                        ton: 'primary',
+                                        attente: 'Calcul en cours',
+                                    }) }}
+                                {% else %}
+                                    <a class="btn btn-ghost btn-sm min-h-11 w-full sm:w-auto" href="{{ path('admin_partie_getpartiecalendarall', {id: poule.id}) }}">{{ icone.i('calendrier') }} Ajuster dans le calendrier<span class="sr-only"> de {{ poule.nom }}</span></a>
+                                    {% if p.joues > 0 %}
+                                        {{ m.replacer(poule.id, 'de ' ~ poule.nom, p.aVenir, p.joues, p.aVenirPasses, app.request.query.get('replacer') == (poule.id ~ ''), false) }}
+                                    {% else %}
+                                    {{ include('admin/_confirmation.html.twig', {
+                                        declencheur: 'Régénérer les matchs de la poule',
+                                        declencheur_sr: poule.nom,
+                                        declencheur_classe: 'btn btn-ghost btn-sm min-h-11 w-full sm:w-auto',
+                                        declencheur_icone: false,
+                                        titre: 'Régénérer les matchs de ' ~ poule.nom ~ ' ?',
+                                        consequences: [
+                                            p.crees ~ ' match' ~ (p.crees > 1 ? 's' : '') ~ ' de la poule ' ~ (p.crees > 1 ? 'seront supprimés' : 'sera supprimé') ~ ', puis recréés.',
+                                            'Les autres poules ne sont pas recalculées : le résultat d\'ensemble sera au mieux égal, souvent moins bon qu\'avec « Régénérer les matchs de la phase ».',
+                                            'Le calcul peut prendre quelques secondes : patientez sans recharger la page.',
+                                        ],
+                                        action: url,
+                                        token: csrf_token('miseenplace' ~ saison.id),
+                                        bouton: 'Supprimer et régénérer',
+                                        champs: {action: 'regenerer-' ~ poule.id},
+                                        irreversible: false,
+                                        ton: 'warning',
+                                        attente: 'Calcul en cours',
+                                    }) }}
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </details>
+                {% endfor %}
+            </div>
+
+            {% if etat.raison %}<p id="raison-validation" class="mt-4 w-full text-sm lg:text-right">{{ etat.raison }}</p>{% endif %}
+            <div class="mt-6 flex justify-end gap-2 lg:hidden">
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>
+            </div>
+            <div class="wizard-navigation mt-2 lg:mt-6 flex flex-wrap items-center gap-2">
+                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent<span class="max-sm:hidden"> : Journées</span></button>
+                <span class="flex-1 max-lg:hidden"></span>
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost max-lg:hidden">Enregistrer et quitter</button>
+                <button type="submit" name="aller" value="terminer" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Terminer<span class="max-sm:hidden"> la mise en place</span></button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

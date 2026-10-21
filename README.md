@@ -104,6 +104,29 @@ INSERT INTO `user`(`id`, `email`, `roles`, `password`, `is_verified`, `nom`, `pr
 symfony server:start
 ```
 
+### 9. Changer de branche : aligner la base locale
+
+Chaque branche peut apporter ses migrations. Après un changement de branche, `bin/base` (depuis WSL, conteneurs
+démarrés) met la base qu'utilise l'application (`blvb_new`, ou `blvb_recette` après `bin/recette utiliser`) dans
+l'état attendu par la branche :
+```bash
+bin/base etat          # migrations à appliquer, ou venues d'une autre branche
+bin/base aligner       # sauvegarde, annule les migrations absentes de la branche, applique celles de la branche
+bin/base sauvegardes   # liste des sauvegardes (~/.local/share/blvb/sauvegardes-base/)
+bin/base restaurer     # remet la sauvegarde la plus récente (ou celle donnée en argument)
+bin/base rappel        # une fois : après chaque changement de branche, git signale une base non alignée
+```
+Pour annuler une migration venue d'une autre branche, `aligner` reprend son fichier dans l'historique git le temps
+de l'annulation. Usage local uniquement ; en production, les migrations s'appliquent au déploiement.
+
+### 10. Lancer les tests
+
+```bash
+docker compose exec php composer tests     # tests automatisés (hors tests lents)
+docker compose exec php composer qualite   # Twig, YAML, conteneur de services
+```
+Mode d'emploi complet (première installation, cibler un test, base de recette, CI) : [`tests/README.md`](tests/README.md).
+
 
 ---
 

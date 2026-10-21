@@ -1,0 +1,95 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block titre_etape %}Classement{% endblock %}
+
+{% block contenu %}
+    {% set valeursSaison = {victoire_forte: saison.pointsVictoireForte, victoire_faible: saison.pointsVictoireFaible, defaite_forte: saison.pointsDefaiteForte, defaite_faible: saison.pointsDefaiteFaible, forfait: saison.pointsForfait} %}
+    <form id="wizard-form" method="post" novalidate>
+        <input type="hidden" name="_token" value="{{ csrf_token('wizard' ~ saison.id) }}">
+
+        {% if erreurs is not empty %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">Points à corriger (rien n'a été enregistré)</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">{% for e in erreurs %}<li>{{ e }}</li>{% endfor %}</ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+
+        <fieldset class="fieldset border border-base-300 rounded-box p-4">
+            <legend class="fieldset-legend">Points attribués à chaque match</legend>
+            <table class="table table-admin max-w-xl">
+                <thead><tr><th>Résultat</th><th>Points</th></tr></thead>
+                <tbody>
+                {% for cle, b in bareme %}
+                    <tr>
+                        <td><label for="bareme-{{ cle }}">{{ b[1] }}</label>{% if b[2] %}<p class="text-sm text-(--color-base-content)/80">{{ b[2] }}</p>{% endif %}</td>
+                        <td><input id="bareme-{{ cle }}" name="bareme[{{ cle }}]" type="text" inputmode="text" pattern="-?[0-9]{1,2}" class="input input-bordered champ-court text-center tabular-nums" value="{{ saisie ? saisie.bareme[cle]|default('') : valeursSaison[cle] }}"></td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="mt-4 flex flex-col gap-3">
+                {% for phase in phases %}
+                    {% set propre = phase.bareme is not null %}
+                    {% set aucun = propre and phase.bareme|filter(v => v != 0)|length == 0 and phase.bareme|length == bareme|length %}
+                    <details class="rounded-box border border-base-300 p-3" {% if propre %}open{% endif %}>
+                        <summary class="cursor-pointer font-semibold min-h-11">Barème propre : {{ phase.nom }}{% if propre %} <span class="badge badge-outline ml-2">Barème propre</span>{% endif %}</summary>
+                        <label class="mt-2 flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" name="phase[{{ phase.id }}][propre]" value="1" {% if propre %}checked{% endif %}> Barème différent pour cette phase</label>
+                        <fieldset class="pl-7">
+                            <legend class="sr-only">Barème, {{ phase.nom }}</legend>
+                            <label class="flex min-h-11 items-center gap-2"><input type="radio" class="radio" name="phase[{{ phase.id }}][mode]" value="aucun" {% if not propre or aucun %}checked{% endif %}> Aucun point (tableau, barrage)</label>
+                            <label class="flex min-h-11 items-center gap-2"><input type="radio" class="radio" name="phase[{{ phase.id }}][mode]" value="autre" {% if propre and not aucun %}checked{% endif %}> Autre barème :</label>
+                            <div class="flex flex-wrap gap-3 pl-7">
+                                {% for cle, b in bareme %}
+                                    <label class="flex flex-col gap-1 text-sm">{{ b[1] }}<input name="phase[{{ phase.id }}][{{ cle }}]" type="text" inputmode="text" pattern="-?[0-9]{1,2}" class="input input-bordered champ-court text-center" placeholder="{{ valeursSaison[cle] }}" value="{{ propre and not aucun ? phase.bareme[cle]|default('') : '' }}"></label>
+                                {% endfor %}
+                            </div>
+                            <p class="mt-1 pl-7 text-sm text-(--color-base-content)/80">Laissez vide : valeur de la saison.</p>
+                        </fieldset>
+                    </details>
+                {% endfor %}
+            </div>
+        </fieldset>
+
+        <fieldset id="departage" class="fieldset border border-base-300 rounded-box p-4 mt-4 scroll-mt-20">
+            <legend class="fieldset-legend">Pour départager les équipes à égalité</legend>
+            <p class="text-sm text-(--color-base-content)/80">Les critères s'appliquent dans l'ordre de la liste : on ne passe au suivant que si les équipes sont encore à égalité.</p>
+            <ol class="mt-2 flex flex-col gap-2">
+                {% for i, c in criteres %}
+                    <li class="flex flex-wrap items-center gap-2 rounded-box border border-base-300 px-3 py-2">
+                        <input type="hidden" name="departage[]" value="{{ c.value }}">
+                        <strong class="w-8">{{ i + 1 }}.</strong>
+                        <span class="flex-1 min-w-48"><span class="block font-semibold">{{ c.libelle }}</span><span class="block text-sm text-(--color-base-content)/80">{{ c.aide }}</span></span>
+                        {{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-critere-' ~ i, bas: 'descendre-critere-' ~ i, cible: c.libelle, premier: loop.first, dernier: loop.last}) }}
+                        <button type="submit" name="action" value="retirer-critere-{{ i }}" class="btn btn-ghost min-h-11" aria-label="Retirer {{ c.libelle }}">Retirer</button>
+                    </li>
+                {% endfor %}
+                <li class="flex items-center gap-2 rounded-box border border-dashed border-base-300 px-3 py-2 text-(--color-base-content)/80">{{ icone.i('cadenas') }} <strong>Ordre alphabétique</strong> — toujours appliqué en dernier, pour un classement stable.</li>
+            </ol>
+            {% if disponibles is not empty %}
+                <div class="mt-3 flex flex-wrap items-end gap-2">
+                    <div>
+                        <label for="nouveau_critere" class="label font-semibold">Ajouter un critère</label>
+                        <select id="nouveau_critere" name="nouveau_critere" class="select select-bordered">
+                            {% for c in disponibles %}<option value="{{ c.value }}">{{ c.libelle }}</option>{% endfor %}
+                        </select>
+                    </div>
+                    <button type="submit" name="action" value="ajouter-critere" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter</button>
+                </div>
+            {% endif %}
+        </fieldset>
+
+        <section class="mt-4 rounded-box border border-base-300 bg-base-200/40 p-4" aria-labelledby="criteres-expliques">
+            <h3 id="criteres-expliques">Les critères expliqués</h3>
+            <dl class="mt-2 grid gap-4 md:grid-cols-2">
+                <div><dt class="font-semibold">Différence de sets</dt><dd>Sets gagnés moins sets perdus sur toute la poule.<br><span class="text-sm text-(--color-base-content)/80">Exemple : 30 sets gagnés et 12 perdus = +18.</span></dd></div>
+                <div><dt class="font-semibold">Quotient de sets</dt><dd>Sets gagnés divisés par sets perdus (règle de la FFVB). Utile quand les équipes n'ont pas joué le même nombre de matchs (reports, forfaits, poules de tailles différentes). Une équipe qui n'a perdu aucun set passe devant.<br><span class="text-sm text-(--color-base-content)/80">Exemple : 9 gagnés pour 3 perdus = 3,00 passe devant 12 gagnés pour 6 perdus = 2,00, alors que la différence (+6 contre +6) les laisse à égalité.</span></dd></div>
+                <div><dt class="font-semibold">Confrontation directe</dt><dd>Entre deux équipes à égalité, celle qui a gagné le dernier match joué entre elles passe devant. Pensée pour deux équipes : à trois ou plus, elle peut tourner en rond (A bat B, B bat C, C bat A). Sans match joué entre elles, le critère suivant s'applique.<br><span class="text-sm text-(--color-base-content)/80">Exemple : A et B à 15 points ; A a gagné le match retour → A devant.</span></dd></div>
+                <div><dt class="font-semibold">Mini-classement entre les équipes à égalité</dt><dd>Quand plusieurs équipes sont à égalité, on refait un classement avec seulement les matchs qu'elles ont joués entre elles : points, puis différence de sets. Recommandé quand 3 équipes ou plus peuvent finir à égalité.<br><span class="text-sm text-(--color-base-content)/80">Exemple : A, B et C à 12 points. Entre elles : A a 7 points, B 6, C 5 → A, puis B, puis C.</span></dd></div>
+            </dl>
+        </section>
+
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    </form>
+{% endblock %}

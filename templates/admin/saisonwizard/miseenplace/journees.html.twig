@@ -1,0 +1,186 @@
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{# Mise en place, étape « Journées » (docs/wizard-saison/ecrans-mise-en-place.md, §8 à §14). Variables : saison, phase,
+   phases, etat (MiseEnPlaceJournees::etat). Chaque action est un envoi du formulaire unique qui enregistre et réaffiche
+   l'étape ; « Régénérer » passe par la fenêtre de confirmation partagée. #}
+{% block title %}Étape 8 sur 9 : Journées · {{ saison.nom }}{% endblock %}
+
+{# « 14/09 → 20/09 » ; l'année n'est ajoutée que si la journée enjambe deux années. #}
+{% macro dates(j) %}
+    {%- set avec_annee = j.dateDebut|date('Y') != j.dateFin|date('Y') -%}
+    <time datetime="{{ j.dateDebut|date('Y-m-d') }}">{{ j.dateDebut|date(avec_annee ? 'd/m/Y' : 'd/m') }}</time> → <time datetime="{{ j.dateFin|date('Y-m-d') }}">{{ j.dateFin|date(avec_annee ? 'd/m/Y' : 'd/m') }}</time>
+{%- endmacro %}
+
+{% block body %}
+    {% import _self as m %}
+    {% set url = path('admin_saison_miseenplace_journees', {id: saison.id, phase: phase.id}) %}
+    {% set nb_poules = etat.poules|length %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Créer les journées : ' ~ saison.nom,
+        sous_titre: phase.nom ~ ' · chaque changement est enregistré tout de suite.',
+        retour: {url: path('admin_saison_show', {id: saison.id}), label: saison.nom},
+    }) }}
+
+    <nav aria-label="Étapes de la saison" class="mb-6">
+        <p class="mb-2 text-sm font-semibold uppercase tracking-wide text-(--color-base-content)/80">Mise en place</p>
+        <ol class="steps steps-wizard w-full">
+            <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 6}) }}"><span class="max-md:sr-only">Organisation</span><span class="sr-only"> (étapes 1 à 6, faites)</span></a></li>
+            <li class="step step-primary relative" data-content="✓"><a class="max-md:absolute max-md:inset-0 max-md:z-10 rounded-box hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)" href="{{ path('admin_saison_miseenplace_poules', {id: saison.id, phase: phase.id}) }}"><span class="max-md:sr-only">Poules</span><span class="sr-only"> (étape 7, faite)</span></a></li>
+            <li class="step step-primary" data-content="8" aria-current="step"><span class="max-md:sr-only font-semibold">Journées</span></li>
+            <li class="step" data-content="9"><span class="max-md:sr-only">Matchs</span><span class="sr-only"> (étape suivante)</span></li>
+        </ol>
+        <p class="md:hidden mt-2 text-center font-display uppercase tracking-wide">Étape 8 sur 9 · Journées</p>
+    </nav>
+
+    {% if phases|length > 1 %}
+        <nav aria-label="Phase à organiser" class="mb-4">
+            <ul class="flex flex-wrap gap-2">
+                {% for p in phases %}
+                    <li><a href="{{ path('admin_saison_miseenplace_journees', {id: saison.id, phase: p.id}) }}" class="btn btn-sm {{ p.id == phase.id ? 'btn-primary' : 'btn-ghost' }} min-h-11" {% if p.id == phase.id %}aria-current="page"{% endif %}>{{ p.nom }}{% if p.close %} <span class="sr-only">(clôturée)</span>{% endif %}</a></li>
+                {% endfor %}
+            </ul>
+        </nav>
+    {% endif %}
+
+    <div class="admin-carte">
+        <h2 id="titre-etape" class="mb-2" tabindex="-1">Journées de {{ phase.nom }}</h2>
+        <p class="mb-2">
+            Une journée correspond à une semaine de matchs.{% if phase.type.name == 'BARRAGE' %} Chaque barrage se joue en un seul match, la première semaine de la phase.{% endif %}
+            La phase va du {{ phase.datedebut|date('d/m/Y') }} au {{ phase.datefin|date('d/m/Y') }}{% if etat.semaines is not null %} : {{ etat.semaines.total }} semaine{{ etat.semaines.total > 1 ? 's' : '' }}{% if etat.semaines.fermees > 0 %}, dont {{ etat.semaines.fermees }} de fermeture ({{ etat.semaines.utilisables }} utilisable{{ etat.semaines.utilisables > 1 ? 's' : '' }}){% endif %}{% endif %}.
+            {% if etat.semaines is not null and etat.semaines.fermees > 0 and not etat.verrouillee %}<a class="underline" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 2}) }}">Modifier les fermetures</a>{% endif %}
+        </p>
+        {% if nb_poules > 0 and etat.avecJournee > 0 %}
+            <p class="mb-4">
+                {% if etat.sansJournee == 0 %}
+                    {% set unite = phase.type.name == 'BARRAGE' ? 'barrage' : 'poule' %}{{ nb_poules == 1 ? (unite == 'barrage' ? 'Le barrage a ses journées.' : 'La poule a ses journées.') : 'Les ' ~ nb_poules ~ ' ' ~ unite ~ 's ont leurs journées.' }}
+                {% else %}
+                    {{ etat.avecJournee }} poule{{ etat.avecJournee > 1 ? 's' : '' }} sur {{ nb_poules }} {{ etat.avecJournee > 1 ? 'ont' : 'a' }} ses journées ; {{ etat.sansJournee }} {{ etat.sansJournee > 1 ? 'n\'en ont' : 'n\'en a' }} pas encore.
+                {% endif %}
+            </p>
+        {% endif %}
+
+        {% if etat.verrouillee %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Cette phase est lancée (scores saisis ou clôturée) : ses journées ne peuvent plus être refaites ici.{% endblock %}{% endembed %}
+        {% elseif etat.avecJournee == 0 %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}Les journées ne sont pas encore créées.{% endblock %}{% endembed %}
+        {% endif %}
+
+        {% if etat.problemes is not empty %}
+            {% set erreur = etat.problemes|filter(p => p.niveau == 'error')|length > 0 %}
+            {% embed 'admin/_alerte.html.twig' with {type: erreur ? 'error' : 'warning', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">À vérifier : {{ phase.nom }}</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for p in etat.problemes %}
+                        <li>
+                            {% if p.ancre %}<a class="underline" href="#{{ p.ancre }}">{{ p.texte }}</a>{% else %}{{ p.texte }}{% endif %}
+                            {% if p.lien == 'phases' and not etat.verrouillee %} <a class="underline" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: 3}) }}">Modifier la phase</a>{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+
+        {% if etat.poules|length > 4 %}
+            <table class="table-admin table-empilee mb-4">
+                <caption class="sr-only">Journées des poules de {{ phase.nom }}</caption>
+                <thead><tr><th scope="col">Poule</th><th scope="col">Équipes</th><th scope="col">Créées</th><th scope="col">Prévues</th><th scope="col">État</th></tr></thead>
+                <tbody>
+                    {% for p in etat.poules %}
+                        <tr>
+                            <th scope="row" data-label="Poule"><a class="underline" href="#poule-{{ p.poule.id }}">{{ p.poule.nom }}</a></th>
+                            <td data-label="Équipes">{{ p.effectif }}</td>
+                            <td data-label="Créées">{{ p.creees }}</td>
+                            <td data-label="Prévues">{{ p.attendues }}</td>
+                            <td data-label="État">{% if p.statut == 'ok' %}{{ icone.i('coche', 'size-3.5') }} Complet{% elseif p.statut == 'ecart' %}{{ icone.i('alerte', 'size-3.5') }} Écart à vérifier{% elseif p.statut == 'impossible' %}{{ icone.i('erreur', 'size-3.5') }} Pas assez d'équipes{% else %}{{ icone.i('erreur', 'size-3.5') }} Aucune journée{% endif %}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+
+        <form id="wizard-form" method="post" action="{{ url }}" data-controller="poules-pliables position-defilement" data-action="submit->position-defilement#memoriser">
+            <input type="hidden" name="_token" value="{{ csrf_token('miseenplace' ~ saison.id) }}">
+
+            {% if not etat.verrouillee and etat.sansJournee > 0 and etat.poules|filter(p => p.statut == 'aucune')|length > 0 %}
+                <div class="mb-4">
+                    <button type="submit" name="action" value="generer-toutes" class="btn btn-primary min-h-11 w-full sm:w-auto">{{ icone.i('calendrier') }} Générer les journées manquantes</button>
+                </div>
+            {% endif %}
+
+            <div class="grid gap-4 lg:grid-cols-2">
+                {% for p in etat.poules %}
+                    {% set poule = p.poule %}
+                    {% set vide = p.creees == 0 %}
+                    <details id="poule-{{ poule.id }}" name="poules" data-poule class="group rounded-box p-3 scroll-mt-20 {{ vide ? 'border-2 border-(--color-primary)' : 'border border-base-300' }}" {% if vide or loop.first %}open{% endif %}>
+                        <summary class="flex min-h-11 cursor-pointer flex-wrap items-center gap-x-2 gap-y-1">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ poule.nom }}</strong>
+                            <span class="text-sm text-(--color-base-content)/80">{{ p.effectif }} équipe{{ p.effectif > 1 ? 's' : '' }}</span>
+                            <span class="badge badge-outline h-auto py-1 {{ p.statut != 'ok' ? 'badge-ecart' : '' }}">
+                                {% if vide %}Aucune journée{% else %}{{ p.creees }} journée{{ p.creees > 1 ? 's' : '' }} sur {{ p.attendues }} prévue{{ p.attendues > 1 ? 's' : '' }}{% endif %}
+                                {% if p.statut == 'ok' %}{{ icone.i('coche', 'size-3.5') }}<span class="sr-only">(conforme)</span>{% elseif p.statut == 'ecart' %}{{ icone.i('alerte', 'size-3.5') }}<span class="sr-only">(écart à vérifier)</span>{% else %}{{ icone.i('erreur', 'size-3.5') }}{% endif %}
+                            </span>
+                            <span class="ml-auto text-(--color-primary) lg:hidden">{{ icone.i('fleche-bas', 'size-5 transition-transform group-open:rotate-180') }}<span class="sr-only">Afficher ou masquer les journées</span></span>
+                        </summary>
+
+                        {% if p.memeQue and p.journees|length > 1 %}<p class="mt-2 text-sm text-(--color-base-content)/80">Mêmes dates que {{ le_poule(p.memeQue) }}.</p>{% endif %}
+
+                        {% if vide %}
+                            <p class="mt-2 text-sm">{{ p.statut == 'impossible' ? 'Il faut au moins deux équipes dans la poule pour créer des journées.' : 'Aucune journée pour l\'instant.' }}</p>
+                        {% else %}
+                            {% if phase.type.name == 'FINALE' %}<p class="mt-2 text-sm text-(--color-base-content)/80">Une journée par tour : les barrages, s'il y en a, puis les tours jusqu'à la finale.</p>{% endif %}
+                            <ul class="mt-2 divide-y divide-(--color-base-300)">
+                                {% for j in p.journees %}
+                                    <li class="flex items-baseline gap-2 py-2">
+                                        <span class="w-10 shrink-0 font-display uppercase tracking-wide">J{{ j.numero }}</span>
+                                        <span class="min-w-0 break-words">{% if j.nom %}<strong class="font-semibold">{{ j.nom }}</strong> · {% endif %}{{ m.dates(j) }}</span>
+                                    </li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+
+                        {% if not etat.verrouillee %}
+                            <div class="mt-3 flex flex-col gap-2 border-t border-base-300 pt-3 sm:flex-row sm:flex-wrap sm:items-center">
+                                {% if p.statut == 'aucune' %}
+                                    <button type="submit" name="action" value="generer-{{ poule.id }}" class="btn btn-primary btn-sm min-h-11 w-full sm:w-auto">Générer les journées<span class="sr-only"> de {{ poule.nom }}</span></button>
+                                {% elseif not vide %}
+                                    <a class="btn btn-ghost btn-sm min-h-11 w-full sm:w-auto" href="{{ path('admin_journee_getjourneecalendar', {id: poule.id}) }}">{{ icone.i('calendrier') }} Ajuster dans le calendrier<span class="sr-only"> de {{ poule.nom }}</span></a>
+                                    {{ include('admin/_confirmation.html.twig', {
+                                        declencheur: 'Régénérer les journées',
+                                        declencheur_sr: 'de ' ~ poule.nom,
+                                        declencheur_classe: 'btn btn-ghost btn-sm min-h-11 w-full sm:w-auto',
+                                        declencheur_icone: false,
+                                        titre: 'Régénérer les journées de ' ~ poule.nom ~ ' ?',
+                                        consequences: [
+                                            p.creees ~ ' journée' ~ (p.creees > 1 ? 's' : '') ~ ' actuelle' ~ (p.creees > 1 ? 's' : '') ~ ' ' ~ (p.creees > 1 ? 'seront supprimées' : 'sera supprimée') ~ ', puis recréée' ~ (p.creees > 1 ? 's' : '') ~ ' d\'après les dates de la phase.',
+                                            p.nbParties > 0 ? 'Les ' ~ p.nbParties ~ ' match' ~ (p.nbParties > 1 ? 's' : '') ~ ' de la poule et leurs scores seront supprimés.' : 'Aucun match n\'est encore créé.',
+                                            'Les équipes sont conservées.',
+                                        ],
+                                        action: url,
+                                        token: csrf_token('miseenplace' ~ saison.id),
+                                        bouton: 'Supprimer et régénérer',
+                                        champs: {action: 'regenerer-' ~ poule.id},
+                                        irreversible: false,
+                                        ton: 'warning',
+                                    }) }}
+                                {% endif %}
+                            </div>
+                            {% if not vide %}<p class="mt-2 text-sm text-(--color-base-content)/80 lg:hidden">Le calendrier s'utilise mieux sur un grand écran.</p>{% endif %}
+                        {% endif %}
+                    </details>
+                {% endfor %}
+            </div>
+
+            {% if etat.raison %}<p id="raison-validation" class="mt-4 w-full text-sm lg:text-right">{{ etat.raison }}</p>{% endif %}
+            <div class="mt-6 flex justify-end gap-2 lg:hidden">
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost">Enregistrer et quitter</button>
+            </div>
+            <div class="wizard-navigation mt-2 lg:mt-6 flex items-center gap-2">
+                <button type="submit" name="aller" value="precedent" class="btn btn-ghost max-lg:flex-1">{{ icone.i('retour') }} Précédent<span class="max-sm:hidden"> : Poules</span></button>
+                <span class="flex-1 max-lg:hidden"></span>
+                <button type="submit" name="aller" value="quitter" class="btn btn-ghost max-lg:hidden">Enregistrer et quitter</button>
+                <button type="submit" name="aller" value="suivant" class="btn btn-primary max-lg:flex-1" {% if etat.raison %}aria-disabled="true" aria-describedby="raison-validation"{% endif %}>Suivant<span class="max-sm:hidden"> : Matchs</span> {{ icone.i('fleche-droite') }}</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}

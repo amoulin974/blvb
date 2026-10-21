@@ -5,14 +5,16 @@ Docker). Tout est en français : code métier, libellés, messages de commit (`d
 
 ## Chantier en cours : formats de compétition et wizard de création de saison
 
-Branches `formats-competition` et `formats-competition-lotN` (lot en cours : `formats-competition-lot6`).
+Branches `formats-competition` et `formats-competition-lotN`. Lots 1 à 6 et lot 11 (règlement par saison, R1 à R5)
+fusionnés dans `main` le 22/10/2026 ; R6 (schémas dessinés) en attente sur la branche `reglement`. Mise en production :
+`docs/wizard-saison/deploiement-reglement.md` (Francis).
 **Avant de reprendre ce chantier**, lire dans l'ordre :
 1. `docs/wizard-saison/methode.md` (objectif, méthode, journal, reprise sur un autre poste) ;
 2. `docs/wizard-saison/decisions.md` (aucune décision de conception rediscutée sans raison nouvelle) ;
 3. `docs/wizard-saison/lots.md` (état des lots), puis `plan.md`.
 
 Le catalogue des formats est dans `docs/formats-competition.md`. La version de référence du journal est celle de la
-branche du lot en cours ; la copie sur `main` peut être en retard.
+branche du lot en cours ; la copie sur `main` peut être en retard. Règlement par saison : `docs/wizard-saison/reglement.md`.
 
 ## Règles permanentes
 

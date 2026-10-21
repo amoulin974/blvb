@@ -6,11 +6,10 @@ parameters:
     # Images des clubs (logos) envoyées depuis la fiche du club : servies par asset('uploads/clubs/…').
     # En prod, le dossier de l'application est monté depuis le serveur : les images survivent aux reconstructions.
     app.dossier_images_clubs: '%kernel.project_dir%/public/uploads/clubs'
-# Ici tu peux importer ton fichier de config YAML
-# ou définir directement les paramètres
-# Exemple pour la config des phases/poules
-imports:
-    - { resource: app/saison.yaml }
+    # Images du règlement envoyées depuis l'éditeur (App\Reglement\ImagesReglement) : servies par asset('uploads/reglement/…')
+    app.dossier_images_reglement: '%kernel.project_dir%/public/uploads/reglement'
+# La structure d'une saison (phases, poules) ne vient plus de config/app/saison.yaml mais des modèles de saison
+# (App\Competition\Modele, docs/wizard-saison/decisions.md D6 et D10)
 
 services:
     # Valeurs par défaut pour tous les services
@@ -33,6 +32,42 @@ services:
     App\Service\:
         resource: '../src/Service/'
 
+    # Règles propres à chaque sport (docs/wizard-saison/plan.md)
+    App\Competition\Sport\:
+        resource: '../src/Competition/Sport/'
+
+    # Générateurs de calendrier, un par format de compétition (docs/wizard-saison/plan.md)
+    App\Competition\Format\:
+        resource: '../src/Competition/Format/'
+
+    # Copie d'une saison, point de départ du wizard (D10, D22)
+    App\Competition\CopieSaison: ~
+
+    # Composition des poules d'une phase, étape « Poules » de la mise en place (D35 à D38)
+    App\Competition\CompositionPoules: ~
+
+    # Journées d'une phase, étape « Journées » de la mise en place (D35 à D39)
+    App\Competition\MiseEnPlaceJournees: ~
+
+    # Matchs d'une phase, étape « Matchs » de la mise en place (D35 à D40)
+    App\Competition\MiseEnPlaceMatchs: ~
+
+    # Wizard en mode ajout d'une saison lancée : phases figées (D51)
+    App\Competition\ModeAjout: ~
+
+    # Barrages du modèle ajoutés à une saison créée sans eux (commande app:saison:ajouter-barrages)
+    App\Competition\AjoutBarrages: ~
+
+    # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
+    App\Competition\Modele\:
+        resource: '../src/Competition/Modele/'
+
+    # Règlement d'une saison : enregistrement, éléments calculés (docs/wizard-saison/decisions.md, D55 à D57)
+    App\Reglement\:
+        resource: '../src/Reglement/'
+        # Valeurs et textes, pas des services
+        exclude: '../src/Reglement/{ParametreBloc.php,BlocInapplicable.php,Texte.php,Bloc/TableauElimination.php,Bloc/EnchainementPhases.php}'
+
     # --------------------------------------------------------
     # Contrôleurs
     App\Controller\:
@@ -50,18 +85,6 @@ services:
         resource: '../src/Twig/'
 
     # --------------------------------------------------------
-    # Subscriber Doctrine pour créer automatiquement les phases/poules
-    App\EventListener\SaisonListener:
-        autowire: true
-        autoconfigure: false  # on configure manuellement
-        public: true          # nécessaire pour éviter l'inlining
-        tags:
-            - name: doctrine.event_listener
-              event: 'postPersist'
-              priority: 500
-              connection: 'default'
-
-    # --------------------------------------------------------
     # Repositories Doctrine
     App\Repository\:
         resource: '../src/Repository/'
@@ -71,3 +94,13 @@ services:
 when@test:
     parameters:
         app.dossier_images_clubs: '%kernel.project_dir%/var/test/uploads/clubs'
+        app.dossier_images_reglement: '%kernel.project_dir%/var/test/uploads/reglement'
+    services:
+        # Services utilisés une seule fois, donc retirés du conteneur de test : rendus accessibles aux tests
+        App\Competition\CopieSaison: { autowire: true, public: true }
+        App\Reglement\EditionReglement: { autowire: true, public: true }
+        App\Reglement\RenduReglement: { autowire: true, public: true }
+        App\Competition\CompositionPoules: { autowire: true, public: true }
+        App\Competition\MiseEnPlaceJournees: { autowire: true, public: true }
+        App\Competition\MiseEnPlaceMatchs: { autowire: true, public: true }
+        App\Competition\AjoutBarrages: { autowire: true, public: true }

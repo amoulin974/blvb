@@ -1,16 +1,106 @@
 {% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
 
-{% block title %}Modifier la poule {{ poule.nom }}{% endblock %}
+{% block title %}{{ cloturee ? 'Poule ' : 'Modifier la poule ' }}{{ poule.nom }}{% endblock %}
+
+{# Retouches d'une poule (docs/wizard-saison/decisions.md, D52) : nom et niveau ; la phase et la saison sont dans le
+   sous-titre ; équipes en lecture seule, composées dans la mise en place. Variables : commencee (niveau verrouillé),
+   cloturee (lecture seule), composable (lien vers l'étape « Poules » de la mise en place), equipes (triées par nom). #}
+{# Valeur en lecture seule : libellé et valeur reliés pour les lecteurs d'écran #}
+{% macro lecture(libelle, valeur) %}<dl><dt class="label font-semibold">{{ libelle }}</dt><dd class="min-h-11 flex items-center">{{ valeur }}</dd></dl>{% endmacro %}
 
 {% block body %}
+    {% import _self as m %}
+    {% set phase = poule.phase %}
+    {% set nbMatchs = poule.parties|length %}
     {{ include('admin/_entete.html.twig', {
-        titre: 'Modifier la poule ' ~ poule.nom,
-        sous_titre: poule.phase.saison.nom ~ ' · ' ~ poule.phase.nom,
-        retour: {url: path('admin_saison_show', {id: poule.phase.saison.id, openPoule: poule.id}), label: poule.phase.saison.nom},
+        titre: cloturee ? 'Poule ' ~ poule.nom : 'Modifier la poule : ' ~ poule.nom,
+        sous_titre: phase.saison.nom ~ ' · ' ~ phase.nom,
+        retour: {url: path('admin_saison_show', {id: phase.saison.id, openPoule: poule.id}), label: phase.saison.nom},
         actions: [{url: path('admin_journee_getjourneecalendar', {id: poule.id}), label: 'Calendrier des journées', icone: 'calendrier'}],
     }) }}
+
+    {% if cloturee %}
+        <div class="max-w-3xl mb-4">
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', phase: phase} %}{% block contenu %}
+                La phase {{ phase.nom }} est clôturée : cette poule ne se modifie plus.
+            {% endblock %}{% endembed %}
+        </div>
+    {% elseif commencee %}
+        <div class="max-w-3xl mb-4">
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', phase: phase, nbMatchs: nbMatchs} %}{% block contenu %}
+                {% if nbMatchs > 0 %}
+                    Cette poule a commencé : {{ nbMatchs }} match{{ nbMatchs > 1 ? 's' : '' }} au calendrier.
+                {% else %}
+                    La phase {{ phase.nom }} a commencé.
+                {% endif %}
+                Seul le nom se modifie ici.
+            {% endblock %}{% endembed %}
+        </div>
+    {% endif %}
+
     <div class="admin-carte max-w-3xl">
-        {{ include('admin/poule/_form.html.twig', {'button_label': 'Enregistrer'}) }}
+        {% form_theme form 'admin/form/erreurs.html.twig' %}
+        {{ form_start(form, {attr: {novalidate: 'novalidate', 'data-turbo': 'false'}}) }}
+            {% if form.vars.submitted and not form.vars.valid %}
+                {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4', form: form} %}{% block contenu %}
+                    Des points sont à corriger ci-dessous. Rien n'a été enregistré.
+                    {{ form_errors(form) }}
+                {% endblock %}{% endembed %}
+            {% endif %}
+
+            <fieldset class="fieldset fieldset-formulaire border border-base-300 rounded-box p-4">
+                <legend class="fieldset-legend">Identité</legend>
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        {% if cloturee %}
+                            {{ m.lecture(form.nom.vars.label, poule.nom) }}
+                            {% do form.nom.setRendered %}
+                        {% else %}
+                            {{ form_label(form.nom, null, {label_attr: {class: 'label font-semibold'}}) }}
+                            {{ form_widget(form.nom, {attr: {class: 'input input-bordered w-full'}}) }}
+                            {{ form_errors(form.nom) }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        {% if commencee %}
+                            {{ m.lecture(form.niveau.vars.label, poule.niveau) }}
+                            {% do form.niveau.setRendered %}
+                        {% else %}
+                            {{ form_label(form.niveau, null, {label_attr: {class: 'label font-semibold'}}) }}
+                            {{ form_widget(form.niveau, {attr: {class: 'input input-bordered champ-court', min: 1, max: 20}}) }}
+                            {{ form_errors(form.niveau) }}
+                        {% endif %}
+                    </div>
+                </div>
+            </fieldset>
+
+            <fieldset class="fieldset fieldset-formulaire mt-4 border border-base-300 rounded-box p-4">
+                <legend class="fieldset-legend">Équipes ({{ equipes|length }})</legend>
+                {% if equipes is empty %}
+                    <p class="text-(--color-base-content)/80">Aucune équipe.</p>
+                {% else %}
+                    <ul class="divide-y divide-(--color-base-300)">
+                        {% for equipe in equipes %}
+                            <li class="py-2"><a class="font-display font-medium tracking-wide break-words hover:underline" href="{{ path('admin_equipe_show', {id: equipe.id}) }}">{{ equipe.nom }}</a></li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+                {% if composable and not cloturee %}
+                    <a class="link link-primary inline-flex min-h-11 items-center gap-1" href="{{ path('admin_saison_miseenplace_poules', {id: phase.saison.id, phase: phase.id}) }}">Composer les poules {{ icone.i('fleche-droite', 'size-4') }}</a>
+                {% endif %}
+            </fieldset>
+
+            {% if not cloturee %}
+                <div class="mt-6 flex flex-col-reverse gap-2 border-t border-base-300 pt-4 sm:flex-row sm:justify-end">
+                    <a class="btn btn-ghost w-full sm:w-auto" href="{{ path('admin_saison_show', {id: phase.saison.id, openPoule: poule.id}) }}">Annuler</a>
+                    <button type="submit" class="btn btn-primary w-full sm:w-auto">Enregistrer</button>
+                </div>
+            {% endif %}
+        {{ form_end(form) }}
     </div>
-    <div class="max-w-3xl">{{ include('admin/poule/_delete_form.html.twig') }}</div>
+
+    {% if not commencee %}
+        <div class="max-w-3xl">{{ include('admin/poule/_delete_form.html.twig') }}</div>
+    {% endif %}
 {% endblock %}

@@ -1,0 +1,295 @@
+{% extends 'base_admin.html.twig' %}
+{# Page d'édition du règlement d'une saison (ReglementController, D55 à D59, maquettes reglement-maquettes-r4.md) :
+   éditeur TipTap (reglement_editeur_controller.js), aperçu du texte non enregistré, panneau des éléments calculés. #}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{# Bouton de la barre d'outils. bascule : état enfoncé (aria-pressed) ; carre : bouton carré à icône (44 px sur téléphone).
+   contenu : HTML écrit dans ce gabarit seulement (icône, « x<sup>2</sup> »…), jamais une donnée saisie : affiché tel quel
+   (un |raw posé par l'appelant ne traverse pas la macro) #}
+{% macro outil(commande, libelle, titre, contenu, classe = '', bascule = true, carre = true) %}
+    <button type="button" class="btn btn-ghost btn-sm {{ carre ? 'btn-square max-sm:size-11' }} {{ classe }}" data-commande="{{ commande }}"{% if bascule %} aria-pressed="false"{% endif %} tabindex="-1" aria-label="{{ libelle }}" title="{{ titre }}">{{ contenu|raw }}</button>
+{% endmacro %}
+
+{% block title %}Règlement · {{ saison.nom }}{% endblock %}
+{% block container_width %}max-w-7xl{% endblock %}
+{# Page toujours chargée entièrement, jamais par une visite Turbo : les boutons Précédent / Suivant du navigateur quittent
+   alors vraiment la page et déclenchent l'avertissement « beforeunload » quand des modifications ne sont pas enregistrées
+   (une visite Turbo de retour n'est pas annulable) #}
+{% block stylesheets %}{{ parent() }}<meta name="turbo-visit-control" content="reload">{% endblock %}
+
+{% block body %}
+    {% import _self as m %}
+    {% set publie = not saison.brouillon %}
+    {% set auteur = reglement.modifiePar ? (reglement.modifiePar.prenom ? reglement.modifiePar.prenom|first ~ '. ' : '') ~ reglement.modifiePar.nom : null %}
+    {% set misAJour = reglement.modifieLe ? 'mis à jour le ' ~ reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ reglement.modifieLe|date('G \\h i') ~ (auteur ? ' par ' ~ auteur : '') : null %}
+    {% set actions = [{url: path('admin_reglement_historique', {id: saison.id}), label: 'Historique (' ~ (reglement.versions|length + (reglement.id ? 1 : 0)) ~ ')', icone: 'historique'}] %}
+    {% if publie %}
+        {% set actions = actions|merge([{url: path('front_reglement', {saison: saison.id}), label: 'Voir la page publique', icone: 'externe'}]) %}
+    {% endif %}
+    {# Retour : un brouillon se reprend dans le wizard, pas sur la page de la saison (PO1) #}
+    {% include 'admin/_entete.html.twig' with {
+        titre: 'Règlement de la saison ' ~ saison.nom|replace({'Saison ': ''}),
+        sous_titre: saison.brouillon
+            ? 'Brouillon : visible par le public quand la saison sera lancée' ~ (misAJour ? ' · ' ~ misAJour : '')
+            : (reglement.id ? 'Publié · ' ~ misAJour : 'Pas encore rédigé'),
+        retour: saison.brouillon
+            ? {url: path('admin_saison_wizard_etape', {id: saison.id, etape: 6}), label: saison.nom ~ ' : vérification'}
+            : {url: path('admin_saison_show', {id: saison.id}), label: saison.nom},
+        actions: actions,
+    } %}
+
+    <div data-controller="reglement-editeur"
+         data-reglement-editeur-enregistrer-url-value="{{ path('admin_reglement_enregistrer', {id: saison.id}) }}"
+         data-reglement-editeur-apercu-url-value="{{ path('admin_reglement_apercu', {id: saison.id}) }}"
+         data-reglement-editeur-image-url-value="{{ path('admin_reglement_image', {id: saison.id}) }}"
+         data-reglement-editeur-element-url-value="{{ path('admin_reglement_element', {id: saison.id, code: 'CODE'}) }}"
+         data-reglement-editeur-jeton-value="{{ jeton }}"
+         data-reglement-editeur-token-value="{{ csrf_token('reglement' ~ saison.id) }}"
+         data-reglement-editeur-publie-value="{{ publie ? 'true' : 'false' }}"
+         data-reglement-editeur-code-value="{{ app.request.query.get('code', '') }}"
+         data-reglement-editeur-inapplicables-value="{{ inapplicables|json_encode }}">
+
+        <div data-reglement-editeur-target="inapplicables">{% include 'admin/reglement/_inapplicables.html.twig' %}</div>
+
+        <a href="#elements-calcules" class="btn btn-ghost btn-sm max-sm:min-h-11 xl:hidden mb-3">Aller aux éléments calculés {{ icone.i('fleche-bas') }}</a>
+
+        <div class="grid gap-6 xl:grid-cols-3">
+            <div class="admin-carte p-0 overflow-clip xl:col-span-2 min-w-0">
+                <div role="tablist" aria-label="Mode" class="tabs tabs-border px-2 pt-1">
+                    <button type="button" role="tab" id="onglet-rediger" class="tab tab-active min-h-11" aria-selected="true" aria-controls="panneau-rediger"
+                            data-reglement-editeur-target="ongletRediger" data-action="reglement-editeur#rediger keydown->reglement-editeur#flecheOnglet">Rédiger</button>
+                    <button type="button" role="tab" id="onglet-apercu" class="tab min-h-11" aria-selected="false" aria-controls="panneau-apercu" tabindex="-1"
+                            data-reglement-editeur-target="ongletApercu" data-action="reglement-editeur#apercu keydown->reglement-editeur#flecheOnglet">Aperçu</button>
+                    <button type="button" role="tab" id="onglet-html" class="tab min-h-11" aria-selected="false" aria-controls="panneau-html" tabindex="-1"
+                            data-reglement-editeur-target="ongletHtml" data-action="reglement-editeur#html keydown->reglement-editeur#flecheOnglet">HTML</button>
+                </div>
+
+                <div id="panneau-rediger" role="tabpanel" aria-labelledby="onglet-rediger" data-reglement-editeur-target="panneauRediger">
+                    <div role="toolbar" aria-label="Mise en forme" aria-controls="texte-reglement"
+                         class="sticky top-0 z-10 flex flex-wrap items-center gap-1 max-sm:gap-0.5 border-y border-base-300 bg-base-100 p-1"
+                         data-reglement-editeur-target="barre" data-action="keydown->reglement-editeur#flecheBarre">
+                        {# Libellés complets à partir de sm, abrégés sur téléphone ; aria-label donne le nom complet partout #}
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="partie" aria-pressed="false" aria-label="Titre de partie" title="Titre de partie"><span class="sm:hidden">Partie</span><span class="max-sm:hidden">Titre de partie</span></button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="regle" aria-pressed="false" tabindex="-1" aria-label="Titre de règle" title="Titre de règle (ex. « RÈGLE 1R : Partie interrompue »)"><span class="sm:hidden">Règle</span><span class="max-sm:hidden">Titre de règle</span></button>
+                        {# Séparateurs masqués sur téléphone : le retour à la ligne suffit à grouper, la barre y prend moins de hauteur #}
+                        {% set separateur %}<span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300 max-sm:hidden"></span>{% endset %}
+                        {{ separateur }}
+                        {# Annuler et rétablir (indispensables sur téléphone, sans Ctrl+Z) #}
+                        {{ m.outil('annuler', 'Annuler', 'Annuler (Ctrl+Z)', icone.i('annuler'), '', false) }}
+                        {{ m.outil('retablir', 'Rétablir', 'Rétablir (Ctrl+Maj+Z)', icone.i('retablir'), '', false) }}
+                        {{ separateur }}
+                        {# Mise en forme du texte #}
+                        {{ m.outil('gras', 'Gras', 'Gras (Ctrl+B)', 'G', 'font-bold') }}
+                        {{ m.outil('italique', 'Italique', 'Italique (Ctrl+I)', 'I', 'italic') }}
+                        {{ m.outil('souligne', 'Souligné', 'Souligné (Ctrl+U)', 'S', 'underline max-sm:hidden') }}
+                        {# Sur téléphone, les outils moins courants passent dans le menu « Plus » (fin de la barre) #}
+                        {{ m.outil('surligne', 'Surligné', 'Surligné', '<mark>ab</mark>', 'max-sm:hidden') }}
+                        {{ m.outil('exposant', 'Exposant', 'Exposant, ex. 1er (Ctrl+.)', 'x<sup>2</sup>', 'max-sm:hidden') }}
+                        {{ m.outil('indice', 'Indice', 'Indice (Ctrl+,)', 'x<sub>2</sub>', 'max-sm:hidden') }}
+                        {{ m.outil('code', 'Code (écrit tel quel)', 'Code, écrit tel quel : un code court mis en forme « code » n\'est pas remplacé (Ctrl+E)', icone.i('code'), 'max-sm:hidden') }}
+                        {{ separateur }}
+                        {# Blocs #}
+                        {{ m.outil('puces', 'Liste à puces', 'Liste à puces (Ctrl+Maj+8)', icone.i('liste')) }}
+                        {{ m.outil('numeros', 'Liste numérotée', 'Liste numérotée (Ctrl+Maj+7)', icone.i('liste-numerotee')) }}
+                        {{ m.outil('citation', 'Citation', 'Citation (Ctrl+Maj+B)', icone.i('citation'), 'max-sm:hidden') }}
+                        {{ m.outil('separation', 'Ligne de séparation', 'Ligne de séparation', icone.i('separation'), 'max-sm:hidden', false) }}
+                        {{ m.outil('saut', 'Saut de ligne', 'Saut de ligne dans le même paragraphe (Maj+Entrée)', icone.i('saut-ligne'), 'max-sm:hidden', false) }}
+                        {{ separateur }}
+                        {# Alignement du paragraphe, du titre ou de l'image sélectionnée : un menu (menu-deroulant), dont le bouton montre
+                           l'alignement en cours #}
+                        <details class="dropdown" data-controller="menu-deroulant" data-action="toggle->reglement-editeur#placerMenu">
+                            <summary class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:px-2 gap-0.5" tabindex="-1"
+                                     title="Alignement du paragraphe, du titre ou de l'image sélectionnée" data-reglement-editeur-target="alignement">
+                                {# Contenu transparent aux clics : la cible du clic reste le summary, même quand l'icône change #}
+                                <span class="pointer-events-none" data-role="icone-alignement">{{ icone.i('aligne-gauche') }}</span>
+                                <span class="sr-only" data-role="libelle-alignement">Alignement : à gauche</span>
+                                <span class="pointer-events-none">{{ icone.i('fleche-bas', 'size-3') }}</span>
+                            </summary>
+                            <ul class="menu dropdown-content z-20 mt-1 w-56 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+                                {% for commande, a in {
+                                    gauche: {libelle: 'À gauche', court: 'à gauche', icone: 'aligne-gauche'},
+                                    centrer: {libelle: 'Centré', court: 'centré', icone: 'centrer', titre: 'Centrer (Ctrl+Maj+E)'},
+                                    droite: {libelle: 'À droite', court: 'à droite', icone: 'aligne-droite'},
+                                    justifier: {libelle: 'Justifié', court: 'justifié', icone: 'justifier', titre: 'Justifier (paragraphe ou titre seulement)'},
+                                } %}
+                                    <li><button type="button" class="min-h-11" data-commande="{{ commande }}" aria-pressed="false" data-icone="{{ commande }}" data-libelle="{{ a.court }}"{% if a.titre is defined %} title="{{ a.titre }}"{% endif %}><span class="inline-flex w-6 justify-center">{{ icone.i(a.icone) }}</span> {{ a.libelle }}</button></li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                        {{ separateur }}
+                        {{ m.outil('tableau', 'Insérer un tableau', 'Insérer un tableau (3 lignes, 3 colonnes, avec ligne d\'en-tête)', icone.i('tableau'), 'max-sm:hidden', false) }}
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="lien" aria-pressed="false" tabindex="-1" title="Lien (Ctrl+K) : sélectionnez un texte ou cliquez sur une image">{{ icone.i('lien') }} <span class="max-sm:sr-only">Lien</span></button>
+                        <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11 max-sm:min-w-11" data-commande="image" tabindex="-1" title="Image (JPG, PNG ou WebP ; au-delà de 2 Mo, elle est réduite automatiquement)">{{ icone.i('image') }} <span class="max-sm:sr-only">Image</span></button>
+                        {# Menu « Plus », sur téléphone seulement : outils moins courants ; Lien et Image en icône seule, menus resserrés : la
+                           barre tient en deux lignes à 375 px #}
+                        <details class="dropdown sm:hidden" data-controller="menu-deroulant" data-action="toggle->reglement-editeur#placerMenu">
+                            <summary class="btn btn-ghost btn-sm min-h-11 px-2 gap-0.5" tabindex="-1" title="Autres outils" aria-label="Plus d'outils" data-reglement-editeur-target="plus">Plus <span class="pointer-events-none">{{ icone.i('fleche-bas', 'size-3') }}</span><span class="sr-only" data-role="plus-actif"></span></summary>
+                            <ul class="menu dropdown-content z-20 mt-1 w-60 flex-nowrap overflow-y-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-md">
+                                {% for commande, o in {
+                                    souligne: {libelle: 'Souligné', icone: '<span class="underline">S</span>'},
+                                    surligne: {libelle: 'Surligné', icone: '<mark>ab</mark>'},
+                                    exposant: {libelle: 'Exposant (ex. 1er)', icone: 'x<sup>2</sup>'},
+                                    indice: {libelle: 'Indice', icone: 'x<sub>2</sub>'},
+                                    code: {libelle: 'Code (écrit tel quel)', icone: icone.i('code')},
+                                    citation: {libelle: 'Citation', icone: icone.i('citation')},
+                                    separation: {libelle: 'Ligne de séparation', icone: icone.i('separation'), action: true},
+                                    saut: {libelle: 'Saut de ligne', icone: icone.i('saut-ligne'), action: true},
+                                    tableau: {libelle: 'Insérer un tableau', icone: icone.i('tableau'), action: true},
+                                } %}
+                                    <li><button type="button" class="min-h-11" data-commande="{{ commande }}"{% if o.action is not defined %} aria-pressed="false"{% endif %}><span class="inline-flex w-6 justify-center" aria-hidden="true">{{ o.icone|raw }}</span> {{ o.libelle }}</button></li>
+                                {% endfor %}
+                            </ul>
+                        </details>
+                        <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" data-reglement-editeur-target="fichier" data-action="change->reglement-editeur#envoyerImage" tabindex="-1" aria-hidden="true">
+                        {# Actions sur l'image sélectionnée (clic sur l'image) #}
+                        <div role="group" aria-label="Image" class="flex w-full flex-wrap items-center gap-1 border-t border-base-300 pt-1" hidden data-reglement-editeur-target="barreImage">
+                            <span class="px-1 text-sm text-(--color-base-content)/80">Image :</span>
+                            {{ m.outil('image-description', "Modifier la description de l'image", 'Description lue aux personnes malvoyantes', 'Description', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('image-retirer', "Retirer l'image", "Retirer l'image du texte (Annuler pour la récupérer)", "Retirer l'image", 'btn-danger-discret max-sm:min-h-11', false, false) }}
+                        </div>
+                        {# Actions de tableau, seulement quand le curseur est dans un tableau #}
+                        <div role="group" aria-label="Tableau" class="flex w-full flex-wrap items-center gap-1 border-t border-base-300 pt-1" hidden data-reglement-editeur-target="barreTableau">
+                            <span class="px-1 text-sm text-(--color-base-content)/80">Tableau :</span>
+                            {{ m.outil('ligne-ajouter', 'Ajouter une ligne en dessous', 'Ajouter une ligne en dessous', '+ Ligne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('colonne-ajouter', 'Ajouter une colonne à droite', 'Ajouter une colonne à droite', '+ Colonne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('ligne-supprimer', 'Supprimer la ligne', 'Supprimer la ligne', '− Ligne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('colonne-supprimer', 'Supprimer la colonne', 'Supprimer la colonne', '− Colonne', 'max-sm:min-h-11', false, false) }}
+                            {{ m.outil('entete', 'Ligne d\'en-tête', 'Première ligne en en-tête (titres de colonnes)', 'En-tête', 'max-sm:min-h-11', true, false) }}
+                            {{ separateur }}
+                            {{ m.outil('tableau-supprimer', 'Supprimer le tableau', 'Supprimer le tableau', 'Supprimer le tableau', 'btn-danger-discret max-sm:min-h-11', false, false) }}
+                        </div>
+                    </div>
+                    {# data-turbo="false" : un lien du texte ne déclenche jamais de navigation pendant l'édition #}
+                    <div id="texte-reglement" class="reglement-editeur reglement-article" data-turbo="false" data-reglement-editeur-target="editeur"></div>
+                    <template data-reglement-editeur-target="contenu">{{ contenu|raw }}</template>
+                    <noscript><p class="p-4">L'éditeur a besoin de JavaScript.</p></noscript>
+                </div>
+
+                <div id="panneau-apercu" role="tabpanel" aria-labelledby="onglet-apercu" tabindex="0" class="hidden p-4 md:p-8" data-reglement-editeur-target="panneauApercu">
+                    <p class="reglement-bloc-infos mb-4">Aperçu du texte non enregistré.{% if publie %} Le public voit la version publiée.{% endif %}</p>
+                    <div class="reglement-article" data-reglement-editeur-target="apercu"></div>
+                </div>
+
+                <div id="panneau-html" role="tabpanel" aria-labelledby="onglet-html" class="hidden p-4 space-y-2" data-reglement-editeur-target="panneauHtml">
+                    <p id="aide-html" class="text-sm text-(--color-base-content)/80">Code du texte, un bloc par ligne. En quittant cet onglet ou en enregistrant, seule la mise en forme proposée par la barre d'outils est gardée. Le reste (styles, scripts…) est retiré.</p>
+                    <label for="source-html" class="sr-only">Code HTML du règlement</label>
+                    <textarea id="source-html" class="textarea w-full min-h-[60vh] font-mono text-base sm:text-sm leading-relaxed focus:outline-primary" spellcheck="false" aria-describedby="aide-html"
+                              data-reglement-editeur-target="source" data-action="input->reglement-editeur#sourceModifiee"></textarea>
+                </div>
+
+                <div class="sticky bottom-0 z-10 flex flex-wrap items-center justify-between gap-3 border-t border-base-300 bg-base-100 p-2">
+                    {% set quand = reglement.modifieLe ? reglement.modifieLe|format_datetime(pattern: "d MMMM 'à' H 'h' mm", locale: 'fr') : null %}
+                    <p class="text-sm" aria-live="polite" data-reglement-editeur-target="etat">{{ quand ? (publie ? 'Publié · mis à jour le ' : 'Enregistré le ') ~ quand : 'Pas encore enregistré' }}</p>
+                    <button type="button" class="btn btn-accent" aria-disabled="true" aria-describedby="aucune-modification"
+                            data-reglement-editeur-target="bouton" data-action="reglement-editeur#enregistrer">{{ publie ? 'Enregistrer et publier' : 'Enregistrer' }}</button>
+                    <span id="aucune-modification" class="sr-only" data-reglement-editeur-target="aucuneModification">Aucune modification</span>
+                </div>
+                <p role="alert" class="px-2 pb-2 text-sm form-erreur empty:hidden" data-reglement-editeur-target="erreur"></p>
+            </div>
+
+            <aside id="elements-calcules" aria-labelledby="titre-elements" class="xl:sticky xl:top-4 xl:self-start xl:max-h-[calc(100vh-2rem)] xl:overflow-y-auto space-y-3">
+                <h2 id="titre-elements" class="text-lg">Éléments calculés</h2>
+                <p class="text-sm text-(--color-base-content)/80">Placez un élément dans le texte avec « Insérer ». Sur la page publique, il est remplacé par l'élément, toujours à jour avec les paramètres de la saison.</p>
+                {% for item in blocs %}
+                    {% set bloc = item.bloc %}
+                    <details class="admin-carte p-0" data-reglement-editeur-target="element" data-code="{{ bloc.code }}">
+                        <summary class="flex min-h-11 cursor-pointer items-center gap-2 px-4 font-display uppercase tracking-wide text-primary">{{ bloc.libelle }}<span class="ml-auto">{{ icone.i('fleche-bas') }}</span></summary>
+                        <div class="space-y-2 px-4 pb-4 text-sm">
+                            <p>{{ bloc.description }}</p>
+                            {% set phase = item.parametres|filter(p => p.nom == 'phase')|first %}
+                            {% if phase %}
+                                <label class="flex flex-col gap-1">
+                                    <span>Afficher pour</span>
+                                    <select class="select w-full" data-action="reglement-editeur#choisirVariante">
+                                        <option value="">Toute la saison</option>
+                                        {% for valeur, libelle in phase.valeurs %}<option value="{{ valeur }}">{{ libelle }} ({{ valeur }})</option>{% endfor %}
+                                    </select>
+                                </label>
+                            {% else %}
+                                <p class="text-(--color-base-content)/80">Aucun paramètre.</p>
+                            {% endif %}
+                            <p>Code : <code class="break-all rounded bg-base-200 px-1 font-mono" data-role="code" aria-live="polite">[{{ bloc.code }}]</code></p>
+                            <div class="grid grid-cols-2 gap-2">
+                                <button type="button" class="btn btn-primary btn-sm max-sm:min-h-11" data-action="reglement-editeur#inserer">{{ icone.i('inserer') }} Insérer</button>
+                                <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-action="reglement-editeur#copier">{{ icone.i('copier') }} <span data-role="libelle-copier">Copier</span></button>
+                            </div>
+                            {% if item.parametres is not empty %}
+                                <details>
+                                    <summary class="cursor-pointer min-h-11 flex items-center">Écrire le code à la main</summary>
+                                    <dl class="space-y-1">
+                                        {% for p in item.parametres %}
+                                            <dt><code>{{ p.nom }}</code></dt>
+                                            <dd class="pl-3">{{ p.role }} Valeurs : {{ p.valeursEnClair }}. Par défaut : {{ p.defaut }}.</dd>
+                                        {% endfor %}
+                                    </dl>
+                                    <p class="mt-1">Exemple : <code>[{{ bloc.code }} {{ item.parametres|first.nom }}={{ (item.parametres|first.valeurs|keys)|first }}]</code></p>
+                                </details>
+                            {% endif %}
+                            <details data-action="toggle->reglement-editeur#voirResultat">
+                                <summary class="cursor-pointer min-h-11 flex items-center">Voir le résultat</summary>
+                                <div class="reglement-article mt-2" data-role="resultat" aria-live="polite"></div>
+                            </details>
+                        </div>
+                    </details>
+                {% endfor %}
+            </aside>
+        </div>
+
+        <p class="sr-only" aria-live="polite" data-reglement-editeur-target="annonce"></p>
+
+        {# Fenêtre Lien #}
+        <dialog class="modal" data-reglement-editeur-target="dialogueLien" aria-labelledby="titre-lien">
+            <form method="dialog" class="modal-box flex flex-col gap-3" data-action="submit->reglement-editeur#validerLien">
+                <h2 id="titre-lien" class="text-lg">Lien</h2>
+                <label class="flex flex-col gap-1">
+                    <span>Adresse</span>
+                    <input type="text" class="input w-full" data-reglement-editeur-target="adresse" aria-describedby="aide-lien" autocomplete="off">
+                </label>
+                <p id="aide-lien" class="text-sm text-(--color-base-content)/80">Une page web (https://…), une adresse e-mail, ou une règle du règlement : #regle-1r</p>
+                <p role="alert" class="form-erreur empty:hidden" data-reglement-editeur-target="erreurLien"></p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost btn-danger-discret mr-auto hidden" data-reglement-editeur-target="retirerLien" data-action="reglement-editeur#retirerLien">Retirer le lien</button>
+                    <button type="button" class="btn btn-ghost" data-action="reglement-editeur#fermerDialogue">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Valider</button>
+                </div>
+            </form>
+            <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+        </dialog>
+
+        {# Fenêtre Image : description obligatoire, ou image décorative #}
+        <dialog class="modal" data-reglement-editeur-target="dialogueImage" aria-labelledby="titre-image">
+            <form method="dialog" class="modal-box flex flex-col gap-3" data-action="submit->reglement-editeur#validerImage">
+                <h2 id="titre-image" class="text-lg">Image</h2>
+                <img alt="" class="max-h-40 self-start rounded-box border border-base-300" data-reglement-editeur-target="vignette">
+                <p class="text-sm text-(--color-base-content)/80 empty:hidden" data-reglement-editeur-target="infoImage"></p>
+                <label class="flex flex-col gap-1">
+                    <span>Description de l'image (lue aux personnes malvoyantes)</span>
+                    <input type="text" class="input w-full" data-reglement-editeur-target="description" autocomplete="off">
+                </label>
+                <label class="flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" data-reglement-editeur-target="decorative"> Image décorative (pas de description)</label>
+                <p data-role="aide-description" class="text-sm text-(--color-base-content)/80">Pour changer la description plus tard, cliquez sur l'image puis sur « Description ».</p>
+                <p class="text-sm text-(--color-base-content)/80">Pour rendre l'image cliquable, cliquez dessus puis sur Lien.</p>
+                <p role="alert" class="form-erreur empty:hidden" data-reglement-editeur-target="erreurImage"></p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" data-action="reglement-editeur#fermerDialogue">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Insérer l'image</button>
+                </div>
+            </form>
+            <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+        </dialog>
+
+        {# Fenêtre Conflit (D59) #}
+        <dialog class="modal" data-reglement-editeur-target="dialogueConflit" aria-labelledby="titre-conflit">
+            <div class="modal-box flex flex-col gap-3">
+                <h2 id="titre-conflit" class="text-lg">Une autre version a été {{ publie ? 'publiée' : 'enregistrée' }}</h2>
+                <p data-reglement-editeur-target="messageConflit"></p>
+                <p>Si vous {{ publie ? 'publiez' : 'enregistrez' }} la vôtre, l'autre reste dans l'historique.</p>
+                <div class="modal-action">
+                    <button type="button" class="btn btn-ghost" data-action="reglement-editeur#fermerDialogue">Annuler</button>
+                    <button type="button" class="btn btn-warning" data-action="reglement-editeur#forcer">{{ publie ? 'Publier' : 'Enregistrer' }} la mienne quand même</button>
+                </div>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>Fermer</button></form>
+        </dialog>
+    </div>
+{% endblock %}

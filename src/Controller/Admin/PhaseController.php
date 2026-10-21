@@ -2,6 +2,8 @@
 
 namespace App\Controller\Admin;
 
+use App\Competition\MiseEnPlaceJournees;
+use App\Competition\ModeAjout;
 use App\Entity\Journee;
 use App\Entity\Phase;
 use App\Form\PhaseFormType;
@@ -62,8 +64,9 @@ final class PhaseController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Phase $phase, EntityManagerInterface $entityManager): Response
+    public function edit(Request $request, Phase $phase, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
+        $phase->jouee = $modeAjout->jouee($phase); // suppression bloquée (D54)
         $form = $this->createForm(PhaseFormType::class, $phase);
         $form->handleRequest($request);
 
@@ -80,9 +83,15 @@ final class PhaseController extends AbstractController
     }
 
     #[Route('/{id}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request, Phase $phase, EntityManagerInterface $entityManager): Response
+    public function delete(Request $request, Phase $phase, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
         $saisonId = $phase->getSaison()->getId();
+        if ($this->isCsrfTokenValid('delete'.$phase->getId(), $request->getPayload()->getString('_token')) && $modeAjout->jouee($phase)) {
+            // Phase jouée : ses poules, matchs et scores ne se suppriment plus (D54) ; jeton absent : message habituel
+            $this->addFlash('error', ModeAjout::refusSuppression('la phase '.$phase->getNom(), $phase));
+
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saisonId], Response::HTTP_SEE_OTHER);
+        }
         $this->supprimerEntite($request, $entityManager, $phase, 'delete'.$phase->getId(), 'la phase '.$phase->getNom(), true);
 
         // Retour à la saison : c'est de là que les phases se gèrent
@@ -133,10 +142,12 @@ final class PhaseController extends AbstractController
 
     //Supprime et recrée les matchs de toutes les poules de la phase
     #[Route('/{id}/optimisertout', name: 'optimisertout', methods: ['POST'])]
-    public function optimiserTout(Request $request, Phase $phase, PartieService $partieService): Response
+    public function optimiserTout(Request $request, Phase $phase, PartieService $partieService, MiseEnPlaceJournees $verrou): Response
     {
         if (!($this->isCsrfTokenValid('optimisertout'.$phase->getId(), $request->getPayload()->getString('_token')))) {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } elseif ($verrou->verrouillee($phase)) {
+            $this->addFlash('error', 'Cette phase est lancée (scores saisis ou clôturée) : ses matchs ne peuvent plus être refaits. Rien n\'a été modifié.');
         } else {
             $rapport = $partieService->creerCalendrierOptimise($phase);
 
@@ -162,8 +173,6 @@ final class PhaseController extends AbstractController
         Phase $phase,
         EntityManagerInterface $entityManager,
         PhaseService $phaseService,
-        JourneeService $journeeService,
-        PartieService $partieService,
         Request $request
     ): Response {
         $saison = $phase->getSaison();
@@ -183,29 +192,48 @@ final class PhaseController extends AbstractController
         // 1. Trouver la phase suivante (même règle que PhaseService : ordre immédiatement supérieur)
         $phaseSuivante = $phaseService->phaseSuivante($phase);
 
-        if (!$phaseSuivante) {
+        $terminale = $phaseService->estTerminale($phase);
+        if (!$phaseSuivante && !$terminale) {
             $this->addFlash('error', 'Il n’y a pas de phase suivante pour clôturer celle-ci.');
             return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
-        }else{
-            $phaseService->cloturerEtBasculer($phase);
-            foreach($phaseSuivante->getPoules() as $poule){
-                $journeeService->creerJournees($poule);
-            }
-            // Génération optimisée (toutes les poules de championnat de la phase suivante
-            // ensemble, pour tenir compte des lieux partagés) plutôt que le round-robin naïf.
-            $rapport = $partieService->creerCalendrierOptimise($phaseSuivante);
-
-            $surcharges = array_merge(...array_column($rapport, 'surcharges'));
-            $this->addFlash(
-                $surcharges === [] ? 'success' : 'warning',
-                'Équipes basculées avec succès.' . ($surcharges !== [] ? ' Attention : ' . implode(' ; ', $surcharges) : '')
-            );
         }
 
+        // Mêmes conditions que le bouton de la fiche saison, vérifiées côté serveur : saison validée, phases
+        // précédentes clôturées, chaque poule a ses journées
+        $refus = null;
+        if ($saison->isBrouillon()) {
+            $refus = 'La saison n\'est pas encore validée : terminez le wizard avant de clôturer une phase.';
+        } elseif (!$phaseService->estCloturable($phase)) {
+            $refus = sprintf('La phase %s ne peut pas être clôturée : les phases précédentes doivent l\'être, et chaque poule doit avoir ses journées.', $phase->getNom());
+        }
+        if ($refus !== null) {
+            $this->addFlash('error', $refus.' Rien n\'a été modifié.');
 
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+        }
 
-        // Redirection vers la vue de la saison pour voir le résultat
-        return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+        // Règles de passage : la clôture se fait toujours, les problèmes reviennent en avertissements (D24).
+        // Les journées et les matchs de la phase suivante ne sont plus créés ici (D40) : on renvoie à la mise en place,
+        // où l'on vérifie d'abord la composition des poules.
+        $avertissements = $phaseService->cloturerEtBasculer($phase);
+        if ($terminale) {
+            // Phase finale sans passage (D50) : rien à répartir, retour au suivi de la saison
+            $this->addFlash('success', sprintf('Phase clôturée : %s ne transmet aucune équipe à une autre phase.', $phase->getNom()));
+
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+        }
+        if ($avertissements === []) {
+            $this->addFlash('success', sprintf('Phase clôturée : les équipes ont été réparties dans « %s ». Vérifiez les poules, puis créez les journées et les matchs.', $phaseSuivante->getNom()));
+        } else {
+            // Message à liste (titre, détails, conseil), rendu par base_admin.html.twig
+            $this->addFlash('warning', [
+                'titre' => sprintf('Phase clôturée, mais certaines équipes n\'ont peut-être pas été réparties comme prévu dans « %s ».', $phaseSuivante->getNom()),
+                'details' => $avertissements,
+                'conseil' => 'Pour corriger : placez les équipes depuis cet écran. Signalez aussi le problème au responsable du site : il est le seul à pouvoir corriger les règles de passage pour l\'instant.',
+            ]);
+        }
+
+        return $this->redirectToRoute('admin_saison_miseenplace_poules', ['id' => $saison->getId(), 'phase' => $phaseSuivante->getId()]);
     }
 
 }

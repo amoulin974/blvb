@@ -1,0 +1,219 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block titre_etape %}Les phases{% endblock %}
+
+{# Erreurs d'un champ et de ses enfants, une ligne chacune, avec un lien vers le champ (récursif) #}
+{% macro lister(champ, nom, ancre) %}{% for err in champ.vars.errors %}<li><a class="link link-primary inline-flex min-h-11 items-center" href="{{ champ.parent is null or champ.vars.compound ? ancre : '#' ~ champ.vars.id }}">{{ nom }} : {{ err.message }}</a></li>{% endfor %}{% for enfant in champ %}{{ _self.lister(enfant, nom, ancre) }}{% endfor %}{% endmacro %}
+
+
+{# Texte qui suit le type de phase coché, avant même l'enregistrement : un span par type (valeur de PhaseType),
+   seul celui du type enregistré est visible sans :has() (app.css, .selon-type) #}
+{% macro selon_type(textes, actuel) %}<span class="selon-type">{% for valeur, texte in textes %}<span data-type="{{ valeur }}"{% if valeur != actuel %} class="type-inactif"{% endif %}>{{ texte }}</span>{% endfor %}</span>{% endmacro %}
+
+{% block contenu %}
+    {% import _self as m %}
+    {% form_theme form 'admin/form/erreurs.html.twig' %}
+    {{ form_start(form, {attr: {id: 'wizard-form', novalidate: 'novalidate'}}) }}
+        {% if form.vars.submitted and not form.vars.valid %}
+            {# Une ligne par erreur, avec un lien vers le champ concerné (le volet de sa phase est déjà ouvert) #}
+            {% set lignes_erreurs %}{% for i, pf in form.phases %}{{ m.lister(pf, pf.vars.data.nom, '#phase-' ~ i) }}{% endfor %}{% endset %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4', form: form, lignes: lignes_erreurs} %}{% block contenu %}
+                <strong class="font-semibold">Des points sont à corriger dans les phases ci-dessous. Rien n'a été enregistré.</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for err in form.vars.errors %}<li>{{ err.message }}</li>{% endfor %}
+                    {{ lignes }}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+        {% set figees = figees|default([]) %}
+        {% if ajout|default(false) %}
+            {# Mode ajout d'une saison lancée (D51) : en tête de l'étape, avant la consigne générale #}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4'} %}{% block contenu %}
+                La saison est lancée : les phases déjà commencées ne se modifient plus, et aucune phase ne se place avant elles. Vous pouvez modifier celles qui n'ont pas commencé et en ajouter, par exemple des barrages. Une nouvelle phase s'ajoute à la fin : utilisez Monter pour la placer avant une phase qui n'a pas commencé, puis réglez ses dates.
+            {% endblock %}{% endembed %}
+        {% endif %}
+        <p class="mb-4 text-(--color-base-content)/80">Les phases se suivent dans l'ordre de la saison, selon leurs dates de début : chaque phase envoie ses équipes à la suivante. Utilisez Monter / Descendre pour corriger l'ordre. Ouvrez une phase pour la modifier.</p>
+
+        {% set nb = form.phases|length %}
+        <ol class="flex flex-col gap-3">
+            {% for k, phase in figees %}
+                {% set nbPoules = phase.poules|length %}
+                {% set unite = phase.type.name == 'BARRAGE' ? (nbPoules > 1 ? 'matchs' : 'match') : (phase.type.name == 'FINALE' ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule')) %}
+                <li class="rounded-box border border-base-300 bg-base-200">
+                    <div class="flex flex-wrap items-center gap-2 p-3">
+                        <span class="font-display text-xl uppercase tracking-wide text-(--color-base-content)/80"><span class="tabular-nums">{{ k + 1 }}.</span> {{ phase.nom }}</span>
+                        <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
+                        <span class="sm:ml-auto badge badge-outline h-auto py-1">{{ phase.close ? 'Clôturée' : 'Commencée' }} · ne se modifie plus</span>
+                    </div>
+                </li>
+            {% endfor %}
+            {% for i, phaseForm in form.phases %}
+                {% set phase = phaseForm.vars.data %}
+                {% set finale = phase.type.name == 'FINALE' %}
+                {% set barrage = phase.type.name == 'BARRAGE' %}
+                {% set nbPoules = phase.poules|length %}
+                {% set unite = barrage ? (nbPoules > 1 ? 'matchs' : 'match') : (finale ? (nbPoules > 1 ? 'tableaux' : 'tableau') : (nbPoules > 1 ? 'poules' : 'poule')) %}
+                {% set element = barrage ? 'match' : (finale ? 'tableau' : 'poule') %}
+                {% set enErreur = phaseForm.vars.submitted and not phaseForm.vars.valid %}
+                <li id="phase-{{ i }}" tabindex="-1" class="phase-wizard rounded-box border {{ enErreur ? 'border-error' : 'border-base-300' }} bg-base-100">
+                    <div class="flex flex-wrap items-center gap-2 p-3">
+                        <span class="font-display text-xl uppercase tracking-wide text-(--color-primary)"><span class="tabular-nums">{{ i + 1 + figees|length }}.</span> {{ phase.nom }}</span>
+                        <span class="text-sm text-(--color-base-content)/80">{{ libelles[phase.type.name][0] }} · {{ phase.datedebut|date('d/m/Y') }} → {{ phase.datefin|date('d/m/Y') }} · {{ nbPoules }} {{ unite }}</span>
+                        <span class="ml-auto">{{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-phase-' ~ i, bas: 'descendre-phase-' ~ i, cible: phase.nom, premier: i == 0, dernier: i == nb - 1}) }}</span>
+                    </div>
+                    <details class="border-t border-base-300" {% if i == ouverte or enErreur %}open{% endif %}>
+                        <summary class="cursor-pointer px-4 py-3 font-semibold min-h-11">Modifier {{ phase.nom }}</summary>
+                        <div class="flex flex-col gap-4 px-4 pb-4">
+                            <div class="max-w-md">
+                                {{ form_label(phaseForm.nom, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                {{ form_widget(phaseForm.nom, {attr: {class: 'input input-bordered w-full'}}) }}
+                                {{ form_errors(phaseForm.nom) }}
+                            </div>
+                            <fieldset class="fieldset border border-base-300 rounded-box p-3">
+                                <legend class="fieldset-legend">Type de phase</legend>
+                                <div class="grid gap-3 md:grid-cols-2">
+                                    {% for choix in phaseForm.type %}
+                                        <label class="choix-carte">
+                                            <span class="flex items-center gap-2 font-semibold">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</span>
+                                            <span class="text-sm text-(--color-base-content)/80">{{ libelles[{'0': 'CHAMPIONNAT', '1': 'FINALE', '2': 'BARRAGE'}[choix.vars.value]|default('')][1]|default('') }}</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                                <p class="mt-2 text-sm text-(--color-base-content)/80">Seuls les formats disponibles sont proposés. Les réglages propres à un type s'affichent après l'enregistrement.</p>
+                            </fieldset>
+                            <fieldset class="fieldset fieldset-formulaire border border-base-300 rounded-box p-3" aria-describedby="aide-sets-gagnants-{{ i }}">
+                                <legend class="fieldset-legend">{{ phaseForm.setsGagnants.vars.label }}<span class="sr-only"> ({{ phase.nom }})</span></legend>
+                                <div class="flex flex-wrap gap-x-6">
+                                    {% for choix in phaseForm.setsGagnants %}
+                                        <label class="flex min-h-11 items-center gap-2">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</label>
+                                    {% endfor %}
+                                </div>
+                                <p id="aide-sets-gagnants-{{ i }}" class="text-sm text-(--color-base-content)/80">Trois sets gagnants : le match se termine à 3–0, 3–1 ou 3–2. Deux sets gagnants : il se termine à 2–0 ou 2–1, donc plus vite. Le barème de la saison s'applique dans les deux cas : la victoire est forte quand l'adversaire n'a pris aucun set (3–0, 3–1 ou 2–0), faible sinon. Par défaut : trois sets gagnants.</p>
+                            </fieldset>
+                            {% if not finale and not barrage %}
+                                <div>
+                                    <label class="flex min-h-11 items-start gap-2 py-2">
+                                        {{ form_widget(phaseForm.allerRetour, {attr: {class: 'checkbox mt-0.5', 'aria-describedby': 'aide-aller-retour-' ~ i}}) }}
+                                        <span>Matchs aller et retour<span class="sr-only"> ({{ phase.nom }})</span></span>
+                                    </label>
+                                    <p id="aide-aller-retour-{{ i }}" class="pl-8 text-sm text-(--color-base-content)/80">Chaque équipe rencontre deux fois chaque autre : le retour reprend les journées de l'aller, domicile et extérieur inversés. Les journées sont doublées (6 équipes : 10 journées au lieu de 5), prévoyez assez de semaines : l'étape Journées signale une phase trop courte.</p>
+                                </div>
+                            {% else %}
+                                <div hidden>{{ form_widget(phaseForm.allerRetour) }}</div>
+                            {% endif %}
+                            {% if finale %}
+                                <div>
+                                    <label class="flex min-h-11 items-start gap-2 py-2">
+                                        {{ form_widget(phaseForm.petiteFinale, {attr: {class: 'checkbox mt-0.5', 'aria-describedby': 'aide-petite-finale-' ~ i}}) }}
+                                        <span>Jouer un match pour la troisième place (petite finale)</span>
+                                    </label>
+                                    <p id="aide-petite-finale-{{ i }}" class="pl-8 text-sm text-(--color-base-content)/80">Entre les deux perdants des demi-finales, le jour de la finale. Sans effet s'il y a moins de 4 équipes.</p>
+                                </div>
+                                {# Journée des finales (D45, D46) : réglages affichés quand la case est cochée (sans JavaScript) #}
+                                {% set jf = phaseForm.journeeFinales %}
+                                <fieldset class="group fieldset fieldset-formulaire border border-base-300 rounded-box p-3">
+                                    <legend class="fieldset-legend">Journée des finales</legend>
+                                    <label class="flex min-h-11 items-start gap-2 py-2">
+                                        {{ form_widget(jf.actif, {attr: {class: 'checkbox mt-0.5 js-journee-finales', 'aria-describedby': 'aide-journee-finales-' ~ i, 'aria-controls': 'reglages-journee-finales-' ~ i}}) }}
+                                        <span>{{ jf.actif.vars.label }}</span>
+                                    </label>
+                                    <p id="aide-journee-finales-{{ i }}" class="sm:pl-8 text-sm text-(--color-base-content)/80">Les derniers tours de tous les tableaux se jouent le même jour, dans un même gymnase. Case décochée : un tour par semaine, chez l'équipe qui reçoit.</p>
+                                    <div id="reglages-journee-finales-{{ i }}" class="{{ jf.vars.valid ? 'hidden' : 'flex' }} group-has-[.js-journee-finales:checked]:flex flex-col gap-4 pt-2 sm:pl-8">
+                                        <fieldset>
+                                            <legend class="label font-semibold">{{ jf.tours.vars.label }}</legend>
+                                            <div class="flex flex-wrap gap-x-6">
+                                                {% for choix in jf.tours %}
+                                                    <label class="flex min-h-11 items-center gap-2">{{ form_widget(choix, {attr: {class: 'radio radio-primary'}}) }} {{ choix.vars.label }}</label>
+                                                {% endfor %}
+                                            </div>
+                                        </fieldset>
+                                        <div class="grid max-w-xl gap-4 sm:grid-cols-2">
+                                            {% for champ in [jf.date, jf.lieu, jf.heure, jf.terrains, jf.duree] %}
+                                                <div>
+                                                    {{ form_label(champ, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                                    {{ form_widget(champ, {attr: {class: champ is same as(jf.lieu) ? 'select select-bordered w-full' : (champ is same as(jf.terrains) or champ is same as(jf.duree) ? 'input input-bordered champ-court' : 'input input-bordered w-full')}}) }}
+                                                    {{ form_errors(champ) }}
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                        <p class="text-sm text-(--color-base-content)/80">Horaires calculés du dernier tableau au tableau 1 ; la finale du tableau 1 se joue en dernier. Durée conseillée d'un match : {{ constant('App\\Entity\\Phase::DUREE_MATCH_DEFAUT') }} minutes en trois sets gagnants, {{ constant('App\\Entity\\Phase::DUREE_MATCH_COURT') }} minutes en deux. Vous pourrez modifier les horaires dans le calendrier.</p>
+                                    </div>
+                                </fieldset>
+                            {% else %}
+                                <div hidden>{{ form_widget(phaseForm.petiteFinale) }}{{ form_widget(phaseForm.journeeFinales) }}</div>
+                            {% endif %}
+                            {% if barrage %}
+                                <fieldset class="fieldset border border-base-300 rounded-box p-3">
+                                    <legend class="fieldset-legend">Qui reçoit le match ?</legend>
+                                    {{ form_widget(phaseForm.reception, {attr: {class: 'select select-bordered w-full max-w-xl', 'aria-label': 'Qui reçoit le match ? ' ~ phase.nom}}) }}
+                                    <p class="mt-2 text-sm text-(--color-base-content)/80">Chaque match oppose deux équipes de poules voisines. Un seul match, en {{ phase.setsGagnants == 2 ? 'deux' : 'trois' }} sets gagnants (format réglé plus haut). Le vainqueur et le perdant jouent ensuite dans les poules que vous indiquez à l'étape Passages.</p>
+                                </fieldset>
+                            {% else %}
+                                <div hidden>{{ form_widget(phaseForm.reception) }}</div>
+                            {% endif %}
+                            <div class="grid max-w-xl gap-4 sm:grid-cols-2">
+                                <div>
+                                    {{ form_label(phaseForm.datedebut, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                    {{ form_widget(phaseForm.datedebut, {attr: {class: 'input input-bordered w-full'}}) }}
+                                    {{ form_errors(phaseForm.datedebut) }}
+                                </div>
+                                <div>
+                                    {{ form_label(phaseForm.datefin, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                    {{ form_widget(phaseForm.datefin, {attr: {class: 'input input-bordered w-full'}}) }}
+                                    {{ form_errors(phaseForm.datefin) }}
+                                </div>
+                            </div>
+
+                            <fieldset class="fieldset border border-base-300 rounded-box p-3">
+                                <legend class="fieldset-legend">{{ m.selon_type({0: 'Poules', 1: 'Tableaux', 2: 'Matchs de barrage'}, phase.type.value) }}</legend>
+                                {# Tableau sur grand écran, une carte par poule sur téléphone (.table-empilee) #}
+                                <table class="table table-admin table-empilee">
+                                    <thead><tr><th>Nom</th><th>Niveau (1 = le plus fort)</th><th>Nombre d'équipes prévues</th><th><span class="sr-only">Actions</span></th></tr></thead>
+                                    <tbody>
+                                    {% for j, pouleForm in phaseForm.poules %}
+                                        {% set nomPoule = pouleForm.vars.data.nom %}
+                                        <tr>
+                                            <td data-label="Nom" class="pleine-largeur">{{ form_widget(pouleForm.nom, {attr: {class: 'input input-bordered w-full min-w-32', 'aria-label': 'Nom, ligne ' ~ (j + 1) ~ ' de ' ~ phase.nom}}) }}{{ form_errors(pouleForm.nom) }}</td>
+                                            <td data-label="Niveau">{{ form_widget(pouleForm.niveau, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Niveau, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.niveau) }}</td>
+                                            <td data-label="Nombre d'équipes prévues">{{ form_widget(pouleForm.nbEquipesPrevu, {attr: {class: 'input input-bordered champ-court', 'aria-label': 'Nombre d\'équipes prévues, ' ~ nomPoule}}) }}{{ form_errors(pouleForm.nbEquipesPrevu) }}</td>
+                                            <td class="pleine-largeur text-right"><button type="submit" name="action" value="supprimer-poule-{{ i }}-{{ j }}" class="btn btn-ghost btn-error btn-sm" aria-label="Supprimer {{ nomPoule }} de {{ phase.nom }}" data-turbo-confirm="Supprimer {{ nomPoule }} de {{ phase.nom }} ? Les passages qui en partent ou y arrivent seront supprimés.">{{ icone.i('poubelle') }} Supprimer</button></td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                                <div><button type="submit" name="action" value="ajouter-poule-{{ i }}" class="btn btn-ghost">{{ icone.i('plus') }} {{ m.selon_type({0: 'Ajouter une poule', 1: 'Ajouter un tableau', 2: 'Ajouter un match'}, phase.type.value) }}</button></div>
+                            </fieldset>
+
+                            <details class="rounded-box border border-dashed border-base-300 p-3">
+                                <summary class="cursor-pointer font-semibold min-h-11">Options avancées</summary>
+                                <p class="mt-2 text-sm text-(--color-base-content)/80">Codes courts utilisés dans les règles et le règlement. Laissez-les tels quels sauf besoin particulier.</p>
+                                <div class="mt-2 flex flex-wrap gap-4">
+                                    <div class="w-40">
+                                        {{ form_label(phaseForm.code, null, {label_attr: {class: 'label font-semibold'}}) }}
+                                        {{ form_widget(phaseForm.code, {attr: {class: 'input input-bordered w-full'}}) }}
+                                        {{ form_errors(phaseForm.code) }}
+                                    </div>
+                                    {% for pouleForm in phaseForm.poules %}
+                                        <div class="w-40">
+                                            <label class="label font-semibold" for="{{ pouleForm.code.vars.id }}">Code, {{ pouleForm.vars.data.nom }}</label>
+                                            {{ form_widget(pouleForm.code, {attr: {class: 'input input-bordered w-full'}}) }}
+                                            {{ form_errors(pouleForm.code) }}
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </details>
+
+                            <div class="text-right">
+                                <button type="submit" name="action" value="supprimer-phase-{{ i }}" class="btn btn-ghost btn-error" data-turbo-confirm="Supprimer {{ phase.nom }} et ses {{ nbPoules }} {{ unite }} ? Les passages qui les concernent seront supprimés.">{{ icone.i('poubelle') }} Supprimer la phase</button>
+                            </div>
+                        </div>
+                    </details>
+                </li>
+            {% endfor %}
+        </ol>
+        <button type="submit" name="action" value="ajouter-phase" class="btn btn-ajout mt-3 w-full">{{ icone.i('plus') }} Ajouter une phase</button>
+
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    {{ form_end(form) }}
+{% endblock %}

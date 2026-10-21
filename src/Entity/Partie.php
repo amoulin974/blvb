@@ -45,6 +45,10 @@ class Partie
     #[ORM\ManyToOne(targetEntity: self::class)]
     private ?self $parent_match2 = null;
 
+    /** Les équipes viennent des perdants (et non des vainqueurs) des matchs parents : petite finale (B2, D42). */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $parent_perdants = false;
+
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $nom = null;
 
@@ -63,7 +67,7 @@ class Partie
 
         if ($this->parent_match1) {
             // On affiche le nom du match parent (ex: "M1")
-            return "Vainqueur " . ($this->parent_match1->getNom() ?: "Match #" . $this->parent_match1->getId());
+            return ($this->parent_perdants ? "Perdant " : "Vainqueur ") . ($this->parent_match1->getNom() ?: "Match #" . $this->parent_match1->getId());
         }
 
         return "À définir";
@@ -76,7 +80,7 @@ class Partie
         }
 
         if ($this->parent_match2) {
-            return "Vainqueur " . ($this->parent_match2->getNom() ?: "Match #" . $this->parent_match2->getId());
+            return ($this->parent_perdants ? "Perdant " : "Vainqueur ") . ($this->parent_match2->getNom() ?: "Match #" . $this->parent_match2->getId());
         }
 
         return "À définir";
@@ -191,6 +195,18 @@ class Partie
     public function setNbSetGagnantDeplacement(?int $nb_set_gagnant_deplacement): static
     {
         $this->nb_set_gagnant_deplacement = $nb_set_gagnant_deplacement;
+
+        return $this;
+    }
+
+    public function isParentPerdants(): bool
+    {
+        return $this->parent_perdants;
+    }
+
+    public function setParentPerdants(bool $parentPerdants): static
+    {
+        $this->parent_perdants = $parentPerdants;
 
         return $this;
     }

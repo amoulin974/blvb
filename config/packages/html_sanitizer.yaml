@@ -1,0 +1,44 @@
+framework:
+    html_sanitizer:
+        sanitizers:
+            # Règlement d'une saison (App\Reglement\EditionReglement, D55 à D57) : mise en forme de l'éditeur seulement ;
+            # images du site uniquement (adresses relatives), liens http, https et mailto. Les codes courts sont du texte.
+            # Attribut class : seulement les classes de l'éditeur (App\Reglement\ClasseAlignement, alignements).
+            app.reglement:
+                with_attribute_sanitizers:
+                    - App\Reglement\ClasseAlignement
+                allow_elements:
+                    h2: [class]
+                    h3: [class]
+                    h4: [class]
+                    p: [class]
+                    br: []
+                    hr: []
+                    strong: []
+                    b: []
+                    em: []
+                    i: []
+                    u: []
+                    s: []
+                    mark: []
+                    sub: []
+                    sup: []
+                    code: []
+                    blockquote: []
+                    ul: []
+                    ol: [start]
+                    li: []
+                    a: [href, title]
+                    img: [src, alt, width, height, class]
+                    table: []
+                    thead: []
+                    tbody: []
+                    tr: []
+                    th: [colspan, rowspan]
+                    td: [colspan, rowspan]
+                allowed_link_schemes: [http, https, mailto]
+                allow_relative_links: true
+                allowed_media_schemes: []
+                allowed_media_hosts: []
+                allow_relative_medias: true
+                max_input_length: 500000 # = EditionReglement::TAILLE_MAX

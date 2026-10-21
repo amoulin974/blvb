@@ -6,17 +6,18 @@ import { Controller } from '@hotwired/stimulus';
  * Les boutons « Saisir » / crayon portent : data-partie-id, data-url-score (URL de l'API générée par path(),
  * préfixe /blvb compris en prod), data-equipe-recoit, data-equipe-deplace,
  * data-score-reception / data-score-deplacement (score actuel, -1 = forfait, vide = non joué), data-match-passe,
- * data-bareme (points de la saison du match, pour le résumé).
+ * data-bareme (points de la saison du match, pour le résumé), data-sets-gagnants (format de match de la phase : 3, ou 2).
  *
  * Envoi à FrontController::api_score_update (PUT, jeton CSRF de la balise <meta name="csrf-token">) :
  *   match joué → nombres ; forfait → « F » pour l'équipe forfait et vide pour l'autre ; effacer → deux vides.
  * La réponse newScore vaut « 3 - 1 », « F - 3 », « 3 - F » ou null (score effacé).
  *
- * Règle de validité d'un match joué (3 sets gagnants) : une équipe exactement à 3, l'autre entre 0 et 2.
+ * Règle de validité d'un match joué (N sets gagnants, 3 par défaut ou 2 en format court) : une équipe exactement à N,
+ * l'autre entre 0 et N-1.
  * Les erreurs ne s'affichent qu'à l'enregistrement ou une fois les deux champs remplis, jamais avant la saisie.
  */
 export default class extends Controller {
-    static targets = ['modal', 'title', 'typeJoue', 'typeInterrompu', 'aideInterrompu', 'typeForfaitReception', 'typeForfaitDeplacement',
+    static targets = ['modal', 'title', 'typeJoue', 'typeInterrompu', 'aideInterrompu', 'typeForfaitReception', 'typeForfaitDeplacement', 'aide3Sets', 'aide2Sets', 'formatSets',
         'nomForfaitReception', 'nomForfaitDeplacement', 'sets', 'labelReception', 'labelDeplacement',
         'inputReception', 'inputDeplacement', 'resume', 'erreur', 'effacer', 'enregistrer'];
 
@@ -48,6 +49,14 @@ export default class extends Controller {
             this.bareme = {};
         }
 
+        // Format de match de la phase : nombre de sets à gagner (3 par défaut)
+        this.sets = Number(btn.dataset.setsGagnants) === 2 ? 2 : 3;
+        this.inputReceptionTarget.max = this.sets;
+        this.inputDeplacementTarget.max = this.sets;
+        this.aide3SetsTarget.classList.toggle('hidden', this.sets !== 3);
+        this.aide2SetsTarget.classList.toggle('hidden', this.sets !== 2);
+        this.formatSetsTarget.textContent = this.sets === 2 ? '(match en 2 sets gagnants)' : '';
+
         this.titleTarget.textContent = `${this.recoit} contre ${this.deplace}`;
         this.labelReceptionTarget.textContent = this.recoit;
         this.labelDeplacementTarget.textContent = this.deplace;
@@ -59,7 +68,7 @@ export default class extends Controller {
         const dejaSaisi = r !== '' && d !== '';
         this.typeForfaitReceptionTarget.checked = r === '-1';
         this.typeForfaitDeplacementTarget.checked = d === '-1';
-        const interrompu = dejaSaisi && r !== '-1' && d !== '-1' && r !== '3' && d !== '3';
+        const interrompu = dejaSaisi && r !== '-1' && d !== '-1' && r !== String(this.sets) && d !== String(this.sets);
         this.typeInterrompuTarget.checked = interrompu;
         this.typeJoueTarget.checked = r !== '-1' && d !== '-1' && !interrompu;
         this.inputReceptionTarget.value = dejaSaisi && r !== '-1' && d !== '-1' ? r : '';
@@ -130,23 +139,30 @@ export default class extends Controller {
         if (this.type() === 'interrompu') {
             return this.analyserInterrompu(r, d, complet);
         }
-        const valide = Number.isInteger(r) && Number.isInteger(d) && r >= 0 && d >= 0 && r <= 3 && d <= 3
-            && (r === 3) !== (d === 3);
+        const n = this.sets;
+        const valide = Number.isInteger(r) && Number.isInteger(d) && r >= 0 && d >= 0 && r <= n && d <= n
+            && (r === n) !== (d === n);
         if (!valide) {
-            return { complet, erreur: 'Score impossible : une des deux équipes doit avoir gagné 3 sets, l\'autre 0, 1 ou 2. Pour une partie interrompue, choisissez « Match interrompu ».' };
+            const autre = n === 3 ? '0, 1 ou 2' : '0 ou 1';
+            return { complet, erreur: `Score impossible : une des deux équipes doit avoir gagné ${n} sets, l'autre ${autre}. Pour une partie interrompue, choisissez « Match interrompu ».` };
         }
 
-        const [gagnant, perdant, sg, sp] = r === 3 ? [this.recoit, this.deplace, r, d] : [this.deplace, this.recoit, d, r];
-        const [pg, pp] = sp === 2 ? [b.victoireFaible, b.defaiteForte] : [b.victoireForte, b.defaiteFaible];
+        // Victoire faible : l'adversaire a pris le dernier set possible (2 sur 3, 1 sur 2)
+        const [gagnant, perdant, sg, sp] = r === n ? [this.recoit, this.deplace, r, d] : [this.deplace, this.recoit, d, r];
+        const [pg, pp] = sp === n - 1 ? [b.victoireFaible, b.defaiteForte] : [b.victoireForte, b.defaiteFaible];
         return { complet, valeurs: [String(r), String(d)], resume: `${gagnant} gagne ${sg}–${sp} : ${gagnant} ${this.points(pg)}, ${perdant} ${this.points(pp)}.` };
     }
 
-    // Règle 1R : points fixés par le règlement (mêmes valeurs que App\Service\RegleScore)
+    // Règle 1R : points fixés par le règlement (mêmes valeurs que App\Competition\Sport\Volley) ; en 2 sets gagnants,
+    // 1–1 et 1–0 seulement, sans point
     analyserInterrompu(r, d, complet) {
-        const BAREME_1R = { '2-1': [2, 1], '1-2': [1, 2], '2-2': [1, 1], '1-1': [0, 0], '1-0': [0, 0], '0-1': [0, 0] };
+        const BAREME_1R = this.sets === 2
+            ? { '1-1': [0, 0], '1-0': [0, 0], '0-1': [0, 0] }
+            : { '2-1': [2, 1], '1-2': [1, 2], '2-2': [1, 1], '1-1': [0, 0], '1-0': [0, 0], '0-1': [0, 0] };
         const points = BAREME_1R[`${r}-${d}`];
         if (!Number.isInteger(r) || !Number.isInteger(d) || !points) {
-            return { complet, erreur: 'Match interrompu : les scores possibles sont 2–1, 2–2, 1–1 et 1–0, dans un sens ou dans l\'autre.' };
+            const possibles = this.sets === 2 ? '1–1 et 1–0' : '2–1, 2–2, 1–1 et 1–0';
+            return { complet, erreur: `Match interrompu : les scores possibles sont ${possibles}, dans un sens ou dans l'autre.` };
         }
         const valeurs = [String(r), String(d)];
         if (r === d || points[0] === points[1]) {

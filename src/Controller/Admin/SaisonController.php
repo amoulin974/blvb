@@ -1,12 +1,16 @@
 <?php
 
 namespace App\Controller\Admin;
+use App\Competition\ModeAjout;
 use App\Entity\Poule;
 use App\Entity\Saison;
 use App\Form\PouleType;
-use App\Form\SaisonType;
+use App\Competition\Sport\Sports;
+use App\Form\Wizard\SaisonWizardType;
+use Symfony\Component\Form\FormError;
 use App\Repository\SaisonRepository;
 use App\Repository\PouleRepository;
+use App\Service\PhaseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -33,35 +37,11 @@ final class SaisonController extends AbstractController
 
 
 
-    //Ajoute une saison
-    //Attention au EventListener/SaisonListener qui créé les phases et les poules automatiquement
-    #[Route('/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, EntityManagerInterface $em, CacheInterface $cache): Response
+    // Une saison se crée désormais avec le wizard (docs/wizard-saison/decisions.md, D6 et D29) : ancienne adresse conservée
+    #[Route('/new', name: 'new', methods: ['GET'])]
+    public function new(): Response
     {
-        // creates a saison object
-        $saison = new Saison();
-
-        //Créer le formulaire et lui envoyer l'objet saison
-        $form = $this->createForm(SaisonType::class, $saison);
-
-
-        //Si le formulaire est soumis et valide
-        $form->handleRequest($request);
-        if ($form->isSubmitted() && $form->isValid()) {
-            $saison = $form->getData();
-            $em->persist($saison);
-            $em->flush();
-            $cache->delete('saisons_all');
-            return $this->redirectToRoute('admin_saison_show', [
-                'id' => $saison->getId(),
-            ]);
-        }
-
-        return $this->render('admin/saison/new.html.twig', [
-            'form' => $form,
-            'saison' => $saison,
-        ]);
-
+        return $this->redirectToRoute('admin_saison_wizard_nouvelle');
     }
 
 
@@ -83,22 +63,35 @@ final class SaisonController extends AbstractController
     }
 
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache): Response
+    /**
+     * Nom, dates et périodes de fermeture ; tant que la saison n'est pas lancée, lien vers le wizard pour l'organisation
+     * (phases, passages, classement) (docs/wizard-saison/decisions.md, D29).
+     */
+    public function edit(Request $request, Saison $saison, EntityManagerInterface $entityManager, CacheInterface $cache, SaisonRepository $saisons, Sports $sports): Response
     {
-        $form = $this->createForm(SaisonType::class, $saison);
+        $form = $this->createForm(SaisonWizardType::class, $saison);
         $form->handleRequest($request);
+        if ($form->isSubmitted()) {
+            $homonyme = $saisons->findOneBy(['nom' => $saison->getNom()]);
+            if ($homonyme !== null && $homonyme !== $saison) {
+                $form->get('nom')->addError(new FormError('Une saison porte déjà ce nom.'));
+            }
+        }
 
         if ($form->isSubmitted() && $form->isValid()) {
             $entityManager->flush();
             $cache->delete('saisons_all');
+            $this->addFlash('success', sprintf('La saison %s a été modifiée.', $saison->getNom()));
 
-            return $this->redirectToRoute('admin_saison_index', [], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()], Response::HTTP_SEE_OTHER);
         }
 
         return $this->render('admin/saison/edit.html.twig', [
             'saison' => $saison,
             'form' => $form,
-        ]);
+            'sport' => $sports->pourSaison($saison)->libelle(),
+            'lancee' => $saisons->estLancee($saison),
+        ], new Response(status: $form->isSubmitted() ? 422 : 200));
     }
 
     //défini une saison comme favorite
@@ -111,6 +104,12 @@ final class SaisonController extends AbstractController
             return $this->redirectToRoute('admin_saison_index');
         }
         $saisons=$em->getRepository(Saison::class)->findAll();
+        $choisie = $em->getRepository(Saison::class)->find($id);
+        if ($choisie?->isBrouillon()) {
+            $this->addFlash('error', sprintf('La saison %s est un brouillon : terminez sa création avant de l\'afficher sur le site. Rien n\'a été modifié.', $choisie->getNom()));
+
+            return $this->redirectToRoute('admin_saison_index');
+        }
         foreach ($saisons as $saison) {
             if ($saison->getId() == $id) {
                 $this->addFlash('success', sprintf('La saison %s est maintenant affichée sur le site.', $saison->getNom()));
@@ -133,12 +132,15 @@ final class SaisonController extends AbstractController
     //Affiche une saison
 
     #[Route('/{id}', name: 'show', methods: ['GET'])]
-    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository): Response
+    public function show(Saison $saison, Request $request, PouleRepository $pouleRepository, PhaseService $phaseService, ModeAjout $modeAjout): Response
     {
 
         // 1. Déterminer la poule à ouvrir (via paramètre d'URL si présent)
         $openPouleId = $request->query->get('openPoule');
         $pouleOuverte = $openPouleId ? $pouleRepository->find($openPouleId) : null;
+        if ($pouleOuverte !== null && $pouleOuverte->getPhase()->getSaison() !== $saison) {
+            $pouleOuverte = null; // poule d'une autre saison : ignorée
+        }
 
         // 2. Déterminer la phase à ouvrir
         // Si une poule est spécifiée, on ouvre sa phase parente
@@ -156,16 +158,21 @@ final class SaisonController extends AbstractController
         // ont déjà des journées (sinon leur classement n'a pas de sens et basculer les
         // équipes vers la phase suivante serait prématuré).
         foreach($saison->getPhases() as $phase){
-            $phase->cloturable = count($phase->getPoules()) > 0;
-            foreach($phase->getPoules() as $poule){
-                if ($poule->getJournees()->count()==0){
-                    $phase->cloturable=false;
-                    break;
-                }
+            $phase->cloturable = $phaseService->estCloturable($phase);
+            $phase->jouee = $modeAjout->jouee($phase); // suppressions en masse masquées (D54)
+        }
+
+        // Problèmes des règles de passage, montrés dans la fenêtre « Clôturer la phase » avant le clic (D37)
+        $avertissementsCloture = [];
+        foreach ($saison->getPhases() as $phase) {
+            if (!$phase->getClose() && $phase->cloturable) {
+                $avertissementsCloture[$phase->getId()] = $phaseService->problemesAvantCloture($phase);
             }
         }
+
         return $this->render('admin/saison/show.html.twig', [
             'saison' => $saison,
+            'avertissementsCloture' => $avertissementsCloture,
             'phaseOuverteId' => $phaseOuverteId,
             'pouleOuverteId' => $pouleOuverteId,
         ]);

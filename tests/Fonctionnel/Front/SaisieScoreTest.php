@@ -4,6 +4,8 @@ namespace App\Tests\Fonctionnel\Front;
 
 use App\Entity\Classement;
 use App\Entity\Partie;
+use App\Entity\Saison;
+use App\Reglement\EditionReglement;
 use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -218,6 +220,10 @@ final class SaisieScoreTest extends TestFonctionnel
         self::assertSame('/reglement#regle-1r', $lien->attr('href'));
         self::assertSame('_blank', $lien->attr('target'));
 
+        // Ancre posée sur le titre de la règle par le rendu du règlement de la saison (D57)
+        $em = self::getContainer()->get('doctrine')->getManager();
+        self::getContainer()->get(EditionReglement::class)->enregistrer($em->find(Saison::class, ChampionnatDeTest::get('saison')->getId()),
+            '<h3>RÈGLE 1R : Partie interrompue</h3><p>…</p>', null);
         $crawler = $this->client->request('GET', '/reglement');
         self::assertStringContainsString('RÈGLE 1R', $crawler->filter('#regle-1r')->text());
     }

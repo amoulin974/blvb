@@ -3,9 +3,11 @@
 namespace App\Controller\Front;
 
 
+use App\Competition\Sport\Sports;
 use App\Entity\Equipe;
 use App\Enum\PhaseType;
 use App\Entity\Partie;
+use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\User;
 use App\Form\Front\UserChangePasswordType;
@@ -15,13 +17,16 @@ use App\Repository\MembreEquipeRepository;
 use App\Repository\PartieRepository;
 use App\Repository\ClubRepository;
 use App\Repository\EquipeRepository;
+use App\Repository\ReglementRepository;
 use App\Repository\SaisonRepository;
+use App\Reglement\EditionReglement;
+use App\Reglement\RenduReglement;
 use App\Service\CalendrierAnalyseService;
 use App\Security\ScoreVoter;
 use App\Service\ClassementService;
-use App\Service\RegleScore;
 use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
+use App\Twig\ScoreExtension;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
@@ -108,20 +113,33 @@ final class FrontController extends AbstractController
     //Route pour une page de réglement
     #[Route('/reglement', name: 'reglement', methods: ['GET'])]
     public function reglement(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-                                               $saisonRepository, ClassementService $classementService): Response
+                                               $saisonRepository, ReglementRepository $reglementRepository, RenduReglement $renduReglement, EditionReglement $editionReglement): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
         if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
             return $redirect;
         }
-        $saison=$saisonRepository->find($this->idSaisonSelected);
-        //Déterminer la phase à ouvrir
-        $phaseouverte=$this->getPhaseActuelle($saison);
+        // Règlement de la saison affichée sur le site (D57) : jamais celui d'un brouillon (getSaisonSession l'écarte) ;
+        // texte nettoyé de nouveau (contenu repris ou importé), éléments calculés à chaque affichage, encarts des codes
+        // inapplicables pour les admins seulement
+        $saison = $saisonRepository->find($this->idSaisonSelected);
+        // Lien « Voir la page publique » de la page d'édition (D59) : un admin ouvre la saison modifiée, sans changer la
+        // saison choisie sur le site ; jamais un brouillon
+        if ($request->query->has('saison') && $this->isGranted('ROLE_ADMIN')) {
+            $saison = $saisonRepository->findPubliee($request->query->getInt('saison')) ?? $saison;
+        }
+        $reglement = $reglementRepository->findDeSaison($saison);
+        $contenu = $reglement !== null && $reglement->getContenu() !== ''
+            ? $renduReglement->rendre($saison, $editionReglement->nettoyer($reglement->getContenu()), $this->isGranted('ROLE_ADMIN'))['html']
+            : null;
 
         return $this->render('front/reglement.html.twig', [
             'saisons' => $this->saisons,
             'idSaisonSelected' => $this->idSaisonSelected,
+            'saison' => $saison,
+            'reglement' => $reglement,
+            'contenu' => $contenu,
         ]);
     }
 
@@ -422,11 +440,19 @@ final class FrontController extends AbstractController
     public function setSaison(Request $request, SessionInterface $session, SaisonRepository $saisonRepository): Response
     {
         $idSaisonSelected = $request->request->get('idSaisonSelected'); // récupère l'id envoyé
-        $saison = $saisonRepository->find($idSaisonSelected);   // récupère l'objet saison
+        $saison = $saisonRepository->findPubliee($idSaisonSelected);   // récupère l'objet saison (jamais un brouillon)
 
         if ($saison) {
             $session->set('idSaisonSelected', $saison->getId());   // stocke la saison dans la session
         }
+        // Retour à la page d'où vient le choix (ex. le règlement, relecture de l'ergonome) : chemin interne seulement,
+        // relatif à l'application (« /reglement »), jamais une autre adresse (« //exemple.org », « /\exemple.org »)
+        $retour = (string) $request->request->get('retour', '');
+        // (adresse de la page = base de l'application + chemin, comme la requête d'origine ; « .. » refusé)
+        if (preg_match('#^/(?![/\\\\])[A-Za-z0-9/_.\-]*\z#', $retour) && !str_contains($retour, '..') && $retour !== '/set-saison') {
+            return $this->redirect($request->getBaseUrl().$retour);
+        }
+
         return $this->redirectToRoute('front_index');  // retourne vers la page principale
     }
 
@@ -442,7 +468,7 @@ final class FrontController extends AbstractController
 
     //Route appelé quand un admin ou un capitaine change le score d'une partie
     #[Route('/front/partie/{id}/api/update', name: 'api_score_update', methods: ['PUT'])]
-    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService): JsonResponse
+    public function api_score_update(Request $request, Partie $partie, EntityManagerInterface $em, ClassementService $classementService, Sports $sports): JsonResponse
     {
 
     // Jeton CSRF envoyé par score-modal-controller.js (balise <meta name="csrf-token"> de base_front)
@@ -461,8 +487,17 @@ final class FrontController extends AbstractController
             return $this->json(['error' => 'Ce match n\'a pas encore eu lieu : seul un administrateur peut saisir son score.'], 403);
         }
 
+
         if (!isset($data['scoreReception'])) throw new Exception("Score réception invalide");
         if (!isset($data['scoreDeplacement'])) throw new Exception("Score déplacement invalide");
+        // Texte ou nombre uniquement : un tableau ou un objet envoyé à la main est refusé (400), pas une erreur 500
+        foreach (['scoreReception', 'scoreDeplacement'] as $champ) {
+            if (!\is_int($data[$champ]) && !\is_string($data[$champ])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
+        }
+
+        $sport = $sports->pourSaison($partie->getPoule()?->getPhase()?->getSaison());
+        // Format de match de la phase (D48) : 3 sets gagnants, ou 2
+        $setsGagnants = $partie->getPoule()?->getPhase()?->getSetsGagnants() ?? Phase::SETS_GAGNANTS_DEFAUT;
 
         if (trim($data['scoreReception']) === '' && trim($data['scoreDeplacement']) === ''){
             //Les deux champs vides : on efface le score (ex. score saisi par erreur sur un match non joué)
@@ -470,26 +505,21 @@ final class FrontController extends AbstractController
             $partie->setNbSetGagnantDeplacement(null);
             $newScore = null;
         } elseif ($data['scoreReception'] === 'F' || $data['scoreDeplacement'] === 'F'){
-            //Cas d'une forfait
+            //Cas d'une forfait : score enregistré selon le sport (volley : -1 set pour l'équipe forfait, 3 pour l'autre)
             if ($data['scoreReception'] === 'F' && $data['scoreDeplacement'] === 'F') throw new Exception("Deux forfaits impossibles");
-            if ($data['scoreReception'] === 'F'){
-                $partie->setNbSetGagnantReception(-1);
-                $partie->setNbSetGagnantDeplacement(3);
-                $newScore = 'F - 3';
-            } else{
-                $partie->setNbSetGagnantReception(3);
-                $partie->setNbSetGagnantDeplacement(-1);
-                $newScore = '3 - F';
-            }
+            [$scoreReception, $scoreDeplacement] = $sport->scoreForfait($data['scoreReception'] === 'F', $setsGagnants);
+            $partie->setNbSetGagnantReception($scoreReception);
+            $partie->setNbSetGagnantDeplacement($scoreDeplacement);
+            $newScore = ScoreExtension::sets($scoreReception) . ' - ' . ScoreExtension::sets($scoreDeplacement);
 
 
         }else{
-            //Cas normal : nombres entiers de sets, match complet ou interrompu (règle 1R) — App\Service\RegleScore
+            //Cas normal : nombres entiers de sets, match complet ou interrompu (règle 1R) — App\Competition\Sport\Volley
             $entier = static fn ($v) => \is_int($v) || (\is_string($v) && ctype_digit(trim($v)));
             if (!$entier($data['scoreReception']) || !$entier($data['scoreDeplacement'])) throw new Exception("Score invalide : indiquez un nombre entier de sets.");
             $scoreReception = (int) $data['scoreReception'];
             $scoreDeplacement = (int) $data['scoreDeplacement'];
-            if (!RegleScore::estValide($scoreReception, $scoreDeplacement)) throw new Exception("Score impossible : une équipe doit avoir 3 sets et l'autre de 0 à 2, ou, pour un match interrompu (règle 1R), 2-1, 2-2, 1-1 ou 1-0.");
+            if (!$sport->estValide($scoreReception, $scoreDeplacement, $setsGagnants)) throw new Exception($sport->messageScoreInvalide($setsGagnants));
 
             $partie->setNbSetGagnantReception($scoreReception);
             $partie->setNbSetGagnantDeplacement($scoreDeplacement);
@@ -525,7 +555,7 @@ final class FrontController extends AbstractController
     {
         $this->saisons = $cache->get('saisons_all', function (ItemInterface $item) use ($saisonRepository){
             $item->expiresAfter(3600);
-            return $saisonRepository->findBy([], ['favori' => 'DESC']);
+            return $saisonRepository->findPubliees(); // sans les brouillons du wizard
         });
 
 
@@ -539,16 +569,16 @@ final class FrontController extends AbstractController
     public function getSaisonSession(SessionInterface $session, Request $request, SaisonRepository $saisonRepository): ?Response
     {
         $idSelected = $session->has('idSaisonSelected') ? $session->get('idSaisonSelected') : null;
-        $saison = $idSelected ? $saisonRepository->find($idSelected) : null;
+        $saison = $saisonRepository->findPubliee($idSelected);
 
         if (!$saison) {
-            // L'id en session est absent, invalide ou ne correspond plus à une saison existante :
+            // L'id en session est absent, invalide ou ne correspond plus à une saison visible (supprimée, brouillon) :
             // on retombe sur la saison favorite...
-            $saison = $saisonRepository->findOneBy(['favori' => 1]);
+            $saison = $saisonRepository->findFavoritePubliee();
 
             // ... sinon sur la saison la plus récente...
             if (!$saison) {
-                $saison = $saisonRepository->findOneBy([], ['date_debut' => 'DESC']);
+                $saison = $saisonRepository->findPlusRecentePubliee();
             }
 
             // ... sinon il n'y a tout simplement aucune saison en base.

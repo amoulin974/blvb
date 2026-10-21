@@ -2,25 +2,686 @@
 
 namespace App\Controller\Admin;
 
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use App\Competition\Classement\CritereDepartage;
+use App\Competition\CodesCompetition;
+use App\Competition\CopieSaison;
+use App\Competition\EtapePassages;
+use App\Competition\ModeAjout;
+use App\Competition\VerificationSaison;
+use App\Competition\Modele\Modeles;
+use App\Competition\Sport\Sports;
+use App\Entity\Lieu;
+use App\Entity\Phase;
+use App\Entity\Poule;
 use App\Entity\Saison;
+use App\Enum\PhaseType;
+use App\Form\Wizard\DepartType;
+use App\Form\Wizard\PhasesWizardType;
+use App\Form\Wizard\PhaseWizardType;
+use App\Form\Wizard\SaisonWizardType;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
+use App\Repository\SaisonRepository;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Routing\Attribute\Route;
+use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Contracts\Cache\CacheInterface;
 
+/**
+ * Wizard de création d'une saison (docs/wizard-saison/ecrans.md, D29) : 1 Départ, 2 Saison, 3 Phases, 4 Passages,
+ * 5 Classement, 6 Vérification. La saison est un brouillon dès l'étape 1 ; chaque changement d'étape enregistre.
+ */
 #[IsGranted('ROLE_ADMIN')]
-#[Route('/admin/saison/{id}/wizard', name: 'admin_saison_wizard_')]
+#[Route('/admin/saison', name: 'admin_saison_wizard_')]
 class SaisonWizardController extends AbstractController
 {
-    #[Route('/etape/{step}', name: 'dispatch')]
-    public function dispatch(Saison $saison, string $step = 'configuration'): Response
+    public function __construct(private Sports $sports, private ModeAjout $modeAjout)
     {
-        // Cette méthode sert juste d'aiguillage pour afficher la barre de progression
-        // et inclure le bon template
+    }
 
-        return $this->render('admin/saisonwizard/layout.html.twig', [
-            'saison' => $saison,
-            'current_step' => $step,
+    public const ETAPES = [1 => 'Départ', 2 => 'Saison', 3 => 'Phases', 4 => 'Passages', 5 => 'Classement', 6 => 'Vérification'];
+
+    /** Étapes proposées en mode ajout d'une saison lancée (D51). */
+    private const ETAPES_AJOUT = [3, 4, 6];
+
+    /** Saison lancée en cours de modification : mode ajout (D51), fixé par etape(). */
+    private bool $ajout = false;
+
+    /** Étape 1 : copier une saison ou partir d'un modèle ; crée le brouillon. */
+    #[Route('/wizard/nouvelle', name: 'nouvelle', methods: ['GET', 'POST'])]
+    public function nouvelle(Request $request, Modeles $modeles, CopieSaison $copie, EntityManagerInterface $em, SaisonRepository $saisons, CacheInterface $cache): Response
+    {
+        $choixModeles = [];
+        foreach ($modeles->tous() as $code => $modele) {
+            $choixModeles[$modele->libelle()] = $code;
+        }
+        $form = $this->createForm(DepartType::class, null, ['modeles' => $choixModeles]);
+        $form->handleRequest($request);
+
+        if ($form->isSubmitted() && $form->isValid()) {
+            $donnees = $form->getData();
+            $source = $donnees['saison'] ?? null;
+            $departLibelle = null;
+            if ($donnees['depart'] === 'copie' && $source instanceof Saison) {
+                $departLibelle = sprintf('Copie de la saison %s', $source->getNom());
+                $debut = $source->getDateDebut()->modify('+1 year');
+                $resultat = $copie->copier($source, self::nomPropose($debut, $saisons), $debut, $source->getDateFin()->modify('+1 year'));
+                $saison = $resultat['saison'];
+                foreach ($resultat['avertissements'] as $avertissement) {
+                    $this->addFlash('warning', $avertissement);
+                }
+            } elseif ($donnees['depart'] === 'modele' && ($modele = $modeles->parCode((string) ($donnees['modele'] ?? ''))) !== null) {
+                $departLibelle = sprintf('Modèle « %s »', $modele->libelle());
+                $annee = (int) date('Y') + ((int) date('n') >= 7 ? 1 : 0);
+                $saison = (new Saison())
+                    ->setDateDebut(new \DateTimeImmutable("$annee-09-01"))
+                    ->setDateFin(new \DateTimeImmutable(($annee + 1).'-07-31'));
+                $saison->setNom(self::nomPropose($saison->getDateDebut(), $saisons));
+                $modele->appliquer($saison);
+                $em->persist($saison);
+                foreach ($saison->getPhases() as $phase) {
+                    $em->persist($phase);
+                    foreach ($phase->getPoules() as $poule) {
+                        $em->persist($poule);
+                    }
+                }
+            } else {
+                $this->addFlash('error', 'Choisissez la saison à copier ou le modèle.');
+
+                return $this->redirectToRoute('admin_saison_wizard_nouvelle');
+            }
+
+            $saison->setBrouillon(true)->setEtapeWizard(2)->setFavori(0)->setDepartLibelle($departLibelle)->setModifieLe(new \DateTimeImmutable());
+            $em->flush();
+            $cache->delete('saisons_all');
+
+            return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 2]);
+        }
+
+        $apercus = [];
+        foreach ($saisons->findPubliees() as $source) {
+            $apercus[$source->getId()] = CopieSaison::apercu($source);
+        }
+
+        return $this->render('admin/saisonwizard/depart.html.twig', [
+            'form' => $form,
+            'apercus' => $apercus,
+            'modeles' => $modeles->tous(),
+            'etapes' => self::etapes(null, 1),
         ]);
+    }
+
+    /** Étapes 2 à 6 d'un brouillon. */
+    #[Route('/{id}/wizard/{etape}', name: 'etape', requirements: ['id' => '\d+', 'etape' => '[1-6]'], methods: ['GET', 'POST'])]
+    public function etape(Saison $saison, int $etape, Request $request, EntityManagerInterface $em, SaisonRepository $saisons, Sports $sports, CacheInterface $cache): Response
+    {
+        if (!$saison->isBrouillon()) {
+            // Saison créée : son organisation se modifie dans le wizard (étapes 2 à 6) tant qu'elle n'est pas lancée (D29) ;
+            // lancée, en mode ajout (D51) : phases commencées figées, étapes Phases, Passages et Vérification seulement
+            $this->ajout = $saisons->estLancee($saison);
+            if ($this->ajout && !\in_array($etape, self::ETAPES_AJOUT, true)) {
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 3]);
+            }
+            if ($etape === 1) {
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 2]);
+            }
+        } elseif ($etape > max(2, (int) $saison->getEtapeWizard())) {
+            return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => max(2, (int) $saison->getEtapeWizard())]);
+        }
+
+        // Date du dernier enregistrement d'un brouillon (« Brouillon enregistré à 14 h 32 ») ; persistée par les flush de l'étape
+        if ($request->isMethod('POST') && $saison->isBrouillon()) {
+            $saison->setModifieLe(new \DateTimeImmutable());
+        }
+
+        // Vérification déjà atteinte (ou saison créée) : les étapes à corriger sont signalées dans le stepper
+        $verification = !$saison->isBrouillon() || (int) $saison->getEtapeWizard() >= 6 ? VerificationSaison::verifier($saison) : null;
+        $aCorriger = array_values(array_unique(array_column($verification['erreurs'] ?? [], 'etape')));
+        $vue = ['saison' => $saison, 'etape' => $etape, 'etapes' => self::etapes($saison, $etape, $aCorriger, $this->ajout), 'ajout' => $this->ajout];
+
+        if ($etape === 2) {
+            $form = $this->createForm(SaisonWizardType::class, $saison);
+            $form->handleRequest($request);
+            if ($form->isSubmitted()) {
+                $homonyme = $saisons->findOneBy(['nom' => $saison->getNom()]);
+                if ($homonyme !== null && $homonyme !== $saison) {
+                    $form->get('nom')->addError(new \Symfony\Component\Form\FormError('Une saison porte déjà ce nom.'));
+                }
+                if ($form->isValid()) {
+                    $em->flush();
+                    $cache->delete('saisons_all');
+
+                    return $this->naviguer($request, $saison, $etape, $em);
+                }
+            }
+
+            return $this->render('admin/saisonwizard/saison.html.twig', $vue + ['form' => $form, 'sport' => $sports->pourSaison($saison)->libelle()]);
+        }
+
+        if ($etape === 3) {
+            return $this->etapePhases($saison, $request, $em, $vue);
+        }
+        if ($etape === 4) {
+            return $this->etapePassages($saison, $request, $em, $vue);
+        }
+        if ($etape === 5) {
+            return $this->etapeClassement($saison, $request, $em, $vue);
+        }
+        if ($etape === 6) {
+            return $this->etapeVerification($saison, $request, $em, $cache, $vue);
+        }
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => $etape]);
+            }
+
+            return $this->naviguer($request, $saison, $etape, $em);
+        }
+
+        return $this->render('admin/saisonwizard/depart_resume.html.twig', $vue);
+    }
+
+    /**
+     * Étape 3 : les phases et leurs poules. Les boutons « action » (ajouter, supprimer, monter, descendre une phase ;
+     * ajouter, supprimer une poule) enregistrent la saisie en cours, modifient la structure et réaffichent l'étape.
+     */
+    private function etapePhases(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
+    {
+        $phases = self::phasesDansLOrdre($saison);
+        // Mode ajout (D51) : les phases commencées et celles qui les précèdent restent hors du formulaire, en lecture seule
+        $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
+        $phases = \array_slice($phases, \count($figees));
+        $gymnases = [];
+        foreach ($em->getRepository(Lieu::class)->findBy([], ['nom' => 'ASC']) as $lieu) {
+            $gymnases[$lieu->getId()] = (string) $lieu->getNom(); // identifiant => nom : deux gymnases de même nom restent distincts
+        }
+        $form = $this->createForm(PhasesWizardType::class, ['phases' => $phases], ['gymnases' => $gymnases]);
+        $form->handleRequest($request);
+        $ouverte = $request->query->getInt('phase', 0);
+
+        if ($form->isSubmitted()) {
+            self::verifierCodes($form, array_map(fn (Phase $p) => (string) $p->getCode(), $figees));
+            if ($form->isValid()) {
+                $action = $request->getPayload()->getString('action');
+                if ($action !== '') {
+                    $ouverte = $this->appliquerAction($action, $saison, $phases, $em, $figees);
+                }
+                CodesCompetition::attribuer($saison);
+                $em->flush();
+                if ($action !== '') {
+                    return $this->redirect($this->generateUrl('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 3, 'phase' => $ouverte]).'#phase-'.$ouverte);
+                }
+
+                return $this->naviguer($request, $saison, 3, $em);
+            }
+        }
+
+        return $this->render('admin/saisonwizard/phases.html.twig', $vue + [
+            'form' => $form,
+            'figees' => $figees,
+            'ouverte' => $ouverte,
+            'libelles' => PhaseWizardType::LIBELLES,
+        ], new Response(status: $form->isSubmitted() ? 422 : 200));
+    }
+
+    /**
+     * Étape 4 : passages d'une phase à l'autre (EtapePassages). Les poules passées en mode détaillé sont mémorisées
+     * en session ; les boutons « action » enregistrent la saisie puis réaffichent l'étape.
+     */
+    private function etapePassages(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
+    {
+        $cleDetail = 'wizard.passages.detail.'.$saison->getId();
+        $detail = $request->getSession()->get($cleDetail, []);
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 4]);
+            }
+            $action = $request->getPayload()->getString('action');
+            $saisie = $request->getPayload()->all('p');
+            $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
+            foreach (EtapePassages::appliquer($saison, $saisie, $action, $detail, $figees, $request->getPayload()->all('fin')) as $probleme) {
+                $this->addFlash('warning', $probleme);
+            }
+            $request->getSession()->set($cleDetail, $detail);
+            $em->flush();
+            if ($action !== '') {
+                $ancre = preg_match('/(\d+)/', $action, $m) ? '#poule-'.$m[1] : '';
+
+                return $this->redirect($this->generateUrl('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 4]).$ancre);
+            }
+
+            return $this->naviguer($request, $saison, 4, $em);
+        }
+
+        // Mode ajout (D51) : passages déjà appliqués, ou vers une phase déjà commencée : ils ne s'affichent plus
+        $figees = $this->ajout ? $this->modeAjout->phasesFigees($saison) : [];
+        $phases = self::phasesDansLOrdre($saison);
+        $figes = [];
+        foreach ($phases as $i => $phase) {
+            if (isset($phases[$i + 1]) && $phase->getType() !== PhaseType::FINALE && EtapePassages::passagesFiges($phase, $phases[$i + 1], $figees)) {
+                $figes[] = $phase;
+            }
+        }
+
+        return $this->render('admin/saisonwizard/passages.html.twig', $vue + [
+            'transitions' => EtapePassages::transitions($saison, $detail, $figees),
+            // Barrages de fin de saison : une section par phase, une carte par match (D53)
+            'barragesFin' => EtapePassages::sectionsFinDeSaison($saison, $figees),
+            'figes' => $figes,
+        ]);
+    }
+
+    /**
+     * Étape 6 : vérification, schéma de la saison, récapitulatif ; « Valider la saison » (aller = valider) n'aboutit
+     * que sans erreur : la saison cesse d'être un brouillon (D29).
+     */
+    private function etapeVerification(Saison $saison, Request $request, EntityManagerInterface $em, CacheInterface $cache, array $vue): Response
+    {
+        $verification = VerificationSaison::verifier($saison);
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 6]);
+            }
+            if ($request->getPayload()->getString('aller') !== 'valider') {
+                return $this->naviguer($request, $saison, 6, $em);
+            }
+            if ($verification['erreurs'] === [] && !$saison->isBrouillon()) {
+                $em->flush();
+                $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.%s', $saison->getNom(),
+                    // Mode ajout (D51) : la suite pour les phases ajoutées
+                    $this->ajout ? ' Les poules, journées et matchs d\'une phase ajoutée se mettent en place quand la phase qui la précède est clôturée.' : ''));
+
+                return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+            }
+            if ($verification['erreurs'] === []) {
+                $saison->setBrouillon(false)->setEtapeWizard(null);
+                $em->flush();
+                $cache->delete('saisons_all');
+                $premiere = self::phasesDansLOrdre($saison)[0] ?? null;
+                $this->addFlash('success', sprintf('Saison %s validée.%s', $saison->getNom(),
+                    $premiere ? sprintf(' Prochaine étape : composer les poules de « %s ».', $premiere->getNom()) : ''));
+
+                return $premiere
+                    ? $this->redirectToRoute('admin_saison_miseenplace_poules', ['id' => $saison->getId()])
+                    : $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+            }
+        }
+
+        $phases = self::phasesDansLOrdre($saison);
+        $transitions = [];
+        foreach ($phases as $i => $phase) {
+            // Une phase finale ne transmet pas d'équipes (D50) : pas de ligne de passages
+            if (isset($phases[$i + 1]) && $phase->getType() !== PhaseType::FINALE) {
+                $transitions[] = ['phase' => $phase, 'suivante' => $phases[$i + 1], 'regles' => $phase->getReglesDePassage()->toArray()];
+            }
+        }
+
+        return $this->render('admin/saisonwizard/verification.html.twig', $vue + [
+            'verification' => $verification,
+            'schema' => VerificationSaison::schema($saison),
+            'phases' => $phases,
+            'transitions' => $transitions,
+            'libelles' => PhaseWizardType::LIBELLES,
+            'sport' => $this->sports->pourSaison($saison)->libelle(),
+        ], new Response(status: $request->isMethod('POST') ? 422 : 200));
+    }
+
+    /** Catégories du barème saisies (volley-ball) : clé enregistrée → [setter de la saison, libellé, aide]. */
+    private const BAREME = [
+        'victoire_forte' => ['setPointsVictoireForte', 'Victoire 3-0 ou 3-1', null],
+        'victoire_faible' => ['setPointsVictoireFaible', 'Victoire 3-2', null],
+        'defaite_forte' => ['setPointsDefaiteForte', 'Défaite 2-3', null],
+        'defaite_faible' => ['setPointsDefaiteFaible', 'Défaite 0-3 ou 1-3', null],
+        'forfait' => ['setPointsForfait', 'Équipe forfait', 'L\'adversaire reçoit les points d\'une victoire 3-0.'],
+    ];
+
+    /**
+     * Étape 5 : barème de la saison, barème propre à certaines phases, ordre du départage (liste réordonnée par les
+     * boutons « action » : monter, descendre, retirer, ajouter un critère).
+     */
+    private function etapeClassement(Saison $saison, Request $request, EntityManagerInterface $em, array $vue): Response
+    {
+        $phases = self::phasesDansLOrdre($saison);
+        $erreurs = [];
+
+        if ($request->isMethod('POST')) {
+            if (!$this->isCsrfTokenValid('wizard'.$saison->getId(), $request->getPayload()->getString('_token'))) {
+                $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été enregistré.');
+
+                return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 5]);
+            }
+            $payload = $request->getPayload();
+            $entier = static fn ($v) => \is_string($v) && preg_match('/^-?\d{1,2}$/', trim($v)) ? (int) trim($v) : null;
+
+            $bareme = $payload->all('bareme');
+            $valeurs = [];
+            foreach (self::BAREME as $cle => [, $libelle]) {
+                $valeurs[$cle] = $entier($bareme[$cle] ?? null);
+                if ($valeurs[$cle] === null) {
+                    $erreurs[] = sprintf('%s : indiquez un nombre de points (de -99 à 99).', $libelle);
+                }
+            }
+            $baremesPhases = [];
+            foreach ($phases as $phase) {
+                $champs = $payload->all('phase')[$phase->getId()] ?? [];
+                $champs = \is_array($champs) ? $champs : [];
+                if (empty($champs['propre'])) {
+                    $baremesPhases[$phase->getId()] = null;
+                } elseif (($champs['mode'] ?? 'aucun') === 'aucun') {
+                    $baremesPhases[$phase->getId()] = array_fill_keys(array_keys(self::BAREME), 0);
+                } else {
+                    $propre = [];
+                    foreach (array_keys(self::BAREME) as $cle) {
+                        if (($champs[$cle] ?? '') !== '') {
+                            $propre[$cle] = $entier($champs[$cle]);
+                            if ($propre[$cle] === null) {
+                                $erreurs[] = sprintf('%s, %s : indiquez un nombre de points (de -99 à 99), ou laissez vide pour reprendre celui de la saison.', $phase->getNom(), self::BAREME[$cle][1]);
+                            }
+                        }
+                    }
+                    $baremesPhases[$phase->getId()] = array_filter($propre, fn ($v) => $v !== null) ?: null;
+                }
+            }
+
+            if ($erreurs === []) {
+                foreach (self::BAREME as $cle => [$setter]) {
+                    $saison->$setter($valeurs[$cle]);
+                }
+                foreach ($phases as $phase) {
+                    $phase->setBareme($baremesPhases[$phase->getId()]);
+                }
+                $saison->setDepartage(self::departage($payload->all('departage'), $payload->getString('action'), $payload->getString('nouveau_critere')));
+                $em->flush();
+                if ($payload->getString('action') !== '') {
+                    return $this->redirect($this->generateUrl('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 5]).'#departage');
+                }
+
+                return $this->naviguer($request, $saison, 5, $em);
+            }
+        }
+
+        $criteres = array_values(array_filter($saison->getDepartage(), fn (CritereDepartage $c) => $c !== CritereDepartage::ALPHABETIQUE));
+
+        return $this->render('admin/saisonwizard/classement.html.twig', $vue + [
+            'erreurs' => $erreurs,
+            'bareme' => self::BAREME,
+            'phases' => $phases,
+            'criteres' => $criteres,
+            'disponibles' => array_values(array_filter(CritereDepartage::cases(), fn (CritereDepartage $c) => $c !== CritereDepartage::ALPHABETIQUE && !\in_array($c, $criteres, true))),
+            'saisie' => $request->isMethod('POST') ? $request->getPayload()->all() : null,
+        ], new Response(status: $erreurs === [] ? 200 : 422));
+    }
+
+    /**
+     * Départage envoyé (codes dans l'ordre), modifié par l'action : monter-critere-i, descendre-critere-i,
+     * retirer-critere-i, ajouter-critere (critère choisi dans nouveau_critere).
+     *
+     * @return list<CritereDepartage>
+     */
+    private static function departage(array $codes, string $action, string $nouveau): array
+    {
+        $criteres = array_values(array_filter(array_map(fn ($c) => \is_string($c) ? CritereDepartage::tryFrom($c) : null, $codes)));
+        if ($action === 'ajouter-critere' && ($critere = CritereDepartage::tryFrom($nouveau)) !== null) {
+            $criteres[] = $critere;
+        } elseif (preg_match('/^(monter|descendre|retirer)-critere-(\d+)$/', $action, $m) && isset($criteres[(int) $m[2]])) {
+            $i = (int) $m[2];
+            if ($m[1] === 'retirer') {
+                array_splice($criteres, $i, 1);
+            } else {
+                $j = $m[1] === 'monter' ? $i - 1 : $i + 1;
+                if (isset($criteres[$j])) {
+                    [$criteres[$i], $criteres[$j]] = [$criteres[$j], $criteres[$i]];
+                }
+            }
+        }
+
+        return $criteres;
+    }
+
+    /** Applique un bouton de structure de l'étape 3 ; renvoie l'index de la phase à garder ouverte. */
+    private function appliquerAction(string $action, Saison $saison, array $phases, EntityManagerInterface $em, array $figees = []): int
+    {
+        if ($action === 'ajouter-phase') {
+            // Après la dernière phase de la saison, y compris les phases figées du mode ajout (D51)
+            $toutes = self::phasesDansLOrdre($saison);
+            $derniere = end($toutes) ?: null;
+            $phase = (new Phase())
+                ->setNom('Phase '.(\count($toutes) + 1))
+                ->setType(PhaseType::CHAMPIONNAT)
+                ->setOrdre(($derniere?->getOrdre() ?? -1) + 1)
+                ->setClose(0)
+                ->setDateDebut($derniere?->getDateFin() ?? $saison->getDateDebut())
+                ->setDateFin($saison->getDateFin());
+            $saison->addPhase($phase);
+            $phase->addPoule((new Poule())->setNom('Poule A')->setNiveau(1));
+            $em->persist($phase);
+            foreach ($phase->getPoules() as $poule) {
+                $em->persist($poule);
+            }
+
+            return \count($phases);
+        }
+
+        if (preg_match('/^(supprimer|monter|descendre)-phase-(\d+)$/', $action, $m) && isset($phases[(int) $m[2]])) {
+            $i = (int) $m[2];
+            $phase = $phases[$i];
+            if ($m[1] === 'supprimer') {
+                if (($refus = self::viseeParPhaseFigee($phase->getPoules()->toArray(), $figees)) !== null) {
+                    $this->addFlash('error', sprintf('%s n\'est pas supprimée : %s Modifiez d\'abord ces passages.', $phase->getNom(), $refus));
+
+                    return $i;
+                }
+                $saison->removePhase($phase);
+                $em->remove($phase);
+
+                return max(0, $i - 1);
+            }
+            $j = $m[1] === 'monter' ? $i - 1 : $i + 1;
+            if (isset($phases[$j])) {
+                [$a, $b] = [$phase->getOrdre(), $phases[$j]->getOrdre()];
+                $phase->setOrdre($b);
+                $phases[$j]->setOrdre($a);
+
+                return $j;
+            }
+
+            return $i;
+        }
+
+        if (preg_match('/^ajouter-poule-(\d+)$/', $action, $m) && isset($phases[(int) $m[1]])) {
+            $phase = $phases[(int) $m[1]];
+            $niveaux = array_map(fn (Poule $p) => (int) $p->getNiveau(), $phase->getPoules()->toArray());
+            $rang = $phase->getPoules()->count() + 1;
+            $barrage = $phase->getType() === PhaseType::BARRAGE; // un match de deux équipes (D42)
+            $poule = (new Poule())
+                ->setNom($barrage ? 'Barrage '.$rang : 'Poule '.\chr(64 + min(26, $rang)))
+                ->setNiveau(($niveaux === [] ? 0 : max($niveaux)) + 1);
+            if ($barrage) {
+                $poule->setNbEquipesPrevu(2);
+            }
+            $phase->addPoule($poule);
+            $em->persist($poule);
+
+            return (int) $m[1];
+        }
+
+        if (preg_match('/^supprimer-poule-(\d+)-(\d+)$/', $action, $m) && isset($phases[(int) $m[1]])) {
+            $phase = $phases[(int) $m[1]];
+            $poule = array_values($phase->getPoules()->toArray())[(int) $m[2]] ?? null;
+            if ($poule !== null && ($refus = self::viseeParPhaseFigee([$poule], $figees)) !== null) {
+                $this->addFlash('error', sprintf('%s n\'est pas supprimée : %s Modifiez d\'abord ces passages.', $poule->getNom(), $refus));
+            } elseif ($poule !== null) {
+                $phase->removePoule($poule);
+                $em->remove($poule);
+            }
+
+            return (int) $m[1];
+        }
+
+        return 0;
+    }
+
+    /**
+     * Mode ajout (D51) : une poule visée par les passages d'une phase figée ne se supprime pas (la base effacerait ces
+     * passages sans prévenir). Rend la raison, ou null si rien ne la vise.
+     *
+     * @param list<Poule> $poules
+     * @param list<Phase> $figees
+     */
+    private static function viseeParPhaseFigee(array $poules, array $figees): ?string
+    {
+        foreach ($figees as $figee) {
+            foreach ($figee->getReglesDePassage() as $regle) {
+                if (\in_array($regle->getPouleDestination(), $poules, true)) {
+                    return sprintf('les passages de « %s », déjà commencée, y envoient des équipes.', $figee->getNom());
+                }
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Codes saisis : uniques dans la saison (phases) et dans la phase (poules), sinon erreur sur le champ.
+     *
+     * @param list<string> $reserves codes des phases hors du formulaire (phases figées du mode ajout, D51)
+     */
+    private static function verifierCodes(FormInterface $form, array $reserves = []): void
+    {
+        $codesPhases = array_fill_keys(array_filter($reserves), true);
+        foreach ($form->get('phases') as $phaseForm) {
+            $code = (string) $phaseForm->get('code')->getData();
+            if ($code !== '' && isset($codesPhases[$code])) {
+                $phaseForm->get('code')->addError(new FormError(sprintf('Le code %s est déjà utilisé par une autre phase.', $code)));
+            }
+            $codesPhases[$code] = true;
+            $codesPoules = [];
+            foreach ($phaseForm->get('poules') as $pouleForm) {
+                $codePoule = (string) $pouleForm->get('code')->getData();
+                if ($codePoule !== '' && isset($codesPoules[$codePoule])) {
+                    $pouleForm->get('code')->addError(new FormError(sprintf('Le code %s est déjà utilisé par une autre poule de cette phase.', $codePoule)));
+                }
+                $codesPoules[$codePoule] = true;
+            }
+        }
+    }
+
+    /** @return list<Phase> */
+    private static function phasesDansLOrdre(Saison $saison): array
+    {
+        $phases = $saison->getPhases()->toArray();
+        usort($phases, fn (Phase $a, Phase $b) => [$a->getOrdre(), $a->getId()] <=> [$b->getOrdre(), $b->getId()]);
+
+        return array_values($phases);
+    }
+
+    /**
+     * Après enregistrement d'une étape : bouton « aller » = precedent, suivant, verification, quitter, enregistrer (rester
+     * sur l'étape, alertes recalculées) ou un numéro d'étape déjà vue. L'étape atteinte est mémorisée pour reprendre le
+     * brouillon.
+     */
+    private function naviguer(Request $request, Saison $saison, int $etape, EntityManagerInterface $em): Response
+    {
+        $aller = $request->getPayload()->getString('aller', 'suivant');
+        if ($aller === 'quitter') {
+            if (!$saison->isBrouillon()) {
+                // Saison visible sur le site : on ne la quitte pas avec des erreurs bloquantes
+                if (VerificationSaison::verifier($saison)['erreurs'] !== []) {
+                    $this->addFlash('error', 'Vos modifications sont enregistrées, mais la saison contient des erreurs : corrigez-les avant de quitter.');
+
+                    return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 6]);
+                }
+                $this->addFlash('success', sprintf('Les modifications de la saison %s sont enregistrées.', $saison->getNom()));
+
+                return $this->redirectToRoute('admin_saison_show', ['id' => $saison->getId()]);
+            }
+            $this->addFlash('success', sprintf('Brouillon « %s » enregistré. Reprenez-le depuis la liste des saisons.', $saison->getNom()));
+
+            return $this->redirectToRoute('admin_saison_index');
+        }
+        if ($aller === 'enregistrer') {
+            $this->addFlash('success', 'Modifications enregistrées. Les alertes ci-dessous sont à jour.');
+
+            return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => $etape]);
+        }
+        $cible = match (true) {
+            $aller === 'precedent' => $etape - 1,
+            $aller === 'verification' => 6,
+            ctype_digit($aller) => (int) $aller,
+            default => $etape + 1,
+        };
+        $cible = max($saison->isBrouillon() ? 1 : 2, min(6, $cible));
+        if ($this->ajout && !\in_array($cible, self::ETAPES_AJOUT, true)) {
+            // Mode ajout (D51) : étape proposée la plus proche dans le sens du déplacement
+            $recul = $cible < $etape;
+            $cible = $etape;
+            foreach ($recul ? array_reverse(self::ETAPES_AJOUT) : self::ETAPES_AJOUT as $numero) {
+                if ($recul ? $numero < $etape : $numero > $etape) {
+                    $cible = $numero;
+                    break;
+                }
+            }
+        }
+        if ($cible > $etape && $saison->isBrouillon()) {
+            $saison->setEtapeWizard(max((int) $saison->getEtapeWizard(), $cible));
+            $em->flush();
+        }
+        if ($cible === 1) {
+            return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => 1]);
+        }
+
+        return $this->redirectToRoute('admin_saison_wizard_etape', ['id' => $saison->getId(), 'etape' => $cible]);
+    }
+
+    /**
+     * Étapes pour le stepper : numéro, libellé, état (faite, en cours, à venir) et si elle est accessible (déjà vue).
+     *
+     * @return list<array{numero: int, libelle: string, etat: string, accessible: bool}>
+     */
+    private static function etapes(?Saison $saison, int $courante, array $aCorriger = [], bool $ajout = false): array
+    {
+        // Saison déjà créée (modification) : toutes les étapes sauf le départ ; lancée : Phases, Passages, Vérification (D51)
+        $edition = $saison !== null && !$saison->isBrouillon();
+        $atteinte = $edition ? 6 : max($courante, (int) $saison?->getEtapeWizard());
+        $etapes = [];
+        foreach (self::ETAPES as $numero => $libelle) {
+            if (($edition && $numero === 1) || ($ajout && !\in_array($numero, self::ETAPES_AJOUT, true))) {
+                continue;
+            }
+            $etapes[] = [
+                'numero' => $numero,
+                'libelle' => $libelle,
+                'etat' => $numero === $courante ? 'en cours' : (\in_array($numero, $aCorriger, true) ? 'à corriger' : ($numero <= $atteinte ? 'faite' : 'à venir')),
+                // L'étape 1 d'un brouillon n'est qu'un rappel (le point de départ est appliqué) ; pas de lien sans brouillon
+                'accessible' => $saison !== null && $numero <= $atteinte,
+            ];
+        }
+
+        return $etapes;
+    }
+
+    /** « Saison 2027-2028 » d'après la date de début, rendu unique si besoin (« Saison 2027-2028 (2) »). */
+    private static function nomPropose(\DateTimeImmutable $debut, SaisonRepository $saisons): string
+    {
+        $annee = (int) $debut->format('Y');
+        $nom = sprintf('Saison %d-%d', $annee, $annee + 1);
+        $candidat = $nom;
+        for ($i = 2; $saisons->findOneBy(['nom' => $candidat]) !== null; ++$i) {
+            $candidat = "$nom ($i)";
+        }
+
+        return $candidat;
     }
 }

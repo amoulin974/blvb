@@ -219,7 +219,7 @@
                 {% if membres is empty %}
                     <p class="mt-2">Composition non renseignée pour cette saison.</p>
                 {% else %}
-                    <ul class="mt-2 divide-y divide-base-300">
+                    <ul class="mt-2 divide-y divide-(--color-base-300)">
                         {% for membre in membres %}
                             <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>

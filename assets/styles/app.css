@@ -159,9 +159,9 @@ body{
 
 /* Règlement : typographie de lecture (longue page de texte), sans toucher au contenu balise par balise. */
 @layer components {
-    #article-reglement { line-height: 1.6; }
-    #article-reglement h1 { margin-bottom: 1rem; }
-    #article-reglement h2 {
+    .reglement-article { line-height: 1.6; }
+    .reglement-article h1 { margin-bottom: 1rem; }
+    .reglement-article h2 {
         text-transform: uppercase;
         letter-spacing: 0.025em;
         color: var(--color-primary);
@@ -170,23 +170,170 @@ body{
         margin-bottom: 0.75rem;
         border-top: 1px solid var(--color-base-300);
     }
-    #article-reglement h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
-    #article-reglement p { margin-bottom: 0.75rem; max-width: 70ch; }
-    #article-reglement ul, #article-reglement ol { margin: 0 0 0.75rem 1.25rem; list-style: disc; }
-    #article-reglement li { margin-bottom: 0.25rem; }
-    #article-reglement img { max-width: 100%; height: auto; margin: 1rem auto; border-radius: var(--radius-box); }
-    #article-reglement table { margin: 1rem 0; border: 1px solid var(--color-base-300); }
-    #article-reglement thead tr { border-bottom: 2px solid var(--color-primary); }
-    #article-reglement th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
+    .reglement-article h3 { font-size: 1.25rem; margin-top: 1.5rem; margin-bottom: 0.5rem; }
+    .reglement-article p { margin-bottom: 0.75rem; max-width: 70ch; }
+    .reglement-article ul, .reglement-article ol { margin: 0 0 0.75rem 1.25rem; list-style: disc; }
+    .reglement-article ol { list-style: decimal; }
+    .reglement-article li { margin-bottom: 0.25rem; }
+    .reglement-article img { max-width: 100%; height: auto; margin: 1rem auto; border-radius: var(--radius-box); }
+    .reglement-article table { margin: 1rem 0; border: 1px solid var(--color-base-300); }
+    .reglement-article thead tr { border-bottom: 2px solid var(--color-primary); }
+    .reglement-article th { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; }
 
 }
 
-/* Sommaire du règlement : tocbot recopie le texte des h2 tel qu'affiché (en capitales), on le remet en casse normale.
-   Hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
-.js-toc .toc-link { display: block; padding: 0.25rem 0; text-decoration: none; text-transform: lowercase; color: var(--color-primary); }
-.js-toc .toc-link::first-letter { text-transform: uppercase; }
+/* Éléments calculés du règlement (templates/reglement/blocs/, D58, docs/wizard-saison/reglement-maquettes.md).
+   Hors couche pour passer devant .reglement-article (puces, marges, largeur 70ch) ; container-type : le rendu suit la
+   largeur de l'article, pas celle de l'écran. */
+.reglement-bloc { margin-block: 1rem; container-type: inline-size; }
+.reglement-article .reglement-bloc ul, .reglement-article .reglement-bloc ol { margin: 0; list-style: none; padding: 0; }
+.reglement-article .reglement-bloc li { margin: 0; }
+.reglement-article .reglement-bloc p { margin-bottom: 0.5rem; }
+.reglement-article .reglement-bloc .reglement-criteres { list-style: decimal; padding-left: 1.5rem; }
+.reglement-article .reglement-bloc .reglement-criteres li { margin-bottom: 0.5rem; }
+.reglement-bloc-titre { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-primary); font-size: 1.125rem; margin: 0 0 0.25rem; }
+.reglement-tableau .reglement-bloc-titre { font-size: 1rem; }
+.reglement-bloc-infos { font-size: 0.875rem; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+.reglement-schema-phase { padding-block: 1rem; }
+.reglement-schema-phase + .reglement-schema-phase { border-top: 1px solid var(--color-base-300); }
+.reglement-cartes { display: grid; gap: 0.75rem; margin-top: 0.5rem; }
+@container (min-width: 36rem) { .reglement-cartes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.reglement-carte { background-color: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 0.75rem; break-inside: avoid; }
+.reglement-carte-titre { font-family: var(--font-display); font-weight: 700; text-transform: uppercase; letter-spacing: 0.025em; }
+.reglement-carte-effectif { font-family: var(--font-sans); font-weight: 400; text-transform: none; letter-spacing: 0; font-size: 0.875rem; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+/* Sorties d'une poule : une puce par phrase (souvent sur 2 lignes), phrases plus écartées que leurs lignes */
+.reglement-article .reglement-bloc .reglement-sorties { font-size: 0.875rem; line-height: 1.45; list-style: disc; padding-left: 1.125rem; }
+.reglement-article .reglement-bloc .reglement-sorties li + li { margin-top: 0.375rem; }
+/* Tableau final : carte sur le fond secondaire de la charte (lisible d'un tableau à l'autre), matchs en cartes blanches */
+.reglement-tableau { margin-top: 1.25rem; padding: 0.75rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box);
+    background-color: var(--color-base-200); break-inside: avoid-page; }
+.reglement-tableau .match-tableau { background-color: var(--color-base-100); border-color: color-mix(in oklab, var(--color-base-content) 20%, transparent); }
+/* Enchaînement des phases : étapes l'une sous l'autre, flèche et « qui passe » entre deux étapes (la flèche est
+   décorative : l'ordre de la liste porte la succession) ; phases jouées en même temps côte à côte quand la place le permet */
+.reglement-etapes { display: flex; flex-direction: column; gap: 0.5rem; margin: 0.5rem 0 1rem; break-inside: avoid; }
+.reglement-etapes + .reglement-schema > :first-child { border-top: 1px solid var(--color-base-300); }
+.reglement-etape { display: flex; flex-direction: column; gap: 0.5rem; }
+.reglement-etape-passage { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; text-align: center; }
+.reglement-etape-fleche::before { content: "↓"; display: block; color: var(--color-primary); font-weight: 700; font-size: 1.25rem; line-height: 1; }
+.reglement-article .reglement-bloc .reglement-etape-transition { font-size: 0.875rem; max-width: 40rem; margin: 0; }
+.reglement-etape-ensemble { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+.reglement-etape-phases { display: flex; flex-direction: column; gap: 0.5rem; }
+.reglement-etape-phase { padding: 0.5rem 0.75rem; font-size: 0.875rem; line-height: 1.4; }
+.reglement-etape-nom { color: var(--color-primary); }
+.reglement-article .reglement-bloc .reglement-etape-phase p { margin-bottom: 0.125rem; }
+@container (min-width: 36rem) {
+    .reglement-etape-phases:has(.reglement-etape-ensemble) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .reglement-etape-ensemble { grid-column: 1 / -1; }
+}
+/* Tableau à élimination : tours en liste, en colonnes quand l'article est assez large (4 tours au plus) */
+.tableau-final { display: grid; gap: 1rem; margin-top: 0.5rem; }
+@container (min-width: 40rem) {
+    .tableau-final[data-tours="2"] { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .tableau-final[data-tours="3"] { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .tableau-final[data-tours="4"] { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .tableau-final[data-tours] .tableau-final-tour { display: flex; flex-direction: column; }
+    .tableau-final[data-tours] .tableau-final-matchs { align-content: space-around; flex: 1; }
+}
+.tableau-final-nom { font-weight: 600; }
+.tableau-final-date { font-size: 0.875rem; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+.tableau-final-matchs { display: grid; gap: 0.5rem; }
+.match-tableau { display: flex; flex-direction: column; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); font-size: 0.875rem; break-inside: avoid; }
+.match-tableau > :not(.sr-only) { padding: 0.25rem 0.5rem; }
+.match-tableau-nom { font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+.match-tableau-equipe + .sr-only + .match-tableau-equipe, .match-tableau-nom + .match-tableau-equipe { border-top: 1px solid var(--color-base-300); }
+.reglement-baremes { display: grid; gap: 1rem; }
+@container (min-width: 44rem) { .reglement-baremes { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+/* Barème : colonnes de points de largeur fixe, en-têtes sur 2 lignes équilibrées */
+.reglement-baremes th[scope="col"]:not(:first-child) { width: 5.5rem; text-wrap: balance; }
+/* Un barème : largeur bornée, libellés et note passent à la ligne (le tableau ne s'étire pas sur tout l'article) */
+.reglement-bareme { max-width: 34rem; min-width: 0; break-inside: avoid; }
+.reglement-baremes > :only-child { grid-column: 1 / -1; }
+.reglement-bareme .reglement-table th, .reglement-bareme .reglement-table td { overflow-wrap: break-word; }
+.reglement-bareme-note { margin-top: 0.5rem; }
+.reglement-article .reglement-bloc table { margin: 0; width: 100%; }
+.reglement-article .reglement-bloc .reglement-table:not(.reglement-calendrier) { break-inside: avoid; }
+.reglement-table caption:not(.sr-only) { text-align: left; font-weight: 600; padding-bottom: 0.25rem; }
+/* En-têtes de ligne en casse normale (.reglement-article th met tous les th en petites capitales) ; texte à 14 px
+   (table-sm de daisyUI le met à 12 px) ; en-têtes de colonne au contraste AA */
+.reglement-article .reglement-table th[scope="row"] { font-size: inherit; text-transform: none; letter-spacing: normal; }
+.reglement-table tbody tr { font-size: 0.875rem; }
+.reglement-table thead { color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+.reglement-calendrier-phase th { font-family: var(--font-display); text-transform: uppercase; letter-spacing: 0.025em; color: var(--color-primary); font-size: 0.875rem; background-color: var(--color-base-200); }
+.reglement-calendrier-periode { font-family: var(--font-sans); text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--color-base-content); }
+.reglement-calendrier-fermeture { background-color: var(--color-base-200); }
+.reglement-calendrier-finales { background-color: color-mix(in oklab, var(--color-primary) 10%, var(--color-base-100)); }
+.reglement-calendrier-finales > :first-child { box-shadow: inset 4px 0 0 var(--color-primary); }
+.reglement-cette-semaine { color: var(--color-primary); }
+.reglement-calendrier tbody { break-inside: avoid; }
+.reglement-inapplicable p:last-child { margin-bottom: 0; }
+@media print { .reglement-article h2, .reglement-article h3 { break-after: avoid; } }
+
+/* Page d'édition du règlement (admin/reglement/edit.html.twig) : zone d'édition TipTap, codes courts reconnus */
+.reglement-editeur { min-height: 60vh; padding: 1rem; }
+@media (min-width: 48rem) { .reglement-editeur { padding: 1.5rem 2rem; } }
+.reglement-editeur .ProseMirror { min-height: 55vh; outline: none; }
+.reglement-editeur:focus-within { box-shadow: inset 0 0 0 2px var(--color-primary); }
+.reglement-editeur .ProseMirror img { max-width: 100%; }
+.reglement-editeur .ProseMirror img.ProseMirror-selectednode { outline: 3px solid var(--color-primary); }
+/* Code court qui sera remplacé par un élément calculé : filet turquoise (jamais en couleur de texte), fond, police mono */
+/* Casse et espacement normaux même dans un titre (h2 en capitales) ; fond et filet répétés si le code passe à la ligne */
+.reglement-code-court { font-family: ui-monospace, monospace; background-color: var(--color-base-200); border-left: 3px solid var(--color-secondary); padding: 0 0.25rem; text-transform: none; letter-spacing: normal; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+/* Code court jugé inapplicable au dernier enregistrement ou aperçu : « à vérifier » (filet et soulignement ondulé
+   orange, la raison en infobulle) ; jamais la couleur seule : l'encart en tête de page liste aussi ces codes */
+.reglement-code-court.reglement-code-inapplicable { border-left-color: var(--color-warning); background-color: color-mix(in oklab, var(--color-warning) 15%, var(--color-base-100)); text-decoration: underline wavy color-mix(in oklab, var(--color-warning) 70%, black); text-underline-offset: 3px; cursor: help; }
+/* Bouton de mise en forme actif : fond teinté et soulignement marine (indice contrasté, WCAG 1.4.11) */
+[role="toolbar"] .btn[aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); box-shadow: inset 0 -2px 0 var(--color-primary); }
+/* Menus de la barre : focus clavier visible (le fond gris de daisyUI disparaît sur une entrée enfoncée) ; « Plus » marqué
+   quand une de ses entrées est active ; marge du menu ouvert vers le haut */
+[role="toolbar"] .dropdown-content button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+[role="toolbar"] summary[data-actif] { box-shadow: inset 0 -2px 0 var(--color-primary); color: var(--color-primary); }
+[role="toolbar"] .dropdown-top > .dropdown-content { margin-top: 0; margin-bottom: 0.25rem; }
+/* Panneau des éléments calculés : chevron qui pivote à l'ouverture, sans triangle du navigateur */
+details[data-code] > summary { list-style: none; }
+details[data-code] > summary::-webkit-details-marker { display: none; }
+details[data-code] > summary svg { transition: rotate 0.15s; }
+@media (prefers-reduced-motion: reduce) { details[data-code] > summary svg { transition: none; } }
+details[data-code][open] > summary svg { rotate: 180deg; }
+
+/* Sommaire du règlement : tocbot recopie le texte des titres tel qu'il est écrit (les capitales des h2 ne viennent que du
+   CSS) ; hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
+.js-toc .toc-link { display: block; padding: 0.25rem 0; text-decoration: none; color: var(--color-primary); }
+@media (width < 64rem) { .js-toc .toc-link { padding-block: 0.625rem; } }
 .js-toc .toc-link:hover { text-decoration: underline; }
 .js-toc .is-active-link { font-weight: 700; }
+/* Barre de position aux couleurs de la charte (tocbot la met en vert) ; règles (h3) en retrait et plus petites */
+.js-toc .toc-link::before { background-color: var(--color-base-300); }
+.js-toc .is-active-link::before { background-color: var(--color-primary); width: 3px; }
+.js-toc .toc-list .toc-list { padding-left: 0.75rem; }
+.js-toc .toc-list .toc-list .toc-link { font-size: 0.875rem; }
+/* Alignements posés dans l'éditeur (classes aligne-…, seules classes gardées par le nettoyage) : sur toute la largeur de
+   l'article (pas seulement dans les 70ch d'un paragraphe) ; une image alignée, seule ou dans son lien, passe en bloc */
+.reglement-article .aligne-centre { text-align: center; }
+.reglement-article .aligne-droite { text-align: right; }
+.reglement-article .aligne-justifie { text-align: justify; hyphens: auto; }
+.reglement-article p:is(.aligne-centre, .aligne-droite) { max-width: none; }
+.reglement-article img.aligne-centre { display: block; margin-inline: auto; }
+.reglement-article img.aligne-droite { display: block; margin-left: auto; margin-right: 0; }
+.reglement-article a:has(> img.aligne-centre) { display: table; margin-inline: auto; }
+.reglement-article a:has(> img.aligne-droite) { display: table; margin-left: auto; }
+/* Mise en forme de l'éditeur dans le texte libre (hors éléments calculés) : surligné, citation, séparation, tableaux.
+   Exception à la charte (jaune réservé au logo et aux boutons) : le surligné reprend le jaune accent, pâli à 35 %,
+   convention du surligneur connue de tous ; texte foncé dessus bien au-delà de AA. */
+.reglement-article mark, [role="toolbar"] mark { background-color: color-mix(in oklab, var(--color-accent) 35%, var(--color-base-100)); color: inherit; padding-inline: 0.125rem; border-radius: 0.125rem; }
+.reglement-article blockquote { margin: 0 0 0.75rem; padding: 0.25rem 0 0.25rem 1rem; border-left: 3px solid var(--color-primary); color: color-mix(in oklab, var(--color-base-content) 85%, transparent); }
+.reglement-article hr { margin: 1.5rem 0; border: 0; border-top: 1px solid var(--color-base-300); }
+.reglement-article sup, .reglement-article sub { font-size: 0.75em; line-height: 0; }
+.reglement-article table:not(.reglement-bloc table) { border-collapse: collapse; width: 100%; }
+.reglement-article :is(td, th):not(.reglement-bloc *) { border: 1px solid var(--color-base-300); padding: 0.375rem 0.5rem; vertical-align: top; text-align: left; overflow-wrap: anywhere; }
+.reglement-article :is(td, th):not(.reglement-bloc *) p { margin: 0; max-width: none; }
+.reglement-article th:not(.reglement-bloc *) { background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); }
+/* Éditeur : tableau qui défile s'il est trop large, cellules sélectionnées visibles */
+.reglement-editeur .tableWrapper { overflow-x: auto; }
+.reglement-editeur .selectedCell { background-color: color-mix(in oklab, var(--color-primary) 14%, var(--color-base-100)); }
+/* Image cliquable : focus clavier visible autour de l'image ; dans l'éditeur, contour pointillé qui signale le lien */
+.reglement-article a:has(> img) { display: inline-block; border-radius: var(--radius-box); }
+.reglement-article a:has(> img):focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.reglement-editeur .ProseMirror a > img { outline: 2px dashed var(--color-primary); outline-offset: 2px; }
 
 /* « Mon équipe » (mon_equipe_controller.js) : lignes et cartes de l'équipe suivie, teintées du jaune d'accent.
    Hors couche pour passer devant les fonds utilitaires (zones de montée/descente, survol). */
@@ -204,6 +351,68 @@ body{
 /* Carte de contenu du back-office (formulaires, listes) */
 .admin-carte { background-color: var(--color-base-100); border: 1px solid var(--color-base-300); border-radius: var(--radius-box); padding: 1rem; }
 @media (min-width: 64rem) { .admin-carte { padding: 1.5rem; } }
+/* Wizard de saison : carte de choix (radio visible dans un label) et barre de navigation collée en bas sur téléphone */
+.choix-carte { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background-color: var(--color-base-100); cursor: pointer; }
+.choix-carte:has(:checked) { border-color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); }
+.choix-carte:has(:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.wizard-navigation { border-top: 1px solid var(--color-base-300); padding-top: 0.75rem; background-color: var(--color-base-100); }
+@media (max-width: 63.99rem) { .wizard-navigation { position: sticky; bottom: 0; z-index: 2; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); } }
+/* Stepper du wizard : six pastilles tiennent sur un téléphone ; « ! » lisible sur orange ; étape en cours cerclée */
+.steps-wizard .step { min-width: 0; }
+.steps-wizard .step-warning::after { --step-fg: var(--color-base-content); }
+.steps-wizard .step[aria-current="step"]::after { box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--color-primary); }
+/* Bouton refusé tant qu'il reste des erreurs (aria-disabled : il garde le focus et sa description) */
+.btn[aria-disabled="true"] { --btn-bg: var(--color-base-200); --btn-border: var(--color-base-300); --btn-fg: color-mix(in oklab, var(--color-base-content) 70%, transparent); cursor: not-allowed; }
+/* Utilitaires que les composants daisyUI (couche suivante) écraseraient */
+.btn-ajout { border-style: dashed; }
+.badge-ecart { border-color: var(--color-warning); }
+.champ-court { width: 6rem; }
+/* Wizard, étape Phases : textes qui suivent le type de phase coché avant l'enregistrement (macro selon_type).
+   Sans :has(), seul le texte du type enregistré s'affiche. */
+.selon-type > .type-inactif { display: none; }
+@supports selector(:has(*)) {
+  /* Seulement si un type est coché : sinon (type refusé, aucun choix coché) le repli .type-inactif s'applique */
+  .phase-wizard:has(input[name$="[type]"]:checked) .selon-type > [data-type] { display: none; }
+  .phase-wizard:has(input[name$="[type]"][value="0"]:checked) .selon-type > [data-type="0"],
+  .phase-wizard:has(input[name$="[type]"][value="1"]:checked) .selon-type > [data-type="1"],
+  .phase-wizard:has(input[name$="[type]"][value="2"]:checked) .selon-type > [data-type="2"] { display: inline; }
+}
+/* En-têtes de tableau de l'admin posés sur le filet, même quand un voisin passe sur deux lignes */
+.table-admin thead th { vertical-align: bottom; }
+/* Menu déroulant en <details> (menu_deroulant_controller.js) : sans triangle du navigateur */
+.dropdown > summary { list-style: none; }
+.dropdown > summary::-webkit-details-marker { display: none; }
+.dropdown[open] > summary svg:last-child { rotate: 180deg; }
+/* Menu d'une barre d'outils (éditeur du règlement) : son summary porte un tabindex (navigation aux flèches) ; daisyUI rend
+   alors ce déclencheur insensible aux clics dès qu'il a le focus, et le menu ne s'ouvrait jamais à la souris */
+[role="toolbar"] .dropdown > summary { pointer-events: auto; }
+[role="toolbar"] .dropdown-content button:disabled { opacity: 0.5; cursor: not-allowed; }
+/* Entrée en cours du menu d'alignement : même repère qu'un bouton enfoncé (fond teinté, filet marine) */
+[role="toolbar"] .dropdown-content [aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); font-weight: 600; box-shadow: inset 3px 0 0 var(--color-primary); }
+/* Bouton de suppression discret : rouge foncé, contraste AA même sur le fond gris du survol de .btn-ghost (D54) */
+.btn-danger-discret { color: color-mix(in oklab, var(--color-error) 70%, black); }
+/* Entrée destructive d'un menu (D54) : rouge foncé, contraste AA même au survol ; 44 px */
+.menu .menu-danger { color: color-mix(in oklab, var(--color-error) 70%, black); min-height: 2.75rem; width: 100%; justify-content: flex-start; }
+.menu .menu-danger:hover, .menu .menu-danger:focus-visible { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); }
+.menu .menu-danger:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+/* Carte repliable ouverte (daisyUI .collapse) qui contient un menu déroulant ouvert : le menu n'est pas rogné en bas
+   de carte ni recouvert par la carte suivante ; les autres cartes gardent leur rognage */
+.collapse:has(> input:checked):has(details[open]) { overflow: visible; z-index: 1; }
+/* Fieldset de formulaire : texte à taille normale (daisyUI impose .75rem à .fieldset) */
+.fieldset-formulaire { font-size: 1rem; }
+/* Cibles tactiles de 44 px dans l'admin */
+@media (pointer: coarse) { main .btn { min-height: 2.75rem; } main .btn-square { width: 2.75rem; } }
+/* Tableau de saisie empilé en cartes sur téléphone : chaque cellule porte son libellé (data-label) */
+@media (max-width: 47.99rem) {
+  .table-empilee thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .table-empilee, .table-empilee tbody { display: block; }
+  .table-empilee tr { display: grid; grid-template-columns: 1fr 1fr; align-items: end; gap: 0.5rem 0.75rem; padding: 0.75rem; margin-bottom: 0.75rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); }
+  .table-empilee td { display: block; padding: 0; }
+  .table-empilee td.pleine-largeur { grid-column: 1 / -1; }
+  .table-empilee td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 70%, transparent); }
+  .table-empilee tbody tr:hover { background: none; }
+  .table-empilee .champ-court { width: 100%; }
+}
 /* Alertes de l'admin (admin/_alerte.html.twig) : texte lisible (contraste AA) en couleur de base ; l'état est porté par
    l'icône et le filet gauche ; icône en haut des messages sur plusieurs lignes (hors couche : passe devant daisyUI) */
 .admin-alerte { color: var(--color-base-content); border-left: 4px solid var(--alert-color); align-items: start; }
@@ -211,3 +420,10 @@ body{
 .admin-nav .menu-active { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); font-weight: 600; }
 /* En-tête des tableaux de l'admin visible pendant le défilement des longues listes (sans pagination) */
 .table-admin thead th { position: sticky; top: 0; z-index: 1; background-color: var(--color-base-100); box-shadow: inset 0 -2px 0 var(--color-primary); }
+/* Messages d'erreur des formulaires de l'admin (thème admin/form/erreurs.html.twig) : rouge foncé (contraste AA), champ cerclé */
+.form-erreur { margin: 0.25rem 0 0.5rem; padding: 0; list-style: none; font-size: 0.875rem; font-weight: 600; color: color-mix(in oklab, var(--color-error) 70%, black); }
+.form-erreur + .input, .input:has(+ .form-erreur) { border-color: var(--color-error); }
+/* Boutons Monter / Descendre (wizard) : texte visible dès 640 px, sinon icône seule dans un carré de 44 px.
+   Hors couche : daisyUI n'a pas de variante responsive de btn-square. */
+.btn-deplacer { min-height: 2.75rem; }
+@media (max-width: 39.99rem) { .btn-deplacer { width: 2.75rem; padding: 0; } }

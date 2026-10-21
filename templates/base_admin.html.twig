@@ -47,7 +47,16 @@
                 {% for label, messages in app.flashes %}
                     {% set type = {success: 'success', error: 'error', danger: 'error', warning: 'warning'}[label] ?? 'info' %}
                     {% for message in messages %}
-                        {% embed 'admin/_alerte.html.twig' with {type: type, classe: 'mb-4'} %}{% block contenu %}{{ message }}{% endblock %}{% endembed %}
+                        {% embed 'admin/_alerte.html.twig' with {type: type, classe: 'mb-4'} %}{% block contenu %}
+                            {# Message simple, ou message à liste : {titre, details, conseil} (ex. clôture d'une phase) #}
+                            {% if message is iterable %}
+                                <strong class="font-semibold">{{ message.titre }}</strong>
+                                <ul class="mt-1 list-disc pl-5 space-y-1">
+                                    {% for detail in message.details %}<li>{{ detail }}</li>{% endfor %}
+                                </ul>
+                                {% if message.conseil is defined %}<p class="mt-2">{{ message.conseil }}</p>{% endif %}
+                            {% else %}{{ message }}{% endif %}
+                        {% endblock %}{% endembed %}
                     {% endfor %}
                 {% endfor %}
                 {% block body %}{% endblock %}
@@ -71,7 +80,15 @@
                         <span class="flex flex-col leading-tight"><span>Saison en cours</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
                     </a></li>
                 {% endif %}
-                {% set actif = route starts with 'admin_saison_' and not surSaisonCourante %}
+                {% if saisonCourante %}
+                    {% set surReglement = route starts with 'admin_reglement_' and app.request.attributes.get('id') == saisonCourante.id %}
+                    <li><a href="{{ path('admin_reglement_edit', {id: saisonCourante.id}) }}" class="{{ lien }} {{ surReglement ? 'menu-active' }}" {% if surReglement %}aria-current="page"{% endif %}>
+                        {{ icone.i('document', 'size-5') }}
+                        <span class="flex flex-col leading-tight"><span>Règlement</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
+                    </a></li>
+                {% endif %}
+                {# Règlement d'une autre saison que la saison en cours : rangé sous « Toutes les saisons » #}
+                {% set actif = (route starts with 'admin_saison_' and not surSaisonCourante) or (route starts with 'admin_reglement_' and not surReglement|default(false)) %}
                 <li><a href="{{ path('admin_saison_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('saison', 'size-5') }} Toutes les saisons</a></li>
             </ul>
 
@@ -121,7 +138,7 @@
     </div>
 </div>
 {# Fenêtre de confirmation partagée : remplie par confirmation_controller.js depuis les boutons admin/_confirmation.html.twig #}
-<dialog class="modal" data-confirmation-target="dialogue" aria-labelledby="confirmation-titre">
+<dialog class="modal" data-confirmation-target="dialogue" data-action="cancel->confirmation#echap" aria-labelledby="confirmation-titre">
     <div class="modal-box max-w-lg">
         <h3 id="confirmation-titre" class="flex items-start gap-2 text-xl">
             <span class="mt-0.5 text-error"><span data-confirmation-target="iconeAlerte">{{ icone.i('alerte', 'size-6') }}</span><span data-confirmation-target="iconeBlocage" class="hidden">{{ icone.i('cadenas', 'size-6') }}</span></span>
@@ -130,9 +147,10 @@
         <ul class="mt-4 list-disc pl-5 space-y-1" data-confirmation-target="consequences"></ul>
         <p class="mt-4 hidden" data-confirmation-target="blocage"></p>
         <p class="mt-4 font-semibold" data-confirmation-target="definitive">Cette action est définitive.</p>
+        <p class="mt-4 hidden" role="status" data-confirmation-target="statut"></p>
         <div class="modal-action">
             <form method="dialog"><button class="btn btn-ghost" data-confirmation-target="annuler">Annuler</button></form>
-            <form method="post" data-confirmation-target="formulaire">
+            <form method="post" data-confirmation-target="formulaire" data-action="submit->confirmation#envoyer">
                 <input type="hidden" name="_token" data-confirmation-target="token">
                 <span data-confirmation-target="champs"></span>
                 <button type="submit" class="btn btn-error" data-confirmation-target="bouton">Supprimer définitivement</button>

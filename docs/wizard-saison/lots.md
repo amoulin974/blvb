@@ -15,12 +15,12 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D28) | ✅ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ✅ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ✅ |
-| 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | 🟡 |
+| 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ✅ |
 | 7 | Autres championnats : brassage puis niveau (A4), serpentin (A5), géographique (A6) | ⬜ |
 | 8 | Autres éliminations et hybrides : classement intégral (B3), consolante (B4), aller-retour et set en or (B6), play-offs et play-downs (C2), meilleurs Xe (C5) | ⬜ |
 | 9 | Formats particuliers : plateaux (A7), suisse (A8), échelle (A9), double élimination (B5), handicap (C6) | ⬜ |
 | 10 | Autres sports : représentation neutre du score ; sports à buts (match nul), sports à points, sports de raquette en match simple ; saisie et affichages par sport | ⬜ |
-| 11 | Règlement en ligne généré à partir des paramètres | ⬜ |
+| 11 | Règlement en ligne généré à partir des paramètres : branche `reglement`, voir `reglement.md` (D55 à D59) ; R1 à R5 faits et fusionnés dans `formats-competition` (22/10/2026), R6 en attente | 🟡 |
 
 Étude à part, hors lots : rencontres par équipes des sports de raquette (une rencontre = plusieurs
 matchs individuels), qui changent le modèle lui-même (D13).
@@ -105,7 +105,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Brouillon : `Saison.brouillon`, `Saison.etapeWizard`, `Poule.nbEquipesPrevu` (migration
       `Version20261013150000`) ; brouillon invisible sur le site et jamais « affiché sur le site »
       (`SaisonRepository::findPubliees`, `findPubliee`, `findPlusRecentePubliee`)
-- [ ] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : reporté au lot 6 (D33)
+- [x] ~~`Phase.format` à la place de `PhaseType` (D27)~~ : sans objet, le type de la phase est son format (D42, lot 6)
 - [x] Écrans du wizard : 6 étapes (départ, saison, phases, passages, classement, vérification et validation)
 - [x] « Modifier la saison » (D29, question 8) : wizard en mode édition tant que la saison n'est pas
       lancée (D34) ; la page de modification ne garde que nom, dates et périodes de fermeture
@@ -115,7 +115,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       stepper cliquable sur téléphone, barre du bas allégée, icônes au lieu des glyphes, cibles de
       44 px, pluriels, textes sans article devant un nom saisi, règles en clair dans les messages,
       aperçu et avertissement de la saison copiée dès l'étape 1, brouillon supprimable depuis la liste
-- [ ] Reporté au lot 5 (relecture) : carte « Point de départ » du récapitulatif (le départ n'est pas
+- [x] Reporté au lot 5 (relecture), réalisé au lot 5 : carte « Point de départ » du récapitulatif (le départ n'est pas
       enregistré), « Brouillon enregistré à 14 h 32 », écarts d'effectif dans le schéma (« 9 / 8 »),
       aide courte sous chaque critère de départage, liens de l'alerte d'erreur de l'étape 3 vers les
       champs ; vérifier dans le navigateur les utilitaires Tailwind écrasés par daisyUI (webdesigner)
@@ -145,30 +145,95 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Tests (MEP-01 à MEP-24, WIZ-18 à WIZ-21, PHA-10, PHA-11), `tests/SPECIFICATIONS.md`, relecture ergonome + webdesigner + sécurité de chaque écran
       Point à traiter à part (hors lot) : équipe qui se retire et forfait général (règle de forfait, D41).
 
-## Lot 6 : formats BLVB 🟡
-- [x] Branche `formats-competition-lot6` ; décisions D42 à D44
+## Lot 6 : formats BLVB ✅ (fusionné dans `formats-competition` le 22/10/2026)
+- [x] Branche `formats-competition-lot6` ; décisions D42 à D44, puis D45 à D48 (16/10 : journée des finales, aller-retour, format de match)
 - [x] 6a. Phase de barrages : `PhaseType::BARRAGE`, `Phase.options` (JSON, migration), générateur `Barrage`
       (une poule de deux équipes par match, réception selon l'option), vainqueur / perdant résolus par
       `ResultatsSaison`, règles de passage depuis une phase de barrages ; clôture d'une phase sans classement
 - [x] 6b. Modèle « BLVB avec barrages » (D44) et vérification (D5) des passages par barrage
 - [x] 6c. Wizard : phase de barrages (étape Phases), carte par match à l'étape Passages (D32), modèle proposé
       au départ ; relu par l'ergonome, le webdesigner et la sécurité
-- [ ] 6c bis. Mise en place (Poules, Journées, Matchs) d'une phase de barrages : fonctionne par les générateurs
-      (BAR-01 à BAR-06) mais n'a pas été relue écran par écran dans le navigateur (« Barrage 1 » à 2 équipes,
-      textes des bilans)
+- [x] 6c bis. Mise en place (Poules, Journées, Matchs) d'une phase de barrages relue dans le navigateur (22/10/2026,
+      Playwright, scénario de recette `barrages` : clôture de la phase 2 depuis l'admin puis barrages de fin de saison) ;
+      corrigé : phases de la saison triées par ordre (la phase 2 n'avait pas de bouton « Clôturer »), « 0 journée créée »,
+      origine « Vient de la poule A », textes propres aux barrages (« Match unique : A reçoit B. », placement d'après le
+      classement, un match la première semaine, « 3 journées créées pour 3 barrages »), article des noms (« Le barrage… »),
+      séparateurs `divide-(--color-base-300)` ; relu par l'ergonome et le webdesigner ; BAR-10
 - [x] 6d. Élimination complète : barrages du tableau (`n` non puissance de 2), exemptions, placement standard
       1-8, 4-5, 3-6, 2-7 (B1), petite finale (B2)
-- [ ] 6e. Journée des finales (C3) : tableaux de tous les niveaux sur une date
-- [ ] 6f. Aller-retour (A2) et format de match par phase (3 ou 2 sets gagnants)
-- [ ] Relecture ergonome + webdesigner + sécurité des écrans, tests, `tests/SPECIFICATIONS.md`, journal
+- [x] 6e. Journée des finales (C3) : derniers tours au choix (finales seules, ou demi-finales et finales) de tous les
+      tableaux sur une date, dans un gymnase, planning calculé (D45, D46) : option `journee_finales` de la phase,
+      `PlanningFinales`, dates des journées (`Elimination`), vérification, copie ; écran de l'étape Phases relu par
+      l'ergonome, le webdesigner et la sécurité ; JFI-01 à JFI-05, WIZ-28, WIZ-29. Petite finale d'un tableau de 4
+      équipes corrigée
+- [x] 6f-1. Format de match par phase, 3 ou 2 sets gagnants (D48) : option `sets_gagnants` (`Phase::getSetsGagnants`),
+      `RegleSport` et `Volley` paramétrés (`$setsGagnants`), classement par format de phase, API et fenêtre de saisie
+      du score, choix dans l'étape Phases ; relu par l'ergonome et le webdesigner (règle 1R en format court, règlement
+      public, `fieldset-formulaire`) ; SET-01 à SET-04
+- [x] 6f-2. Aller-retour (A2), retour en miroir (D47) : option `aller_retour` du championnat, journées et matchs doublés,
+      retour dérivé de l'aller par l'optimiseur (un match de l'aller et son retour s'inversent ensemble, les rondes
+      s'échangent avec leurs retours), replacement des matchs à venir compatible, case à l'étape Phases ; ALR-01 à ALR-07
+- [x] 6g. Barrages de fin de phase 2 (D50) : seconde phase de barrages placée après la phase finale et jouée en même
+      temps, alimentée par la phase 2 (avant-dernier du haut, 2e du bas) sans effet sur le tableau final ; aucun passage
+      vers la saison suivante (poules remplies à la main). Une phase finale est terminale (clôture sans répartition),
+      une équipe peut avoir une destination par phase d'arrivée ; BAR-07 à BAR-09, VER-02
+- [x] Vérifier dans le navigateur la mise en place des deux phases de barrages du modèle (Poules, Journées, Matchs) : voir 6c bis (même format pour les deux)
+- [x] Relecture sécurité de 6f et 6g (19/10/2026) : aucune faille critique ni importante ; corps JSON forgé de l'API de
+      score refusé en 400 (SCO-17, défaut déjà présent avant le lot). Le match sans poule est impossible en base
+- [x] 6h. Wizard en mode ajout pour une saison lancée (D51) : étapes Phases, Passages, Vérification ; phases
+      commencées (`ModeAjout::phasesFigees`) en lecture seule, nouvelle phase ajoutée à la fin puis remontée parmi les
+      phases libres ; passages d'une phase clôturée ou vers une phase commencée figés ; suppression refusée si une
+      phase commencée y envoie des équipes ; lien « Ajouter des phases » sur « Modifier la saison ». Relu par l'ergonome,
+      le webdesigner et la sécurité (3 constats mineurs corrigés) ; ADJ-01 à ADJ-09
+- [x] 6i. Section « Barrages de fin de saison » à l'étape Passages (D53) : identification par la position, une carte par
+      match (places de la source), proposition du schéma du bureau, contrôles (deux équipes, différentes, un seul
+      barrage, même équipe sous deux libellés) ; chaque section n'enregistre que ses propres règles ; case « saison
+      suivante » masquée ; relu par l'ergonome, le webdesigner et la sécurité ; FIN-01 à FIN-07
+- [x] 6j. Commande `app:saison:ajouter-barrages` (`App\Competition\AjoutBarrages`) : ajoute à une saison créée sans eux
+      les barrages du modèle, entre les deux phases de championnat (tant que la première n'est pas clôturée et que la
+      seconde n'a pas commencé ; passages de la première remplacés par ceux du modèle) et après la phase finale (passages
+      ajoutés à la dernière phase de championnat) ; simulation, puis `--force` ; `--seulement=entre|fin` ; BAR-11
+- [x] Bilan de fin de lot : relecture globale et journal (22/10/2026, `methode.md`)
+
+## Lot 11 : règlement par saison 🟡 (branche `reglement`, R1 à R5 fusionnés dans `formats-competition` le 22/10/2026 ; R6 en attente ; détail dans `reglement.md`)
+La branche `reglement` part de `formats-competition-lot6` : elle contient le lot 6 et se fusionnera avec lui (D15).
+- [x] R1 à R4 : données, éléments calculés, page publique, page d'édition (TipTap complet, onglet HTML, images) ; relus
+- [x] R5 : reprise du règlement 2025 (`app:reglement:importer`, RGL-23), ancien gabarit supprimé ; checklist de mise en
+      production dans `deploiement-reglement.md`
+- [x] `prosemirror-view` monté en 1.42.3 (faille XSS au collage)
+- [ ] R6 : schémas dessinés dans un canvas (bibliothèque à choisir, décision à consigner)
+- [ ] Essais restants dans un navigateur : conflit entre deux onglets, historique et restauration, Firefox et Safari
+- [x] TipTap monté en version 3 (3.31.4, faille moyenne de `@tiptap/core` corrigée), vérifié dans Chromium, Firefox et WebKit
+- [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
+- [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
 ## À faire hors lots (relevé en relecture)
+- [x] Page « Modifier la poule » refaite (D52) : nom et niveau, équipes en lecture seule avec lien vers la mise en place,
+      phase commencée ou clôturée verrouillée côté serveur ; relue par l'ergonome et le webdesigner ; POU-01 à POU-05
 - [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info
       (webdesigner, D28) : fait sur `main` et `prod` (`af97240`), gabarit commun `admin/_alerte.html.twig`
-- [ ] Avertissements des règles de passage affichés avant de cliquer sur « Clôturer » (ergonome,
-      D28) : avec le wizard (lots 4-5)
+- [x] Avertissements des règles de passage avant « Clôturer » (ergonome, D28) : fait (D37, PHA-10)
 - [ ] Autres messages joints par « ; » (surcharges des gymnases, `optimiserTout`) : liste comme D28
-- [ ] Page d'une saison hors wizard : la recentrer sur le suivi (liste avec colonne « État » et bouton principal unique,\n      suppressions en masse masquées une fois la saison lancée, show renvoyant un brouillon vers le wizard,\n      « Créer la saison suivante ») : avis de l'ergonome et décisions à prendre dans decisions.md, PO1\n- [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)\n- [x] Avertissements des règles de passage avant « Clôturer » : fait (D37, PHA-10)
+- [ ] Page d'une saison hors wizard : la recentrer sur le suivi (liste avec colonne « État » et bouton principal unique,
+      suppressions en masse masquées une fois la saison lancée, show renvoyant un brouillon vers le wizard,
+      « Créer la saison suivante ») : avis de l'ergonome et décisions à prendre dans decisions.md, PO1
+- [ ] Équipe qui se retire, forfait général : règle de forfait (decisions.md, PO2)
+- [x] Expéditeur des e-mails : un seul, `blvb@vblc.fr` (le compte authentifié sur le SMTP d'OVH, qui refusait
+      `admin@blvb.fr` et `tech@vblc.fr`), réglable par `MAILER_FROM` ; fait sur `main` (`ad55678`) et `prod`
+      (`41ba275`), test MAI-01 ; ramené dans `formats-competition-lot6` le 16/10
+- [ ] Import Excel des utilisateurs trop lent sur le serveur (erreur 500 au-delà d'une dizaine de lignes ; il
+      fonctionne 10 lignes par 10 lignes) : chaque compte reçoit un mot de passe aléatoire haché avec le coût
+      normal (≈ 0,3 s par compte), jamais utilisé. Décision de l'utilisateur (16/10/2026) : générer ces mots de
+      passe plus simplement ; l'utilisateur choisit le sien par « J'ai oublié mon mot de passe ». Proposition :
+      compte créé sans mot de passe utilisable. Sur `main`, puis `prod`
+- [ ] Site en panne en production (16/10/2026) : la branche `prod` a été vérifiée sur le poste de développement
+      (image de production construite, pages publiques en 200, assets servis sous `/blvb`) ; la cause est côté
+      serveur. En attente de `docker compose ps` et `docker compose logs --tail=80 php` sur le serveur (Francis)
+
+- [ ] Contraste des libellés de formulaire (`.label` de daisyUI, ≈ 4,4:1, limite AA) : correction globale proposée par
+      le webdesigner (`color-mix(... currentColor 80% ...)` hors couche dans `app.css`), à décider
+- [ ] Texte à 12 px dans les autres `fieldset` de l'étape Phases (daisyUI) : leur appliquer `.fieldset-formulaire`
+- [x] Journée des finales en 2 sets gagnants : durée proposée selon le format, 120 minutes en 3 sets et 75 en 2 sets (D49, SET-05)
 
 ## Critères de fin d'un lot
 - tests unitaires et d'intégration du lot écrits et verts, suite complète verte ;

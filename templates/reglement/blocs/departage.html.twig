@@ -1,0 +1,9 @@
+{# [departage] (App\Reglement\Bloc\BlocDepartage, D58) : le numéro est le rang du critère. #}
+<section class="reglement-bloc" data-bloc="departage" aria-label="Départage des équipes à égalité">
+    <p>Les équipes d'une poule sont classées selon ces critères, dans l'ordre. On ne passe au critère suivant qu'en cas d'égalité.</p>
+    <ol class="reglement-criteres">
+        {% for critere in criteres %}
+            <li><span class="font-semibold">{{ critere.libelle }}</span><span class="reglement-bloc-infos block">{{ critere.aide }}</span></li>
+        {% endfor %}
+    </ol>
+</section>

@@ -377,6 +377,209 @@ la phase suivante. Le calendrier de la phase suivante se génère après les bar
 directes reste une option du wizard (D1).
 *(2026-10-15, lot 6)*
 
+## D45. Journée des finales (C3) : derniers tours au choix, dans un gymnase et à une date
+**Décision** : option de la phase à élimination. Sans elle, comportement actuel (un tour par semaine, chez l'équipe qui
+reçoit). Avec elle, l'administrateur choisit **par phase** les tours regroupés : les finales seules (avec les petites
+finales), ou les demi-finales et les finales. Ces tours de **tous les tableaux** de la phase se jouent le même jour, dans
+un même gymnase choisi ; les tours précédents restent un par semaine, avant cette date.
+**Pourquoi** : la finale du vendredi soir avec la remise des prix (F1) ; certains règlements regroupent aussi les
+demi-finales (final four). Choix de l'utilisateur, 16/10/2026.
+*(2026-10-16, lot 6)*
+
+## D46. Journée des finales : planning calculé
+**Décision** : paramètres gymnase, date, heure de début, nombre de terrains, durée d'un match. Les matchs s'enchaînent par
+créneaux (autant de matchs par créneau que de terrains) : demi-finales d'abord s'il y en a, puis petites finales et finales,
+chaque fois du niveau le plus bas au niveau 1 ; la finale du niveau 1 se joue en dernier, avant la remise des prix. Les heures
+restent modifiables ensuite dans le calendrier.
+*(2026-10-16, lot 6)*
+
+## D47. Championnat aller-retour (A2) : retour en miroir
+**Décision** : option de la phase de championnat. Le retour reprend les journées de l'aller dans le même ordre, domicile et
+extérieur inversés, dans la seconde moitié de la phase (`2(n-1)` journées, `2n` avec un nombre impair d'équipes).
+L'optimiseur place l'aller (gymnases, alternance) ; le retour en découle. Pas de retour décalé pour l'instant.
+**Pourquoi** : lecture simple pour les clubs, équilibre domicile / extérieur parfait. Choix de l'utilisateur.
+*(2026-10-16, lot 6)*
+
+## D48. Format de match par phase : 3 ou 2 sets gagnants, barème adapté
+**Décision** : option de toute phase, 3 sets gagnants par défaut. En 2 sets gagnants : scores 2-0 et 2-1 ; 2-0 = victoire
+forte, 2-1 = victoire faible, 1-2 = défaite forte, 0-2 = défaite faible ; forfait 2 contre -1 ; match interrompu (règle
+1R) : 1-1 et 1-0, 0 point chacun. Le barème de la saison (ou de la phase) s'applique aux catégories forte / faible comme
+en 3 sets. La validation du score et la fenêtre de saisie suivent le format de la phase du match.
+*(2026-10-16, lot 6)*
+
+## D49. Durée d'un match : réglable pour la journée des finales, proposée selon le format
+**Décision** : la durée d'un match ne se règle que pour la journée des finales (champ « Durée d'un match (minutes) »,
+entre 30 et 240). Valeur proposée quand rien n'est enregistré : 120 minutes en 3 sets gagnants, 75 minutes en 2 sets
+gagnants (`Phase::dureeMatchParDefaut`). Les autres usages (agenda `.ics`, affichage du calendrier d'administration)
+gardent leur durée actuelle ; un réglage par phase ou par saison reste possible plus tard.
+**Pourquoi** : un match en 2 sets est plus court ; la proposition évite de saisir une durée à chaque fois. Choix de
+l'utilisateur, 19/10/2026 (périmètre : journée des finales seulement). Remplace l'ancien défaut de 90 minutes.
+*(2026-10-19, lot 6)*
+
+## D50. Barrages de fin de phase 2 : sans effet sur la phase finale, ils décident de la saison suivante
+**Décision** (point 6 de F2, utilisateur, 19/10/2026) : dans le modèle BLVB, la phase 2 se termine aussi par des barrages
+entre poules voisines (avant-dernier de la poule N contre 2e de la poule N+1, comme en fin de phase 1, D44). Ces
+barrages **n'influencent pas la phase finale** : les tableaux finaux sont alimentés par le classement de la phase 2,
+comme aujourd'hui. Ils **déterminent seulement le niveau de la saison suivante** : le vainqueur est placé dans la poule
+supérieure, le perdant dans la poule inférieure ; les autres équipes suivent les montées et descentes directes de la
+phase 2 (1er monte, dernier descend). Les barrages se jouent en même temps que la phase finale.
+**Précisions** (utilisateur, 19/10/2026) : les barrages de fin de saison sont placés **après** la phase finale ; **aucun
+lien n'est codé entre saisons** : leurs résultats servent à remplir à la main les poules de la saison suivante. Le modèle
+n'enregistre donc aucune règle « saison suivante » pour la phase 2.
+**Conséquences** (lot 6g) : une équipe peut avoir une destination dans chaque phase d'arrivée (tableau final et barrage),
+jamais deux dans la même ; une phase finale sans règle est « terminale » : elle se clôture sans répartir d'équipes et
+n'apparaît plus dans les passages, même si une autre phase la suit.
+*(2026-10-19, lot 6)*
+
+## D51. Saison lancée : le wizard rouvre en mode ajout (modifie D29, D34)
+**Décision** (utilisateur, 19/10/2026) : une saison lancée (un match, une phase clôturée ou un classement) se modifie
+encore dans le wizard, en **mode ajout**, pour lui ajouter des phases, en particulier les barrages qui n'existaient pas
+quand la saison de production a été créée (barrages entre phase 1 et phase 2, barrages de fin de saison, D44, D50).
+- **Phases commencées, figées** : une phase est commencée si elle est clôturée, a un match, un classement non nul ou des
+  équipes dans ses poules. Elle et toutes celles qui la précèdent sont affichées en lecture seule : ni nom, ni dates, ni
+  type, ni poules, ni ordre ne changent, et aucune phase ne se place avant elles.
+- **Phases suivantes, libres** : les phases placées après la dernière phase commencée se modifient, se déplacent et se
+  suppriment comme dans un brouillon ; une nouvelle phase s'ajoute à la fin puis se remonte parmi elles.
+- **Passages** : ceux d'une phase clôturée sont déjà appliqués et ne s'affichent plus ; ceux d'une phase en cours se
+  modifient (pour envoyer ses équipes dans un barrage ajouté).
+- **Étapes** : seules Phases, Passages et Vérification sont proposées ; la saison (nom, dates, fermetures) se modifie
+  par la page « Modifier la saison », le classement (barème, départage) ne change plus en cours de saison.
+**Pourquoi** : ajouter des barrages à la saison en cours sans jamais toucher aux matchs, scores et classements déjà là.
+Préféré à un bouton dédié « Ajouter des barrages » (plus souple : tout format de phase peut s'ajouter).
+*(2026-10-19, lot 6)*
+
+## D52. Page « Modifier la poule » : retouches seulement, la composition reste dans la mise en place
+**Décision** (utilisateur, 19/10/2026, sur proposition de l'ergonome et du webdesigner) : la page d'administration
+« Modifier la poule » ne sert plus qu'aux retouches.
+- **Champs** : nom et niveau ; la phase et la saison ne se changent plus et figurent dans le sous-titre de la page
+  (déplacer une poule casse ses journées, matchs et passages : on la supprime puis on la recrée dans le wizard) ; les
+  journées sortent du formulaire (écran « Calendrier des journées »).
+- **Équipes** : liste en lecture seule, avec un lien vers l'étape « Poules » de la mise en place tant que la composition de
+  la phase n'est pas verrouillée (D36, D38).
+- **Phase commencée** (ModeAjout::commencee, D51) : seul le nom se modifie, le niveau est verrouillé côté serveur, la
+  suppression n'est plus proposée sur cette page. **Phase clôturée** : page en lecture seule.
+- Après enregistrement : retour à la page de la saison, sur la poule.
+*(2026-10-19, hors lots)*
+
+## D53. Barrages de fin de saison : une section dédiée à l'étape Passages (précise D50)
+**Décision** (utilisateur, 19/10/2026, sur avis de l'ergonome) :
+- **Identification par la position** : une phase de barrages dont la phase précédente est une phase finale est une phase
+  de barrages de fin de saison ; ses équipes viennent de la dernière phase de championnat placée avant elle (la
+  « source »). Aucun réglage supplémentaire.
+- **Section dédiée** à l'étape Passages, juste après « source → phase finale », titrée « {source} → {barrages} » : une
+  carte par match, deux listes « Première équipe » et « Seconde équipe » (rang et poule de la source en un seul choix),
+  pré-remplie selon le schéma du bureau (avant-dernier de la poule N contre 2e de la poule N+1), enregistrée seulement à
+  la validation de l'étape. Contrôles : deux équipes par match, deux équipes différentes, une équipe dans un seul barrage.
+- **Une seule source de saisie** : les règles vers ces barrages ne s'affichent ni ne se modifient dans « source → phase
+  finale » ; chaque section n'enregistre que ses propres règles.
+- **Saison suivante** : quand une phase de barrages de fin de saison existe, la case « Montées et descentes pour la saison
+  suivante » de la section « source → phase finale » est masquée (poules de la saison suivante remplies à la main, D50).
+- Mode ajout (D51) : la section se modifie tant que la source n'est pas clôturée.
+**Pourquoi** : l'écran Passages ne montrait que des transitions vers la phase suivante ; ces barrages n'avaient aucun
+endroit visible, et leurs règles faisaient basculer les poules de la phase 2 en mode détaillé.
+*(2026-10-19, lot 6)*
+
+## D54. Page « Piloter une saison » : suppressions d'une poule dans un menu « Supprimer », refusées une fois la phase jouée
+**Décision** (utilisateur, 19/10/2026, avis de l'ergonome et du webdesigner) :
+- Dans la barre de chaque poule, « Supprimer les matchs », « Supprimer les journées » (« … et les matchs » s'il y en a) et
+  « Supprimer la poule » sont regroupés dans un menu « Supprimer » (poubelle et chevron, rouge discret), toujours présent
+  même avec une seule entrée ; séparateur avant « Supprimer la poule » ; chaque entrée garde la fenêtre de confirmation.
+- **Phase jouée** (clôturée, au moins un score saisi ou un classement non nul) : le menu n'est plus affiché et le serveur
+  refuse ces suppressions (matchs, journées, poule, matchs d'une journée, et la phase elle-même), avec un message
+  « Impossible de supprimer … : des matchs de Phase 1 ont déjà été joués » (ou « Phase 1 est clôturée »). À la place du
+  menu, la barre de la poule l'explique (« Suppression impossible : des matchs ont été joués. ») ; « Supprimer la
+  phase » disparaît de la page de la saison et la page « Modifier la phase » montre le blocage. La suppression d'un match
+  isolé reste possible pour corriger une erreur.
+- Relectures (ergonome, webdesigner) : boutons de suppression discrets en rouge foncé (`.btn-danger-discret`, AA au
+  survol), icônes retirées des entrées du menu, chevron qui pivote à l'ouverture. Une phase dont les matchs sont générés mais pas joués reste modifiable
+  (régénérer les matchs).
+**Pourquoi** : trois boutons rouges voisins aux libellés proches invitaient au clic accidentel ; aucune garde côté serveur
+n'empêchait d'effacer des matchs joués. Règle plus souple que « commencée » (D51, D52) : avant le premier score,
+supprimer et régénérer reste l'usage normal.
+*(2026-10-19, hors lots ; avance sur PO1)*
+
+## D55. Règlement par saison : texte libre édité par les admins, blocs générés insérés par marqueurs (précise D14)
+**Décision** (utilisateur, 20/10/2026) : chaque saison a son règlement, rédigé par les admins dans un **éditeur
+visuel** (titres, gras, listes, liens, images ; HTML nettoyé côté serveur). Les éléments calculés à partir des
+paramètres de la saison sont des **blocs** que l'admin place où il veut dans le texte, choisis dans une liste ; ils
+sont recalculés à chaque affichage. Blocs : schéma des phases (remplace les images `schema-2025*.jpg`), barème et
+format des matchs, départage, calendrier (remplace `calendrier-2025.jpg`). Travail sur la branche `reglement`, créée
+depuis `formats-competition-lot6` (elle tient lieu de lot 11).
+**Pourquoi** : le texte (règles de jeu, arbitrage, joueurs) change peu et reste l'affaire du bureau ; les parties qui
+dépendent des paramètres ne peuvent plus être en décalage avec ce que fait l'application.
+**Précision** (utilisateur, 20/10/2026) : le marqueur est un **code court** écrit dans le texte (ex. `[bareme]`,
+`[bareme phase=P2]`) ; la page d'édition montre la liste des éléments calculés, chacun avec son code court et son
+rendu pour la saison.
+**Précisions** (utilisateur, 20/10/2026) :
+- **Code inapplicable** (code inconnu, phase absente de la saison, élément sans objet) : rien n'est affiché au public ;
+  un admin connecté voit à sa place un encart d'avertissement qui en donne la raison ; la page d'édition les liste en tête.
+- **Éléments graphiques** : rendus en HTML et CSS par des gabarits Twig (aucune image générée), relus par le webdesigner
+  et l'ergonome.
+- **Tableaux des phases finales** : compris dans `[schema_phases]` ; le paramètre `phase` limite le schéma à une phase
+  (`[schema_phases phase=FIN]` : les tableaux finaux seuls).
+- **Panneau de la page d'édition** : pour chaque élément, la liste de ses paramètres (nom, rôle, valeurs possibles dans
+  la saison, valeur par défaut).
+*(2026-10-20, règlement)*
+
+## D56. Règlement : reprise d'une saison à l'autre, publication et historique
+**Décision** (utilisateur, 20/10/2026) :
+- **Reprise** : une saison créée par copie (D3, D10) reprend le texte du règlement de la saison copiée ; les blocs
+  suivent les paramètres de la nouvelle saison.
+- **Publication** : enregistrer publie aussitôt ; la page affiche la date de dernière mise à jour ; chaque
+  enregistrement garde la version précédente, consultable et restaurable par un admin.
+- **Archives** : les blocs d'une saison terminée restent recalculés (ses paramètres ne changent plus, D51) ; rien
+  n'est figé.
+*(2026-10-20, règlement)*
+
+## D57. Règlement : page publique, accès et liens
+**Décision** (utilisateur, 20/10/2026) :
+- `/reglement` affiche le règlement de la saison affichée sur le site (sélecteur de saison du site) ; les règlements
+  des saisons passées restent consultables ; celui d'un brouillon ne l'est jamais.
+- Édition par les admins seulement, sur une **page dédiée par saison** (lien depuis la page de la saison et le
+  récapitulatif du wizard), modifiable à tout moment, même saison lancée.
+- **Ancres automatiques** sur les titres, tirées du code de la règle (« RÈGLE 1R » → `#regle-1r`, utilisé par la
+  fenêtre de saisie du score) ; sommaire généré comme aujourd'hui.
+- **Images** envoyées depuis l'éditeur (JPG, PNG, WebP, taille limitée), stockées sur le serveur.
+- **Reprise de l'existant** : le règlement actuel (gabarit `front/reglement.html.twig` et ses images) est importé dans
+  la saison en cours ; le gabarit en dur disparaît ensuite.
+*(2026-10-20, règlement)*
+
+## D58. Règlement : rendu des éléments calculés
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes.md`) :
+- **Schéma des phases** : chaque poule liste ses sorties dans l'ordre du classement, en une seule liste, chacune avec sa
+  phase d'arrivée ; un barrage dit son adversaire et son enjeu (précision de l'utilisateur, 20/10/2026) : « Du 1er au 6e
+  restent en poule A dans la phase 2 », « Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s'il reste en
+  poule A », « Le 8e descend en poule B dans la phase 2 » ; en mots publics
+  (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
+  numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
+- **Enchaînement des phases** (demande de l'utilisateur, 20/10/2026) : en tête de `[schema_phases]` pour toute la saison,
+  un schéma des étapes (une case par phase, flèches ; phases qui commencent le même jour dans la même étape, « En même
+  temps : »), et sous chaque flèche qui passe à l'étape suivante, résumé à partir des règles de passage (mouvements communs
+  à plusieurs poules ; le détail reste dans les cartes ; condition de l'ergonome).
+- **Barème** : un tableau par format de match, trois colonnes « Résultat », « Points du gagnant », « Points du perdant »
+  (choix de l'utilisateur, 20/10/2026 ; une ligne par résultat : 3-0 ou 3-1, 3-2, forfait) ; ligne
+  « Match interrompu (règle 1R) », points fixés par le règlement (`Volley::pointsInterrompus`, selon le format de match),
+  avec lien vers la règle ; le texte de la règle 1R n'écrit plus les points en dur. Phase à élimination : une phrase, pas de tableau.
+- **Départage** : liste numérotée, aides du wizard.
+- **Calendrier** : tableau « semaine / programme » par phase, fermetures, journée des finales, « Cette semaine » ; les tours
+  d'une phase à élimination s'affichent « à jouer avant le … » (date limite du tour), sauf la journée des finales.
+- **Jours fériés** : texte libre (une semaine entière sans match se saisit comme fermeture).
+*(2026-10-20, règlement)*
+
+## D59. Règlement : page d'édition des admins (R4)
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes-r4.md`) :
+- **Brouillon** : le règlement d'une saison en brouillon se rédige dès le wizard ; aperçu seulement (jamais public, D57) ;
+  statut « Brouillon : visible par le public quand la saison sera lancée », bouton « Enregistrer ». Saison visible :
+  « Enregistrer et publier ».
+- **Voir la page publique** : pour un admin, `/reglement?saison=<id>` ouvre la saison modifiée (saison visible
+  seulement).
+- **Deux admins en même temps** : à l'enregistrement, si une autre version a été publiée depuis l'ouverture de la page,
+  avertir (« A. Moulin a publié une autre version à 14 h 40 ») et laisser choisir « Publier la mienne quand même »
+  (l'autre reste dans l'historique) ou « Annuler ».
+- **Conservation** : toutes les versions sont gardées ; les images envoyées restent sur le serveur (nettoyage plus tard,
+  sans jamais supprimer une image citée dans l'historique) ; description d'image obligatoire, ou case « Image décorative ».
+*(2026-10-20, règlement)*
+
 ---
 
 ## Points ouverts

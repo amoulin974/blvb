@@ -11,7 +11,11 @@
         titre: saison.nom,
         sous_titre: saison.favori ? 'Saison affichée sur le site' : 'Saison non affichée sur le site',
         retour: {url: path('admin_saison_index'), label: 'Saisons'},
-        actions: [{url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'}],
+        actions: [
+            {url: path('admin_saison_miseenplace_poules', {id: saison.id}), label: 'Composer les poules', icone: 'crayon'},
+            {url: path('admin_saison_edit', {id: saison.id}), label: 'Modifier la saison', icone: 'crayon'},
+            {url: path('admin_reglement_edit', {id: saison.id}), label: reglement_saison(saison) ? 'Modifier le règlement' : 'Rédiger le règlement', icone: 'document'},
+        ],
     }) }}
 
     <div class="space-y-4">
@@ -39,8 +43,8 @@
                                 consequences: [
                                     'Le classement final de chaque poule est figé et la phase est marquée « Clôturée ».',
                                     'Les équipes sont réparties dans les poules de la phase suivante selon leur classement (montées et descentes).',
-                                    'Les journées et les matchs de la phase suivante sont générés automatiquement.',
-                                ],
+                                    'Vous composez ensuite les poules, les journées et les matchs de la phase suivante depuis la mise en place.',
+                                ]|merge((avertissementsCloture[phase.id]|default([]))|map(p => 'À vérifier avant de clôturer : ' ~ p)),
                                 bouton: 'Clôturer la phase',
                                 ton: 'warning',
                                 action: path('admin_phase_cloturer', {id: phase.id}),
@@ -49,7 +53,8 @@
                         {% endif %}
                         <a class="btn btn-ghost btn-sm" href="{{ path('admin_phase_edit', {id: phase.id}) }}">{{ icone.i('crayon') }} Modifier la phase</a>
                         <a class="btn btn-ghost btn-sm" href="{{ path('admin_phase_optimiser', {id: phase.id}) }}">{{ icone.i('eclair') }} Optimiser les matchs</a>
-                        <span class="ml-auto">{{ include('admin/phase/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm text-error'}) }}</span>
+                        {# Phase jouée : plus de suppression (D54), l'explication figure dans chaque poule #}
+                        {% if not phase.jouee %}<span class="ml-auto">{{ include('admin/phase/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm btn-danger-discret'}) }}</span>{% endif %}
                     </div>
 
                     {# Poules de la phase, en onglets #}
@@ -83,27 +88,40 @@
                                         {% set premiereJournee = poule.journees|sort((a, b) => a.numero <=> b.numero)|first %}
                                         <a class="btn btn-ghost btn-sm" href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: premiereJournee.id}) }}">{{ icone.i('calendrier') }} Calendrier des matchs</a>
                                     {% endif %}
-                                    <span class="ml-auto flex flex-wrap gap-1">
-                                        {% if aDesMatchs %}
-                                            {{ include('admin/_confirmation.html.twig', {
-                                                declencheur: 'Supprimer les matchs',
-                                                titre: 'Supprimer tous les matchs de la poule ' ~ poule.nom ~ ' ?',
-                                                consequences: [poule.parties|length ~ ' match(s) et leurs scores seront supprimés.', 'Les journées et les équipes sont conservées.'],
-                                                action: path('admin_partie_deleteall', {id: poule.id}),
-                                                token: csrf_token('deleteallparties' ~ poule.id),
-                                            }) }}
-                                        {% endif %}
-                                        {% if aDesJournees %}
-                                            {{ include('admin/_confirmation.html.twig', {
-                                                declencheur: 'Supprimer les journées',
-                                                titre: 'Supprimer toutes les journées de la poule ' ~ poule.nom ~ ' ?',
-                                                consequences: [poule.journees|length ~ ' journée(s) seront supprimées' ~ (aDesMatchs ? ', avec leurs ' ~ poule.parties|length ~ ' match(s) et leurs scores.' : '.'), 'Les équipes sont conservées.'],
-                                                action: path('admin_journee_deleteall', {id: poule.id}),
-                                                token: csrf_token('deleteall' ~ poule.id),
-                                            }) }}
-                                        {% endif %}
-                                        {{ include('admin/poule/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm text-error'}) }}
-                                    </span>
+                                    {# Suppressions de la poule dans un menu « Supprimer » (D54), masqué une fois la phase jouée (le serveur les refuse aussi) #}
+                                    {% if not poule.phase.jouee %}
+                                        {% set nbM = poule.parties|length %}{% set nbJ = poule.journees|length %}
+                                        <details class="dropdown dropdown-end ml-auto" data-controller="menu-deroulant">
+                                            <summary class="btn btn-ghost btn-sm btn-danger-discret">{{ icone.i('poubelle') }} Supprimer<span class="sr-only"> ({{ poule.nom }})</span> {{ icone.i('fleche-bas') }}</summary>
+                                            <ul class="menu dropdown-content bg-base-100 border border-base-300 rounded-box w-64 p-1 mt-1 shadow-md">
+                                                {% if aDesMatchs %}
+                                                    <li>{{ include('admin/_confirmation.html.twig', {
+                                                        declencheur: 'Supprimer les matchs',
+                                                        declencheur_classe: 'menu-danger',
+                                                        declencheur_icone: false,
+                                                        titre: 'Supprimer tous les matchs de la poule ' ~ poule.nom ~ ' ?',
+                                                        consequences: [nbM ~ (nbM > 1 ? ' matchs et leurs scores seront supprimés.' : ' match et son score seront supprimés.'), 'Les journées et les équipes sont conservées.'],
+                                                        action: path('admin_partie_deleteall', {id: poule.id}),
+                                                        token: csrf_token('deleteallparties' ~ poule.id),
+                                                    }) }}</li>
+                                                {% endif %}
+                                                {% if aDesJournees %}
+                                                    <li>{{ include('admin/_confirmation.html.twig', {
+                                                        declencheur: aDesMatchs ? 'Supprimer les journées et les matchs' : 'Supprimer les journées',
+                                                        declencheur_classe: 'menu-danger',
+                                                        declencheur_icone: false,
+                                                        titre: 'Supprimer toutes les journées de la poule ' ~ poule.nom ~ ' ?',
+                                                        consequences: [nbJ ~ (nbJ > 1 ? ' journées seront supprimées' : ' journée sera supprimée') ~ (aDesMatchs ? ', avec ' ~ (nbM > 1 ? 'leurs ' ~ nbM ~ ' matchs et leurs scores.' : 'son match et son score.') : '.'), 'Les équipes sont conservées.'],
+                                                        action: path('admin_journee_deleteall', {id: poule.id}),
+                                                        token: csrf_token('deleteall' ~ poule.id),
+                                                    }) }}</li>
+                                                {% endif %}
+                                                <li class="{{ aDesMatchs or aDesJournees ? 'mt-1 border-t border-base-300 pt-1' : '' }}">{{ include('admin/poule/_delete_form.html.twig', {declencheur_classe: 'menu-danger', declencheur_icone: false}) }}</li>
+                                            </ul>
+                                        </details>
+                                    {% else %}
+                                        <p class="ml-auto text-sm text-(--color-base-content)/80">Suppression impossible : {{ poule.phase.close ? 'phase clôturée.' : 'des matchs ont été joués.' }}</p>
+                                    {% endif %}
                                 </div>
 
                                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -113,7 +131,7 @@
                                             {% for equipe in poule.equipes %}
                                                 <li><a class="font-display font-medium tracking-wide hover:underline" href="{{ path('admin_equipe_show', {id: equipe.id}) }}">{{ equipe.nom }}</a></li>
                                             {% else %}
-                                                <li class="text-(--color-base-content)/80">Aucune équipe : ajoutez-en depuis « Modifier la poule ».</li>
+                                                <li class="text-(--color-base-content)/80">Aucune équipe.</li>
                                             {% endfor %}
                                         </ul>
                                     </section>
@@ -131,14 +149,15 @@
                                                         {% if journee.parties|length > 0 %}
                                                             <span class="flex items-center gap-1">
                                                                 <a class="btn btn-ghost btn-xs" href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: journee.id}) }}">{{ icone.i('calendrier') }} Calendrier</a>
-                                                                {{ include('admin/_confirmation.html.twig', {
+                                                                {% if not poule.phase.jouee %}{{ include('admin/_confirmation.html.twig', {
                                                                     declencheur: 'Supprimer les matchs',
-                                                                    declencheur_classe: 'btn btn-ghost btn-xs text-error',
+                                                                    declencheur_sr: 'de la journée ' ~ journee.numero,
+                                                                    declencheur_classe: 'btn btn-ghost btn-xs btn-danger-discret',
                                                                     titre: 'Supprimer les matchs de la journée ' ~ journee.numero ~ ' (poule ' ~ poule.nom ~ ') ?',
-                                                                    consequences: [journee.parties|length ~ ' match(s) et leurs scores seront supprimés.', 'La journée est conservée.'],
+                                                                    consequences: [journee.parties|length > 1 ? journee.parties|length ~ ' matchs et leurs scores seront supprimés.' : '1 match et son score seront supprimés.', 'La journée est conservée.'],
                                                                     action: path('admin_partie_deleteallbyjournee', {id: poule.id, journee: journee.id}),
                                                                     token: csrf_token('deleteallbyjournee' ~ journee.id),
-                                                                }) }}
+                                                                }) }}{% endif %}
                                                             </span>
                                                         {% endif %}
                                                     </div>
@@ -160,7 +179,7 @@
                                                                 </span>
                                                                 <a href="{{ path('admin_partie_getpartiecalendar', {id: poule.id, journee: journee.id, editPartie: partie.id}) }}"
                                                                    class="btn btn-ghost btn-sm btn-square" title="Changer la date ou le gymnase" aria-label="Changer la date ou le gymnase de {{ partie.nomReception }} contre {{ partie.nomDeplacement }}">{{ icone.i('calendrier') }}</a>
-                                                                {{ include('admin/partie/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm btn-square text-error', icone_seule: true}) }}
+                                                                {{ include('admin/partie/_delete_form.html.twig', {declencheur_classe: 'btn btn-ghost btn-sm btn-square btn-danger-discret', icone_seule: true}) }}
                                                             </li>
                                                         {% else %}
                                                             <li class="py-1.5 text-(--color-base-content)/80">Aucun match planifié.</li>

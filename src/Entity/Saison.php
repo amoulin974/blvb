@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Entity;
+use App\Competition\Classement\CritereDepartage;
 use Doctrine\DBAL\Types\Types;
 use Symfony\Component\Validator\Constraints as Assert;
 use App\Repository\SaisonRepository;
@@ -23,7 +24,9 @@ class Saison
     /**
      * @var Collection<int, Phase>
      */
+    // Dans l'ordre de la saison : la page de la saison les affiche ainsi et ne propose « Clôturer » qu'avant la dernière
     #[ORM\OneToMany(targetEntity: Phase::class, mappedBy: 'saison', orphanRemoval: true)]
+    #[ORM\OrderBy(['ordre' => 'ASC', 'id' => 'ASC'])]
     private Collection $phases;
 
     #[ORM\Column(type: 'integer', options: ['default' => 0])]
@@ -61,6 +64,37 @@ class Saison
     private ?int $points_defaite_faible = 0;
 
     /**
+     * Saison en cours de création dans le wizard : invisible sur le site, ne peut pas être la saison affichée
+     * (docs/wizard-saison/decisions.md, D29). Les saisons existantes ne sont pas des brouillons.
+     */
+    #[ORM\Column(options: ['default' => false])]
+    private bool $brouillon = false;
+
+    /** Dernière étape du wizard atteinte (1 à 6), pour reprendre un brouillon ; null hors wizard. */
+    #[ORM\Column(nullable: true)]
+    private ?int $etapeWizard = null;
+
+    /** Point de départ du wizard, en clair (« Copie de la saison X », « Modèle … ») ; null hors wizard. */
+    #[ORM\Column(length: 255, nullable: true)]
+    private ?string $departLibelle = null;
+
+    /** Dernier enregistrement d'une étape du wizard (« Brouillon enregistré à 14 h 32 ») ; null hors wizard. */
+    #[ORM\Column(type: Types::DATETIME_IMMUTABLE, nullable: true)]
+    private ?\DateTimeImmutable $modifieLe = null;
+
+    /** Sport de la saison (code d'un App\Competition\Sport\RegleSport) : forme du score, barème, départage. */
+    #[ORM\Column(length: 30, options: ['default' => 'volley'])]
+    private string $sport = 'volley';
+
+    /**
+     * Critères de départage du classement, dans l'ordre (codes de App\Competition\Classement\CritereDepartage).
+     *
+     * @var list<string>|null
+     */
+    #[ORM\Column(type: Types::JSON, nullable: true)]
+    private ?array $departage = null;
+
+    /**
      * @var Collection<int, Indisponibilite>
      */
     #[ORM\OneToMany(targetEntity: Indisponibilite::class, mappedBy: 'saison', cascade: ['persist', 'remove'], orphanRemoval: true)]
@@ -81,6 +115,81 @@ class Saison
         $this->date_fin = new \DateTimeImmutable("last day of july $nextYear"); // date actuelle par défaut
         $this->indisponibilites = new ArrayCollection();
         $this->membres = new ArrayCollection();
+        $this->setDepartage(CritereDepartage::parDefaut());
+    }
+
+    public function isBrouillon(): bool
+    {
+        return $this->brouillon;
+    }
+
+    public function setBrouillon(bool $brouillon): static
+    {
+        $this->brouillon = $brouillon;
+
+        return $this;
+    }
+
+    public function getEtapeWizard(): ?int
+    {
+        return $this->etapeWizard;
+    }
+
+    public function setEtapeWizard(?int $etapeWizard): static
+    {
+        $this->etapeWizard = $etapeWizard;
+
+        return $this;
+    }
+
+    public function getDepartLibelle(): ?string
+    {
+        return $this->departLibelle;
+    }
+
+    public function setDepartLibelle(?string $departLibelle): static
+    {
+        $this->departLibelle = $departLibelle;
+
+        return $this;
+    }
+
+    public function getModifieLe(): ?\DateTimeImmutable
+    {
+        return $this->modifieLe;
+    }
+
+    public function setModifieLe(?\DateTimeImmutable $modifieLe): static
+    {
+        $this->modifieLe = $modifieLe;
+
+        return $this;
+    }
+
+    public function getSport(): string
+    {
+        return $this->sport;
+    }
+
+    public function setSport(string $sport): static
+    {
+        $this->sport = $sport;
+
+        return $this;
+    }
+
+    /** @return list<CritereDepartage> critères dans l'ordre, ordre alphabétique en dernier */
+    public function getDepartage(): array
+    {
+        return CritereDepartage::depuisCodes($this->departage);
+    }
+
+    /** @param list<CritereDepartage> $criteres */
+    public function setDepartage(array $criteres): static
+    {
+        $this->departage = array_map(fn (CritereDepartage $c) => $c->value, CritereDepartage::normaliser($criteres));
+
+        return $this;
     }
 
     public function getId(): ?int
