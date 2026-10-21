@@ -55,6 +55,9 @@ services:
     # Wizard en mode ajout d'une saison lancée : phases figées (D51)
     App\Competition\ModeAjout: ~
 
+    # Barrages du modèle ajoutés à une saison créée sans eux (commande app:saison:ajouter-barrages)
+    App\Competition\AjoutBarrages: ~
+
     # Modèles de saison, point de départ du wizard (docs/wizard-saison/decisions.md, D10)
     App\Competition\Modele\:
         resource: '../src/Competition/Modele/'
@@ -100,3 +103,4 @@ when@test:
         App\Competition\CompositionPoules: { autowire: true, public: true }
         App\Competition\MiseEnPlaceJournees: { autowire: true, public: true }
         App\Competition\MiseEnPlaceMatchs: { autowire: true, public: true }
+        App\Competition\AjoutBarrages: { autowire: true, public: true }

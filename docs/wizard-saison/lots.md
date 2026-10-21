@@ -189,7 +189,11 @@ matchs individuels), qui changent le modèle lui-même (D13).
       match (places de la source), proposition du schéma du bureau, contrôles (deux équipes, différentes, un seul
       barrage, même équipe sous deux libellés) ; chaque section n'enregistre que ses propres règles ; case « saison
       suivante » masquée ; relu par l'ergonome, le webdesigner et la sécurité ; FIN-01 à FIN-07
-- [ ] Bilan de fin de lot : relecture globale et journal
+- [x] 6j. Commande `app:saison:ajouter-barrages` (`App\Competition\AjoutBarrages`) : ajoute à une saison créée sans eux
+      les barrages du modèle, entre les deux phases de championnat (tant que la première n'est pas clôturée et que la
+      seconde n'a pas commencé ; passages de la première remplacés par ceux du modèle) et après la phase finale (passages
+      ajoutés à la dernière phase de championnat) ; simulation, puis `--force` ; `--seulement=entre|fin` ; BAR-11
+- [x] Bilan de fin de lot : relecture globale et journal (22/10/2026, `methode.md`)
 
 ## Lot 11 : règlement par saison 🟡 (branche `reglement`, détail dans `reglement.md`)
 La branche `reglement` part de `formats-competition-lot6` : elle contient le lot 6 et se fusionnera avec lui (D15).

@@ -485,6 +485,38 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
 - **Ajouter des barrages à une saison existante** : aucune commande ; l'interface le permet (mode ajout, D51 : « Modifier
   la saison » → « Ajouter des phases ») tant que la phase 2 n'a pas commencé pour des barrages entre les phases 1 et 2.
 
+### 2026-10-22 : lot 6, commande d'ajout des barrages et bilan du lot
+
+- **6j** : `app:saison:ajouter-barrages` (service `AjoutBarrages`) ajoute à une saison créée sans eux les barrages du
+  modèle (entre les phases et/ou de fin de saison), simulation puis `--force` ; refus expliqués (phase 1 clôturée, phase 2
+  commencée, barrages déjà là) ; avertissements (dates qui chevauchent la phase 2, passages « saison suivante » gardés,
+  vérification des passages). BAR-11 : résultat identique au modèle. Sur la copie locale de la saison 2026-2027 (phase 1
+  clôturée) : barrages entre les phases refusés, barrages de fin de saison proposés.
+
+#### Bilan du lot 6 (formats BLVB)
+
+- **Livré** (6a à 6j) : phase de barrages et modèle « BLVB avec barrages » (D42 à D44), élimination complète avec
+  exemptions et petite finale (B1, B2), journée des finales au planning calculé (C3, D45, D46), format de match en 2 ou
+  3 sets gagnants et durée d'un match (D48, D49), championnat aller-retour en miroir (A2, D47), barrages de fin de saison
+  (D50, D53), wizard en mode ajout pour une saison lancée (D51), mise en place des barrages relue dans le navigateur
+  (6c bis), commande d'ajout des barrages (6j). Hors lot pendant le lot : page « Modifier la poule » (D52), menu
+  « Supprimer » d'une poule refusé une fois la phase jouée (D54), expéditeur unique des e-mails, rappel des scores.
+- **Migrations** du lot : `Version20261015100000`, `Version20261015110000` (options et codes des phases de barrages) ;
+  avec `main` : `Version20261017145440` (rappel des scores) ; lot 11 : `Version20261020164942` (règlement). À appliquer
+  en production au déploiement seulement.
+- **Tests** : 617 verts + 2 lents (branche `reglement`, qui contient le lot 6) ; `composer qualite`, `composer audit` et
+  `importmap:audit` propres. Chaque écran relu par l'ergonome et le webdesigner, les formulaires et API par la sécurité ;
+  barrages et règlement vérifiés dans Chromium, Firefox et WebKit (Playwright).
+- **Format BLVB actuel inchangé** : calendriers, classements et passages d'une saison au modèle « Format BLVB actuel »
+  identiques (tests de non-régression des lots 1 à 5 verts sans modification).
+- **Reste, hors lot** (`lots.md`, « À faire hors lots », et points ouverts PO1, PO2 de `decisions.md`) : page d'une saison
+  recentrée sur le suivi (PO1), forfait général (PO2), contraste des libellés de formulaire, taille du texte des autres
+  `fieldset` de l'étape Phases, messages joints par « ; », import Excel lent en production, validation par le comité de
+  « 1-1 ou 1-0 sans point » en 2 sets gagnants.
+- **Suite** : fusion de `formats-competition-lot6` et `reglement` dans `formats-competition` (D15), puis `main` ; mise en
+  production par Francis avec `deploiement-reglement.md` (commande d'ajout des barrages en option). Lot 11 : R6 en
+  attente (choix de l'utilisateur), essais restants dans un navigateur (conflit entre deux onglets, historique).
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout reglement && git pull`. La branche `reglement` (lot 11, en cours)

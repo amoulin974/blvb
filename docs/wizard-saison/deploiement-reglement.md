@@ -83,3 +83,18 @@ l'éditeur (adresse en `/blvb/uploads/reglement/…`).
 
 Note : le préfixe `/blvb` est écrit dans le contenu des règlements (images importées et envoyées) ; une copie de la base
 de production en local aura donc des images cassées.
+
+## Facultatif : barrages ajoutés à la saison en cours
+
+Si le bureau veut les barrages du modèle « BLVB avec barrages » sur la saison déjà lancée (créée sans eux) :
+
+```
+php bin/console app:saison:ajouter-barrages                 # simulation : ce qui serait ajouté, ou pourquoi c'est refusé
+php bin/console app:saison:ajouter-barrages --force         # enregistrement
+php bin/console app:saison:ajouter-barrages --seulement=fin --force   # seulement les barrages de fin de saison
+```
+
+Barrages entre les phases : seulement si la phase 1 n'est pas clôturée et si la phase 2 n'a pas commencé ; barrages de
+fin de saison : si la phase 2 n'est pas clôturée. Vérifier ensuite dans « Modifier la saison » → « Ajouter des phases »
+(dates des barrages, passages), et retirer les passages « saison suivante » de la phase 2 si le bureau suit le modèle.
+
