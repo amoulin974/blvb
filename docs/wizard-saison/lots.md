@@ -15,12 +15,12 @@ dernier (D14). Une branche par lot : `formats-competition-lotN`, fusionnée dans
 | 3 | Règles de passage en données + vérification (D5) ; `cloturerEtBasculer` réécrit ; migration des saisons existantes (D9, D20 à D28) | ✅ |
 | 4 | Wizard, architecture : point de départ (copie ou modèle « BLVB actuel »), saison et sport, phases, passages, classement, récapitulatif ; fin du YAML et de `SaisonListener` (D6) | ✅ |
 | 5 | Wizard, mise en place : composition des poules, journées, génération des matchs, enchaînement des phases suivantes | ✅ |
-| 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | 🟡 |
+| 6 | Formats BLVB : aller-retour (A2), format de match par phase, élimination complète avec barrages, exemptions et placement standard (B1), petite finale (B2), journée des finales (C3), barrages de montée et descente (C4) ; modèle « BLVB avec barrages » | ✅ |
 | 7 | Autres championnats : brassage puis niveau (A4), serpentin (A5), géographique (A6) | ⬜ |
 | 8 | Autres éliminations et hybrides : classement intégral (B3), consolante (B4), aller-retour et set en or (B6), play-offs et play-downs (C2), meilleurs Xe (C5) | ⬜ |
 | 9 | Formats particuliers : plateaux (A7), suisse (A8), échelle (A9), double élimination (B5), handicap (C6) | ⬜ |
 | 10 | Autres sports : représentation neutre du score ; sports à buts (match nul), sports à points, sports de raquette en match simple ; saisie et affichages par sport | ⬜ |
-| 11 | Règlement en ligne généré à partir des paramètres : branche `reglement`, voir `reglement.md` (D55 à D59) ; R1 à R5 faits, R6 à faire | 🟡 |
+| 11 | Règlement en ligne généré à partir des paramètres : branche `reglement`, voir `reglement.md` (D55 à D59) ; R1 à R5 faits et fusionnés dans `formats-competition` (22/10/2026), R6 en attente | 🟡 |
 
 Étude à part, hors lots : rencontres par équipes des sports de raquette (une rencontre = plusieurs
 matchs individuels), qui changent le modèle lui-même (D13).
@@ -145,7 +145,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
 - [x] Tests (MEP-01 à MEP-24, WIZ-18 à WIZ-21, PHA-10, PHA-11), `tests/SPECIFICATIONS.md`, relecture ergonome + webdesigner + sécurité de chaque écran
       Point à traiter à part (hors lot) : équipe qui se retire et forfait général (règle de forfait, D41).
 
-## Lot 6 : formats BLVB 🟡
+## Lot 6 : formats BLVB ✅ (fusionné dans `formats-competition` le 22/10/2026)
 - [x] Branche `formats-competition-lot6` ; décisions D42 à D44, puis D45 à D48 (16/10 : journée des finales, aller-retour, format de match)
 - [x] 6a. Phase de barrages : `PhaseType::BARRAGE`, `Phase.options` (JSON, migration), générateur `Barrage`
       (une poule de deux équipes par match, réception selon l'option), vainqueur / perdant résolus par
@@ -195,7 +195,7 @@ matchs individuels), qui changent le modèle lui-même (D13).
       ajoutés à la dernière phase de championnat) ; simulation, puis `--force` ; `--seulement=entre|fin` ; BAR-11
 - [x] Bilan de fin de lot : relecture globale et journal (22/10/2026, `methode.md`)
 
-## Lot 11 : règlement par saison 🟡 (branche `reglement`, détail dans `reglement.md`)
+## Lot 11 : règlement par saison 🟡 (branche `reglement`, R1 à R5 fusionnés dans `formats-competition` le 22/10/2026 ; R6 en attente ; détail dans `reglement.md`)
 La branche `reglement` part de `formats-competition-lot6` : elle contient le lot 6 et se fusionnera avec lui (D15).
 - [x] R1 à R4 : données, éléments calculés, page publique, page d'édition (TipTap complet, onglet HTML, images) ; relus
 - [x] R5 : reprise du règlement 2025 (`app:reglement:importer`, RGL-23), ancien gabarit supprimé ; checklist de mise en

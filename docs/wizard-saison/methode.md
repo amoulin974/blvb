@@ -517,11 +517,15 @@ saison en dur : elle suivra le nouveau modèle, avec des scénarios aux formats 
   production par Francis avec `deploiement-reglement.md` (commande d'ajout des barrages en option). Lot 11 : R6 en
   attente (choix de l'utilisateur), essais restants dans un navigateur (conflit entre deux onglets, historique).
 
+- **Fusion** (22/10/2026, demande de l'utilisateur) : `reglement` (lot 6 + lot 11, R1 à R5) fusionnée dans
+  `formats-competition` en avance rapide, sans conflit. `main` n'est pas encore touchée.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
-1. **Récupérer le code** : `git fetch && git checkout reglement && git pull`. La branche `reglement` (lot 11, en cours)
-   part de `formats-competition-lot6` (lot 6, pas encore terminé) : les deux se fusionneront ensemble dans
-   `formats-competition` (D15). Pour un nouveau lot, créer `formats-competition-lotN` depuis `formats-competition` une
+1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Le lot 6 et le lot 11 (règlement,
+   R1 à R5) y sont fusionnés depuis le 22/10/2026 ; R6 (schémas dessinés) est en attente sur la branche `reglement`.
+   Prochaine étape : fusion de `formats-competition` dans `main` (D15), puis mise en production par Francis
+   (`deploiement-reglement.md`). Pour un nouveau lot, créer `formats-competition-lotN` depuis `formats-competition` une
    fois le lot précédent fusionné. Après un pull qui change `composer.lock` : `composer install` dans le conteneur
    (sinon l'application ne démarre pas, par exemple sans `symfony/html-sanitizer`).
 2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,
