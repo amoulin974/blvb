@@ -16,42 +16,42 @@ return [
         'path' => './assets/app.js',
         'entrypoint' => true,
     ],
-    '@hotwired/stimulus' => [
-        'version' => '3.2.2',
-    ],
     '@symfony/stimulus-bundle' => [
         'path' => './vendor/symfony/stimulus-bundle/assets/dist/loader.js',
     ],
+    '@hotwired/stimulus' => [
+        'version' => '3.2.2',
+    ],
     'tom-select/dist/css/tom-select.css' => [
-        'version' => '2.5.1',
+        'version' => '2.6.2',
         'type' => 'css',
     ],
     'tocbot/dist/tocbot.css' => [
-        'version' => '4.36.4',
+        'version' => '4.36.8',
         'type' => 'css',
     ],
     'daisyui' => [
-        'version' => '5.5.18',
+        'version' => '5.7.50',
     ],
     'daisyui/daisyui.min.css' => [
-        'version' => '5.5.18',
+        'version' => '5.7.50',
         'type' => 'css',
     ],
     'tom-select' => [
-        'version' => '2.5.1',
+        'version' => '2.6.2',
     ],
     '@orchidjs/sifter' => [
         'version' => '1.1.0',
     ],
     '@orchidjs/unicode-variants' => [
-        'version' => '1.1.2',
+        'version' => '1.2.2',
     ],
     'tom-select/dist/css/tom-select.default.min.css' => [
-        'version' => '2.5.1',
+        'version' => '2.6.2',
         'type' => 'css',
     ],
     'tocbot' => [
-        'version' => '4.36.4',
+        'version' => '4.36.8',
     ],
     '@hotwired/turbo' => [
         'version' => '8.0.23',
@@ -63,7 +63,7 @@ return [
         'version' => '2.31.0',
     ],
     'prosemirror-view' => [
-        'version' => '1.42.6',
+        'version' => '1.42.8',
     ],
     'prosemirror-model' => [
         'version' => '1.25.12',
@@ -84,13 +84,13 @@ return [
         'version' => '1.7.2',
     ],
     'prosemirror-changeset' => [
-        'version' => '2.4.4',
+        'version' => '2.4.5',
     ],
     'prosemirror-gapcursor' => [
         'version' => '1.4.1',
     ],
     'prosemirror-transform' => [
-        'version' => '1.12.2',
+        'version' => '1.12.4',
     ],
     'prosemirror-dropcursor' => [
         'version' => '1.8.4',
@@ -99,10 +99,10 @@ return [
         'version' => '1.5.1',
     ],
     'prosemirror-schema-list' => [
-        'version' => '1.5.1',
+        'version' => '1.6.0',
     ],
     'linkifyjs' => [
-        'version' => '4.3.3',
+        'version' => '4.4.0',
     ],
     'orderedmap' => [
         'version' => '2.1.1',
@@ -114,103 +114,103 @@ return [
         'version' => '1.3.4',
     ],
     '@tiptap/core' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/starter-kit' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-image' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-highlight' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-subscript' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-superscript' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-table' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/state' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/view' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/transform' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/commands' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/model' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/schema-list' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/keymap' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/history' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-blockquote' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-bold' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-code' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-code-block' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-document' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-hard-break' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-heading' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-horizontal-rule' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-italic' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-link' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-list' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-paragraph' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-strike' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-text' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extension-underline' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/extensions' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/tables' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     'prosemirror-view/style/prosemirror.min.css' => [
-        'version' => '1.42.6',
+        'version' => '1.42.8',
         'type' => 'css',
     ],
     'prosemirror-tables/style/tables.min.css' => [
@@ -222,12 +222,12 @@ return [
         'type' => 'css',
     ],
     '@tiptap/core/jsx-runtime' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/dropcursor' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
     '@tiptap/pm/gapcursor' => [
-        'version' => '3.31.4',
+        'version' => '3.32.2',
     ],
 ];
