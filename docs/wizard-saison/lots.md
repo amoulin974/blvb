@@ -48,6 +48,22 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin, `/calendrierlieu`, mise en
       place)
 
+## Paramètres du site et éditeur de la fiche club ⬜ (demande de l'utilisateur, 30/10/2026 ; questions : PO4, PO5 de `decisions.md`)
+Dans cet ordre. Rien n'est commencé ; répondre à PO4 et PO5 et consigner les décisions avant de coder.
+1. [ ] **Socle « Paramètres du site »** : page d'administration, entrée du menu, stockage en base (un `cache:clear` ne doit
+   rien perdre). Tout le reste en dépend ; branche `parametres-site`, à créer depuis `fermetures-gymnase`, qui contient
+   `LimiteurConnexion`
+2. [ ] **Connexion limitée** : activer ou désactiver (D61) et vérifier si elle est activable sur le site (IP vue fiable,
+   `SYMFONY_TRUSTED_PROXIES`, essais de `deploiement-reglement.md`). En premier : elle conditionne la mise en production
+   de D61. Prévoir un moyen de la couper sans passer par la page (admin bloqué)
+3. [ ] **Adresse de contact** : un paramètre, le plus simple, à afficher ensuite sur le site (voir PO4)
+4. [ ] **Logo du site** : envoi et retour au logo d'origine. Plus délicat : le logo actuel est un SVG écrit dans
+   `front/fragments/_logo.html.twig`, prévu pour le fond marine, et l'envoi de fichiers demande une relecture sécurité
+5. [ ] **Éditeur TipTap sur la fiche du club** : indépendant des paramètres, branche à part depuis `main`. Remplace le
+   champ de texte de `ClubFicheType` ; la description devient du HTML nettoyé (reprise des textes existants, affichage de
+   `front/club/show.html.twig`) ; partie commune à extraire de `reglement_editeur_controller.js`. Les responsables de club
+   ne sont pas admins : relecture sécurité
+
 ## À faire hors lots (relevé en relecture)
 - [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `fermetures-gymnase` ; à vérifier sur le serveur
       avant la mise en production (`deploiement-reglement.md`)

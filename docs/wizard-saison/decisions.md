@@ -72,7 +72,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D59. Règlement : page d'édition des admins (R4)
 - D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
 - D61. Essais de connexion limités, avec une attente qui double à chaque échec
-- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
+- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants ; PO4. Paramètres du site : questions à trancher ; PO5. Éditeur TipTap sur la fiche du club : questions à trancher
 
 ## D1. Rôle de l'outil
 **Décision** : le wizard sert à **créer** une saison. Il doit savoir proposer tous les formats du
@@ -726,3 +726,23 @@ Traités à part de l'optimisation (D41) : règle de forfait (score réglementai
 
 ### PO3. Questions de détail des lots suivants
 Notation des « meilleurs Xe », options exactes de chaque format, écrans du wizard : elles apparaîtront lot par lot.
+
+### PO4. Paramètres du site : questions à trancher (demande de l'utilisateur, 30/10/2026 ; ordre dans `lots.md`)
+Aucune n'est actée. Recommandations à confirmer :
+1. **Connexion limitée, état au déploiement** : désactivée tant que la vérification n'a pas réussi (recommandé), ou active d'office ?
+2. **Vérification en échec** : activation refusée (recommandé), ou simple avertissement que l'admin peut passer outre ?
+   Ce que le site peut contrôler seul : IP vue par le serveur, en-tête `X-Forwarded-For` forgé ignoré, proxys de
+   confiance. Ce qu'il ne peut pas : conteneur joignable sans passer par le proxy, visiteurs qui partagent une même IP.
+3. **Secours** : commande console pour couper la limite si un admin est bloqué (recommandé, indispensable).
+4. **Adresse de contact** : où l'afficher (pied de page, page des conditions d'utilisation, `conditions-utilisation-v2`) ?
+   Elle reste distincte de l'expéditeur des e-mails (`MAILER_FROM`, imposé par le SMTP d'OVH).
+5. **Logo** : formats (PNG et WebP recommandés, SVG refusé car il peut contenir du script) ; le logo doit rester lisible sur
+   le fond marine ; où il s'applique (en-tête du site et de l'admin ; icône d'onglet, e-mails ?).
+
+### PO5. Éditeur TipTap sur la fiche du club : questions à trancher (demande de l'utilisateur, 30/10/2026)
+Aucune n'est actée. Recommandations à confirmer :
+1. **Outils** : barre réduite (titres, gras, italique, listes, liens), sans onglet HTML, tableaux ni codes courts : les
+   responsables de club ne sont pas admins.
+2. **Images dans le texte** : non pour commencer ; la fiche a déjà son image (logo du club).
+3. **Textes existants** : convertis une fois en HTML, paragraphes et sauts de ligne gardés (migration ou commande).
+4. **Historique et conflit entre deux responsables** : pas au début (le dernier enregistrement l'emporte).
