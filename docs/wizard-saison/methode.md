@@ -177,11 +177,15 @@ production par Francis avec `deploiement-reglement.md`. Ajouter ici les nouvelle
 - Attente qui double à chaque échec à partir du 3e : D61, LIM-01 à LIM-10. À vérifier sur le serveur avant la mise en
   production : essai réel de `SYMFONY_TRUSTED_PROXIES` (`deploiement-reglement.md`).
 
-### 2026-10-30 : paramètres du site (branche `parametres-site`, partie de `fermetures-gymnase`)
+### 2026-10-30 : paramètres du site (branche `parametres-site`, qui contient les fermetures ; `fermetures-gymnase` supprimée)
 Page `/admin/parametres` (D62) : limitation des essais de connexion activée seulement après vérification, adresse de contact,
 logo. Relu par l'ergonome, le webdesigner et la sécurité, vérifié dans Chromium ; en local, l'IP vue est privée : l'activation
 réussie n'est couverte que par les tests fonctionnels. La fusion avec `conditions-utilisation-v2` devra y afficher l'adresse de
 contact. Suite : éditeur de la fiche club (D63), branche à part depuis `main`.
+
+### 2026-10-30 : fermetures dans le calendrier par gymnase
+Date marquée « Gymnase fermé » et motif, match sans score « à déplacer » (D60, GYM-06) ; relu par l'ergonome, le webdesigner et
+la sécurité, vérifié dans Chromium à 1280 et 375 px. Couleurs d'état du fragment passées en AA. Suite : lots 2 et 3 du placement.
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
@@ -189,7 +193,7 @@ contact. Suite : éditeur de la fiche club (D63), branche à part depuis `main`.
    y sont fusionnés depuis le 22/10/2026 ; R6 (schémas dessinés) est en attente sur la branche `reglement`.
    Prochaine étape : mise en production par Francis (`deploiement-reglement.md`). Pour un nouveau lot, créer
    `formats-competition-lotN` depuis `formats-competition` une fois le lot précédent fusionné. Les fermetures de gymnase
-   sont sur la branche `fermetures-gymnase` (voir `lots.md`), à pousser pour pouvoir la reprendre sur un autre poste.
+   sont sur la branche `parametres-site` (voir `lots.md`), à pousser pour pouvoir la reprendre sur un autre poste.
    Après un pull qui change `composer.lock` : `composer install` dans le conteneur
    (sinon l'application ne démarre pas, par exemple sans `symfony/html-sanitizer`).
 2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,

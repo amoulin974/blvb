@@ -19,8 +19,7 @@ L'historique (journal complet, détail des lots 0 à 6, maquettes, état des lie
 Le catalogue des formats est dans `docs/formats-competition.md`. La version de référence du journal est celle de la
 branche du lot en cours ; la copie sur `main` peut être en retard. Règlement par saison : `docs/wizard-saison/reglement.md`.
 
-Autre chantier en cours : fermetures de gymnase, branche `fermetures-gymnase` (D60, section dédiée de `lots.md`).
-Paramètres du site (branche `parametres-site`, D62), puis éditeur de la fiche club (D63) : section dédiée de `lots.md`.
+Autres chantiers en cours, sur la branche `parametres-site` : fermetures de gymnase (D60) et paramètres du site (D62) ; ensuite, éditeur de la fiche club (D63) : sections dédiées de `lots.md`.
 
 ## Règles permanentes
 

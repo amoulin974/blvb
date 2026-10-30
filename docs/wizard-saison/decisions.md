@@ -665,8 +665,10 @@ rendu pour la saison.
 - **Quand** : à tout moment, sans date limite. Le moment utile est avant la génération des matchs : c'est aux admins de
   le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
 - **Placement** (lots 2 et 3) : aucun match n'est placé dans un gymnase fermé.
-- **Calendrier des gymnases** : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée avec son
-  motif, et un match placé pendant une fermeture y est signalé (demande de l'utilisateur, 30/10/2026).
+- **Calendrier des gymnases** (public) : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée
+  « Gymnase fermé » avec son motif (le premier, si des fermetures se chevauchent), et un match sans score y est signalé « à
+  déplacer » (demande de l'utilisateur, 30/10/2026). Le motif étant un texte libre devenu public : l'aide du formulaire
+  l'annonce et écarte noms et coordonnées, et il n'est plus affiché une fois la date passée (relecture sécurité).
 **Pourquoi** : demande de l'utilisateur ; relectures ergonome, webdesigner et sécurité.
 *(2026-10-30)*
 

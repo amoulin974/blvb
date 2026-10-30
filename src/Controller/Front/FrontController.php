@@ -381,7 +381,18 @@ final class FrontController extends AbstractController
                 }
             }
 
-            // 2. Analyse de chaque date (capacité, priorité, créneau) et vacances scolaires
+            // Fermetures du gymnase (D60), comparées au format "Y-m-d"
+            $aujourdhui = (new \DateTimeImmutable('today'))->format('Y-m-d');
+            $fermetures = [];
+            foreach ($lieu->getFermetures() as $fermeture) {
+                $fermetures[] = [
+                    'motif' => $fermeture->getMotif(),
+                    'debut' => $fermeture->getDateDebut()->format('Y-m-d'),
+                    'fin' => $fermeture->getDateFin()->format('Y-m-d'),
+                ];
+            }
+
+            // 2. Analyse de chaque date (capacité, priorité, créneau), vacances scolaires et fermetures
             foreach ($partiesDuLieu as $phaseId => &$dates) {
                 ksort($dates);
                 foreach ($dates as $dateKey => $matchs) {
@@ -393,6 +404,25 @@ final class FrontController extends AbstractController
                     }
                     // Match placé pendant les vacances : à vérifier par le responsable du gymnase
                     $analyse['alerte_vacances'] = count($matchs) > 0 && $analyse['vacances'] !== null;
+                    // Gymnase fermé : jamais présenté comme un terrain libre ; seul un match sans score reste à déplacer
+                    $analyse['ferme'] = false;
+                    $analyse['motif_fermeture'] = null;
+                    foreach ($fermetures as $periode) {
+                        if ($dateKey >= $periode['debut'] && $dateKey <= $periode['fin']) {
+                            $analyse['ferme'] = true;
+                            // Texte libre, public : plus affiché une fois la date passée (D60)
+                            $analyse['motif_fermeture'] = $dateKey >= $aujourdhui ? $periode['motif'] : null;
+                            break;
+                        }
+                    }
+                    $analyse['matchs_a_deplacer'] = $analyse['ferme'] ? count(array_filter(
+                        $matchs,
+                        static fn ($partie) => $partie->getNbSetGagnantReception() === null && $partie->getNbSetGagnantDeplacement() === null
+                    )) : 0;
+                    $analyse['alerte_fermeture'] = $analyse['matchs_a_deplacer'] > 0;
+                    if ($analyse['ferme']) {
+                        $analyse['alerte_priorite'] = $analyse['alerte_capacite'] = $analyse['alerte_horscrenau'] = $analyse['alerte_vacances'] = false;
+                    }
                     $analysesDuLieu[$phaseId][$dateKey] = $analyse;
                 }
             }

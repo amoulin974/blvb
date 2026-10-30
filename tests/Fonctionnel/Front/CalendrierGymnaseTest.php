@@ -3,6 +3,7 @@
 namespace App\Tests\Fonctionnel\Front;
 
 use App\Factory\CreneauFactory;
+use App\Factory\FermetureGymnaseFactory;
 use App\Factory\IndisponibiliteFactory;
 use App\Factory\LieuFactory;
 use App\Factory\PartieFactory;
@@ -11,7 +12,7 @@ use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * GYM-02, GYM-04, GYM-05 : page « Calendrier par gymnase » (/calendrierlieu) sur un gymnase construit pour le test
+ * GYM-02, GYM-04, GYM-05, GYM-06 : page « Calendrier par gymnase » (/calendrierlieu) sur un gymnase construit pour le test
  * (mercredi : 2 terrains, priorité 2 ; vendredi : 1 terrain, priorité 1), avec des matchs à des dates choisies.
  */
 final class CalendrierGymnaseTest extends TestFonctionnel
@@ -21,7 +22,7 @@ final class CalendrierGymnaseTest extends TestFonctionnel
     /** Date relative au lundi de référence (dans la phase 1, qui finit dans deux mois). */
     private function jour(int $decalage): \DateTimeImmutable
     {
-        return $this->lundi->modify("+$decalage days")->setTime(20, 30);
+        return $this->lundi->modify(sprintf('%+d days', $decalage))->setTime(20, 30);
     }
 
     private function match(int $decalage, string $recoit, string $deplace, object $lieu): void
@@ -85,5 +86,54 @@ final class CalendrierGymnaseTest extends TestFonctionnel
         [$libre, $alerte] = $this->ligne($page, 37);
         self::assertStringContainsString('2 terrains libres sur 2', $libre);
         self::assertSame('0', $alerte);
+    }
+
+    #[TestDox('GYM-06 Fermeture : date libre marquée « Gymnase fermé », jamais un terrain libre ; match à déplacer signalé ; motif échappé, retiré une fois la date passée')]
+    public function test_fermetures(): void
+    {
+        $this->lundi = new \DateTimeImmutable('monday next week');
+        $lieu = LieuFactory::createOne(['nom' => 'Gymnase analyse']);
+        CreneauFactory::createOne(['lieu' => $lieu, 'jourSemaine' => 3, 'capacite' => 2, 'prioritaire' => 1]);
+        CreneauFactory::createOne(['lieu' => $lieu, 'jourSemaine' => 5, 'capacite' => 2, 'prioritaire' => 2]);
+        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => 'Toiture', 'dateDebut' => $this->lundi->modify('+7 days'), 'dateFin' => $this->lundi->modify('+9 days')]);
+        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => '0', 'dateDebut' => $this->lundi->modify('+16 days'), 'dateFin' => $this->lundi->modify('+16 days')]);
+        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => '<script>alert(1)</script>', 'dateDebut' => $this->lundi->modify('+23 days'), 'dateFin' => $this->lundi->modify('+23 days')]);
+        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => 'Motif ancien', 'dateDebut' => $this->lundi->modify('-5 days'), 'dateFin' => $this->lundi->modify('-5 days')]);
+        FermetureGymnaseFactory::createOne(['motif' => 'Autre gymnase', 'dateDebut' => $this->lundi, 'dateFin' => $this->lundi->modify('+60 days')]);
+        $this->match(9, 'A1', 'A3', $lieu);
+        $this->match(2, 'A2', 'A4', $lieu);
+        PartieFactory::createOne(['journee' => ChampionnatDeTest::get('match.reference')->getJournee(), 'poule' => ChampionnatDeTest::get('poule.A'),
+            'idEquipeRecoit' => ChampionnatDeTest::get('equipe.A1'), 'idEquipeDeplace' => ChampionnatDeTest::get('equipe.A2'),
+            'lieu' => $lieu, 'date' => $this->jour(-5), 'nb_set_gagnant_reception' => 3, 'nb_set_gagnant_deplacement' => 0]);
+
+        $page = $this->client->request('GET', '/calendrierlieu');
+        self::assertResponseIsSuccessful();
+
+        [$matchDeplace, $alerte] = $this->ligne($page, 9);
+        self::assertStringContainsString('Gymnase fermé : 1 match à déplacer', $matchDeplace);
+        self::assertStringContainsString('Motif : Toiture', $matchDeplace);
+        self::assertStringNotContainsString('terrain', $matchDeplace);
+        self::assertSame('1', $alerte);
+
+        [$fermee, $alerte] = $this->ligne($page, 16);
+        self::assertStringContainsString('Gymnase fermé', $fermee);
+        self::assertStringContainsString('Motif : 0', $fermee);
+        self::assertStringNotContainsString('terrain', $fermee);
+        self::assertSame('0', $alerte, 'même sur un créneau non prioritaire');
+
+        [$matchJoue, $alerte] = $this->ligne($page, -5);
+        self::assertStringContainsString('Gymnase fermé', $matchJoue);
+        self::assertStringNotContainsString('déplacer', $matchJoue);
+        self::assertStringNotContainsString('Motif ancien', $this->client->getResponse()->getContent());
+        self::assertSame('0', $alerte);
+
+        self::assertStringNotContainsString('<script>alert(1)', $this->client->getResponse()->getContent());
+        self::assertStringContainsString('&lt;script&gt;alert(1)', $this->client->getResponse()->getContent());
+
+        foreach ([2 => '1 terrain libre sur 2', 30 => '2 terrains libres sur 2'] as $jour => $attendu) {
+            [$ouverte] = $this->ligne($page, $jour);
+            self::assertStringContainsString($attendu, $ouverte, 'jours voisins des fermetures, ou fermeture d\'un autre gymnase');
+            self::assertStringNotContainsString('fermé', $ouverte);
+        }
     }
 }

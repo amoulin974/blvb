@@ -197,6 +197,9 @@ final class FermetureGymnaseTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(422);
         self::assertSelectorTextContains('body', 'caractères de contrôle');
 
+        $this->saisir(motif: "Travaux\u{202E}suite");
+        self::assertResponseStatusCodeSame(422, 'caractère invisible qui inverse le texte');
+
         // Gymnase G3 hors du club : absent de la liste, refusé même en forçant la valeur
         $crawler = $this->client->request('GET', $this->url());
         $form = $crawler->selectButton('Enregistrer la fermeture')->form();

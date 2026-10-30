@@ -6,7 +6,7 @@ formats, wizard de saison, règlement par saison R1 à R5). Seul Francis fusionn
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env`
 compris. Aucune nouvelle variable d'environnement. Nouveautés : paquet Composer `symfony/html-sanitizer`, une
 soixantaine de paquets importmap (éditeur TipTap 3), dossier `public/uploads/reglement`, 9 migrations (ajouts de
-colonnes et de tables seulement), 11 une fois les branches `fermetures-gymnase` et `parametres-site` fusionnées dans `main`.
+colonnes et de tables seulement), 11 une fois la branche `parametres-site` fusionnée dans `main`.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
 
@@ -94,7 +94,7 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261015100000 | `phase.options` |
 | Version20261015110000 | `partie.parent_perdants` |
 | Version20261020164942 | tables `reglement` et `reglement_version` |
-| Version20261030091911 | table `fermeture_gymnase` (branche `fermetures-gymnase`, seulement une fois fusionnée dans `main`) |
+| Version20261030091911 | table `fermeture_gymnase` (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
 | Version20261030213902 | table `parametres_site`, une ligne : limitation désactivée (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
 
 ## Vérifications en ligne

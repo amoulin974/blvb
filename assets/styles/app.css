@@ -391,6 +391,10 @@ details[data-code][open] > summary svg { rotate: 180deg; }
 [role="toolbar"] .dropdown-content [aria-pressed="true"] { background-color: color-mix(in oklab, var(--color-primary) 12%, var(--color-base-100)); color: var(--color-primary); font-weight: 600; box-shadow: inset 3px 0 0 var(--color-primary); }
 /* Bouton de suppression discret : rouge foncé, contraste AA même sur le fond gris du survol de .btn-ghost (D54) */
 .btn-danger-discret { color: color-mix(in oklab, var(--color-error) 70%, black); }
+/* Texte d'état lisible (AA), y compris sur une ligne teintée : calendrier par gymnase */
+.texte-erreur { color: color-mix(in oklab, var(--color-error) 70%, black); }
+.texte-attention { color: color-mix(in oklab, var(--color-warning) 70%, black); }
+.texte-succes { color: color-mix(in oklab, var(--color-success) 70%, black); }
 /* Entrée destructive d'un menu (D54) : rouge foncé, contraste AA même au survol ; 44 px */
 .menu .menu-danger { color: color-mix(in oklab, var(--color-error) 70%, black); min-height: 2.75rem; width: 100%; justify-content: flex-start; }
 .menu .menu-danger:hover, .menu .menu-danger:focus-visible { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); }

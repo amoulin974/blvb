@@ -405,6 +405,7 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 **GYM-03** ✅ — Créneau non prioritaire alors qu'un autre jour l'est → alerte priorité.
 **GYM-04** ✅ — Date pendant des vacances scolaires (indisponibilité) avec match → alerte vacances ; sans match → simple mention.
 **GYM-05 (fonctionnel)** ✅ — La page `/calendrierlieu` affiche aussi les dates de créneau **libres** de la phase, et le filtre « Seulement les dates à problème » s'appuie sur `data-alerte`.
+**GYM-06 (fonctionnel)** ✅ — Pendant une fermeture du gymnase (D60), une date libre affiche « Gymnase fermé » et son motif, échappé, et aucun terrain libre, sans être retenue par le filtre, même sur un créneau non prioritaire ou avec le motif « 0 » ; un match sans score est signalé « à déplacer » et retenu par le filtre, pas un match joué ; le motif disparaît une fois la date passée ; la fermeture d'un autre gymnase et les jours voisins ne changent rien.
 
 ### 4.12 « Mon équipe » et fonctions Twig — `Fonctionnel/Front/MonEquipeTest`, `Integration/Twig/SaisonCouranteTest` (P2)
 
@@ -580,7 +581,7 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-04** ✅ : un match sans score, premier ou dernier jour compris, empêche le responsable d'enregistrer (422) ; le match est cité, avec un e-mail prérempli aux admins ; un motif contenant `&bcc=` reste dans le corps du message.
 - **FGY-05** ✅ : ne bloquent pas : un match joué, un match d'un autre gymnase, un match hors de la période.
 - **FGY-06** ✅ : l'admin enregistre malgré un match programmé, qui lui est signalé (page du club et page du gymnase).
-- **FGY-07** ✅ : refus avec message : motif vide, dates inversées, période terminée, plus de 2 ans, fin à plus de 5 ans, caractères de contrôle ; refus aussi pour un gymnase d'un autre club forcé dans le formulaire et sans jeton CSRF.
+- **FGY-07** ✅ : refus avec message : motif vide, dates inversées, période terminée, plus de 2 ans, fin à plus de 5 ans, caractères de contrôle ou de format invisibles ; refus aussi pour un gymnase d'un autre club forcé dans le formulaire et sans jeton CSRF.
 - **FGY-08** ✅ : retrait par un responsable du gymnase ; jeton requis ; 404 pour un gymnase hors du club ; 403 par l'URL d'un autre club.
 - **FGY-09** ✅ : un match d'une saison en préparation bloque le responsable sans dévoiler ses équipes, ni dans la page ni dans l'e-mail.
 - **FGY-10** ✅ : l'adresse de contact des paramètres (D62) remplace celles des admins dans le lien et le message de refus ; sans elle, FGY-04 reste vrai.

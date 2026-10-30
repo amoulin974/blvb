@@ -38,11 +38,12 @@ class FermetureGymnaseType extends AbstractType
         $builder
             ->add('motif', TextType::class, [
                 'label' => 'Motif',
+                'help' => 'Visible par tous sur le calendrier par gymnase : restez bref, n\'indiquez ni nom ni coordonnées.',
                 'empty_data' => '',
                 'constraints' => [
                     new Assert\NotBlank(message: 'Indiquez le motif de la fermeture.'),
                     new Assert\Length(max: 255, maxMessage: 'Le motif ne peut pas dépasser {{ limit }} caractères.'),
-                    new Assert\Regex(pattern: '/\p{Cc}/u', match: false, message: 'Le motif ne peut pas contenir de caractères de contrôle.'),
+                    new Assert\Regex(pattern: '/[\p{Cc}\p{Cf}]/u', match: false, message: 'Le motif ne peut pas contenir de caractères de contrôle.'),
                 ],
                 'label_attr' => ['class' => 'block mb-1 font-semibold'],
                 'attr' => ['class' => 'input input-bordered w-full', 'placeholder' => 'Ex. : travaux, compétition de judo', 'maxlength' => 255],

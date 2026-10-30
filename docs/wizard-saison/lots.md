@@ -41,15 +41,17 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
 - [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
-## Fermetures de gymnase 🟡 (branche `fermetures-gymnase`, hors numérotation du chantier ; D60)
+## Fermetures de gymnase 🟡 (branche `parametres-site`, hors numérotation du chantier ; D60)
 - [x] Lot 1 : saisie par les responsables de club et les admins ; FGY-01 à FGY-09
 - [ ] Lot 2 : placement automatique (générateurs et replacement). **Tant qu'il n'est pas fait, une fermeture ne bloque pas
       le placement**
 - [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin, mise en place)
-- [ ] **Calendrier des gymnases** (`/calendrierlieu`, `FrontController::calendrierLieu`, demande de l'utilisateur, 30/10/2026) :
-      afficher les fermetures. Aujourd'hui, une date de créneau sans match y apparaît comme un terrain libre, même gymnase
-      fermé : à marquer « Gymnase fermé » avec le motif ; alerte sur un match placé pendant une fermeture, sur le modèle de
-      `alerte_vacances`. Indépendant du placement : peut précéder les lots 2 et 3. Relecture ergonome et webdesigner
+- [x] **Calendrier des gymnases** (`/calendrierlieu`, demande de l'utilisateur, 30/10/2026) : date libre marquée « Gymnase
+      fermé » avec le motif, match sans score signalé « à déplacer » ; GYM-06
+- [ ] **Calendrier par équipe** : y signaler aussi un match placé dans un gymnase fermé, sinon le joueur peut se déplacer pour
+      rien (relevé par l'ergonome, à traiter avec le lot 3)
+- [ ] À trancher : enregistrer l'auteur d'une fermeture, visible des admins seulement, le motif étant devenu public (D60 a
+      retenu de ne pas l'enregistrer ; relevé par la sécurité)
 
 ## Paramètres du site et éditeur de la fiche club 🟡 (demande de l'utilisateur, 30/10/2026 ; D62, D63)
 Dans cet ordre.
@@ -71,7 +73,7 @@ Analyse de l'ergonome, maquettes et données : `tableau-de-bord.md`. Rien n'est 
       `front/club/fermetures`), tant que les lots 2 et 3 des fermetures ne sont pas faits (§5 de `tableau-de-bord.md`)
 
 ## À faire hors lots (relevé en relecture)
-- [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `fermetures-gymnase` ; à vérifier sur le serveur
+- [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `parametres-site` ; à vérifier sur le serveur
       avant la mise en production (`deploiement-reglement.md`)
 - [x] Page « Modifier la poule » refaite (D52) : nom et niveau, équipes en lecture seule avec lien vers la mise en place,
       phase commencée ou clôturée verrouillée côté serveur ; relue par l'ergonome et le webdesigner ; POU-01 à POU-05
