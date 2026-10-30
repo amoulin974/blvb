@@ -138,6 +138,10 @@ final class LimiteurConnexion implements EventSubscriberInterface
     /** Mot de passe changé par le lien reçu par e-mail : la personne n'a plus à attendre, quelle que soit son IP. */
     public function lever(string $email): void
     {
+        // Désactivée : rien à lever, et pas d'empreinte à garder (D62)
+        if (!$this->parametres->courants()->isConnexionLimitee()) {
+            return;
+        }
         $element = $this->connexionsCache->getItem($this->cleGeneration($this->normaliser($email)));
         $element->set(($element->isHit() ? $element->get() : 0) + 1);
         $element->expiresAfter(self::VIE_GENERATION);

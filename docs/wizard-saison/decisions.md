@@ -675,7 +675,14 @@ rendu pour la saison.
   reste placé et il est signalé, avec un lien vers le match, sur la mise en place de la phase, tant qu'il n'a pas de score. Jamais d'autre gymnase ni
   d'autre semaine sans décision d'un admin. Un match joué ne bouge pas. Le gymnase et la date choisis pour une journée des
   finales restent ceux de l'admin : ils sont seulement signalés.
-- **Placement manuel** (lot 3) : à faire.
+- **Placement manuel** (lot 3 ; formulaires, fenêtre et glisser-déposer du calendrier admin) : mettre un match sans score dans un
+  gymnase fermé est refusé, y compris pour un admin, avec le motif et le conseil de changer de date ou de retirer la fermeture
+  (elle peut être levée, le refus reste donc simple à contourner en connaissance de cause). Seul un changement de gymnase ou de
+  jour est contrôlé : un match déjà dans le gymnase fermé reste modifiable. Le gymnase et la date d'une journée des finales ne
+  sont pas refusés, seulement signalés.
+- **Signalement** : un match sans score dans un gymnase fermé porte « Gymnase fermé : match à déplacer » sur le calendrier, la
+  fiche de l'équipe et l'agenda ; il est en rouge dans le calendrier admin. Sans le motif, qui reste au calendrier par gymnase.
+  Un match passé sans score n'est signalé qu'aux admins : il ne manque sans doute que son score.
 - **Calendrier des gymnases** (public) : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée
   « Gymnase fermé » avec son motif (le premier, si des fermetures se chevauchent), et un match sans score y est signalé « à
   déplacer » (demande de l'utilisateur, 30/10/2026). Le motif étant un texte libre devenu public : l'aide du formulaire

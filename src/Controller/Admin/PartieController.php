@@ -7,14 +7,18 @@ use App\Competition\MiseEnPlaceJournees;
 use App\Competition\ModeAjout;
 use App\Entity\Equipe;
 use App\Entity\Journee;
+use App\Entity\Lieu;
 use App\Entity\Partie;
 use App\Entity\Poule;
 use App\Form\PartieType;
 use App\Form\PartieCalendarType;
 use App\Repository\PartieRepository;
 use App\Service\PartieService;
+use App\Service\FermetureGymnaseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\FormError;
+use Symfony\Component\Form\FormInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -28,6 +32,22 @@ final class PartieController extends AbstractController
 {
     use JetonApiTrait;
     use SuppressionTrait;
+
+    public function __construct(private readonly FermetureGymnaseService $fermetures)
+    {
+    }
+
+    /** Placement dans un gymnase fermé (D60) : refusé, avec le message sur le champ de la date */
+    private function placementRefuse(FormInterface $form, Partie $partie, ?Lieu $lieuAvant, ?\DateTimeInterface $dateAvant): bool
+    {
+        $refus = $this->fermetures->refusPlacement($partie, $lieuAvant, $dateAvant);
+        if ($refus === null) {
+            return false;
+        }
+        $form->get('date')->addError(new FormError($refus));
+
+        return true;
+    }
 
     #[Route("/", name: 'index', methods: ['GET'])]
     public function index(PartieRepository $partieRepository): Response
@@ -44,7 +64,7 @@ final class PartieController extends AbstractController
         $form = $this->createForm(PartieType::class, $partie);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid() && !$this->placementRefuse($form, $partie, null, null)) {
             $entityManager->persist($partie);
             $entityManager->flush();
 
@@ -54,7 +74,7 @@ final class PartieController extends AbstractController
         return $this->render('admin/partie/new.html.twig', [
             'partie' => $partie,
             'form' => $form,
-        ]);
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     #[Route('/{id}', name: 'show', methods: ['GET'])]
@@ -68,10 +88,12 @@ final class PartieController extends AbstractController
     #[Route('/{id}/edit', name: 'edit', methods: ['GET', 'POST'])]
     public function edit(Request $request, Partie $partie, EntityManagerInterface $entityManager): Response
     {
+        $lieuAvant = $partie->getLieu();
+        $dateAvant = $partie->getDate();
         $form = $this->createForm(PartieType::class, $partie);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid() && !$this->placementRefuse($form, $partie, $lieuAvant, $dateAvant)) {
             $entityManager->flush();
 
             return $this->redirectToRoute('admin_partie_index', [], Response::HTTP_SEE_OTHER);
@@ -80,7 +102,7 @@ final class PartieController extends AbstractController
         return $this->render('admin/partie/edit.html.twig', [
             'partie' => $partie,
             'form' => $form,
-        ]);
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
     }
 
     #[Route('/{id}/delete', name: 'delete', methods: ['POST'])]
@@ -157,10 +179,10 @@ final class PartieController extends AbstractController
         } else {
             $resultat = $partieService->creerCalendrierOptimisePourPoule($poule);
 
-            if ($resultat['type'] === 'championnat') {
+            if ($resultat['type'] === 'championnat' || $resultat['surcharges'] !== []) {
                 $this->addFlash(
                     $resultat['surcharges'] === [] ? 'success' : 'warning',
-                    sprintf('%s : %d break(s)', $resultat['poule'], $resultat['nbBreaks'])
+                    ($resultat['type'] === 'championnat' ? sprintf('%s : %d break(s)', $resultat['poule'], $resultat['nbBreaks']) : $resultat['poule'])
                     . ($resultat['surcharges'] !== [] ? ' — ' . implode(' ; ', $resultat['surcharges']) : '')
                 );
             }
@@ -227,16 +249,18 @@ final class PartieController extends AbstractController
             if ($partie->getIdEquipeRecoit() === null || $partie->getIdEquipeDeplace() === null) {
                 $title = $partie->getNom();
             }else{
-                $title = $partie->getIdEquipeRecoit()->getNom(). "vs" . $partie->getIdEquipeDeplace()->getNom();
+                $title = $partie->getIdEquipeRecoit()->getNom(). " vs " . $partie->getIdEquipeDeplace()->getNom();
             }
+            $enGymnaseFerme = $partie->enGymnaseFerme();
 
             $data[] = [
                 'Cache-Control' => 'no-cache, no-store, must-revalidate',
                 'id' => $partie->getId(),
-                'title' => $title,
+                'title' => $enGymnaseFerme ? 'Gymnase fermé : '.$title : $title,
                 'start' => $start->format(\DateTimeInterface::ATOM),
                 'end' => $end->format(\DateTimeInterface::ATOM),
-            ];
+            'extendedProps' => ['enGymnaseFerme' => $enGymnaseFerme ? 1 : 0],
+            ] + ($enGymnaseFerme ? ['color' => '#b91c1c', 'textColor' => '#fff', 'display' => 'block', 'classNames' => ['evenement-gymnase-ferme']] : []);
         }
 
         return $data;
@@ -248,12 +272,14 @@ final class PartieController extends AbstractController
     public function apiGetModalEdit(Poule $poule, Partie $partie, Request $request, EntityManagerInterface $em): Response
     {
         if ($partie->getPoule() !== $poule) throw $this->createNotFoundException("Cette partie n'appartient pas à cette poule");
+        $lieuAvant = $partie->getLieu();
+        $dateAvant = $partie->getDate();
         $form = $this->createForm(PartieCalendarType::class, $partie,[
         'poule' => $poule,
         ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid() && !$this->placementRefuse($form, $partie, $lieuAvant, $dateAvant)) {
             $em->flush();
 
             return $this->json(['success' => true]);
@@ -261,7 +287,7 @@ final class PartieController extends AbstractController
 
         return $this->render('admin/partie/_form_modal.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
 
     }
 
@@ -278,7 +304,7 @@ final class PartieController extends AbstractController
         ]);
         $form->handleRequest($request);
 
-        if ($form->isSubmitted() && $form->isValid()) {
+        if ($form->isSubmitted() && $form->isValid() && !$this->placementRefuse($form, $partie, null, null)) {
             $em->persist($partie);
             $em->flush();
 
@@ -287,7 +313,7 @@ final class PartieController extends AbstractController
 
         return $this->render('admin/partie/_form_modal.html.twig', [
             'form' => $form->createView(),
-        ]);
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
 
     }
 
@@ -303,7 +329,11 @@ final class PartieController extends AbstractController
         if ($partie->getPoule() !== $poule) throw $this->createNotFoundException("Cette partie n'appartient pas à cette poule");
         $data = json_decode($request->getContent(), true);
         if (isset($data['datedebut'])) {
+            $dateAvant = $partie->getDate();
             $partie->setDate(new \DateTimeImmutable($data['datedebut']));
+            if ($refus = $this->fermetures->refusPlacement($partie, $partie->getLieu(), $dateAvant)) {
+                return $this->json(['erreur' => 'Match non déplacé. '.$refus], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
         }
 
 

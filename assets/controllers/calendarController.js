@@ -69,6 +69,8 @@ export default class extends Controller {
             // plugins: [dayGridPlugin, interactionPlugin, multiMonthPlugin],
             initialView: this.initialviewValue,
             eventColor: '#f59e0b',
+            // Match dans un gymnase fermé (D60) en tête de la case : pas caché derrière « +2 en plus »
+            eventOrder: '-enGymnaseFerme,start,title',
             initialDate: initialDate.format("YYYY-MM-DD"),
             multiMonthMaxColumns: nbMois,
             locale: 'fr',
@@ -188,6 +190,11 @@ export default class extends Controller {
     }
 
     //Méthode appelée sur le click d'un événement qui affiche une modale avec les infos de l'événement et un bouton de suppression
+    // Pas de message périmé dans la page gardée en cache par Turbo
+    disconnect() {
+        this.afficherMessage(null);
+    }
+
     onEventClick(info) {
         if (this.datatypeValue==="journee"){
             this.onEventClickJournee(info);
@@ -316,6 +323,7 @@ export default class extends Controller {
 
     //-------------------------------------------------------Partie eventPartie
     onEventClickPartie(info){
+        this.afficherMessage(null);
 
 
         // ouvrir la modale
@@ -335,26 +343,17 @@ export default class extends Controller {
                 modalBody.innerHTML = html;
                 const form = modalBody.querySelector('form');
                 if(form) {
-                    form.addEventListener('submit', (e) =>{
-                        e.preventDefault();
-                        const data = new FormData(form);
-                        fetch(url, {
-                            method: "POST",
-                            body: data
-                        })
-                            .then(resp => resp.json())
-                            .then(json => {
-                                if(json.success){
-                                    modal.classList.remove('modal-open'); // fermer la modal
-                                    this.calendar.refetchEvents();            // rafraîchir le calendrier
-                                }
-                            });
+                    this.envoyerFormulairePartie(form, url, modalBody, () => {
+                        modal.classList.remove('modal-open'); // fermer la modal
+                        this.calendar.refetchEvents();            // rafraîchir le calendrier
                     });
                 }
 
                 const suprrimer = modal.querySelector('#supprimer')
                 if (suprrimer){
-                    suprrimer.addEventListener('click', (e)=>{
+                    suprrimer.classList.remove('hidden');
+                    // onclick : un seul match à la fois, ce bouton sert pour tous les matchs ouverts dans la fenêtre
+                    suprrimer.onclick = (e)=>{
                         fetch(this.partieApiUrlValue + '/' + info.event.id,{
                             method: "DELETE",
                             headers: { 'X-CSRF-TOKEN': this.csrfTokenValue }
@@ -368,12 +367,13 @@ export default class extends Controller {
                                     console.log("suppression")
                                 }
                             });
-                    })
+                    }
                 }
             });
     }
 
     onDateClickPartie(info){
+        this.afficherMessage(null);
         const modal = document.querySelector('#partieModal');
         modal.classList.add('modal-open');
 
@@ -401,29 +401,61 @@ export default class extends Controller {
                     //On cache le bouton supprimer
                     const buttonsuppr=modal.querySelector('#supprimer')
                     buttonsuppr.classList.add('hidden');
-                    form.addEventListener('submit', (e) =>{
-                        e.preventDefault();
-                        const data = new FormData(form);
-                        fetch(url, {
-                            method: "POST",
-                            body: data
-                        })
-                            .then(resp => resp.json())
-                            .then(json => {
-                                if(json.success){
-                                    modal.classList.remove('modal-open'); // fermer la modal
-                                    buttonsuppr.classList.remove('hidden');
-                                    this.calendar.refetchEvents();            // rafraîchir le calendrier
-                                }
-                            });
+                    this.envoyerFormulairePartie(form, url, modalBody, () => {
+                        modal.classList.remove('modal-open'); // fermer la modal
+                        buttonsuppr.classList.remove('hidden');
+                        this.calendar.refetchEvents();            // rafraîchir le calendrier
                     });
                 }
             });
     }
+    // Envoi du formulaire de la modale : succès en JSON, ou formulaire réaffiché avec ses erreurs (gymnase fermé, D60).
+    // Toute autre réponse (session expirée qui mène à la connexion, erreur) : on recharge plutôt que de l'afficher ici.
+    envoyerFormulairePartie(form, url, modalBody, apresSucces) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            fetch(url, { method: 'POST', body: new FormData(form) })
+                .then(async (resp) => {
+                    if ((resp.headers.get('content-type') || '').includes('application/json')) {
+                        const json = await resp.json();
+                        if (json.success) {
+                            apresSucces();
+                        }
+                        return;
+                    }
+                    if (resp.redirected || resp.status !== 422) {
+                        window.location.reload();
+                        return;
+                    }
+                    modalBody.innerHTML = await resp.text();
+                    const suivant = modalBody.querySelector('form');
+                    if (suivant) {
+                        this.envoyerFormulairePartie(suivant, url, modalBody, apresSucces);
+                        // Le bouton d'envoi a été remplacé : le focus revient sur le champ en erreur
+                        const champ = suivant.querySelector('.form-erreur')?.previousElementSibling?.querySelector('input, select') ?? suivant.querySelector('#partie_calendar_date');
+                        champ?.focus();
+                        suivant.querySelector('.form-erreur')?.scrollIntoView({ block: 'center' });
+                    }
+                });
+        });
+    }
+
+    // Message au-dessus du calendrier : refus d'un déplacement (gymnase fermé, D60) ou erreur
+    afficherMessage(texte) {
+        const zone = document.querySelector('#calendrier-message-zone');
+        const message = document.querySelector('#calendrier-message');
+        if (!zone || !message) {
+            return;
+        }
+        zone.hidden = texte === null;
+        message.textContent = texte ?? '';
+        if (texte !== null) {
+            zone.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+    }
+
     onEventDropPartie(info){
-
-
-        console.log(info.event)
+        this.afficherMessage(null);
         fetch(this.partieApiUrlValue + '/' + info.event.id, {
             method: 'PUT',
             headers: {
@@ -435,17 +467,20 @@ export default class extends Controller {
                 datedebut: info.event.startStr,
             })
         })
-            .then(response => {
+            .then(async (response) => {
+                if (response.status === 422) {
+                    const { erreur } = await response.json();
+                    this.afficherMessage(erreur);
+                    info.revert();
+                    return;
+                }
                 if (!response.ok) throw new Error('Erreur lors de la mise à jour');
-                return response.json();
-            })
-            .then(json => {
-                console.log('Événement mis à jour :', json);
                 //On recharche tous les événements pour tenir compte de la régularisation des numéros de journée
                 this.calendar.refetchEvents();
             })
             .catch(err => {
                 console.error(err);
+                this.afficherMessage('Le match n\'a pas pu être déplacé. Réessayez.');
                 info.revert(); // annule le déplacement si erreur
             });
     }

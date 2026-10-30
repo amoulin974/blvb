@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Equipe;
+use App\Entity\FermetureGymnase;
 use App\Entity\Lieu;
 use App\Entity\Saison;
 use App\Entity\Partie;
@@ -122,6 +123,7 @@ class PartieRepository extends ServiceEntityRepository
             ->addSelect('ed.nom AS equipe_deplace')
             ->addSelect('cr.nomCourt AS club_recoit')
             ->addSelect('cd.nomCourt AS club_deplace')
+            ->addSelect('l.id AS lieu_id')
             ->addSelect('l.nom AS lieu_nom')
             ->addSelect('l.adresse AS lieu_adresse')
             ->addSelect('j.id AS journee_id')
@@ -146,10 +148,22 @@ class PartieRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
 
-        // Noms affichés, comme Equipe::getNom : « Eroak (AOVB) »
-        return array_map(static function (array $match): array {
+        $fermetures = [];
+        $lieux = array_filter(array_column($matchs, 'lieu_id'));
+        if ($lieux !== []) {
+            foreach ($this->getEntityManager()->getRepository(FermetureGymnase::class)->findBy(['lieu' => array_unique($lieux)]) as $fermeture) {
+                $fermetures[$fermeture->getLieu()->getId()][] = [$fermeture->getDateDebut()->format('Y-m-d'), $fermeture->getDateFin()->format('Y-m-d')];
+            }
+        }
+
+        // Noms affichés, comme Equipe::getNom : « Eroak (AOVB) » ; match sans score dans un gymnase fermé (D60)
+        return array_map(static function (array $match) use ($fermetures): array {
             $match['equipe_recoit'] = Equipe::formaterNom($match['equipe_recoit'], $match['club_recoit']);
             $match['equipe_deplace'] = Equipe::formaterNom($match['equipe_deplace'], $match['club_deplace']);
+            $jour = $match['date_match']?->format('Y-m-d');
+            $match['gymnase_ferme'] = $jour !== null && $jour >= date('Y-m-d')
+                && ($match['score_reception_match'] === null || $match['score_deplacement_match'] === null)
+                && array_filter($fermetures[$match['lieu_id']] ?? [], static fn (array $periode) => $jour >= $periode[0] && $jour <= $periode[1]) !== [];
 
             return $match;
         }, $matchs);

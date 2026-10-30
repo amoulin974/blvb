@@ -21,8 +21,8 @@
             <tbody>
             {% for saison in saisons %}
                 <tr>
-                    <td class="pleine-largeur"><a class="font-display text-lg font-semibold tracking-wide text-(--color-primary) hover:underline" href="{{ path('admin_saison_show', {id: saison.id}) }}">{{ saison.nom }}</a></td>
-                    <td class="pleine-largeur" data-label="Sur le site">
+                    <td class="pleine-largeur"><a class="block py-3 md:inline md:py-0 font-display text-lg font-semibold tracking-wide text-(--color-primary) hover:underline" href="{{ path('admin_saison_show', {id: saison.id}) }}">{{ saison.nom }}</a></td>
+                    <td class="pleine-largeur"{% if saison.brouillon or saison.favori %} data-label="Sur le site"{% endif %}>
                         {% if saison.brouillon %}
                             <span class="badge badge-outline">Brouillon · étape {{ saison.etapeWizard|default(2) }} sur 6</span>
                         {% elseif saison.favori %}
@@ -59,13 +59,13 @@
                                 </form>
                             </div>
                         {% else %}
-                            <a href="{{ path('admin_saison_show', {id: saison.id}) }}" class="btn btn-ghost btn-sm">Piloter</a>
+                            <a href="{{ path('admin_saison_show', {id: saison.id}) }}" class="btn btn-ghost btn-sm">Piloter<span class="sr-only"> {{ saison.nom }}</span></a>
                             <a href="{{ path('admin_saison_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm" aria-label="Modifier {{ saison.nom }}">{{ icone.i('crayon') }} Modifier</a>
                         {% endif %}
                     </td>
                 </tr>
             {% else %}
-                <tr><td colspan="3">Aucune saison.</td></tr>
+                <tr><td colspan="3" class="pleine-largeur">Aucune saison.</td></tr>
             {% endfor %}
             </tbody>
         </table>

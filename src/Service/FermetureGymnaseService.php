@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\FermetureGymnase;
+use App\Entity\Lieu;
 use App\Entity\Partie;
 use App\Repository\ParametresSiteRepository;
 use App\Repository\PartieRepository;
@@ -53,6 +54,37 @@ class FermetureGymnaseService
         $contact = $this->parametres->courants()->getAdresseContact();
 
         return $contact !== null ? [$contact] : $this->users->emailsAdmins();
+    }
+
+    /**
+     * Placement à la main (D60) : pourquoi ce match ne peut pas aller là, ou null. Seul un changement de gymnase ou de jour
+     * est contrôlé : un match déjà dans un gymnase fermé reste modifiable (heure, score). Un match au score saisi n'est pas
+     * contrôlé : il a été joué là.
+     */
+    public function refusPlacement(Partie $partie, ?Lieu $lieuAvant, ?\DateTimeInterface $dateAvant): ?string
+    {
+        $lieu = $partie->getLieu();
+        $date = $partie->getDate();
+        if ($lieu === null || $date === null || ($partie->getNbSetGagnantReception() !== null && $partie->getNbSetGagnantDeplacement() !== null)) {
+            return null;
+        }
+        if ($lieu === $lieuAvant && $date->format('Y-m-d') === $dateAvant?->format('Y-m-d')) {
+            return null;
+        }
+        $fermeture = $lieu->fermeLe($date);
+        if ($fermeture === null) {
+            return null;
+        }
+        $motif = $fermeture->getMotif();
+
+        return sprintf(
+            'Le gymnase %s est fermé le %s%s. Choisissez une autre date ou un autre gymnase.%s',
+            $lieu->getNom(),
+            $date->format('d/m/Y'),
+            $motif !== null ? sprintf(' (%s)', $motif) : '',
+            // Une fermeture terminée ne figure plus dans la liste d'où on la retire
+            $fermeture->getDateFin()->format('Y-m-d') >= date('Y-m-d') ? ' Si la fermeture est annulée, retirez-la d\'abord.' : ''
+        );
     }
 
     /**

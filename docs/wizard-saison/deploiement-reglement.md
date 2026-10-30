@@ -153,6 +153,8 @@ Pour lever les blocages sans couper la protection : `docker compose exec php php
 - Mot de passe SMTP en clair dans le `.env` versionné de `prod` : le déplacer dans `.env.local` et le changer.
 - `APP_SECRET` : le définir s'il est vide (étape 1).
 - Port MySQL 3307 publié par `compose.yaml` : vérifier que le pare-feu le ferme depuis l'extérieur.
+- Cron de nettoyage des compteurs d'essais de connexion, que les conditions d'utilisation annoncent :
+  `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`.
 - Cron du rappel des scores : `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`.
 - Données 2025 (back-office) : journées de la phase finale aux noms et dates incohérents, journée 3 des poules C et D
   pendant les vacances d'hiver, noms des fermetures, tableaux nommés « Poule A » à « Poule D », date et gymnase de la

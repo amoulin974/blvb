@@ -416,6 +416,9 @@ details[data-code][open] > summary svg { rotate: 180deg; }
   .table-empilee td[data-label]::before { content: attr(data-label); display: block; margin-bottom: 0.25rem; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: color-mix(in oklab, var(--color-base-content) 70%, transparent); }
   .table-empilee tbody tr:hover { background: none; }
   .table-empilee .champ-court { width: 100%; }
+  .table-empilee tbody tr { border: 1px solid var(--color-base-300); }
+  .table-empilee tbody tr:last-child { margin-bottom: 0; }
+  .table-empilee td { border-bottom: 0; }
 }
 /* Alertes de l'admin (admin/_alerte.html.twig) : texte lisible (contraste AA) en couleur de base ; l'état est porté par
    l'icône et le filet gauche ; icône en haut des messages sur plusieurs lignes (hors couche : passe devant daisyUI) */
@@ -432,3 +435,9 @@ details[data-code][open] > summary svg { rotate: 180deg; }
    Hors couche : daisyUI n'a pas de variante responsive de btn-square. */
 .btn-deplacer { min-height: 2.75rem; }
 @media (max-width: 39.99rem) { .btn-deplacer { width: 2.75rem; padding: 0; } }
+
+/* Match dans un gymnase fermé (D60), vue d'une journée du calendrier admin : le titre passe à la ligne au lieu d'être coupé */
+@media (min-width: 48rem) {
+  .fc-dayGridSixDay-view .evenement-gymnase-ferme :is(.fc-event-title, .fc-event-title-container) { white-space: normal; overflow-wrap: anywhere; }
+  .fc-dayGridSixDay-view .evenement-gymnase-ferme .fc-event-main-frame { flex-wrap: wrap; }
+}

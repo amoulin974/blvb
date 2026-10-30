@@ -133,6 +133,13 @@ class PartieService
         // Journée des finales (D46) : planning recalculé une fois tous les tableaux générés
         $this->planningFinales->planifier($phase);
 
+        // Formats sans optimiseur : matchs restés dans un gymnase fermé (D60), une fois leur date définitive connue
+        foreach ($phase->getPoules() as $poule) {
+            if ($rapportParPouleId[$poule->getId()]['type'] === 'finale') {
+                $rapportParPouleId[$poule->getId()]['surcharges'] = $this->phrasesFermetures($poule);
+            }
+        }
+
         // On restitue le rapport dans l'ordre d'origine des poules de la phase.
         $rapport = [];
         foreach ($phase->getPoules() as $poule) {
@@ -167,7 +174,7 @@ class PartieService
         if (!$this->generateur($poule)->estOptimisable()) {
             $this->generateur($poule)->genererMatchs($poule);
 
-            return ['poule' => $poule->getNom(), 'type' => 'finale', 'nbBreaks' => null, 'surcharges' => []];
+            return ['poule' => $poule->getNom(), 'type' => 'finale', 'nbBreaks' => null, 'surcharges' => $this->phrasesFermetures($poule)];
         }
 
         if (count($poule->getEquipes()) < 2) {
@@ -858,6 +865,14 @@ class PartieService
     private function capacitePrioritaire(Lieu $lieu): int
     {
         return $this->creneauPrioritaire($lieu)->getCapacite();
+    }
+
+    /** @return list<string> une phrase par match de la poule à déplacer ; requête : les matchs viennent peut-être d'être créés */
+    private function phrasesFermetures(Poule $poule): array
+    {
+        $matchs = array_filter($this->em->getRepository(Partie::class)->findBy(['poule' => $poule]), fn (Partie $partie) => $partie->enGymnaseFerme());
+
+        return array_values(array_map(self::phraseFermeture(...), $matchs));
     }
 
     /** Match sans score dans un gymnase fermé (D60) : à déplacer à la main */

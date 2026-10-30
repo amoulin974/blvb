@@ -41,19 +41,19 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
 - [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
-## Fermetures de gymnase 🟡 (branche `parametres-site`, hors numérotation du chantier ; D60)
+## Fermetures de gymnase ✅ (branche `parametres-site`, hors numérotation du chantier ; D60)
 - [x] Lot 1 : saisie par les responsables de club et les admins ; FGY-01 à FGY-09
 - [x] Lot 2 : placement automatique (générateurs et replacement), signalement sur la mise en place ; FGY-12 à FGY-16
-- [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin) ; signalement aussi sur l'ancienne
-      page « Optimiser » des outils techniques, qui ne le montre pas pour les formats sans optimiseur
+- [x] Lot 3 : placement manuel refusé dans un gymnase fermé (formulaires et glisser-déposer du calendrier admin), signalement
+      sur la page « Optimiser » pour les formats sans optimiseur ; FGY-18 à FGY-20
 - [x] **Calendrier des gymnases** (`/calendrierlieu`, demande de l'utilisateur, 30/10/2026) : date libre marquée « Gymnase
       fermé » avec le motif, match sans score signalé « à déplacer » ; GYM-06
-- [ ] **Calendrier par équipe** : y signaler aussi un match placé dans un gymnase fermé, sinon le joueur peut se déplacer pour
-      rien (relevé par l'ergonome, à traiter avec le lot 3)
+- [x] **Calendrier par équipe**, fiche de l'équipe et agenda : match sans score dans un gymnase fermé signalé ; FGY-21
 - [x] Auteur d'une fermeture enregistré, visible des admins seulement ; FGY-11
 - [x] Motif et auteur des fermetures terminées effacés quand une autre saison est affichée (D60) ; FGY-17
 - [x] Conditions d'utilisation : auteur et motif des fermetures, conservation, essais de connexion et adresse de contact, sur
-      `conditions-utilisation-v2`, tenue à jour de cette branche ; reste les informations sur l'éditeur avant toute fusion
+      `conditions-utilisation-v2`, tenue à jour de cette branche ; reste avant toute fusion les informations sur l'éditeur et deux
+      durées à fixer avec Francis : conservation des comptes après la dernière saison, journaux du serveur
 - [x] Liste des saisons sur téléphone : lignes empilées, plus de défilement horizontal
 
 ## Paramètres du site et éditeur de la fiche club 🟡 (demande de l'utilisateur, 30/10/2026 ; D62, D63)
