@@ -108,6 +108,7 @@
                         <li>
                             {% if p.ancre %}<a class="underline" href="#{{ p.ancre }}">{{ p.texte }}</a>{% else %}{{ p.texte }}{% endif %}
                             {% if p.lien == 'equipes' %} <a class="underline" href="{{ path('admin_equipe_index') }}">Voir les équipes</a>{% endif %}
+                            {% if p.partie is defined %} <a class="underline" href="{{ path('admin_partie_edit', {id: p.partie}) }}">Modifier le match</a>{% endif %}
                         </li>
                     {% endfor %}
                 </ul>

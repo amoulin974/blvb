@@ -38,7 +38,7 @@ class FermetureGymnaseType extends AbstractType
         $builder
             ->add('motif', TextType::class, [
                 'label' => 'Motif',
-                'help' => 'Visible par tous sur le calendrier par gymnase : restez bref, n\'indiquez ni nom ni coordonnées.',
+                'help' => 'Visible par tous sur le calendrier par gymnase : restez bref, n\'indiquez ni nom ni coordonnées. Les administrateurs voient qui a saisi la fermeture.',
                 'empty_data' => '',
                 'constraints' => [
                     new Assert\NotBlank(message: 'Indiquez le motif de la fermeture.'),

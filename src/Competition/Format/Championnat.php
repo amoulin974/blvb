@@ -232,13 +232,8 @@ final class Championnat implements GenerateurFormat
 
         // Calcul de la date selon les préférences de l'équipe qui REÇOIT
         $lieuMatch = $equipeHome->getLieu();
-        $creneau = $lieuMatch->getCreneaux()[0]; // On suppose qu'il y a au moins un créneau
-
-        $partie->setDate(DateMatch::calculer(
-            $journee->getDateDebut(),
-            $creneau->getJourSemaine(),
-            $creneau->getHeureDebut(),
-        ));
+        // On suppose qu'il y a au moins un créneau
+        $partie->setDate(DateMatch::premierCreneauOuvert($lieuMatch, $lieuMatch->getCreneaux(), $journee->getDateDebut()));
         $partie->setLieu($lieuMatch);
         $partie->setIdEquipeRecoit($equipeHome);
         $partie->setIdEquipeDeplace($equipeAway);

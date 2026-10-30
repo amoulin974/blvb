@@ -6,7 +6,7 @@
     {% form_theme form 'admin/form/erreurs.html.twig' %}
     {{ include('admin/_entete.html.twig', {
         titre: 'Fermetures du gymnase ' ~ lieu.nom,
-        sous_titre: 'Aucun match n\'est placé dans un gymnase pendant sa fermeture.',
+        sous_titre: 'Les matchs générés ou replacés automatiquement évitent ce gymnase pendant sa fermeture. Si c\'est impossible, le match y reste et il est signalé sur la mise en place de la phase. « Modifier le match » ne vérifie pas encore les fermetures.',
         retour: {url: path('admin_lieu_index'), label: 'Gymnases'},
     }) }}
     <div class="admin-carte max-w-3xl">
@@ -23,10 +23,15 @@
     </div>
     <div class="admin-carte max-w-3xl mt-4">
         <h2 class="text-lg">Fermetures en cours et à venir</h2>
-        <ul class="mt-2 divide-y divide-base-300">
+        <ul class="mt-2 divide-y divide-(--color-base-300)">
             {% for fermeture in fermetures %}
                 <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
-                    <p class="min-w-0 wrap-anywhere">Du {{ fermeture.dateDebut|format_date('long', locale='fr') }} au {{ fermeture.dateFin|format_date('long', locale='fr') }} · {{ fermeture.motif }}</p>
+                    <div class="min-w-0">
+                        <p class="wrap-anywhere">Du {{ fermeture.dateDebut|format_date('long', locale='fr') }} au {{ fermeture.dateFin|format_date('long', locale='fr') }} · {{ fermeture.motif }}</p>
+                        {% if fermeture.creePar %}
+                            <p class="mt-0.5 text-sm wrap-anywhere text-(--color-base-content)/80">Saisie par {% for morceau in fermeture.creePar.email|split('@') %}{% if not loop.first %}@<wbr>{% endif %}{{ morceau }}{% endfor %}</p>
+                        {% endif %}
+                    </div>
                     {{ include('admin/_confirmation.html.twig', {
                         action: path('admin_lieu_fermeture_supprimer', {id: lieu.id, fermeture: fermeture.id}),
                         token: csrf_token('supprimer_fermeture' ~ fermeture.id),
@@ -34,6 +39,7 @@
                         bouton: 'Retirer la fermeture',
                         irreversible: false,
                         declencheur: 'Retirer',
+                        declencheur_classe: 'btn btn-ghost btn-sm btn-danger-discret min-h-11',
                         declencheur_sr: 'la fermeture du ' ~ fermeture.dateDebut|format_date('long', locale='fr'),
                     }) }}
                 </li>

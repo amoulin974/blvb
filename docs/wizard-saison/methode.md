@@ -187,6 +187,11 @@ contact. Suite : éditeur de la fiche club (D63), branche à part depuis `main`.
 Date marquée « Gymnase fermé » et motif, match sans score « à déplacer » (D60, GYM-06) ; relu par l'ergonome, le webdesigner et
 la sécurité, vérifié dans Chromium à 1280 et 375 px. Couleurs d'état du fragment passées en AA. Suite : lots 2 et 3 du placement.
 
+### 2026-10-30 : fermetures, lot 2 et auteur
+Le placement automatique évite les gymnases fermés (D60, FGY-12 à FGY-16, test lent de l'optimiseur vert) ; à défaut, le match
+est signalé sur la mise en place, avec un lien. Auteur de la fermeture enregistré (FGY-11). Relu par l'ergonome, le webdesigner
+et la sécurité. Suite : lot 3 (placement manuel, calendrier par équipe).
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)

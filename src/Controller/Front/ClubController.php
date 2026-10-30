@@ -3,6 +3,7 @@
 namespace App\Controller\Front;
 
 use App\Entity\Club;
+use App\Entity\User;
 use App\Entity\FermetureGymnase;
 use App\Form\FermetureGymnaseType;
 use App\Form\Front\ClubFicheType;
@@ -99,6 +100,7 @@ final class ClubController extends AbstractController
         if ($form->isSubmitted() && $form->isValid()) {
             $matchsConcernes = $service->matchsConcernes($fermeture);
             if ($matchsConcernes === [] || $this->isGranted('ROLE_ADMIN')) {
+                $fermeture->setCreePar($this->getUser() instanceof User ? $this->getUser() : null);
                 $entityManager->persist($fermeture);
                 $entityManager->flush();
                 $this->addFlash('success', sprintf('La fermeture de %s est enregistrée.', $fermeture->getLieu()->getNom()));

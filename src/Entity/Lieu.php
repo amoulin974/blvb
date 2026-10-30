@@ -81,6 +81,19 @@ class Lieu
         return $this->fermetures;
     }
 
+    /** La fermeture (D60) qui couvre ce jour, ou null si le gymnase est ouvert */
+    public function fermeLe(\DateTimeInterface $date): ?FermetureGymnase
+    {
+        foreach ($this->fermetures as $fermeture) {
+            $jour = $date->format('Y-m-d');
+            if ($jour >= $fermeture->getDateDebut()->format('Y-m-d') && $jour <= $fermeture->getDateFin()->format('Y-m-d')) {
+                return $fermeture;
+            }
+        }
+
+        return null;
+    }
+
     public function getId(): ?int
     {
         return $this->id;

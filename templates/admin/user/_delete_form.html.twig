@@ -7,6 +7,7 @@
     consequences: [
         'La personne ne pourra plus se connecter (saisie des scores, coordonnées des capitaines…).',
         'Sa fiche joueur, si elle en a une, est conservée sans compte.',
+        'Les fermetures de gymnase qu\'elle a saisies restent, sans auteur.',
     ],
     blocage: app.user and app.user.userIdentifier == user.email ? 'Vous ne pouvez pas supprimer votre propre compte.' : null,
 }) }}

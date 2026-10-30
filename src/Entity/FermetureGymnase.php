@@ -32,6 +32,11 @@ class FermetureGymnase
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
     private ?\DateTimeImmutable $dateFin = null;
 
+    /** Qui l'a saisie, visible des admins seulement : le motif est public (D60). Vidé si le compte est supprimé. */
+    #[ORM\ManyToOne]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    private ?User $creePar = null;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -81,6 +86,18 @@ class FermetureGymnase
     public function setDateFin(?\DateTimeImmutable $dateFin): static
     {
         $this->dateFin = $dateFin;
+
+        return $this;
+    }
+
+    public function getCreePar(): ?User
+    {
+        return $this->creePar;
+    }
+
+    public function setCreePar(?User $creePar): static
+    {
+        $this->creePar = $creePar;
 
         return $this;
     }

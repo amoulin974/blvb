@@ -15,7 +15,7 @@
         <div>
             <a class="link link-hover text-sm" href="{{ path('front_club_show', {id: club.id}) }}">← Retour à la fiche du club</a>
             <h1 class="mt-2 text-3xl uppercase tracking-wide">Fermetures de gymnase</h1>
-            <p class="mt-1 text-(--color-base-content)/80">Club {{ club.nom }}. Aucun match n'est placé dans un gymnase pendant sa fermeture.</p>
+            <p class="mt-1 text-(--color-base-content)/80">Club {{ club.nom }}. Indiquez les fermetures de vos gymnases dès que vous les connaissez : le championnat les prend en compte pour programmer les matchs, dans la mesure du possible.</p>
         </div>
 
         {% if club.lieux is empty %}
@@ -56,7 +56,7 @@
 
             <section aria-labelledby="titre-liste" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
                 <h2 id="titre-liste" class="text-xl uppercase tracking-wide">Fermetures en cours et à venir</h2>
-                <ul class="mt-2 divide-y divide-base-300">
+                <ul class="mt-2 divide-y divide-(--color-base-300)">
                     {% for fermeture in fermetures %}
                         <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
                             <div class="min-w-0 wrap-anywhere">

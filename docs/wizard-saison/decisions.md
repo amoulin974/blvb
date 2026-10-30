@@ -656,15 +656,22 @@ rendu pour la saison.
 - Une fermeture de gymnase est une entité propre, `FermetureGymnase` (gymnase, motif, premier et dernier jour), et non
   une `Indisponibilite` avec un gymnase : celle-ci fait sauter la journée à tous les clubs, et chaque usage aurait dû
   filtrer. Elle n'est liée à aucune saison : ses dates suffisent.
-- **Qui saisit** : les responsables du club, pour les gymnases rattachés au club (même partagés, sans enregistrer
-  l'auteur), et les admins. Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase »
+- **Qui saisit** : les responsables du club, pour les gymnases rattachés au club (même partagés), et les admins. L'auteur est
+  enregistré, visible des admins seulement, depuis que le motif est public (décision de l'utilisateur, 30/10/2026) ; l'aide du
+  formulaire le dit ; il est effacé avec le compte. Durée de conservation à fixer (`lots.md`). Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase »
   sur la fiche.
 - **Match sans score programmé pendant la période** : le responsable est refusé, les matchs lui sont cités, et il écrit
   aux admins (e-mail prérempli, adresses de connexion des admins). L'admin, lui, enregistre et voit les matchs
   concernés : le replacement a besoin de la fermeture pour éviter le gymnase.
 - **Quand** : à tout moment, sans date limite. Le moment utile est avant la génération des matchs : c'est aux admins de
   le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
-- **Placement** (lots 2 et 3) : aucun match n'est placé dans un gymnase fermé.
+- **Placement automatique** (lot 2, générations et replacement) : un gymnase fermé passe avant tout autre critère, surcharge
+  comprise. Dans l'ordre : recevoir chez l'adversaire ou échanger des journées (recherche locale, championnats) ; sinon le
+  créneau suivant du même gymnase, la même semaine, seule exception à « le créneau prioritaire uniquement » ; sinon le match
+  reste placé et il est signalé, avec un lien vers le match, sur la mise en place de la phase, tant qu'il n'a pas de score. Jamais d'autre gymnase ni
+  d'autre semaine sans décision d'un admin. Un match joué ne bouge pas. Le gymnase et la date choisis pour une journée des
+  finales restent ceux de l'admin : ils sont seulement signalés.
+- **Placement manuel** (lot 3) : à faire.
 - **Calendrier des gymnases** (public) : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée
   « Gymnase fermé » avec son motif (le premier, si des fermetures se chevauchent), et un match sans score y est signalé « à
   déplacer » (demande de l'utilisateur, 30/10/2026). Le motif étant un texte libre devenu public : l'aide du formulaire

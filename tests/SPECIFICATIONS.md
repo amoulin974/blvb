@@ -585,6 +585,12 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-08** ✅ : retrait par un responsable du gymnase ; jeton requis ; 404 pour un gymnase hors du club ; 403 par l'URL d'un autre club.
 - **FGY-09** ✅ : un match d'une saison en préparation bloque le responsable sans dévoiler ses équipes, ni dans la page ni dans l'e-mail.
 - **FGY-10** ✅ : l'adresse de contact des paramètres (D62) remplace celles des admins dans le lien et le message de refus ; sans elle, FGY-04 reste vrai.
+- **FGY-11** ✅ : l'auteur d'une fermeture est enregistré ; l'admin le voit, pas le responsable ; supprimer son compte par la page d'admin garde la fermeture, sans auteur ; l'adresse n'apparaît pas sur le calendrier public.
+- **FGY-12** ✅ *(`Integration/Service/PlacementFermeturesTest`, FGY-12 à FGY-16)* : le placement automatique reçoit chez l'adversaire plutôt que dans un gymnase fermé, sans rien signaler.
+- **FGY-13** ✅ : sans autre solution, le match passe au créneau suivant du gymnase, la même semaine.
+- **FGY-14** ✅ : sans aucune solution, le match reste placé, et il est signalé dans le rapport et sur la mise en place de la phase, tant qu'il n'a pas de score.
+- **FGY-15** ✅ : replacer les matchs à venir évite une fermeture ajoutée après la génération, sans toucher aux matchs joués.
+- **FGY-16** ✅ : un barrage (format sans optimiseur) prend le créneau suivant ouvert.
 
 `Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
 
@@ -694,6 +700,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
 | **Fermetures de gymnase, lot 1** ✅ | FGY-01 à FGY-09 (§4.18) : saisie par les responsables de club et les admins, refus si un match est programmé | 626 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
 | **Essais de connexion limités** ✅ | LIM-01 à LIM-10 (§4.1) : attente qui double à chaque échec, par compte et IP, puis par IP | 649 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
+| **Fermetures de gymnase, lot 2** ✅ | FGY-11 à FGY-16 (§4.18) : auteur de la fermeture, placement automatique qui évite les gymnases fermés, signalement | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
 | **Paramètres du site** ✅ | PAR-01 à PAR-09 (§4.19), LIM-11, FGY-10 : connexion limitée activée après vérification, adresse de contact, logo | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 

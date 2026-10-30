@@ -5,6 +5,7 @@ namespace App\Controller\Admin;
 
 use App\Entity\FermetureGymnase;
 use App\Entity\Lieu;
+use App\Entity\User;
 use App\Form\FermetureGymnaseType;
 use App\Form\LieuType;
 use App\Repository\FermetureGymnaseRepository;
@@ -94,6 +95,7 @@ final class LieuController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $matchsConcernes = $service->matchsConcernes($fermeture);
+            $fermeture->setCreePar($this->getUser() instanceof User ? $this->getUser() : null);
             $entityManager->persist($fermeture);
             $entityManager->flush();
             $this->addFlash('success', 'La fermeture est enregistrée.');

@@ -43,15 +43,17 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 
 ## Fermetures de gymnase 🟡 (branche `parametres-site`, hors numérotation du chantier ; D60)
 - [x] Lot 1 : saisie par les responsables de club et les admins ; FGY-01 à FGY-09
-- [ ] Lot 2 : placement automatique (générateurs et replacement). **Tant qu'il n'est pas fait, une fermeture ne bloque pas
-      le placement**
-- [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin, mise en place)
+- [x] Lot 2 : placement automatique (générateurs et replacement), signalement sur la mise en place ; FGY-12 à FGY-16
+- [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin) ; signalement aussi sur l'ancienne
+      page « Optimiser » des outils techniques, qui ne le montre pas pour les formats sans optimiseur
 - [x] **Calendrier des gymnases** (`/calendrierlieu`, demande de l'utilisateur, 30/10/2026) : date libre marquée « Gymnase
       fermé » avec le motif, match sans score signalé « à déplacer » ; GYM-06
 - [ ] **Calendrier par équipe** : y signaler aussi un match placé dans un gymnase fermé, sinon le joueur peut se déplacer pour
       rien (relevé par l'ergonome, à traiter avec le lot 3)
-- [ ] À trancher : enregistrer l'auteur d'une fermeture, visible des admins seulement, le motif étant devenu public (D60 a
-      retenu de ne pas l'enregistrer ; relevé par la sécurité)
+- [x] Auteur d'une fermeture enregistré, visible des admins seulement ; FGY-11
+- [ ] À trancher : combien de temps garder une fermeture passée, son auteur et son motif (aucun écran ne les montre plus, sauf
+      en base) : purge périodique, ou liste complète côté admin avec suppression (relevé par la sécurité)
+- [ ] À la fusion de `conditions-utilisation-v2` : y mentionner l'auteur des fermetures, avec cette durée
 
 ## Paramètres du site et éditeur de la fiche club 🟡 (demande de l'utilisateur, 30/10/2026 ; D62, D63)
 Dans cet ordre.
@@ -69,8 +71,7 @@ Dans cet ordre.
 Analyse de l'ergonome, maquettes et données : `tableau-de-bord.md`. Rien n'est décidé ni codé.
 - [ ] Trancher les 8 points du §3 de `tableau-de-bord.md` (PO6 de `decisions.md`), puis consigner la décision (D64)
 - [ ] Réaliser la page, avec relecture webdesigner, tests et `tests/SPECIFICATIONS.md`
-- [ ] Corriger sans attendre le texte faux « Aucun match n'est placé dans un gymnase pendant sa fermeture » (`admin/lieu/fermetures`,
-      `front/club/fermetures`), tant que les lots 2 et 3 des fermetures ne sont pas faits (§5 de `tableau-de-bord.md`)
+- [x] Texte faux « Aucun match n'est placé dans un gymnase pendant sa fermeture » corrigé (lot 2 des fermetures)
 
 ## À faire hors lots (relevé en relecture)
 - [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `parametres-site` ; à vérifier sur le serveur

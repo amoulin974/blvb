@@ -50,6 +50,9 @@ class PartieService
     // une surcharge de lieu supplémentaire : la surcharge est toujours résolue en priorité.
     private const POIDS_SURCHARGE = 100000;
 
+    // Poids d'un match placé dans un gymnase fermé (D60) : à éviter avant tout, même au prix d'une surcharge.
+    private const POIDS_FERMETURE = 10000000;
+
     // Poids d'un match de déséquilibre domicile/extérieur au-delà d'un écart de 1 pour une équipe : passe après la
     // surcharge des gymnases, mais avant le nombre de breaks (une équipe ne doit pas recevoir plus souvent qu'une autre).
     private const POIDS_DESEQUILIBRE = 1000;
@@ -496,6 +499,7 @@ class PartieService
         // réellement utilisée par chaque poule (pour attribuer les surcharges à qui de droit).
         $breaksParPoule = [];
         $clesUtiliseesParPoule = [];
+        $fermeturesParPoule = [];
 
         foreach ($schedulesByPoule as $pouleIdx => $schedule) {
             $poule = $poules[$pouleIdx];
@@ -529,6 +533,9 @@ class PartieService
                     $partie->setPoule($poule);
 
                     $this->em->persist($partie);
+                    if ($lieuMatch->fermeLe($dateMatch) !== null) {
+                        $fermeturesParPoule[$pouleIdx][] = self::phraseFermeture($partie);
+                    }
                 }
             }
 
@@ -560,7 +567,7 @@ class PartieService
                     $surcharges[] = $messagesParCle[$cle];
                 }
             }
-            $surchargesParPoule[$pouleIdx] = $surcharges;
+            $surchargesParPoule[$pouleIdx] = [...$fermeturesParPoule[$pouleIdx] ?? [], ...$surcharges];
         }
 
         return ['breaksParPoule' => $breaksParPoule, 'surchargesParPoule' => $surchargesParPoule];
@@ -700,6 +707,7 @@ class PartieService
         $occupation = $occupationFixe;
         $breaksTotal = 0;
         $desequilibre = 0;
+        $fermes = 0;
 
         foreach ($schedulesByPoule as $pouleIdx => $schedule) {
             $equipes = $equipesParPoule[$pouleIdx];
@@ -736,6 +744,9 @@ class PartieService
                     }
                     $equipeHome = $equipes[$homeIdx];
                     [$lieu, $date] = $this->calculerLieuEtDateDomicile($equipeHome, $journee->getDateDebut());
+                    if ($lieu->fermeLe($date) !== null) {
+                        ++$fermes;
+                    }
 
                     $cle = $lieu->getId() . '|' . $date->format('Y-m-d');
                     if (!isset($occupation[$cle])) {
@@ -752,7 +763,7 @@ class PartieService
         }
 
         return [
-            'score' => self::POIDS_SURCHARGE * $surchargeExcess + self::POIDS_DESEQUILIBRE * $desequilibre + $breaksTotal,
+            'score' => self::POIDS_FERMETURE * $fermes + self::POIDS_SURCHARGE * $surchargeExcess + self::POIDS_DESEQUILIBRE * $desequilibre + $breaksTotal,
             'breaks' => $breaksTotal,
             'surchargeExcess' => $surchargeExcess,
             'occupation' => $occupation,
@@ -805,6 +816,7 @@ class PartieService
      * UNIQUEMENT le créneau le plus prioritaire de son lieu : plus de repli sur un créneau
      * secondaire. Une surcharge sur ce créneau doit être résolue en choisissant une autre équipe
      * à domicile (c'est le rôle de la recherche locale), jamais en dégradant le créneau utilisé.
+     * Seule exception : un gymnase fermé ce jour-là (D60), où le match passe au créneau suivant de la semaine, si possible.
      *
      * @return array{0: Lieu, 1: DateTimeImmutable}
      */
@@ -817,6 +829,11 @@ class PartieService
 
         $creneau = $this->creneauPrioritaire($lieu);
         $date = $this->calculerDateMatch($debutJournee, (string) $creneau->getJourSemaine(), $creneau->getHeureDebut());
+        if ($lieu->fermeLe($date) !== null) {
+            $creneaux = $lieu->getCreneaux()->toArray();
+            usort($creneaux, fn (Creneau $a, Creneau $b) => $b->getPrioritaire() <=> $a->getPrioritaire());
+            $date = DateMatch::premierCreneauOuvert($lieu, $creneaux, $debutJournee);
+        }
 
         return [$lieu, $date];
     }
@@ -841,6 +858,12 @@ class PartieService
     private function capacitePrioritaire(Lieu $lieu): int
     {
         return $this->creneauPrioritaire($lieu)->getCapacite();
+    }
+
+    /** Match sans score dans un gymnase fermé (D60) : à déplacer à la main */
+    public static function phraseFermeture(Partie $partie): string
+    {
+        return sprintf('Match %s contre %s à déplacer : le gymnase %s est fermé le %s.', $partie->getNomReception(), $partie->getNomDeplacement(), $partie->getLieu()->getNom(), $partie->getDate()->format('d/m'));
     }
 
     private function deleteMatches(Poule $poule): void

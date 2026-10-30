@@ -3,20 +3,23 @@
 namespace App\Tests\Fonctionnel\Front;
 
 use App\Entity\FermetureGymnase;
+use App\Entity\Lieu;
 use App\Entity\ParametresSite;
+use App\Entity\User;
 use App\Factory\FermetureGymnaseFactory;
 use App\Factory\JourneeFactory;
 use App\Factory\PartieFactory;
 use App\Factory\PhaseFactory;
 use App\Factory\PouleFactory;
 use App\Factory\SaisonFactory;
+use App\Factory\UserFactory;
 use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * FGY-01 à FGY-10 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
+ * FGY-01 à FGY-11 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
  */
 final class FermetureGymnaseTest extends TestFonctionnel
 {
@@ -280,5 +283,43 @@ final class FermetureGymnaseTest extends TestFonctionnel
         self::assertStringStartsWith('mailto:contact@blvb.test?subject=', $alerte->filter('a[href^="mailto:"]')->attr('href'));
         self::assertStringContainsString('écrivez à : contact@blvb.test', $alerte->text());
         self::assertStringNotContainsString('admin@blvb.test', $alerte->html());
+    }
+
+    #[TestDox('FGY-11 : l\'auteur d\'une fermeture est enregistré ; l\'admin le voit, pas le responsable ; supprimer son compte garde la fermeture')]
+    public function test_auteur(): void
+    {
+        $this->connecter('resp.club');
+        $this->saisir();
+        self::assertResponseRedirects();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $fermeture = $em->getRepository(FermetureGymnase::class)->findOneBy([]);
+        self::assertSame(ChampionnatDeTest::compte('resp.club')->getEmail(), $fermeture->getCreePar()->getEmail());
+        $idLieu = $fermeture->getLieu()->getId();
+        $email = $fermeture->getCreePar()->getEmail();
+
+        self::assertStringNotContainsString('Saisie par', (string) $this->client->request('GET', $this->url())->html());
+
+        $this->connecter('admin');
+        $page = $this->client->request('GET', '/admin/lieu/'.$idLieu.'/fermetures');
+        self::assertStringContainsString('Saisie par '.$email, $page->text());
+
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $ancien = UserFactory::createOne(['email' => 'ancien@blvb.test']);
+        $sansCompte = FermetureGymnaseFactory::createOne(['lieu' => $em->find(Lieu::class, $idLieu), 'creePar' => $ancien, 'motif' => 'Ancien auteur']);
+        $idSansCompte = $sansCompte->getId();
+        $em->flush();
+        $idAncien = $ancien->getId();
+        // Absente du calendrier public, y compris pour un visiteur
+        $this->client->request('GET', '/calendrierlieu');
+        self::assertStringNotContainsString('ancien@blvb.test', (string) $this->client->getResponse()->getContent());
+
+        $jeton = $this->client->request('GET', "/admin/user/$idAncien/edit")->filter('[data-confirmation-action-param$="/admin/user/'.$idAncien.'"]')->attr('data-confirmation-token-param');
+        $this->client->request('POST', "/admin/user/$idAncien", ['_token' => $jeton]);
+        self::assertResponseRedirects();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        self::assertNull($em->find(User::class, $idAncien));
+        self::assertNull($em->find(FermetureGymnase::class, $idSansCompte)->getCreePar(), 'la fermeture reste, sans auteur');
+        self::assertStringNotContainsString('Saisie par ancien@', $this->client->request('GET', '/admin/lieu/'.$idLieu.'/fermetures')->text());
     }
 }
