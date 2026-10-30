@@ -1,0 +1,134 @@
+{% extends 'base_admin.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block title %}Paramètres du site{% endblock %}
+
+{% block body %}
+    {% form_theme formContact 'admin/form/erreurs.html.twig' %}
+    {% form_theme formLogo 'admin/form/erreurs.html.twig' %}
+    {{ include('admin/_entete.html.twig', {titre: 'Paramètres du site'}) }}
+
+    <div class="max-w-3xl space-y-6">
+        <section class="admin-carte space-y-4" aria-labelledby="titre-connexion">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <h2 id="titre-connexion" class="text-lg">Limitation des essais de connexion</h2>
+                <span class="badge {{ parametres.connexionLimitee ? 'badge-primary' : 'badge-outline' }}">{{ parametres.connexionLimitee ? 'Activée' : 'Désactivée' }}</span>
+            </div>
+            <p>Après 3 essais ratés sur un compte, ou 20 depuis une même connexion Internet (adresse IP), il faut attendre 30 secondes. L'attente double à chaque nouvel échec, jusqu'à 24 heures.</p>
+
+            {% if parametres.connexionLimitee %}
+                <details class="rounded-box border border-base-300 p-3">
+                    <summary class="cursor-pointer font-semibold">Essai à faire après l'activation</summary>
+                    <ol class="list-decimal pl-5 mt-2 space-y-1">
+                        <li>Dans une fenêtre de navigation privée, essayez 4 fois de vous connecter avec une adresse inventée (essai@exemple.fr) et un mauvais mot de passe. Le message « Trop d'essais de connexion » doit s'afficher.</li>
+                        <li>Sur un téléphone en 4G (Wi-Fi coupé), refaites un essai avec la même adresse. Ce message ne doit pas s'afficher.</li>
+                    </ol>
+                    <p class="mt-2">Si le téléphone est bloqué lui aussi, désactivez la limitation et prévenez l'hébergeur.</p>
+                </details>
+                {{ include('admin/_confirmation.html.twig', {
+                    action: path('admin_parametres_desactiver_connexion'),
+                    token: csrf_token('desactiver-connexion'),
+                    titre: 'Désactiver la limitation des essais de connexion ?',
+                    consequences: ['Les essais de connexion ne seront plus limités.', 'Pour la réactiver, il faudra une vérification de moins d\'une heure.'],
+                    bouton: 'Désactiver',
+                    ton: 'primary',
+                    irreversible: false,
+                    declencheur: 'Désactiver',
+                    declencheur_classe: 'btn btn-sm',
+                    declencheur_icone: false,
+                }) }}
+            {% else %}
+                <p>Pour fonctionner, le site doit voir l'adresse IP de chaque visiteur. Lancez d'abord la vérification : sans elle, l'activation est refusée.</p>
+
+                <div class="space-y-4" data-controller="verification-connexion"
+                     data-verification-connexion-url-value="{{ path('admin_parametres_verifier_connexion') }}"
+                     data-verification-connexion-jeton-value="{{ csrf_token('verifier-connexion') }}"
+                     data-verification-connexion-ip-forgee-value="{{ ipForgee }}">
+                    <div>
+                        <button type="button" class="btn btn-sm {{ verificationValide ? '' : 'btn-primary' }}" data-verification-connexion-target="bouton" data-action="verification-connexion#verifier">{{ controles ? 'Relancer la vérification' : 'Lancer la vérification' }}</button>
+                        <p class="mt-2 text-error" role="alert" data-verification-connexion-target="erreur" hidden>La vérification n'a pas abouti. Rechargez la page, puis réessayez.</p>
+                    </div>
+
+                    {% if controles %}
+                        <p class="font-semibold" tabindex="-1" data-verification-connexion-target="synthese">
+                            {{- verificationValide ? 'Vérification réussie.' : 'Vérification échouée : la limitation ne peut pas être activée. Transmettez ce résultat à l\'hébergeur.' -}}
+                        </p>
+                        <ul class="space-y-2" aria-label="Résultat de la vérification">
+                            {% for controle in controles %}
+                                <li class="flex gap-2">
+                                    <span class="mt-0.5 {{ controle.ok ? 'text-success' : 'text-error' }}">{{ icone.i(controle.ok ? 'valide' : 'erreur', 'size-5') }}</span>
+                                    <span class="min-w-0 wrap-anywhere">
+                                        <span class="sr-only">{{ controle.ok ? 'Réussi : ' : 'Échec : ' }}</span>
+                                        <span class="font-semibold">{{ controle.libelle }}</span><br>{{ controle.detail }}
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+                </div>
+
+                {% if verificationValide %}
+                    <form method="post" action="{{ path('admin_parametres_activer_connexion') }}" class="space-y-3 border-t border-base-300 pt-4">
+                        <input type="hidden" name="_token" value="{{ csrf_token('activer-connexion') }}">
+                        <p>Vérification valable jusqu'à {{ finValidite|date('H:i', 'Europe/Paris') }}. Un dernier point ne peut pas être contrôlé par le site. Demandez à l'hébergeur de vous le confirmer : « Le site n'est joignable qu'en passant par le proxy, jamais directement par l'adresse du serveur. »</p>
+                        <label class="flex min-h-11 items-center gap-2 cursor-pointer">
+                            <input type="checkbox" name="confirmation" value="1" class="checkbox checkbox-sm" required>
+                            <span>L'hébergeur m'a confirmé ce point.</span>
+                        </label>
+                        <button type="submit" class="btn btn-primary btn-sm">Activer</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+
+            <p class="text-sm text-(--color-base-content)/80">Un administrateur ne peut plus se connecter ? Il peut attendre la fin du délai ou cliquer sur « J'ai oublié mon mot de passe ». En dernier recours, l'hébergeur peut désactiver la limitation avec la commande <code class="wrap-anywhere">app:connexion-limitee:desactiver</code>.</p>
+        </section>
+
+        <section class="admin-carte space-y-4" aria-labelledby="titre-contact">
+            <h2 id="titre-contact" class="text-lg">Adresse de contact</h2>
+            {{ form_start(formContact) }}
+                <div class="form-control w-full">
+                    {{ form_label(formContact.adresseContact, null, {'label_attr': {'class': 'label font-semibold text-base-content'}}) }}
+                    {{ form_widget(formContact.adresseContact, {'attr': {'class': 'input input-bordered w-full', 'aria-describedby': formContact.adresseContact.vars.id ~ '_aide'}}) }}
+                    {{ form_errors(formContact.adresseContact) }}
+                    <p id="{{ formContact.adresseContact.vars.id }}_aide" class="mt-1 text-sm text-(--color-base-content)/80">{{ formContact.adresseContact.vars.help }}</p>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm mt-2">Enregistrer l'adresse</button>
+            {{ form_end(formContact) }}
+        </section>
+
+        <section class="admin-carte space-y-4" aria-labelledby="titre-logo">
+            <h2 id="titre-logo" class="text-lg">Logo du site</h2>
+            <p>Il s'affiche en haut de chaque page, sur le site et dans l'administration.</p>
+            <div>
+                <p class="mb-1 text-sm font-semibold">Logo actuel</p>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="rounded-box bg-primary text-primary-content p-4">
+                        {{ include('front/fragments/_logo.html.twig') }}
+                    </div>
+                    {% if parametres.logo %}
+                        {{ include('admin/_confirmation.html.twig', {
+                            action: path('admin_parametres_retirer_logo'),
+                            token: csrf_token('retirer-logo'),
+                            titre: 'Revenir au logo d\'origine ?',
+                            consequences: ['Le logo envoyé sera supprimé du site.'],
+                            bouton: 'Revenir au logo d\'origine',
+                            ton: 'primary',
+                            declencheur: 'Revenir au logo d\'origine',
+                            declencheur_classe: 'btn btn-ghost btn-sm',
+                            declencheur_icone: 'restaurer',
+                        }) }}
+                    {% endif %}
+                </div>
+            </div>
+            {{ form_start(formLogo) }}
+                <div class="form-control w-full">
+                    {{ form_label(formLogo.fichier, null, {'label_attr': {'class': 'label font-semibold text-base-content'}}) }}
+                    {{ form_widget(formLogo.fichier, {'attr': {'class': 'file-input file-input-bordered w-full', 'aria-describedby': formLogo.fichier.vars.id ~ '_aide'}}) }}
+                    {{ form_errors(formLogo.fichier) }}
+                    <p id="{{ formLogo.fichier.vars.id }}_aide" class="mt-1 text-sm text-(--color-base-content)/80">{{ formLogo.fichier.vars.help }}</p>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm mt-2">Envoyer le logo</button>
+            {{ form_end(formLogo) }}
+        </section>
+    </div>
+{% endblock %}

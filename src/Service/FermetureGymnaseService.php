@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\FermetureGymnase;
 use App\Entity\Partie;
+use App\Repository\ParametresSiteRepository;
 use App\Repository\PartieRepository;
 use App\Repository\UserRepository;
 
@@ -16,6 +17,7 @@ class FermetureGymnaseService
     public function __construct(
         private readonly PartieRepository $parties,
         private readonly UserRepository $users,
+        private readonly ParametresSiteRepository $parametres,
     ) {
     }
 
@@ -46,9 +48,11 @@ class FermetureGymnaseService
      *
      * @return list<string>
      */
-    public function emailsAdmins(): array
+    public function emailsContact(): array
     {
-        return $this->users->emailsAdmins();
+        $contact = $this->parametres->courants()->getAdresseContact();
+
+        return $contact !== null ? [$contact] : $this->users->emailsAdmins();
     }
 
     /**

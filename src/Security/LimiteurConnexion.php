@@ -2,6 +2,7 @@
 
 namespace App\Security;
 
+use App\Repository\ParametresSiteRepository;
 use Psr\Cache\CacheItemPoolInterface;
 use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
@@ -15,7 +16,8 @@ use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 
 /**
- * Limite les essais de connexion (D61) : après quelques échecs, l'attente double à chaque nouvel échec.
+ * Limite les essais de connexion (D61) : après quelques échecs, l'attente double à chaque nouvel échec. Sans effet tant
+ * qu'un admin ne l'a pas activée après vérification (D62, page « Paramètres du site »).
  *
  * Deux compteurs : adresse saisie + IP, pour qu'un attaquant ne bloque pas le compte d'un autre depuis chez lui, et IP
  * seule, plus tolérant (plusieurs joueurs derrière la même box), contre l'essai d'un mot de passe sur beaucoup de comptes.
@@ -46,6 +48,7 @@ final class LimiteurConnexion implements EventSubscriberInterface
         private readonly CacheItemPoolInterface $connexionsCache,
         private readonly ClockInterface $clock,
         private readonly RequestStack $requetes,
+        private readonly ParametresSiteRepository $parametres,
     ) {
     }
 
@@ -83,6 +86,10 @@ final class LimiteurConnexion implements EventSubscriberInterface
 
     public function verifier(CheckPassportEvent $event): void
     {
+        // Désactivée (D62) : ni attente, ni comptage
+        if (!$this->parametres->courants()->isConnexionLimitee()) {
+            return;
+        }
         $identifiant = $this->identifiant($event->getPassport());
         $requete = $this->requetes->getCurrentRequest();
         if ($identifiant === null || $requete === null) {
@@ -102,6 +109,9 @@ final class LimiteurConnexion implements EventSubscriberInterface
 
     public function compterEchec(LoginFailureEvent $event): void
     {
+        if (!$this->parametres->courants()->isConnexionLimitee()) {
+            return;
+        }
         // Mot de passe non testé : ni l'attente en cours ni une page expirée ne comptent comme un essai
         $erreur = $event->getException();
         if ($erreur instanceof ConnexionLimitee || $erreur instanceof InvalidCsrfTokenException) {
@@ -132,6 +142,12 @@ final class LimiteurConnexion implements EventSubscriberInterface
         $element->set(($element->isHit() ? $element->get() : 0) + 1);
         $element->expiresAfter(self::VIE_GENERATION);
         $this->connexionsCache->save($element);
+    }
+
+    /** À l'activation (D62) : les échecs d'avant une désactivation ne comptent plus. */
+    public function toutEffacer(): void
+    {
+        $this->connexionsCache->clear();
     }
 
     private function ajouterEchec(string $cle, int $seuil): void

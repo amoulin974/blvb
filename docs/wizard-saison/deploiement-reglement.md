@@ -6,7 +6,7 @@ formats, wizard de saison, règlement par saison R1 à R5). Seul Francis fusionn
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env`
 compris. Aucune nouvelle variable d'environnement. Nouveautés : paquet Composer `symfony/html-sanitizer`, une
 soixantaine de paquets importmap (éditeur TipTap 3), dossier `public/uploads/reglement`, 9 migrations (ajouts de
-colonnes et de tables seulement), 10 une fois la branche `fermetures-gymnase` fusionnée dans `main`.
+colonnes et de tables seulement), 11 une fois les branches `fermetures-gymnase` et `parametres-site` fusionnées dans `main`.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
 
@@ -52,12 +52,12 @@ docker compose exec php php bin/console importmap:install
 docker compose exec php php bin/console tailwind:build --minify
 docker compose exec php php bin/console asset-map:compile
 
-# 7. Migrations (9 nouvelles, 10 avec les fermetures de gymnase), puis contrôle
+# 7. Migrations (9 nouvelles, 11 avec les fermetures de gymnase et les paramètres du site), puis contrôle
 docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
 docker compose exec php php bin/console doctrine:migrations:status | grep -E 'Current|New'   # New : 0
 
-# 8. Dossier des images de l'éditeur du règlement
-docker compose exec php sh -c 'mkdir -p public/uploads/reglement && chmod 775 public/uploads/reglement && ls -ld public/uploads/reglement'
+# 8. Dossiers des images de l'éditeur du règlement et du logo du site
+docker compose exec php sh -c 'mkdir -p public/uploads/reglement public/uploads/site && chmod 775 public/uploads/reglement public/uploads/site && ls -ld public/uploads/reglement public/uploads/site'
 
 # 9. Cache et redémarrage (le worker FrankenPHP garde les anciennes classes)
 docker compose exec php php bin/console cache:clear
@@ -95,6 +95,7 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261015110000 | `partie.parent_perdants` |
 | Version20261020164942 | tables `reglement` et `reglement_version` |
 | Version20261030091911 | table `fermeture_gymnase` (branche `fermetures-gymnase`, seulement une fois fusionnée dans `main`) |
+| Version20261030213902 | table `parametres_site`, une ligne : limitation désactivée (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
 
 ## Vérifications en ligne
 
@@ -126,21 +127,24 @@ docker compose exec -T database sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD
 docker compose restart php
 ```
 
-## Limitation des essais de connexion (D61) : à vérifier avant la mise en production
+## Limitation des essais de connexion (D61, D62) : à activer après le déploiement
 
-La limite suppose que le site voit la vraie IP des visiteurs. Elle dépend de `SYMFONY_TRUSTED_PROXIES`, qui n'est dans
-aucun fichier versionné. Lire la valeur ne suffit pas : la variable peut être dans `.env.local`, et une valeur peut être
-présente mais dangereuse. Ne mettre ni `0.0.0.0/0`, ni `REMOTE_ADDR` si le port du conteneur est ouvert.
+Elle est **désactivée au déploiement** : tant qu'elle l'est, les essais de mot de passe sont illimités (le tableau de bord
+le signale). La limite suppose que le site voit la vraie IP des visiteurs, ce qui dépend de `SYMFONY_TRUSTED_PROXIES` (dans
+aucun fichier versionné). Ne mettre ni `0.0.0.0/0`, ni `REMOTE_ADDR`.
 
-**Essai réel, depuis l'extérieur du serveur, avec une adresse fictive** :
-1. Envoyer 4 essais de connexion ratés, avec un en-tête `X-Forwarded-For` différent à chaque fois : le 4e doit afficher
-   « Trop d'essais ». Sinon, la limite se contourne.
-2. Depuis une autre connexion (téléphone en 4G), vérifier que l'on n'est pas bloqué. Sinon, tous les visiteurs partagent
-   la même IP : 20 échecs sur le site bloquent tout le monde.
-3. Vérifier que le conteneur n'est pas joignable directement depuis Internet, sans passer par le proxy.
+1. Admin, page « Paramètres du site » : « Lancer la vérification ». En cas d'échec, le message dit quoi régler.
+2. Francis confirme que le conteneur n'est pas joignable directement depuis Internet, sans passer par le proxy ; l'admin
+   coche la case et active.
+3. **Essai réel, depuis l'extérieur du serveur, avec une adresse inventée** : 4 essais ratés, avec un en-tête
+   `X-Forwarded-For` différent à chaque fois : le 4e doit afficher « Trop d'essais ». Sinon, la limite se contourne :
+   désactiver.
+4. Depuis une autre connexion (téléphone en 4G), même adresse : pas de blocage. Sinon, tous les visiteurs partagent la même
+   IP, et 20 échecs sur le site bloquent tout le monde : désactiver.
 
-Pour lever un blocage : `docker compose exec php php bin/console cache:pool:clear connexions.cache`. Un `cache:clear`,
-donc un déploiement, remet aussi les compteurs à zéro.
+Pour lever les blocages sans couper la protection : `docker compose exec php php bin/console cache:pool:clear connexions.cache`
+(un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro). Pour couper la limite, si un admin est bloqué :
+`docker compose exec php php bin/console app:connexion-limitee:desactiver`.
 
 ## Réserves, à traiter après
 

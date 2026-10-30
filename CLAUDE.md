@@ -20,7 +20,7 @@ Le catalogue des formats est dans `docs/formats-competition.md`. La version de r
 branche du lot en cours ; la copie sur `main` peut être en retard. Règlement par saison : `docs/wizard-saison/reglement.md`.
 
 Autre chantier en cours : fermetures de gymnase, branche `fermetures-gymnase` (D60, section dédiée de `lots.md`).
-À faire ensuite : paramètres du site et éditeur de la fiche club (section dédiée de `lots.md`, questions PO4 et PO5 de `decisions.md`).
+Paramètres du site (branche `parametres-site`, D62), puis éditeur de la fiche club (D63) : section dédiée de `lots.md`.
 
 ## Règles permanentes
 

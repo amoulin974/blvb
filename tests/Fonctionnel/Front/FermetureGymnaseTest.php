@@ -3,6 +3,7 @@
 namespace App\Tests\Fonctionnel\Front;
 
 use App\Entity\FermetureGymnase;
+use App\Entity\ParametresSite;
 use App\Factory\FermetureGymnaseFactory;
 use App\Factory\JourneeFactory;
 use App\Factory\PartieFactory;
@@ -11,10 +12,11 @@ use App\Factory\PouleFactory;
 use App\Factory\SaisonFactory;
 use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * FGY-01 à FGY-09 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
+ * FGY-01 à FGY-10 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
  */
 final class FermetureGymnaseTest extends TestFonctionnel
 {
@@ -117,7 +119,7 @@ final class FermetureGymnaseTest extends TestFonctionnel
             self::assertSame(0, $this->nombreFermetures());
             self::assertSelectorTextContains('[role="alert"]', 'n\'est pas enregistrée');
             self::assertSelectorTextContains('[role="alert"]', 'contre');
-            self::assertSelectorTextContains('[role="alert"]', 'Contactez les administrateurs');
+            self::assertSelectorTextContains('[role="alert"]', 'Contactez le championnat');
             $lien = $this->client->getCrawler()->filter('a[href^="mailto:"]');
             self::assertCount(1, $lien);
             self::assertStringStartsWith('mailto:admin@blvb.test?subject=', $lien->attr('href'));
@@ -258,5 +260,22 @@ final class FermetureGymnaseTest extends TestFonctionnel
         $lien = rawurldecode((string) $this->client->getCrawler()->filter('a[href^="mailto:"]')->attr('href'));
         self::assertStringContainsString('saison en préparation', $lien);
         self::assertStringNotContainsString('A1', $lien);
+    }
+
+    #[TestDox('FGY-10 : l\'adresse de contact des paramètres (D62) remplace celles des admins dans le message de refus')]
+    public function test_adresse_de_contact(): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->persist($em->getRepository(ParametresSite::class)->courants()->setAdresseContact('contact@blvb.test'));
+        $em->flush();
+        $this->matchLe('+3 years 20:30');
+        $this->connecter('resp.club');
+        $this->saisir();
+
+        self::assertResponseStatusCodeSame(422);
+        $alerte = $this->client->getCrawler()->filter('[role="alert"]');
+        self::assertStringStartsWith('mailto:contact@blvb.test?subject=', $alerte->filter('a[href^="mailto:"]')->attr('href'));
+        self::assertStringContainsString('écrivez à : contact@blvb.test', $alerte->text());
+        self::assertStringNotContainsString('admin@blvb.test', $alerte->html());
     }
 }

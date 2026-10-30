@@ -108,7 +108,7 @@ final class ClubController extends AbstractController
 
                 return $this->redirectToRoute('front_club_fermetures', ['id' => $club->getId()], Response::HTTP_SEE_OTHER);
             }
-            $emailsAdmins = $service->emailsAdmins();
+            $emailsAdmins = $service->emailsContact();
             $contactAdmins = $service->lienContactAdmins($fermeture, $matchsConcernes, $emailsAdmins);
         }
 

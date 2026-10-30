@@ -2,16 +2,18 @@
 
 namespace App\Tests\Fonctionnel\Securite;
 
+use App\Entity\ParametresSite;
 use App\Entity\User;
 use App\Factory\UserFactory;
 use App\Tests\Support\TestFonctionnel;
+use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Clock\MockClock;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 use SymfonyCasts\Bundle\ResetPassword\ResetPasswordHelperInterface;
 
 /**
- * LIM-02 à LIM-09 : limitation des essais de connexion (App\Security\LimiteurConnexion, D61).
+ * LIM-02 à LIM-09, LIM-11 : limitation des essais de connexion (App\Security\LimiteurConnexion, D61).
  */
 final class LimiteConnexionTest extends TestFonctionnel
 {
@@ -27,6 +29,15 @@ final class LimiteConnexionTest extends TestFonctionnel
         parent::setUp();
         $this->horloge = self::mockTime('2026-11-02 18:00:00');
         UserFactory::createOne(['email' => self::COMPTE, 'password' => self::MOT_DE_PASSE]);
+        $this->limiter(true);
+    }
+
+    private function limiter(bool $active): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $parametres = $em->getRepository(ParametresSite::class)->courants()->setConnexionLimitee($active);
+        $em->persist($parametres);
+        $em->flush();
     }
 
     /** Envoie le formulaire ; renvoie le message d'erreur affiché, '' si la connexion a réussi. */
@@ -192,5 +203,20 @@ final class LimiteConnexionTest extends TestFonctionnel
 
         $this->ip('203.0.113.4');
         self::assertSame('', $this->essai(self::MOT_DE_PASSE), 'autre IP');
+    }
+
+    #[TestDox('LIM-11 : désactivée (D62), aucun essai n\'est compté ni bloqué, et une attente en cours ne s\'applique plus')]
+    public function test_desactivee(): void
+    {
+        for ($i = 0; $i < 3; ++$i) {
+            $this->essai();
+        }
+        self::assertStringContainsString('Trop d\'essais', $this->essai());
+
+        $this->limiter(false);
+        for ($i = 0; $i < 5; ++$i) {
+            self::assertStringNotContainsString('Trop d\'essais', $this->essai());
+        }
+        self::assertSame('', $this->essai(self::MOT_DE_PASSE));
     }
 }

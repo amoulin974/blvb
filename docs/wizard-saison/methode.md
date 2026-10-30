@@ -177,6 +177,12 @@ production par Francis avec `deploiement-reglement.md`. Ajouter ici les nouvelle
 - Attente qui double à chaque échec à partir du 3e : D61, LIM-01 à LIM-10. À vérifier sur le serveur avant la mise en
   production : essai réel de `SYMFONY_TRUSTED_PROXIES` (`deploiement-reglement.md`).
 
+### 2026-10-30 : paramètres du site (branche `parametres-site`, partie de `fermetures-gymnase`)
+Page `/admin/parametres` (D62) : limitation des essais de connexion activée seulement après vérification, adresse de contact,
+logo. Relu par l'ergonome, le webdesigner et la sécurité, vérifié dans Chromium ; en local, l'IP vue est privée : l'activation
+réussie n'est couverte que par les tests fonctionnels. La fusion avec `conditions-utilisation-v2` devra y afficher l'adresse de
+contact. Suite : éditeur de la fiche club (D63), branche à part depuis `main`.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)

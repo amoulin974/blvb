@@ -180,7 +180,7 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 
 **SEC-10 — Déconnexion** ✅ : `/logout` termine la session ; une page admin redemande la connexion.
 
-**LIM-01 à LIM-10 — Essais de connexion limités** ✅ *`Unitaire/Security/LimiteurConnexionTest`, `Securite/LimiteConnexionTest`* (D61) :
+**LIM-01 à LIM-11 — Essais de connexion limités** ✅ *`Unitaire/Security/LimiteurConnexionTest`, `Securite/LimiteConnexionTest`* (D61) :
 - **LIM-01** : attente de 30 s au seuil, doublée à chaque échec, 24 h au plus, sans débordement ; durée écrite en secondes, minutes ou heures, arrondie au-dessus.
 - **LIM-02** : pas d'attente pour les 2 premiers échecs ; après le 3e, même le bon mot de passe est refusé pendant 30 s, puis accepté.
 - **LIM-03** : l'attente double à chaque échec ; un essai pendant l'attente ne la prolonge pas et ne compte pas.
@@ -191,6 +191,7 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 - **LIM-08** : en IPv6, les adresses d'un même /64 partagent leur compteur ; un autre /64 n'est pas touché.
 - **LIM-09** : changer son mot de passe par le lien reçu par e-mail lève l'attente du compte, même changé depuis une autre IP.
 - **LIM-10** : un essai refusé pour son jeton de sécurité ne compte pas.
+- **LIM-11** : désactivée (D62), aucun essai n'est compté ni bloqué, et une attente en cours ne s'applique plus.
 
 `TestFonctionnel` vide le pool `connexions.cache` avant chaque test : en test, ce pool est sur disque, un cache en mémoire étant vidé entre deux requêtes.
 
@@ -582,8 +583,23 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-07** ✅ : refus avec message : motif vide, dates inversées, période terminée, plus de 2 ans, fin à plus de 5 ans, caractères de contrôle ; refus aussi pour un gymnase d'un autre club forcé dans le formulaire et sans jeton CSRF.
 - **FGY-08** ✅ : retrait par un responsable du gymnase ; jeton requis ; 404 pour un gymnase hors du club ; 403 par l'URL d'un autre club.
 - **FGY-09** ✅ : un match d'une saison en préparation bloque le responsable sans dévoiler ses équipes, ni dans la page ni dans l'e-mail.
+- **FGY-10** ✅ : l'adresse de contact des paramètres (D62) remplace celles des admins dans le lien et le message de refus ; sans elle, FGY-04 reste vrai.
 
 `Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
+
+### 4.19 Paramètres du site — `Fonctionnel/Admin/ParametresSiteTest`, `Unitaire/Security/VerificationConnexionTest` (P1, D62)
+
+- **PAR-01** ✅ : seuls les admins ouvrent la page et ses actions ; visiteur renvoyé à la connexion, capitaine refusé (403) ; le menu y mène.
+- **PAR-02** ✅ : au départ, limitation désactivée, activation non proposée ; le tableau de bord le signale tant qu'elle n'est pas activée.
+- **PAR-03** ✅ : contrôles de la vérification : proxy bien déclaré ; proxy non déclaré, à adresse privée ou publique, un seul proxy déclaré sur deux ; toutes les adresses déclarées ; `REMOTE_ADDR`, `::/0` et `0::/0` refusés, réseaux privés acceptés ; accès direct, en-tête écrasé et proxy privé d'entreprise acceptés.
+- **PAR-04** ✅ : une vérification réussie est enregistrée, affichée pendant une heure, et ouvre l'activation ; une vérification échouée efface la précédente.
+- **PAR-05** ✅ : activation après vérification et confirmation, compteurs passés effacés ; refus sans la case, après une heure, ou depuis une adresse privée ; réactiver depuis un onglet ouvert n'efface pas les compteurs en cours ; désactivation sans vérification.
+- **PAR-06** ✅ : jeton de sécurité refusé pour chaque action et pour le formulaire de contact.
+- **PAR-07** ✅ : la commande `app:connexion-limitee:desactiver` coupe la limitation, et dit si elle l'était déjà.
+- **PAR-08** ✅ : adresse de contact en pied de page ; la vider l'en retire ; adresse invalide ou avec `?bcc=` refusée.
+- **PAR-09** ✅ : logo PNG ou WebP dans l'en-tête du site et de l'admin, ancien fichier supprimé ; SVG, faux PNG, fichier trop lourd ou trop grand, aucun fichier : refusés ; retour au logo d'origine.
+
+`Securite/LimiteConnexionTest` active la limitation dans son `setUp` (elle est désactivée par défaut).
 
 ## 5. Analyse statique et qualité du code
 
@@ -677,6 +693,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
 | **Fermetures de gymnase, lot 1** ✅ | FGY-01 à FGY-09 (§4.18) : saisie par les responsables de club et les admins, refus si un match est programmé | 626 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
 | **Essais de connexion limités** ✅ | LIM-01 à LIM-10 (§4.1) : attente qui double à chaque échec, par compte et IP, puis par IP | 649 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
+| **Paramètres du site** ✅ | PAR-01 à PAR-09 (§4.19), LIM-11, FGY-10 : connexion limitée activée après vérification, adresse de contact, logo | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

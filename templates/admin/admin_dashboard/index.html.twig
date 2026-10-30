@@ -6,6 +6,12 @@
 {% block body %}
     {{ include('admin/_entete.html.twig', {titre: 'Tableau de bord'}) }}
 
+    {% if not parametres_site().connexionLimitee %}
+        {% embed 'admin/_alerte.html.twig' with {type: 'warning', classe: 'mb-6', role: 'note'} %}{% block contenu %}
+            Les essais de connexion ne sont pas limités. <a class="link font-semibold" href="{{ path('admin_parametres_index') }}">Vérifier et activer la limitation</a>
+        {% endblock %}{% endembed %}
+    {% endif %}
+
     {% set saison = admin_saison_courante() %}
     {% if saison %}
         <section class="admin-carte mb-6 flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-(--color-accent)">
