@@ -52,10 +52,9 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
       rien (relevé par l'ergonome, à traiter avec le lot 3)
 - [x] Auteur d'une fermeture enregistré, visible des admins seulement ; FGY-11
 - [x] Motif et auteur des fermetures terminées effacés quand une autre saison est affichée (D60) ; FGY-17
-- [ ] À la fusion de `conditions-utilisation-v2` : y mentionner l'auteur des fermetures, conservé « jusqu'au changement de saison
-      affichée qui suit la fin de la fermeture » (ce n'est pas une durée fixe)
-- [ ] Liste des saisons sur téléphone : badges qui débordent et tableau qui défile horizontalement (`table-empilee`, relevé par le
-      webdesigner, antérieur à ce chantier)
+- [x] Conditions d'utilisation : auteur et motif des fermetures, conservation, essais de connexion et adresse de contact, sur
+      `conditions-utilisation-v2`, tenue à jour de cette branche ; reste les informations sur l'éditeur avant toute fusion
+- [x] Liste des saisons sur téléphone : lignes empilées, plus de défilement horizontal
 
 ## Paramètres du site et éditeur de la fiche club 🟡 (demande de l'utilisateur, 30/10/2026 ; D62, D63)
 Dans cet ordre.

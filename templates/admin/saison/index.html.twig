@@ -9,8 +9,8 @@
         sous_titre: 'Une seule saison est affichée sur le site public ; les autres restent consultables par les visiteurs dans le sélecteur de saison.',
         actions: [{url: path('admin_saison_wizard_nouvelle'), label: 'Créer une saison', icone: 'plus', principal: true}],
     }) }}
-    <div class="admin-carte max-lg:overflow-x-auto">
-        <table class="table table-admin">
+    <div class="admin-carte">
+        <table class="table table-admin table-empilee">
             <thead>
             <tr>
                 <th>Saison</th>
@@ -21,8 +21,8 @@
             <tbody>
             {% for saison in saisons %}
                 <tr>
-                    <td><a class="font-display text-lg font-semibold tracking-wide text-(--color-primary) hover:underline" href="{{ path('admin_saison_show', {id: saison.id}) }}">{{ saison.nom }}</a></td>
-                    <td>
+                    <td class="pleine-largeur"><a class="font-display text-lg font-semibold tracking-wide text-(--color-primary) hover:underline" href="{{ path('admin_saison_show', {id: saison.id}) }}">{{ saison.nom }}</a></td>
+                    <td class="pleine-largeur" data-label="Sur le site">
                         {% if saison.brouillon %}
                             <span class="badge badge-outline">Brouillon · étape {{ saison.etapeWizard|default(2) }} sur 6</span>
                         {% elseif saison.favori %}
@@ -48,7 +48,7 @@
                             }) }}
                         {% endif %}
                     </td>
-                    <td class="text-right whitespace-nowrap">
+                    <td class="pleine-largeur text-right whitespace-nowrap max-md:text-left">
                         {% if saison.brouillon %}
                             {# Brouillon (D29) : on le reprend ou on le supprime ; il n'a encore rien à piloter #}
                             <div class="inline-flex gap-2">
