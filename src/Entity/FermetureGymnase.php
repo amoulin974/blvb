@@ -23,7 +23,8 @@ class FermetureGymnase
     #[ORM\JoinColumn(nullable: false, onDelete: 'CASCADE')]
     private ?Lieu $lieu = null;
 
-    #[ORM\Column(length: 255)]
+    /** Texte libre, public ; effacé avec l'auteur une fois la fermeture terminée, au changement de saison affichée (D60) */
+    #[ORM\Column(length: 255, nullable: true)]
     private ?string $motif = null;
 
     #[ORM\Column(type: Types::DATE_IMMUTABLE)]
@@ -59,7 +60,7 @@ class FermetureGymnase
         return $this->motif;
     }
 
-    public function setMotif(string $motif): static
+    public function setMotif(?string $motif): static
     {
         $this->motif = $motif;
 

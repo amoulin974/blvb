@@ -191,6 +191,7 @@ la sécurité, vérifié dans Chromium à 1280 et 375 px. Couleurs d'état du fr
 Le placement automatique évite les gymnases fermés (D60, FGY-12 à FGY-16, test lent de l'optimiseur vert) ; à défaut, le match
 est signalé sur la mise en place, avec un lien. Auteur de la fermeture enregistré (FGY-11). Relu par l'ergonome, le webdesigner
 et la sécurité. Suite : lot 3 (placement manuel, calendrier par équipe).
+Motif et auteur des fermetures terminées effacés au changement de saison affichée, annoncé dans une fenêtre de confirmation (FGY-17).
 
 ## 5. Reprendre le travail sur un autre ordinateur
 

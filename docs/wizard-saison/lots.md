@@ -51,9 +51,11 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [ ] **Calendrier par équipe** : y signaler aussi un match placé dans un gymnase fermé, sinon le joueur peut se déplacer pour
       rien (relevé par l'ergonome, à traiter avec le lot 3)
 - [x] Auteur d'une fermeture enregistré, visible des admins seulement ; FGY-11
-- [ ] À trancher : combien de temps garder une fermeture passée, son auteur et son motif (aucun écran ne les montre plus, sauf
-      en base) : purge périodique, ou liste complète côté admin avec suppression (relevé par la sécurité)
-- [ ] À la fusion de `conditions-utilisation-v2` : y mentionner l'auteur des fermetures, avec cette durée
+- [x] Motif et auteur des fermetures terminées effacés quand une autre saison est affichée (D60) ; FGY-17
+- [ ] À la fusion de `conditions-utilisation-v2` : y mentionner l'auteur des fermetures, conservé « jusqu'au changement de saison
+      affichée qui suit la fin de la fermeture » (ce n'est pas une durée fixe)
+- [ ] Liste des saisons sur téléphone : badges qui débordent et tableau qui défile horizontalement (`table-empilee`, relevé par le
+      webdesigner, antérieur à ce chantier)
 
 ## Paramètres du site et éditeur de la fiche club 🟡 (demande de l'utilisateur, 30/10/2026 ; D62, D63)
 Dans cet ordre.

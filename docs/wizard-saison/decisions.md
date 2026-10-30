@@ -658,8 +658,12 @@ rendu pour la saison.
   filtrer. Elle n'est liée à aucune saison : ses dates suffisent.
 - **Qui saisit** : les responsables du club, pour les gymnases rattachés au club (même partagés), et les admins. L'auteur est
   enregistré, visible des admins seulement, depuis que le motif est public (décision de l'utilisateur, 30/10/2026) ; l'aide du
-  formulaire le dit ; il est effacé avec le compte. Durée de conservation à fixer (`lots.md`). Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase »
-  sur la fiche.
+  formulaire le dit ; il est effacé avec le compte.
+  Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase » sur la fiche.
+- **Conservation** (décision de l'utilisateur, 30/10/2026) : quand un admin affiche une autre saison sur le site, le motif et
+  l'auteur des fermetures terminées sont définitivement effacés, ce que la fenêtre de confirmation annonce. Les dates restent,
+  pour que le calendrier des saisons passées affiche toujours « Gymnase fermé ». Pas de cron ; une fermeture en cours ou à venir
+  n'est pas touchée. Une demande d'effacement en cours de saison sur une fermeture terminée se traite en base.
 - **Match sans score programmé pendant la période** : le responsable est refusé, les matchs lui sont cités, et il écrit
   aux admins (e-mail prérempli, adresses de connexion des admins). L'admin, lui, enregistre et voit les matchs
   concernés : le replacement a besoin de la fermeture pour éviter le gymnase.

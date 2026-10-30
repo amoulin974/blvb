@@ -39,4 +39,20 @@ class FermetureGymnaseRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Au changement de saison affichée (D60) : efface le motif et l'auteur des fermetures terminées. Les dates restent : le
+     * calendrier des saisons passées affiche toujours « Gymnase fermé ».
+     */
+    public function effacerMotifsEtAuteursTermines(): void
+    {
+        $this->createQueryBuilder('f')
+            ->update()
+            ->set('f.motif', 'NULL')
+            ->set('f.creePar', 'NULL')
+            ->andWhere('f.dateFin < :aujourdhui')
+            ->setParameter('aujourdhui', (new \DateTimeImmutable('today'))->format('Y-m-d'))
+            ->getQuery()
+            ->execute();
+    }
 }

@@ -405,7 +405,7 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 **GYM-03** ✅ — Créneau non prioritaire alors qu'un autre jour l'est → alerte priorité.
 **GYM-04** ✅ — Date pendant des vacances scolaires (indisponibilité) avec match → alerte vacances ; sans match → simple mention.
 **GYM-05 (fonctionnel)** ✅ — La page `/calendrierlieu` affiche aussi les dates de créneau **libres** de la phase, et le filtre « Seulement les dates à problème » s'appuie sur `data-alerte`.
-**GYM-06 (fonctionnel)** ✅ — Pendant une fermeture du gymnase (D60), une date libre affiche « Gymnase fermé » et son motif, échappé, et aucun terrain libre, sans être retenue par le filtre, même sur un créneau non prioritaire ou avec le motif « 0 » ; un match sans score est signalé « à déplacer » et retenu par le filtre, pas un match joué ; le motif disparaît une fois la date passée ; la fermeture d'un autre gymnase et les jours voisins ne changent rien.
+**GYM-06 (fonctionnel)** ✅ — Pendant une fermeture du gymnase (D60), une date libre affiche « Gymnase fermé » et son motif, échappé, et aucun terrain libre, sans être retenue par le filtre, même sur un créneau non prioritaire ou avec le motif « 0 » ; un match sans score est signalé « à déplacer » et retenu par le filtre, pas un match joué ; le motif disparaît une fois la date passée ; un motif effacé (FGY-17) laisse « Gymnase fermé » ; la fermeture d'un autre gymnase et les jours voisins ne changent rien.
 
 ### 4.12 « Mon équipe » et fonctions Twig — `Fonctionnel/Front/MonEquipeTest`, `Integration/Twig/SaisonCouranteTest` (P2)
 
@@ -591,6 +591,7 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-14** ✅ : sans aucune solution, le match reste placé, et il est signalé dans le rapport et sur la mise en place de la phase, tant qu'il n'a pas de score.
 - **FGY-15** ✅ : replacer les matchs à venir évite une fermeture ajoutée après la génération, sans toucher aux matchs joués.
 - **FGY-16** ✅ : un barrage (format sans optimiseur) prend le créneau suivant ouvert.
+- **FGY-17** ✅ *(`FermetureGymnaseTest`)* : afficher une autre saison efface le motif et l'auteur des fermetures terminées, garde leurs dates, et ne touche pas aux fermetures en cours ou à venir ; une saison qui n'existe plus ne change rien.
 
 `Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
 

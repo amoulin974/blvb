@@ -99,6 +99,7 @@ final class CalendrierGymnaseTest extends TestFonctionnel
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => '0', 'dateDebut' => $this->lundi->modify('+16 days'), 'dateFin' => $this->lundi->modify('+16 days')]);
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => '<script>alert(1)</script>', 'dateDebut' => $this->lundi->modify('+23 days'), 'dateFin' => $this->lundi->modify('+23 days')]);
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => 'Motif ancien', 'dateDebut' => $this->lundi->modify('-5 days'), 'dateFin' => $this->lundi->modify('-5 days')]);
+        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => null, 'dateDebut' => $this->lundi->modify('+30 days'), 'dateFin' => $this->lundi->modify('+30 days')]);
         FermetureGymnaseFactory::createOne(['motif' => 'Autre gymnase', 'dateDebut' => $this->lundi, 'dateFin' => $this->lundi->modify('+60 days')]);
         $this->match(9, 'A1', 'A3', $lieu);
         $this->match(2, 'A2', 'A4', $lieu);
@@ -130,7 +131,12 @@ final class CalendrierGymnaseTest extends TestFonctionnel
         self::assertStringNotContainsString('<script>alert(1)', $this->client->getResponse()->getContent());
         self::assertStringContainsString('&lt;script&gt;alert(1)', $this->client->getResponse()->getContent());
 
-        foreach ([2 => '1 terrain libre sur 2', 30 => '2 terrains libres sur 2'] as $jour => $attendu) {
+        [$motifEfface, $alerte] = $this->ligne($page, 30);
+        self::assertStringContainsString('Gymnase fermé', $motifEfface, 'motif effacé au changement de saison (FGY-17)');
+        self::assertStringNotContainsString('Motif', $motifEfface);
+        self::assertSame('0', $alerte);
+
+        foreach ([2 => '1 terrain libre sur 2', 37 => '2 terrains libres sur 2'] as $jour => $attendu) {
             [$ouverte] = $this->ligne($page, $jour);
             self::assertStringContainsString($attendu, $ouverte, 'jours voisins des fermetures, ou fermeture d\'un autre gymnase');
             self::assertStringNotContainsString('fermé', $ouverte);

@@ -19,7 +19,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * FGY-01 à FGY-11 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
+ * FGY-01 à FGY-11, FGY-17 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
  */
 final class FermetureGymnaseTest extends TestFonctionnel
 {
@@ -321,5 +321,36 @@ final class FermetureGymnaseTest extends TestFonctionnel
         self::assertNull($em->find(User::class, $idAncien));
         self::assertNull($em->find(FermetureGymnase::class, $idSansCompte)->getCreePar(), 'la fermeture reste, sans auteur');
         self::assertStringNotContainsString('Saisie par ancien@', $this->client->request('GET', '/admin/lieu/'.$idLieu.'/fermetures')->text());
+    }
+
+    #[TestDox('FGY-17 : afficher une autre saison efface le motif et l\'auteur des fermetures terminées, pas ceux des fermetures en cours ou à venir')]
+    public function test_effacement_au_changement_de_saison(): void
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $lieu = $em->find(Lieu::class, ChampionnatDeTest::get('gymnase.G1')->getId());
+        $auteur = ChampionnatDeTest::compte('resp.club');
+        $creer = fn (string $motif, string $debut, string $fin) => FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'creePar' => $auteur, 'motif' => $motif,
+            'dateDebut' => new \DateTimeImmutable($debut), 'dateFin' => new \DateTimeImmutable($fin)])->getId();
+        $terminee = $creer('Terminée', '-10 days', '-1 day');
+        $enCours = $creer('En cours', '-1 day', 'today');
+        $aVenir = $creer('À venir', '+5 days', '+6 days');
+        $autre = SaisonFactory::createOne(['nom' => 'Saison suivante', 'favori' => 0, 'brouillon' => false])->getId();
+
+        $this->connecter('admin');
+        $bouton = $this->client->request('GET', '/admin/saison/saison')->filter('[data-confirmation-action-param$="/admin/saison/'.$autre.'/favorite/"]');
+        $this->client->request('POST', $bouton->attr('data-confirmation-action-param'), ['_token' => $bouton->attr('data-confirmation-token-param')]);
+        self::assertResponseRedirects();
+
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+        $ligne = $em->find(FermetureGymnase::class, $terminee);
+        self::assertNull($ligne->getMotif());
+        self::assertNull($ligne->getCreePar());
+        self::assertNotNull($ligne->getDateFin(), 'les dates restent');
+        foreach ([$enCours => 'En cours', $aVenir => 'À venir'] as $id => $motif) {
+            $ligne = $em->find(FermetureGymnase::class, $id);
+            self::assertSame($motif, $ligne->getMotif());
+            self::assertNotNull($ligne->getCreePar());
+        }
     }
 }
