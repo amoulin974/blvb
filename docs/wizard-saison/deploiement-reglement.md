@@ -1,12 +1,14 @@
-# Mise en production des formats de compétition et du règlement par saison : checklist pour Francis
+# Mise en production de `main` : checklist pour Francis
 
-Établie par l'agent `deploiement` après la fusion de `formats-competition` dans `main` (commit 2ef6fd6, lots 1 à 6 des
-formats, wizard de saison, règlement par saison R1 à R5). Seul Francis fusionne dans `prod`.
+Formats de compétition (lots 1 à 6), wizard de saison, règlement par saison (R1 à R5), fermetures de gymnase, paramètres du
+site, limitation des essais de connexion. Relue par l'agent `deploiement` le 31/10/2026 sur `main` 4e5b37b. Seul Francis
+fusionne dans `prod`.
 
-**Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env`
-compris. Aucune nouvelle variable d'environnement. Nouveautés : paquet Composer `symfony/html-sanitizer`, une
-soixantaine de paquets importmap (éditeur TipTap 3), dossier `public/uploads/reglement`, 9 migrations (ajouts de
-colonnes et de tables seulement), 13 depuis la fusion de `parametres-site` dans `main`.
+**Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env` compris.
+Nouveautés : paquet Composer `symfony/html-sanitizer`, une soixantaine de paquets importmap (éditeur TipTap 3), dossiers
+`public/uploads/reglement` et `public/uploads/site`, 13 migrations (ajouts de colonnes et de tables, et `motif` rendu facultatif sur
+une table vide), une variable d'environnement à régler pour la limitation : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
+`Dockerfile`, `compose.yaml` et `frankenphp/` sont inchangés, et le code est monté dans le conteneur.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
 
@@ -17,7 +19,8 @@ Prendre le code de `main`, garder de `prod` seulement les fichiers propres au se
 de `main` (`config/app/saison.yaml`, `SaisonListener`, `front/reglement_2025.html.twig`…). Contrôles :
 
 ```bash
-git diff --stat origin/main prod      # seulement les fichiers serveur (et les fichiers Eclipse .buildpath, .project, .settings/)
+git diff --stat origin/main prod      # seulement les fichiers serveur, les fichiers Eclipse (.buildpath, .project, .settings/) et
+                                      # assets/controllers/mon_equipe_controller.js (saut de ligne final, sans effet)
 git grep -nE '^(<<<<<<< |=======$|>>>>>>> )' prod -- . ':!vendor'     # rien
 ```
 
@@ -25,7 +28,7 @@ git grep -nE '^(<<<<<<< |=======$|>>>>>>> )' prod -- . ':!vendor'     # rien
 
 Le dossier est monté dans le conteneur (`.:/app`) et le site tourne en environnement dev : **pas de `--no-dev`**. Du
 `git pull` à la fin des migrations, le site est en panne (quelques minutes) : enchaîner les étapes 3 à 9, prévenir le
-bureau.
+bureau. Chaque démarrage du conteneur lance `doctrine:migrations:migrate` : ne pas redémarrer entre le `git pull` et l'étape 4.
 
 ```bash
 # 1. Vérifications préalables
@@ -34,6 +37,10 @@ docker compose exec php php -r 'require "vendor/autoload.php"; (new Symfony\Comp
 docker compose exec php php bin/console dbal:run-sql "SELECT DATABASE()"
 docker compose exec php php bin/console doctrine:migrations:status | grep -E 'Current|Latest|New'
 git log -1 --oneline        # noter le commit actuel (3bafba4 attendu) pour un retour arrière
+# Adresse utilisée par les commandes en ligne (cron) : attendu https://www.blvb.fr ou https://www.blvb.fr:443.
+# Si elle vaut localhost, les liens des e-mails de rappel seront faux. À évaluer par Francis (non testé) : SERVER_NAME=www.blvb.fr
+# dans le .env de prod, puis `docker compose up -d php`, car un simple restart ne relit pas l'environnement.
+docker compose exec php printenv DEFAULT_URI
 
 # 2. Sauvegarde de la base (remplacer blvb_new si SELECT DATABASE() donne un autre nom)
 docker compose exec -T database sh -c 'exec mysqldump --single-transaction --routines --triggers -uroot -p"$MYSQL_ROOT_PASSWORD" blvb_new' > ~/blvb-avant-formats-$(date +%F-%H%M).sql
@@ -52,14 +59,14 @@ docker compose exec php php bin/console importmap:install
 docker compose exec php php bin/console tailwind:build --minify
 docker compose exec php php bin/console asset-map:compile
 
-# 7. Migrations (9 nouvelles, 13 avec les fermetures de gymnase et les paramètres du site), puis contrôle
+# 7. Migrations (13), puis contrôle
 docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
 docker compose exec php php bin/console doctrine:migrations:status | grep -E 'Current|New'   # New : 0
 
 # 8. Dossiers des images de l'éditeur du règlement et du logo du site
 docker compose exec php sh -c 'mkdir -p public/uploads/reglement public/uploads/site && chmod 775 public/uploads/reglement public/uploads/site && ls -ld public/uploads/reglement public/uploads/site'
 
-# 9. Cache et redémarrage (le worker FrankenPHP garde les anciennes classes)
+# 9. Cache et redémarrage
 docker compose exec php php bin/console cache:clear
 docker compose restart php
 docker compose logs --tail=50 php        # attendu : « PHP app ready! », aucune erreur
@@ -74,7 +81,7 @@ docker compose exec php php bin/console app:saison:ajouter-barrages
 docker compose exec php php bin/console app:saison:ajouter-barrages --force
 # ou seulement les barrages de fin de saison : --seulement=fin --force
 
-# 12. Paquets : aucune faille attendue
+# 12. Paquets : voir la réserve sur symfony/mime
 docker compose exec php composer audit
 docker compose exec php php bin/console importmap:audit
 ```
@@ -106,10 +113,15 @@ Ne jamais lancer `app:recette:charger` en production.
 - `/blvb/admin` : liste des saisons ; « Règlement » du menu : l'éditeur se charge, enregistrer, historique ; une image
   envoyée a une adresse `/blvb/uploads/reglement/…`.
 - Classements et calendriers de la saison en cours inchangés.
+- « Paramètres du site » : la page s'ouvre ; un logo envoyé a une adresse `/blvb/uploads/site/…`.
+- Fermeture de gymnase : création depuis « Mon club » ; un match à la main dans ce gymnase est refusé ; `/blvb/calendrierlieu` affiche
+  « Gymnase fermé ». Retirer la fermeture d'essai ensuite.
+- Liste des saisons sur téléphone : en cartes, sans défilement horizontal.
 
 ## Retour arrière
 
-Code seul (cas normal, les migrations n'ont fait qu'ajouter) :
+Code seul (cas normal, les migrations n'ont fait qu'ajouter). Le redémarrage relance les migrations avec des versions inconnues du
+code : d'après le code, Doctrine passe outre en mode non interactif, mais ce cas n'a pas été essayé.
 
 ```bash
 git checkout 3bafba4          # le commit noté à l'étape 1
@@ -129,33 +141,64 @@ docker compose exec -T database sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD
 docker compose restart php
 ```
 
-## Limitation des essais de connexion (D61, D62) : à activer après le déploiement
+## Après le déploiement : adresse de contact et limitation des essais de connexion (D61, D62)
 
-Elle est **désactivée au déploiement** : tant qu'elle l'est, les essais de mot de passe sont illimités (le tableau de bord
-le signale). La limite suppose que le site voit la vraie IP des visiteurs, ce qui dépend de `SYMFONY_TRUSTED_PROXIES` (dans
-aucun fichier versionné). Ne mettre ni `0.0.0.0/0`, ni `REMOTE_ADDR`.
+**Adresse de contact** : à renseigner tout de suite dans « Paramètres du site ». Sinon, les messages de refus d'une fermeture de
+gymnase montrent les adresses de connexion des admins.
 
-1. Admin, page « Paramètres du site » : « Lancer la vérification ». En cas d'échec, le message dit quoi régler.
-2. Francis confirme que le conteneur n'est pas joignable directement depuis Internet, sans passer par le proxy ; l'admin
-   coche la case et active.
-3. **Essai réel, depuis l'extérieur du serveur, avec une adresse inventée** : 4 essais ratés, avec un en-tête
-   `X-Forwarded-For` différent à chaque fois : le 4e doit afficher « Trop d'essais ». Sinon, la limite se contourne :
-   désactiver.
+**Limitation** : elle est **désactivée au déploiement** ; tant qu'elle l'est, les essais de mot de passe sont illimités (le tableau
+de bord le signale). Elle suppose que le site voit la vraie IP des visiteurs. `SYMFONY_TRUSTED_PROXIES` n'est dans aucun fichier
+versionné : sans réglage sur le serveur, la vérification échouera très probablement, en montrant une adresse privée.
+
+1. Admin, page « Paramètres du site » : « Lancer la vérification ». Le message dit quoi régler ; l'adresse « Il voit … » est celle du
+   proxy, **à confirmer par Francis**, à mettre dans `.env.local`. Ne mettre ni `0.0.0.0/0`, ni `REMOTE_ADDR`.
+   **Effet de bord** : dès qu'un proxy est déclaré, `prod` croit aussi `x-forwarded-host`, `-proto`, `-port` et `-prefix`, sans
+   `trusted_hosts`. Faire le contrôle ci-dessous, puis relancer la vérification, valable une heure.
+2. Francis confirme que le site n'est pas joignable sans passer par le proxy (`compose.yaml` publie 80 et 443 sur toutes les
+   interfaces) ; l'admin coche la case et active.
+3. Faire l'essai ci-dessous depuis l'extérieur du serveur. Un `curl` sans jeton n'est jamais compté : il ne prouve rien.
 4. Depuis une autre connexion (téléphone en 4G), même adresse : pas de blocage. Sinon, tous les visiteurs partagent la même
    IP, et 20 échecs sur le site bloquent tout le monde : désactiver.
 
-Pour lever les blocages sans couper la protection : `docker compose exec php php bin/console cache:pool:clear connexions.cache`
-(un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro). Pour couper la limite, si un admin est bloqué :
-`docker compose exec php php bin/console app:connexion-limitee:desactiver`.
+```bash
+# Proxy (adresse confirmée par Francis)
+echo 'SYMFONY_TRUSTED_PROXIES=ADRESSE_DU_PROXY' >> .env.local
+docker compose restart php
+curl -sI https://www.blvb.fr/blvb/admin | grep -i '^location'                                       # reste /blvb/login, sans /blvb/blvb
+curl -sI -H 'X-Forwarded-Host: exemple.invalid' https://www.blvb.fr/blvb/admin | grep -i '^location'  # sans exemple.invalid
+
+# Accès direct, depuis l'extérieur du serveur : le site ne doit pas répondre
+curl -sI --max-time 5 http://IP_DU_SERVEUR/blvb/login | head -1
+
+# Limitation activée, depuis l'extérieur, à enchaîner en moins de 30 s :
+# les 3 premiers affichent « Identifiants invalides », le 4e « Trop d'essais de connexion ».
+J=$(mktemp); for i in 1 2 3 4; do
+  curl -s -o /dev/null -c "$J" -b "$J" -H 'Origin: https://www.blvb.fr' -H "X-Forwarded-For: 198.51.100.$i" \
+    -d '_username=essai@exemple.fr&_password=faux&_csrf_token=csrf-token' https://www.blvb.fr/blvb/login
+  curl -s -c "$J" -b "$J" https://www.blvb.fr/blvb/login | grep -oE "Identifiants invalides|Trop d.essais de connexion"
+done; rm -f "$J"
+docker compose exec php php bin/console cache:pool:clear connexions.cache    # lève ensuite les compteurs, sans couper la protection
+```
+
+Pour couper la limite, si un admin est bloqué : `docker compose exec php php bin/console app:connexion-limitee:desactiver`.
+Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
 
 ## Réserves, à traiter après
 
 - Mot de passe SMTP en clair dans le `.env` versionné de `prod` : le déplacer dans `.env.local` et le changer.
 - `APP_SECRET` : le définir s'il est vide (étape 1).
 - Port MySQL 3307 publié par `compose.yaml` : vérifier que le pare-feu le ferme depuis l'extérieur.
-- Cron de nettoyage des compteurs d'essais de connexion, que les conditions d'utilisation annoncent :
-  `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`.
-- Cron du rappel des scores : `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`.
+- Crons : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune'`). Le compte qui les
+  exécute doit avoir accès à Docker.
+  - Rappel des scores, après le contrôle de `DEFAULT_URI` : le **premier passage envoie tout l'arriéré** de la saison, à voir avec
+    `docker compose exec php php bin/console app:scores:rappeler --simulation`.
+    `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`
+  - Nettoyage des compteurs d'essais, à l'activation de la limitation (sans elle, aucun compteur n'est créé) :
+    `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`
+- `symfony/mime` : `composer audit` signale CVE-2026-45070 (gravité moyenne), en 7.4.19 sur `main` comme sur `prod`, corrigée en 7.4.22.
+- Mots de passe de la base en clair dans `compose.yaml`, alors que le port 3307 est publié ; `DATABASE_OLD_URL` et phpMyAdmin publié
+  sur le port 8080 avec `PMA_ARBITRARY=1` : exposition réelle à vérifier.
+- Pas de mentions légales tant que `conditions-utilisation-v2` n'est pas fusionnée : le lien du pied de page reste vide.
 - Données 2025 (back-office) : journées de la phase finale aux noms et dates incohérents, journée 3 des poules C et D
   pendant les vacances d'hiver, noms des fermetures, tableaux nommés « Poule A » à « Poule D », date et gymnase de la
   journée des finales.
