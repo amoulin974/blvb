@@ -45,8 +45,11 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] Lot 1 : saisie par les responsables de club et les admins ; FGY-01 à FGY-09
 - [ ] Lot 2 : placement automatique (générateurs et replacement). **Tant qu'il n'est pas fait, une fermeture ne bloque pas
       le placement**
-- [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin, `/calendrierlieu`, mise en
-      place)
+- [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin, mise en place)
+- [ ] **Calendrier des gymnases** (`/calendrierlieu`, `FrontController::calendrierLieu`, demande de l'utilisateur, 30/10/2026) :
+      afficher les fermetures. Aujourd'hui, une date de créneau sans match y apparaît comme un terrain libre, même gymnase
+      fermé : à marquer « Gymnase fermé » avec le motif ; alerte sur un match placé pendant une fermeture, sur le modèle de
+      `alerte_vacances`. Indépendant du placement : peut précéder les lots 2 et 3. Relecture ergonome et webdesigner
 
 ## Paramètres du site et éditeur de la fiche club 🟡 (demande de l'utilisateur, 30/10/2026 ; D62, D63)
 Dans cet ordre.

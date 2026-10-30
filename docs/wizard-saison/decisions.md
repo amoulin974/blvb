@@ -665,6 +665,8 @@ rendu pour la saison.
 - **Quand** : à tout moment, sans date limite. Le moment utile est avant la génération des matchs : c'est aux admins de
   le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
 - **Placement** (lots 2 et 3) : aucun match n'est placé dans un gymnase fermé.
+- **Calendrier des gymnases** : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée avec son
+  motif, et un match placé pendant une fermeture y est signalé (demande de l'utilisateur, 30/10/2026).
 **Pourquoi** : demande de l'utilisateur ; relectures ergonome, webdesigner et sécurité.
 *(2026-10-30)*
 
