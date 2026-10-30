@@ -41,7 +41,7 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
 - [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
-## Fermetures de gymnase ✅ (branche `parametres-site`, hors numérotation du chantier ; D60)
+## Fermetures de gymnase ✅ (fusionné dans `main` le 31/10/2026, hors numérotation du chantier ; D60)
 - [x] Lot 1 : saisie par les responsables de club et les admins ; FGY-01 à FGY-09
 - [x] Lot 2 : placement automatique (générateurs et replacement), signalement sur la mise en place ; FGY-12 à FGY-16
 - [x] Lot 3 : placement manuel refusé dans un gymnase fermé (formulaires et glisser-déposer du calendrier admin), signalement
@@ -52,7 +52,7 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] Auteur d'une fermeture enregistré, visible des admins seulement ; FGY-11
 - [x] Motif et auteur des fermetures terminées effacés quand une autre saison est affichée (D60) ; FGY-17
 - [x] Conditions d'utilisation : auteur et motif des fermetures, conservation, essais de connexion et adresse de contact, sur
-      `conditions-utilisation-v2`, tenue à jour de cette branche ; reste avant toute fusion les informations sur l'éditeur et deux
+      `conditions-utilisation-v2`, tenue à jour de `main` ; reste avant toute fusion les informations sur l'éditeur et deux
       durées à fixer avec Francis : conservation des comptes après la dernière saison, journaux du serveur
 - [x] Liste des saisons sur téléphone : lignes empilées, plus de défilement horizontal
 
@@ -75,7 +75,10 @@ Analyse de l'ergonome, maquettes et données : `tableau-de-bord.md`. Rien n'est 
 - [x] Texte faux « Aucun match n'est placé dans un gymnase pendant sa fermeture » corrigé (lot 2 des fermetures)
 
 ## À faire hors lots (relevé en relecture)
-- [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `parametres-site` ; à vérifier sur le serveur
+- [ ] Relevé en relecture, non traité : scores non bornés dans les formulaires admin (33, -1) ; empreintes de connexion sans clé
+      secrète (HMAC avec `APP_SECRET`) ; score saisi dans la fenêtre qui permet de placer un match dans un gymnase fermé ; suppression
+      d'un match sans confirmation dans la fenêtre du calendrier ; fenêtre et barre du calendrier à l'étroit sur téléphone
+- [x] Essais de connexion limités (D61, LIM-01 à LIM-10), dans `main` ; à vérifier sur le serveur
       avant la mise en production (`deploiement-reglement.md`)
 - [x] Page « Modifier la poule » refaite (D52) : nom et niveau, équipes en lecture seule avec lien vers la mise en place,
       phase commencée ou clôturée verrouillée côté serveur ; relue par l'ergonome et le webdesigner ; POU-01 à POU-05
