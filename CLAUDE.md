@@ -12,7 +12,7 @@ fusionnés dans `main` le 22/10/2026 ; R6 (schémas dessinés) en attente sur la
 1. `docs/wizard-saison/methode.md` (objectif, méthode, dernière entrée du journal, reprise sur un autre poste) ;
 2. `docs/wizard-saison/decisions.md` : le sommaire en tête, puis les seules décisions du sujet traité (aucune décision
    de conception rediscutée sans raison nouvelle) ;
-3. `docs/wizard-saison/lots.md` (état des lots, lot en cours), et `reglement.md` pour le règlement.
+3. `docs/wizard-saison/lots.md` (**section « Reprendre ici »**, état des lots, lot en cours), et `reglement.md` pour le règlement.
 L'historique (journal complet, détail des lots 0 à 6, maquettes, état des lieux initial) est dans
 `docs/wizard-saison/archive/` : à ne lire qu'au besoin.
 
@@ -37,6 +37,8 @@ Fermetures de gymnase (D60) et paramètres du site (D62) fusionnés dans `main` 
 
 - Le dépôt est dans WSL (`~/projects/blvb`). Depuis Windows, git refuse le chemin `\\wsl.localhost\…`
   (« dubious ownership ») : lancer git dans WSL (`wsl.exe -d Ubuntu -- bash -c 'cd ~/projects/blvb && git …'`).
-- Tests et qualité, dans Docker : `docker compose exec php composer tests` et `composer qualite`.
+- Tests et qualité, dans Docker : `docker compose exec php composer tests` et `composer qualite`. Si l'application tourne sur
+  `blvb_recette` (`bin/recette dev` pour revenir), les tests échouent à la remise à zéro de la base : soit revenir, soit leur passer
+  `-e DATABASE_URL=…/blvb_new…`, sans changer la base que l'utilisateur consulte.
 - Après un changement de branche : `bin/base etat` puis `bin/base aligner`.
 - CSS : `tailwind:build` après chaque changement de style ; ne pas lancer `asset-map:compile` en local.

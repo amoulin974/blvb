@@ -200,6 +200,10 @@ l'agenda et le calendrier admin (FGY-21). Liste des saisons en cartes sur télé
 
 Fusion de `parametres-site` dans `main` (31/10/2026) : fermetures de gymnase, paramètres du site, limitation des essais de connexion.
 
+### 2026-10-31 : fin de journée
+Checklist de déploiement complétée par l'agent `deploiement`. Mise à jour des paquets interrompue avant les tests, sur `maj-paquets` ; mail
+à Francis à compléter (`mail-francis.md`). Reprise : section « Reprendre ici » de `lots.md`.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)
