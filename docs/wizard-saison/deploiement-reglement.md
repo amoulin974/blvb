@@ -125,6 +125,22 @@ docker compose exec -T database sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD
 docker compose restart php
 ```
 
+## Limitation des essais de connexion (D61) : à vérifier avant la mise en production
+
+La limite suppose que le site voit la vraie IP des visiteurs. Elle dépend de `SYMFONY_TRUSTED_PROXIES`, qui n'est dans
+aucun fichier versionné. Lire la valeur ne suffit pas : la variable peut être dans `.env.local`, et une valeur peut être
+présente mais dangereuse. Ne mettre ni `0.0.0.0/0`, ni `REMOTE_ADDR` si le port du conteneur est ouvert.
+
+**Essai réel, depuis l'extérieur du serveur, avec une adresse fictive** :
+1. Envoyer 4 essais de connexion ratés, avec un en-tête `X-Forwarded-For` différent à chaque fois : le 4e doit afficher
+   « Trop d'essais ». Sinon, la limite se contourne.
+2. Depuis une autre connexion (téléphone en 4G), vérifier que l'on n'est pas bloqué. Sinon, tous les visiteurs partagent
+   la même IP : 20 échecs sur le site bloquent tout le monde.
+3. Vérifier que le conteneur n'est pas joignable directement depuis Internet, sans passer par le proxy.
+
+Pour lever un blocage : `docker compose exec php php bin/console cache:pool:clear connexions.cache`. Un `cache:clear`,
+donc un déploiement, remet aussi les compteurs à zéro.
+
 ## Réserves, à traiter après
 
 - Mot de passe SMTP en clair dans le `.env` versionné de `prod` : le déplacer dans `.env.local` et le changer.

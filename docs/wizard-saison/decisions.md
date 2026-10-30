@@ -71,6 +71,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D58. Règlement : rendu des éléments calculés
 - D59. Règlement : page d'édition des admins (R4)
 - D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
+- D61. Essais de connexion limités, avec une attente qui double à chaque échec
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -663,6 +664,24 @@ rendu pour la saison.
   le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
 - **Placement** (lots 2 et 3) : aucun match n'est placé dans un gymnase fermé.
 **Pourquoi** : demande de l'utilisateur ; relectures ergonome, webdesigner et sécurité.
+*(2026-10-30)*
+
+## D61. Essais de connexion limités, avec une attente qui double à chaque échec
+**Décision** : à partir du 3e échec pour une même adresse saisie et une même IP, il faut attendre 30 secondes, puis le
+double à chaque nouvel échec, 24 heures au plus. Un second compteur par IP seule s'applique à partir de 20 échecs. Pendant
+l'attente, le mot de passe n'est pas vérifié et l'essai ne compte pas. Une connexion réussie efface le compteur du compte,
+pas celui de l'IP. Changer son mot de passe par le lien reçu par e-mail lève l'attente du compte, depuis toute IP. Une
+IPv6 compte pour son /64. Les échecs sont oubliés 24 heures après la fin de l'attente. Abonné `LimiteurConnexion`, sans la
+dépendance `symfony/rate-limiter`, dont la limite intégrée à la connexion est fixe et non exponentielle.
+**Pourquoi** : demande de l'utilisateur, après la relecture sécurité de D60 (les responsables voient les adresses de
+connexion des admins, et aucune limite n'existait). Le compteur porte sur l'adresse **et** l'IP pour qu'un attaquant ne
+puisse pas bloquer le compte d'un admin depuis chez lui.
+**Condition en production** : l'IP vue par le site doit être fiable (`SYMFONY_TRUSTED_PROXIES`, essai décrit dans
+`deploiement-reglement.md`), sinon la limite se contourne ou bloque tout le monde.
+**Limites acceptées** : des essais simultanés peuvent passer pendant le calcul du mot de passe ; une variante de l'adresse
+reconnue par la collation de la base (`á` pour `a`) échappe au compteur du compte, mais pas à celui de l'IP (gain d'environ
+2) ; des attaquants répartis sur de nombreuses IP ne sont pas freinés ; le temps de réponse révèle si un compte existe
+(antérieur à cette décision) ; un `cache:clear` remet les compteurs à zéro.
 *(2026-10-30)*
 
 ## Points ouverts

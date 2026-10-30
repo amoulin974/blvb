@@ -171,6 +171,11 @@ production par Francis avec `deploiement-reglement.md`. Ajouter ici les nouvelle
   (formulaires et glisser-déposer du calendrier admin, `/calendrierlieu`, mise en place). **Tant que le lot 2 n'est pas
   fait, une fermeture ne bloque pas encore le placement.**
 
+### 2026-10-30 : essais de connexion limités
+
+- Attente qui double à chaque échec à partir du 3e : D61, LIM-01 à LIM-10. À vérifier sur le serveur avant la mise en
+  production : essai réel de `SYMFONY_TRUSTED_PROXIES` (`deploiement-reglement.md`).
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Le lot 6 et le lot 11 (règlement,

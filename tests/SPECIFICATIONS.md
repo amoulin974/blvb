@@ -180,6 +180,20 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 
 **SEC-10 — Déconnexion** ✅ : `/logout` termine la session ; une page admin redemande la connexion.
 
+**LIM-01 à LIM-10 — Essais de connexion limités** ✅ *`Unitaire/Security/LimiteurConnexionTest`, `Securite/LimiteConnexionTest`* (D61) :
+- **LIM-01** : attente de 30 s au seuil, doublée à chaque échec, 24 h au plus, sans débordement ; durée écrite en secondes, minutes ou heures, arrondie au-dessus.
+- **LIM-02** : pas d'attente pour les 2 premiers échecs ; après le 3e, même le bon mot de passe est refusé pendant 30 s, puis accepté.
+- **LIM-03** : l'attente double à chaque échec ; un essai pendant l'attente ne la prolonge pas et ne compte pas.
+- **LIM-04** : une connexion réussie remet le compteur du compte à zéro.
+- **LIM-05** : le blocage ne touche ni un autre compte sur la même IP ni le même compte depuis une autre IP ; la casse de l'adresse ne change rien.
+- **LIM-06** : une adresse inconnue est limitée comme une adresse existante.
+- **LIM-07** : 20 échecs sur des comptes différents bloquent l'IP sans toucher les autres ; une connexion réussie après 19 échecs ne remet pas le compteur de l'IP à zéro.
+- **LIM-08** : en IPv6, les adresses d'un même /64 partagent leur compteur ; un autre /64 n'est pas touché.
+- **LIM-09** : changer son mot de passe par le lien reçu par e-mail lève l'attente du compte, même changé depuis une autre IP.
+- **LIM-10** : un essai refusé pour son jeton de sécurité ne compte pas.
+
+`TestFonctionnel` vide le pool `connexions.cache` avant chaque test : en test, ce pool est sur disque, un cache en mémoire étant vidé entre deux requêtes.
+
 **SEC-11 — Fiche du club** `/club/{id}/modifier` (voter `CLUB_MODIFIER`) ✅ *`FicheClubTest`* :
 
 | Profil | Attendu |
@@ -661,7 +675,8 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Règlement par saison** (en cours) | RGL-01 à RGL-03 (§4.17), CPS-04 : étape R1, tables `reglement` et `reglement_version` (migration `Version20261020164942`), nettoyage du HTML, versions, copie avec la saison ; RGL-04 à RGL-11 : étape R2, codes courts, ancres, codes inapplicables, quatre éléments calculés ; RGL-12 à RGL-15 : étape R3, page publique, retour du sélecteur de saison ; RGL-16 à RGL-22 : étape R4, page d'édition ; RGL-23 : étape R5, reprise du règlement 2025 (`app:reglement:importer`) | 617 tests verts + 2 lents (branche `reglement`) | R1 à R4 le 20/10/2026, R5 le 21/10/2026 |
 | **Expéditeur des e-mails** ✅ | MAI-01 : un seul expéditeur, `blvb@vblc.fr` (anciennement `admin@blvb.fr` et `tech@vblc.fr`, refusés par le SMTP d'OVH) | 259 tests verts + 2 lents (`main`) | fait le 16/10/2026 |
 | **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
-| **Fermetures de gymnase, lot 1** ✅ | FGY-01 à FGY-09 (§4.18) : saisie par les responsables de club et les admins, refus si un match est programmé | 623 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
+| **Fermetures de gymnase, lot 1** ✅ | FGY-01 à FGY-09 (§4.18) : saisie par les responsables de club et les admins, refus si un match est programmé | 626 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
+| **Essais de connexion limités** ✅ | LIM-01 à LIM-10 (§4.1) : attente qui double à chaque échec, par compte et IP, puis par IP | 649 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

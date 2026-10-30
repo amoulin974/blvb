@@ -15,8 +15,10 @@ framework:
         #app: cache.adapter.apcu
 
         # Namespaced pools use the above "app" backend by default
-        #pools:
-            #my.dedicated.cache: null
+        pools:
+            # Compteurs d'essais de connexion (LimiteurConnexion) : à part, pour qu'un vidage de cache.app par l'application
+            # ne les efface pas. Stockés dans var/cache : cache:clear et donc un déploiement les remettent à zéro.
+            connexions.cache: null
 
 # Tests : cache en mémoire, vidé à chaque requête (les données de test sont annulées après chaque test,
 # un cache sur disque garderait des saisons qui n'existent plus)
@@ -24,3 +26,7 @@ when@test:
     framework:
         cache:
             app: cache.adapter.array
+            pools:
+                # Sur disque : un cache en mémoire serait vidé entre deux essais de connexion (vidé avant chaque test, voir TestFonctionnel)
+                connexions.cache:
+                    adapter: cache.adapter.filesystem
