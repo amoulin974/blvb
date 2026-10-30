@@ -193,6 +193,11 @@ est signalé sur la mise en place, avec un lien. Auteur de la fermeture enregist
 et la sécurité. Suite : lot 3 (placement manuel, calendrier par équipe).
 Motif et auteur des fermetures terminées effacés au changement de saison affichée, annoncé dans une fenêtre de confirmation (FGY-17).
 
+### 2026-10-31 : fermetures, lot 3
+Placement manuel refusé dans un gymnase fermé (D60, FGY-18 à FGY-20), signalement sur le calendrier, la fiche de l'équipe,
+l'agenda et le calendrier admin (FGY-21). Liste des saisons en cartes sur téléphone. Conditions d'utilisation à jour sur
+`conditions-utilisation-v2`, tenue à jour de `parametres-site` ; il reste les informations sur l'éditeur.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)

@@ -592,6 +592,10 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-15** ✅ : replacer les matchs à venir évite une fermeture ajoutée après la génération, sans toucher aux matchs joués.
 - **FGY-16** ✅ : un barrage (format sans optimiseur) prend le créneau suivant ouvert.
 - **FGY-17** ✅ *(`FermetureGymnaseTest`)* : afficher une autre saison efface le motif et l'auteur des fermetures terminées, garde leurs dates, et ne touche pas aux fermetures en cours ou à venir ; une saison qui n'existe plus ne change rien.
+- **FGY-18** ✅ : déplacer un match dans un gymnase fermé par le formulaire est refusé (422, message) ; un match déjà dans ce gymnase reste modifiable le même jour.
+- **FGY-19** ✅ : le glisser-déposer du calendrier admin vers un gymnase fermé est refusé (422, message en JSON) ; vers un jour ouvert, il passe.
+- **FGY-20** ✅ : la fenêtre du calendrier admin refuse un gymnase fermé et se réaffiche avec le message, motif échappé.
+- **FGY-21** ✅ : un match sans score dans un gymnase fermé est signalé sur le calendrier, la fiche de l'équipe et le calendrier admin ; un match joué ne l'est pas, ni pour le public un match passé sans score.
 
 `Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
 

@@ -6,7 +6,7 @@
     {% form_theme form 'admin/form/erreurs.html.twig' %}
     {{ include('admin/_entete.html.twig', {
         titre: 'Fermetures du gymnase ' ~ lieu.nom,
-        sous_titre: 'Les matchs générés ou replacés automatiquement évitent ce gymnase pendant sa fermeture. Si c\'est impossible, le match y reste et il est signalé sur la mise en place de la phase. « Modifier le match » ne vérifie pas encore les fermetures.',
+        sous_titre: 'Les matchs générés ou replacés automatiquement évitent ce gymnase pendant sa fermeture. Si c\'est impossible, le match y reste : il est signalé sur la mise en place de la phase et sur les calendriers. Vous ne pouvez pas non plus y placer un match à la main pendant cette période.',
         retour: {url: path('admin_lieu_index'), label: 'Gymnases'},
     }) }}
     <div class="admin-carte max-w-3xl">

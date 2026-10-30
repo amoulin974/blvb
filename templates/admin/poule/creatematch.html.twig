@@ -23,6 +23,10 @@
             {% endfor %}
         </nav>
 
+        <div id="calendrier-message-zone" class="mb-4 scroll-mt-20" hidden>
+            {% embed 'admin/_alerte.html.twig' with {type: 'error'} %}{% block contenu %}<span id="calendrier-message"></span>{% endblock %}{% endembed %}
+        </div>
+
         {% if journee %}
             <div
                 id="calendar"

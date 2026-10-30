@@ -5,6 +5,7 @@ namespace App\Tests\Fonctionnel\Front;
 use App\Entity\FermetureGymnase;
 use App\Entity\Lieu;
 use App\Entity\ParametresSite;
+use App\Entity\Partie;
 use App\Entity\User;
 use App\Factory\FermetureGymnaseFactory;
 use App\Factory\JourneeFactory;
@@ -19,7 +20,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * FGY-01 à FGY-11, FGY-17 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
+ * FGY-01 à FGY-11, FGY-17 à FGY-21 : saisie des fermetures de gymnase par les responsables de club et les administrateurs (D60).
  */
 final class FermetureGymnaseTest extends TestFonctionnel
 {
@@ -352,5 +353,126 @@ final class FermetureGymnaseTest extends TestFonctionnel
             self::assertSame($motif, $ligne->getMotif());
             self::assertNotNull($ligne->getCreePar());
         }
+    }
+
+    /** Fermeture de G1 ce jour-là ; match sans score de A1 contre A2, le lendemain, dans G1 */
+    private function matchLibreEtFermeture(string $motif = 'Toiture'): array
+    {
+        $g1 = ChampionnatDeTest::get('gymnase.G1');
+        $ferme = new \DateTimeImmutable('+3 years monday');
+        FermetureGymnaseFactory::createOne(['lieu' => $g1, 'motif' => $motif, 'dateDebut' => $ferme, 'dateFin' => $ferme]);
+        $match = PartieFactory::createOne(['journee' => ChampionnatDeTest::get('match.reference')->getJournee(), 'poule' => ChampionnatDeTest::get('poule.A'),
+            'idEquipeRecoit' => ChampionnatDeTest::get('equipe.A1'), 'idEquipeDeplace' => ChampionnatDeTest::get('equipe.A2'),
+            'lieu' => $g1, 'date' => $ferme->modify('+1 day')->setTime(20, 30)]);
+
+        return [$match->getId(), $ferme];
+    }
+
+    private function dateEnBase(int $match): string
+    {
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->clear();
+
+        return $em->find(Partie::class, $match)->getDate()->format('Y-m-d H:i');
+    }
+
+    #[TestDox('FGY-18 : déplacer un match dans un gymnase fermé par le formulaire est refusé ; un match déjà là reste modifiable, et le score aussi')]
+    public function test_formulaire_du_match(): void
+    {
+        [$match, $ferme] = $this->matchLibreEtFermeture();
+        $avant = $this->dateEnBase($match);
+        $this->connecter('admin');
+
+        $form = $this->client->request('GET', "/admin/partie/$match/edit")->filter('form')->reduce(fn ($f) => $f->filter('[name$="[date]"]')->count() > 0)->form();
+        $form['partie[date]'] = $ferme->format('Y-m-d').'T20:30';
+        $this->client->submit($form);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'est fermé le '.$ferme->format('d/m/Y').' (Toiture)');
+        self::assertSame($avant, $this->dateEnBase($match));
+
+        // Déjà dans le gymnase fermé (fermeture saisie ensuite) : un autre champ s'enregistre
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->executeStatement('UPDATE partie SET date = ? WHERE id = ?', [$ferme->format('Y-m-d').' 20:30:00', $match]);
+        $form = $this->client->request('GET', "/admin/partie/$match/edit")->filter('form')->reduce(fn ($f) => $f->filter('[name$="[date]"]')->count() > 0)->form();
+        $form['partie[date]'] = $ferme->format('Y-m-d').'T21:00';
+        $this->client->submit($form);
+        self::assertResponseRedirects();
+        self::assertSame($ferme->format('Y-m-d').' 21:00', $this->dateEnBase($match));
+    }
+
+    #[TestDox('FGY-19 : le glisser-déposer vers un gymnase fermé est refusé avec son message ; vers un autre jour, ou le même jour, il passe')]
+    public function test_glisser_deposer(): void
+    {
+        [$match, $ferme] = $this->matchLibreEtFermeture();
+        $avant = $this->dateEnBase($match);
+        $poule = ChampionnatDeTest::get('poule.A')->getId();
+        $this->connecter('admin');
+        $jeton = $this->client->request('GET', "/admin/partie/$poule/getpartiecalendar")->filter('[data-calendar-csrf-token-value]')->attr('data-calendar-csrf-token-value');
+        $deplacer = fn (string $date) => $this->client->request('PUT', "/admin/partie/$poule/api/$match", server: ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $jeton], content: json_encode(['datedebut' => $date]));
+
+        $deplacer($ferme->format('Y-m-d').' 20:30:00');
+        self::assertResponseStatusCodeSame(422);
+        self::assertStringContainsString('est fermé le', json_decode($this->client->getResponse()->getContent(), true)['erreur']);
+        self::assertSame($avant, $this->dateEnBase($match));
+
+        $autreJour = $ferme->modify('+2 days')->format('Y-m-d').' 20:30';
+        $deplacer($autreJour.':00');
+        self::assertResponseIsSuccessful();
+        self::assertSame($autreJour, $this->dateEnBase($match));
+    }
+
+    #[TestDox('FGY-20 : la fenêtre du calendrier refuse un gymnase fermé et se réaffiche avec le message')]
+    public function test_fenetre_du_calendrier(): void
+    {
+        [$match, $ferme] = $this->matchLibreEtFermeture('<script>alert(1)</script>');
+        $avant = $this->dateEnBase($match);
+        $poule = ChampionnatDeTest::get('poule.A')->getId();
+        $this->connecter('admin');
+
+        $form = $this->client->request('GET', "/admin/partie/$poule/api/$match/getmodal")->filter('form')->form();
+        $form['partie_calendar[date]'] = $ferme->format('Y-m-d').'T20:30';
+        $this->client->submit($form);
+
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('.form-erreur', 'est fermé le');
+        self::assertStringNotContainsString('<script>alert(1)', (string) $this->client->getResponse()->getContent(), 'motif échappé');
+        self::assertSame($avant, $this->dateEnBase($match));
+    }
+
+    #[TestDox('FGY-21 : un match sans score dans un gymnase fermé est signalé sur le calendrier, la fiche de l\'équipe, l\'agenda et le calendrier admin ; un match joué ne l\'est pas')]
+    public function test_signalement(): void
+    {
+        [$match, $ferme] = $this->matchLibreEtFermeture();
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->executeStatement('UPDATE partie SET date = ? WHERE id = ?', [$ferme->format('Y-m-d').' 20:30:00', $match]);
+        $equipe = ChampionnatDeTest::get('equipe.A1')->getId();
+        $poule = ChampionnatDeTest::get('poule.A')->getId();
+        $em->clear();
+        $texte = 'Gymnase fermé : match à déplacer';
+
+        $this->client->request('GET', '/calendrier');
+        self::assertStringContainsString($texte, (string) $this->client->getResponse()->getContent());
+        $this->client->request('GET', "/equipe/$equipe");
+        self::assertStringContainsString($texte, (string) $this->client->getResponse()->getContent());
+        $this->connecter('admin');
+        $this->client->request('GET', "/admin/partie/$poule/api");
+        self::assertStringContainsString('Gymnase fermé : ', implode(' ', array_column(json_decode((string) $this->client->getResponse()->getContent(), true), 'title')));
+
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->executeStatement('UPDATE partie SET nb_set_gagnant_reception = 3, nb_set_gagnant_deplacement = 0 WHERE id = ?', [$match]);
+        $this->client->request('GET', '/calendrier');
+        self::assertStringNotContainsString($texte, (string) $this->client->getResponse()->getContent());
+        $this->client->request('GET', "/equipe/$equipe");
+        self::assertStringNotContainsString($texte, (string) $this->client->getResponse()->getContent());
+
+        // Match passé sans score : il ne manque sans doute que le score, le public n'est pas alerté
+        $hier = new \DateTimeImmutable('yesterday');
+        FermetureGymnaseFactory::createOne(['lieu' => ChampionnatDeTest::get('gymnase.G1'), 'dateDebut' => $hier, 'dateFin' => $hier]);
+        $em = self::getContainer()->get(EntityManagerInterface::class);
+        $em->getConnection()->executeStatement('UPDATE partie SET date = ?, nb_set_gagnant_reception = NULL, nb_set_gagnant_deplacement = NULL WHERE id = ?', [$hier->format('Y-m-d').' 20:30:00', $match]);
+        $this->client->request('GET', '/calendrier');
+        self::assertStringNotContainsString($texte, (string) $this->client->getResponse()->getContent());
+        $this->client->request('GET', "/equipe/$equipe");
+        self::assertStringNotContainsString($texte, (string) $this->client->getResponse()->getContent());
     }
 }

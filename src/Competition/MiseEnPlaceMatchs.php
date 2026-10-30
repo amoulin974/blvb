@@ -227,8 +227,7 @@ final class MiseEnPlaceMatchs
         $matchs = [];
         foreach ($phase->getPoules() as $poule) {
             foreach ($poule->getParties() as $partie) {
-                $lieu = $partie->getLieu();
-                if ($lieu instanceof Lieu && $partie->getDate() && !$this->estJoue($partie) && $lieu->fermeLe($partie->getDate()) !== null) {
+                if ($partie->enGymnaseFerme()) {
                     $matchs[] = $partie;
                 }
             }

@@ -97,7 +97,7 @@
                     {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
                     <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
-                        {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}</p>
+                        {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}{% if prochain.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}</p>
                     <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
                     {% if canViewCapitaine %}
@@ -129,7 +129,7 @@
                         <h3 class="mt-6 mb-3 text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }} · {{ poule.nom }}</h3>
 
                         {# Le masquage mobile est porté par ce div : la classe daisyUI "table" impose display: table. #}
-                        <div class="hidden md:block">
+                        <div class="hidden lg:block">
                             <table class="table w-full table-fixed">
                                 <colgroup>
                                     <col class="w-[16%]">
@@ -156,8 +156,8 @@
                                             {{ include('front/fragments/_equipe_score.html.twig') }}
                                         </td>
                                         <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
-                                        <td class="text-right whitespace-nowrap">
-                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
+                                        <td class="text-right">
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -166,7 +166,7 @@
                         </div>
 
                         {# Mobile : cartes compactes comme dans le calendrier général #}
-                        <div class="md:hidden flex flex-col gap-2">
+                        <div class="lg:hidden flex flex-col gap-2">
                             {% for match in matchsByPoule[poule.id] %}
                                 <div class="card card-xs bg-base-100 border border-base-300">
                                     <div class="card-body px-3 py-2 gap-1">
@@ -181,7 +181,7 @@
                                         </div>
                                         <p class="text-sm">
                                             {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
-                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
                                         </p>
                                     </div>
                                 </div>

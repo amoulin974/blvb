@@ -152,13 +152,13 @@ final class PhaseController extends AbstractController
             $rapport = $partieService->creerCalendrierOptimise($phase);
 
             foreach ($rapport as $ligne) {
-                if ($ligne['type'] !== 'championnat') {
+                if ($ligne['type'] !== 'championnat' && $ligne['surcharges'] === []) {
                     continue;
                 }
 
                 $this->addFlash(
                     $ligne['surcharges'] === [] ? 'success' : 'warning',
-                    sprintf('%s : %d break(s)', $ligne['poule'], $ligne['nbBreaks'])
+                    ($ligne['type'] === 'championnat' ? sprintf('%s : %d break(s)', $ligne['poule'], $ligne['nbBreaks']) : $ligne['poule'])
                     . ($ligne['surcharges'] !== [] ? ' — ' . implode(' ; ', $ligne['surcharges']) : '')
                 );
             }

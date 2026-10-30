@@ -59,6 +59,19 @@ class Partie
 
     // src/Entity/Partie.php
 
+    /** Match sans score complet placé dans un gymnase fermé ce jour-là (D60) : signalé aux admins */
+    public function enGymnaseFerme(): bool
+    {
+        return ($this->nb_set_gagnant_reception === null || $this->nb_set_gagnant_deplacement === null)
+            && $this->date !== null && $this->lieu?->fermeLe($this->date) !== null;
+    }
+
+    /** Signalé au public : un match passé sans score a sans doute été joué, il ne manque que le score */
+    public function aDeplacerPourLePublic(): bool
+    {
+        return $this->enGymnaseFerme() && $this->date->format('Y-m-d') >= date('Y-m-d');
+    }
+
     public function getNomReception(): string
     {
         if ($this->id_equipe_recoit) {
