@@ -123,7 +123,8 @@
             <li><strong>Fiche joueur</strong> : prénom, nom, adresse e-mail et téléphone, équipe(s) et rôle de capitaine pour chaque saison.</li>
             <li><strong>Clubs</strong> : comptes désignés comme responsables d'un club ; compte qui a saisi une fermeture de gymnase.</li>
             <li><strong>Vie du championnat</strong> : équipes, matchs, résultats et classements, conservés comme archives des saisons.</li>
-            <li><strong>Données techniques</strong> : adresse IP et pages consultées, enregistrées par le serveur dans ses journaux pour sa sécurité et son bon fonctionnement ; nombre d'essais de connexion ratés, par adresse saisie et par adresse IP, si la limitation des essais est activée. Adresses et IP y sont enregistrées sous forme d'empreinte, pas en clair.</li>
+            <li><strong>Données techniques</strong> : adresse IP et pages consultées, enregistrées par le serveur dans ses journaux pour sa sécurité et son bon fonctionnement.</li>
+            <li><strong>Limitation des essais de connexion</strong>, si elle est activée : nombre d'essais ratés, par couple adresse saisie et adresse IP, et par adresse IP. Dans ces compteurs, adresses et IP sont enregistrées sous forme d'empreinte, pas en clair.</li>
         </ul>
 
         <h3 class="text-lg font-semibold">Pourquoi</h3>
@@ -138,7 +139,7 @@
         <h3 class="text-lg font-semibold">Qui y a accès</h3>
         <ul class="list-disc pl-5 space-y-1">
             <li>Les noms des équipes, les calendriers, les résultats, les classements, les fiches des clubs et le motif des fermetures de gymnase en cours ou à venir sont publics. Les noms des responsables de club ne sont pas publiés, ni le compte qui a saisi une fermeture, visible des seuls administrateurs.</li>
-            <li>Les coordonnées du capitaine d'une équipe sont visibles par les capitaines de la même poule, les membres de l'équipe et les administrateurs.</li>
+            <li>Les coordonnées du capitaine d'une équipe sont visibles par les capitaines de la même poule, les responsables d'un club dont une équipe joue dans cette poule, les membres de l'équipe et les administrateurs.</li>
             <li>La composition d'une équipe, avec les coordonnées de ses joueurs, est visible par les membres de l'équipe et les administrateurs.</li>
             <li>Les administrateurs bénévoles du championnat accèdent à l'ensemble des données pour l'organiser.</li>
             <li>OVH, hébergeur du site et de sa messagerie, les traite pour le compte de l'éditeur, comme sous-traitant.</li>
@@ -149,7 +150,7 @@
             Les données des comptes et des fiches joueurs sont conservées tant que la personne participe au championnat, puis
             {{ valeur(null, 'durée de conservation après la dernière saison jouée, ex. supprimées 3 ans après') }}.
             Les résultats et classements sont conservés comme archives du championnat. Les demandes de nouveau mot de passe
-            expirent au bout d'une heure. Les essais de connexion ratés sont oubliés au plus tard 48 heures après le dernier essai.
+            expirent au bout d'une heure. Les essais de connexion ratés ne comptent plus au plus tard 48 heures après le dernier essai ; leurs empreintes sont ensuite effacées par le nettoyage régulier du serveur.
             Le motif d'une fermeture de gymnase et le compte qui l'a saisie sont conservés jusqu'au changement de saison affichée
             sur le site qui suit la fin de la fermeture, puis effacés ; seules les dates restent. Le motif peut rester plus
             longtemps dans les messageries, s'il a été envoyé par e-mail aux organisateurs.
