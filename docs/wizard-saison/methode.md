@@ -198,13 +198,15 @@ Placement manuel refusé dans un gymnase fermé (D60, FGY-18 à FGY-20), signale
 l'agenda et le calendrier admin (FGY-21). Liste des saisons en cartes sur téléphone. Conditions d'utilisation à jour sur
 `conditions-utilisation-v2`, tenue à jour de `parametres-site` ; il reste les informations sur l'éditeur.
 
+Fusion de `parametres-site` dans `main` (31/10/2026) : fermetures de gymnase, paramètres du site, limitation des essais de connexion.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)
    y sont fusionnés depuis le 22/10/2026 ; R6 (schémas dessinés) est en attente sur la branche `reglement`.
    Prochaine étape : mise en production par Francis (`deploiement-reglement.md`). Pour un nouveau lot, créer
    `formats-competition-lotN` depuis `formats-competition` une fois le lot précédent fusionné. Les fermetures de gymnase
-   sont sur la branche `parametres-site` (voir `lots.md`), à pousser pour pouvoir la reprendre sur un autre poste.
+   sont dans `main` (voir `lots.md`), à pousser pour pouvoir la reprendre sur un autre poste.
    Après un pull qui change `composer.lock` : `composer install` dans le conteneur
    (sinon l'application ne démarre pas, par exemple sans `symfony/html-sanitizer`).
 2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,

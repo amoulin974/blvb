@@ -6,7 +6,7 @@ formats, wizard de saison, règlement par saison R1 à R5). Seul Francis fusionn
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env`
 compris. Aucune nouvelle variable d'environnement. Nouveautés : paquet Composer `symfony/html-sanitizer`, une
 soixantaine de paquets importmap (éditeur TipTap 3), dossier `public/uploads/reglement`, 9 migrations (ajouts de
-colonnes et de tables seulement), 13 une fois la branche `parametres-site` fusionnée dans `main`.
+colonnes et de tables seulement), 13 depuis la fusion de `parametres-site` dans `main`.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
 
@@ -94,10 +94,10 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261015100000 | `phase.options` |
 | Version20261015110000 | `partie.parent_perdants` |
 | Version20261020164942 | tables `reglement` et `reglement_version` |
-| Version20261030091911 | table `fermeture_gymnase` (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
-| Version20261030213902 | table `parametres_site`, une ligne : limitation désactivée (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
-| Version20261030223748 | `fermeture_gymnase.cree_par_id` : auteur de la fermeture (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
-| Version20261030225406 | `fermeture_gymnase.motif` facultatif (branche `parametres-site`, seulement une fois fusionnée dans `main`) |
+| Version20261030091911 | table `fermeture_gymnase` |
+| Version20261030213902 | table `parametres_site`, une ligne : limitation désactivée |
+| Version20261030223748 | `fermeture_gymnase.cree_par_id` : auteur de la fermeture |
+| Version20261030225406 | `fermeture_gymnase.motif` facultatif |
 
 ## Vérifications en ligne
 
