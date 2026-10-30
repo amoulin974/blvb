@@ -57,9 +57,9 @@ Branche `reglement`, créée depuis `formats-competition-lot6` le 20/10/2026 ; e
 Chaque étape : tests, `tests/SPECIFICATIONS.md` dans le même commit, journal de `methode.md`.
 
 
-## Reste à faire (mis à jour le 21/10/2026, soir)
+## Reste à faire (mis à jour le 30/10/2026)
 
-R1 à R5 sont faits sur la branche `reglement` (8 commits, poussée le 21/10/2026). Par ordre de priorité :
+R1 à R5 sont faits et fusionnés dans `main` (22/10/2026). Par ordre de priorité :
 
 1. **R6, schémas dessinés** : bibliothèque JavaScript à choisir (canvas), décision à consigner dans `decisions.md` ;
    mêmes données que les éléments calculés, exposées en JSON ; le HTML actuel reste l'alternative textuelle et la version
@@ -75,8 +75,8 @@ R1 à R5 sont faits sur la branche `reglement` (8 commits, poussée le 21/10/202
      webdesigner, vérifié dans Chromium, Firefox et WebKit ;
    - fait le 22/10/2026 : TipTap monté en 3.31.4 (faille moyenne de `@tiptap/core` 2.x corrigée, `importmap:audit`
      propre) ; éditeur vérifié dans Chromium, Firefox et WebKit (voir le journal de `methode.md`).
-4. **Fin de branche** : fusion de `reglement` (avec le lot 6, voir `lots.md`) selon D15, puis `main` ; mise à jour de
-   `lots.md` et du journal.
+4. **Fin de branche** : R6 restera à fusionner selon D15, puis dans `main`, avec la mise à jour de `lots.md` et du
+   journal (fait pour le lot 6 et R1 à R5 le 22/10/2026).
 5. **En production, après la fusion par Francis** (checklist complète : `deploiement-reglement.md`) :
    - corriger d'abord les données 2025 dans le back-office : journées de la phase finale aux noms et dates incohérents
      (avant le début de la phase, dates limites identiques d'un tour à l'autre), journée 3 des poules C et D le 16/02/2026

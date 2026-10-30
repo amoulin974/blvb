@@ -41,7 +41,16 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
 - [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 
+## Fermetures de gymnase 🟡 (branche `fermetures-gymnase`, hors numérotation du chantier ; D60)
+- [x] Lot 1 : saisie par les responsables de club et les admins ; FGY-01 à FGY-09
+- [ ] Lot 2 : placement automatique (générateurs et replacement). **Tant qu'il n'est pas fait, une fermeture ne bloque pas
+      le placement**
+- [ ] Lot 3 : placement manuel et alertes (formulaires et glisser-déposer du calendrier admin, `/calendrierlieu`, mise en
+      place)
+
 ## À faire hors lots (relevé en relecture)
+- [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `fermetures-gymnase` ; à vérifier sur le serveur
+      avant la mise en production (`deploiement-reglement.md`)
 - [x] Page « Modifier la poule » refaite (D52) : nom et niveau, équipes en lecture seule avec lien vers la mise en place,
       phase commencée ou clôturée verrouillée côté serveur ; relue par l'ergonome et le webdesigner ; POU-01 à POU-05
 - [x] Contraste des alertes de l'admin (texte coloré 3:1 au lieu de 4,5:1) et icônes succès / info

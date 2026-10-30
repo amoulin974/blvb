@@ -6,7 +6,7 @@ formats, wizard de saison, règlement par saison R1 à R5). Seul Francis fusionn
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env`
 compris. Aucune nouvelle variable d'environnement. Nouveautés : paquet Composer `symfony/html-sanitizer`, une
 soixantaine de paquets importmap (éditeur TipTap 3), dossier `public/uploads/reglement`, 9 migrations (ajouts de
-colonnes et de tables seulement).
+colonnes et de tables seulement), 10 une fois la branche `fermetures-gymnase` fusionnée dans `main`.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
 
@@ -52,7 +52,7 @@ docker compose exec php php bin/console importmap:install
 docker compose exec php php bin/console tailwind:build --minify
 docker compose exec php php bin/console asset-map:compile
 
-# 7. Migrations (9 nouvelles), puis contrôle
+# 7. Migrations (9 nouvelles, 10 avec les fermetures de gymnase), puis contrôle
 docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction
 docker compose exec php php bin/console doctrine:migrations:status | grep -E 'Current|New'   # New : 0
 
@@ -94,6 +94,7 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261015100000 | `phase.options` |
 | Version20261015110000 | `partie.parent_perdants` |
 | Version20261020164942 | tables `reglement` et `reglement_version` |
+| Version20261030091911 | table `fermeture_gymnase` (branche `fermetures-gymnase`, seulement une fois fusionnée dans `main`) |
 
 ## Vérifications en ligne
 

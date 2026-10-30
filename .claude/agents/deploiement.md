@@ -33,7 +33,7 @@ Tout le reste doit être **identique à main**. Une différence ailleurs signale
 5. Migrations Doctrine apportées par le déploiement : fichiers de `migrations/` présents dans main et absents de prod. Lis-les et signale toute perte de données (DROP, changement de type) et toute reprise de données.
 6. Commandes de reprise : les commandes `app:*` à lancer une seule fois. Leur PHPDoc l'indique, par exemple `app:clubs:depuis-noms-equipes` : d'abord la simulation, puis `--force`.
 7. URL écrites en dur dans le JavaScript ou les gabarits. Elles cassent avec le préfixe /blvb : toute URL doit venir de `path()` ou `url()`.
-8. Construction de l'image de prod, si on te le demande. Fais-la dans un worktree détaché, jamais dans le répertoire de travail de l'utilisateur. `assets/vendor` (importmap) n'est pas versionné : copie-le dans le worktree avant `docker build --target frankenphp_prod`. Ensuite, lance `lint:container` et `lint:twig` dans l'image, puis supprime l'image.
+8. Construction de l'image de prod, si on te le demande. Fais-la dans un worktree détaché, jamais dans le répertoire de travail de l'utilisateur. `assets/vendor` (importmap) est ignoré par git, sauf `installed.php`, Stimulus et Turbo, qui restent suivis : copie-le dans le worktree avant `docker build --target frankenphp_prod`. Ensuite, lance `lint:container` et `lint:twig` dans l'image, puis supprime l'image.
 9. Secrets versionnés : mots de passe ou clés dans `.env` ou ailleurs. Signale-les sans les recopier dans ton rapport.
 10. Obligations légales : `templates/front/conditions.html.twig` ne doit plus contenir de valeur `null` dans `editeur` ni d'appel `valeur(null, …)`. Sinon la page en ligne affiche « À compléter ». Le point est **bloquant** dès que la page est dans prod.
 

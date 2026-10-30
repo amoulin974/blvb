@@ -1,7 +1,8 @@
 # Wizard de création de saison : méthode de travail
 
 Ce fichier permet à une nouvelle session (humaine ou Claude) de reprendre le chantier sans contexte
-préalable. **À lire en premier**, puis dans l'ordre : `decisions.md`, `archive/plan.md`, `lots.md`.
+préalable. **À lire en premier**, puis dans l'ordre : le sommaire de `decisions.md` et les décisions du sujet traité,
+`lots.md`, et `reglement.md` pour le règlement. L'archive ne se lit qu'au besoin.
 
 ---
 
@@ -99,7 +100,7 @@ Deux bases, deux usages, toutes deux séparées de la base de développement `bl
 
 Mode d'emploi complet des commandes de test : [`tests/README.md`](../../tests/README.md).
 
-Tests automatisés, dans le conteneur `php` (614 tests verts + 2 lents au 2026-10-21, branche `reglement` ; toujours par `composer tests`) :
+Tests automatisés, dans le conteneur `php` (649 tests verts hors tests lents au 2026-10-30, branche `fermetures-gymnase` ; toujours par `composer tests`) :
 
 ```
 docker compose exec php composer tests          # tout, hors tests lents (≈ 1 min)
@@ -178,11 +179,12 @@ production par Francis avec `deploiement-reglement.md`. Ajouter ici les nouvelle
 
 ## 5. Reprendre le travail sur un autre ordinateur
 
-1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Le lot 6 et le lot 11 (règlement,
-   R1 à R5) y sont fusionnés depuis le 22/10/2026 ; R6 (schémas dessinés) est en attente sur la branche `reglement`.
-   Prochaine étape : fusion de `formats-competition` dans `main` (D15), puis mise en production par Francis
-   (`deploiement-reglement.md`). Pour un nouveau lot, créer `formats-competition-lotN` depuis `formats-competition` une
-   fois le lot précédent fusionné. Après un pull qui change `composer.lock` : `composer install` dans le conteneur
+1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)
+   y sont fusionnés depuis le 22/10/2026 ; R6 (schémas dessinés) est en attente sur la branche `reglement`.
+   Prochaine étape : mise en production par Francis (`deploiement-reglement.md`). Pour un nouveau lot, créer
+   `formats-competition-lotN` depuis `formats-competition` une fois le lot précédent fusionné. Les fermetures de gymnase
+   sont sur la branche `fermetures-gymnase` (voir `lots.md`), à pousser pour pouvoir la reprendre sur un autre poste.
+   Après un pull qui change `composer.lock` : `composer install` dans le conteneur
    (sinon l'application ne démarre pas, par exemple sans `symfony/html-sanitizer`).
 2. **Environnement** (voir §3, « Environnement » et « Tests ») : `docker compose up -d --build`,
    `docker compose exec php composer install`, droits MySQL des bases de test, `gh auth login` puis
@@ -193,7 +195,7 @@ production par Francis avec `deploiement-reglement.md`. Ajouter ici les nouvelle
    changement de `assets/styles/app.css` ou de classes Tailwind. **Ne pas lancer `asset-map:compile`
    en local** : le dossier `public/assets/` qu'il crée fige d'anciens fichiers (icônes énormes, styles
    manquants) ; s'il existe, le supprimer. En production, le déploiement le lance.
-5. **Vérifier l'état** : `docker compose exec php composer tests` (614 tests verts attendus ; `php bin/phpunit` lancé
+5. **Vérifier l'état** : `docker compose exec php composer tests` (nombre de tests attendu : `tests/SPECIFICATIONS.md`, §7 ; `php bin/phpunit` lancé
    seul dépasse les 128 Mo de PHP, passer par `composer tests` ; mode d'emploi complet : `tests/README.md`) et
    `docker compose exec php composer qualite`.
 6. **Reprendre** : lire `methode.md` (ce fichier), le sommaire de `decisions.md` puis les décisions du sujet traité,
