@@ -8,6 +8,7 @@ use App\Form\PouleType;
 use App\Competition\Sport\Sports;
 use App\Form\Wizard\SaisonWizardType;
 use Symfony\Component\Form\FormError;
+use App\Repository\FermetureGymnaseRepository;
 use App\Repository\SaisonRepository;
 use App\Repository\PouleRepository;
 use App\Service\PhaseService;
@@ -96,7 +97,7 @@ final class SaisonController extends AbstractController
 
     //défini une saison comme favorite
     #[Route('/{id}/favorite/', name: 'favorite', methods: ['POST'])]
-    public function favorite(Request $request, EntityManagerInterface $em, $id, CacheInterface $cache): Response
+    public function favorite(Request $request, EntityManagerInterface $em, $id, CacheInterface $cache, FermetureGymnaseRepository $fermetures): Response
     {
         if (!$this->isCsrfTokenValid('favorite'.$id, $request->getPayload()->getString('_token'))) {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez.');
@@ -110,19 +111,25 @@ final class SaisonController extends AbstractController
 
             return $this->redirectToRoute('admin_saison_index');
         }
-        foreach ($saisons as $saison) {
-            if ($saison->getId() == $id) {
-                $this->addFlash('success', sprintf('La saison %s est maintenant affichée sur le site.', $saison->getNom()));
-            }
-            if ($saison->getId()==$id){
-                $saison->setFavori(1);
-                }else{
-                $saison->setFavori(0);
-            }
-            $em->persist($saison);
-            $em->flush();
-            $cache->delete('saisons_all');
+        if ($choisie === null) {
+            $this->addFlash('error', 'Cette saison n\'existe plus. Rien n\'a été modifié.');
+
+            return $this->redirectToRoute('admin_saison_index');
         }
+        $changement = !$choisie->getFavori();
+        // Même transaction : l'effacement annoncé (D60) ne peut pas être perdu si la saison change sans lui
+        $em->wrapInTransaction(function () use ($saisons, $id, $em, $fermetures, $changement): void {
+            foreach ($saisons as $saison) {
+                $saison->setFavori($saison->getId() == $id ? 1 : 0);
+            }
+            $em->flush();
+            if ($changement) {
+                $fermetures->effacerMotifsEtAuteursTermines();
+            }
+        });
+        $cache->delete('saisons_all');
+        $this->addFlash('success', sprintf('« %s » est maintenant affichée sur le site.', $choisie->getNom()));
+
         return $this->redirectToRoute('admin_saison_index');
     }
 

@@ -14,7 +14,7 @@ use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Mise en place d'une saison validée (docs/wizard-saison/ecrans-mise-en-place.md, D35 à D39) : 7 Poules, 8 Journées,
+ * Mise en place d'une saison validée (docs/wizard-saison/archive/ecrans-mise-en-place.md, D35 à D39) : 7 Poules, 8 Journées,
  * puis 9 Matchs. Chaque action enregistre tout de suite ; « aller » ne fait que naviguer.
  */
 #[IsGranted('ROLE_ADMIN')]

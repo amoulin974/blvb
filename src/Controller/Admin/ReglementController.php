@@ -21,7 +21,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
  * Page d'édition du règlement d'une saison (docs/wizard-saison/decisions.md, D55 à D59 ; maquettes
- * reglement-maquettes-r4.md) : éditeur visuel (assets/controllers/reglement_editeur_controller.js), aperçu du texte non
+ * archive/reglement-maquettes-r4.md) : éditeur visuel (assets/controllers/reglement_editeur_controller.js), aperçu du texte non
  * enregistré, éléments calculés, images, historique et restauration. Admins seulement.
  */
 #[IsGranted('ROLE_ADMIN')]

@@ -308,11 +308,8 @@ final class Elimination implements GenerateurFormat
             if ($lieu !== null) {
                 $match->setLieu($lieu);
             }
-            $creneau = $lieu?->getCreneaux()->first() ?: null;
             $debut = $match->getJournee()->getDateDebut();
-            $match->setDate($creneau
-                ? DateMatch::calculer($debut, $creneau->getJourSemaine(), $creneau->getHeureDebut())
-                : $debut->setTime(20, 0));
+            $match->setDate(($lieu ? DateMatch::premierCreneauOuvert($lieu, $lieu->getCreneaux(), $debut) : null) ?? $debut->setTime(20, 0));
         }
 
         $this->em->flush();

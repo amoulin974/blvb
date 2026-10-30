@@ -31,7 +31,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 use Symfony\Contracts\Cache\CacheInterface;
 
 /**
- * Wizard de création d'une saison (docs/wizard-saison/ecrans.md, D29) : 1 Départ, 2 Saison, 3 Phases, 4 Passages,
+ * Wizard de création d'une saison (docs/wizard-saison/archive/ecrans.md, D29) : 1 Départ, 2 Saison, 3 Phases, 4 Passages,
  * 5 Classement, 6 Vérification. La saison est un brouillon dès l'étape 1 ; chaque changement d'étape enregistre.
  */
 #[IsGranted('ROLE_ADMIN')]

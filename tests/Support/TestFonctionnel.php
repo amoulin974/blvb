@@ -23,6 +23,7 @@ abstract class TestFonctionnel extends WebTestCase
     {
         // Le client doit être créé avant tout accès à la base (il démarre le noyau)
         $this->client = static::createClient();
+        self::getContainer()->get('connexions.cache')->clear(); // essais de connexion des tests précédents
         ChampionnatDeTest::load();
     }
 

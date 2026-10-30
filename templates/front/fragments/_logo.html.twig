@@ -1,3 +1,7 @@
+{% set logoEnvoye = parametres_site().logo %}
+{% if logoEnvoye %}
+    <img src="{{ asset('uploads/site/' ~ logoEnvoye) }}" alt="BLVB – Championnat basque landais de volley-ball" class="{{ class|default('h-8 w-auto') }} max-w-48 min-w-0 object-contain">
+{% else %}
 {# Monogramme BLVB (direction D) pour fond marine : lettres blanches, V jaune ballon (filet et vague), ballon blanc.
    Le texte utilise la police Saira Condensed chargée par app.css. #}
 <svg viewBox="0 0 212 96" class="{{ class|default('h-8 w-auto') }}" role="img" aria-label="BLVB – Championnat basque landais de volley-ball">
@@ -6,3 +10,4 @@
     <circle cx="127" cy="10" r="9" fill="#FFFFFF"/>
     <text x="167" y="84" style="font-family: var(--font-logo)" font-weight="800" font-size="96" fill="#FFFFFF">B</text>
 </svg>
+{% endif %}

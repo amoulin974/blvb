@@ -1,7 +1,7 @@
 {% extends 'base_admin.html.twig' %}
 {% import 'admin/_icones.html.twig' as icone %}
 
-{# Mise en place, étape « Poules » (docs/wizard-saison/ecrans-mise-en-place.md, §7). Variables : saison, phase, phases,
+{# Mise en place, étape « Poules » (docs/wizard-saison/archive/ecrans-mise-en-place.md, §7). Variables : saison, phase, phases,
    etat (CompositionPoules::etat). Chaque action est un envoi du formulaire unique qui enregistre et réaffiche l'étape. #}
 {% set nb_a_placer = etat.aPlacer|length %}
 {% block title %}Étape 7 sur 9 : Poules · {{ saison.nom }}{% endblock %}

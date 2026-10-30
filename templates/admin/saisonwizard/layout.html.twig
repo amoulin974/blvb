@@ -1,7 +1,7 @@
 {% extends 'base_admin.html.twig' %}
 {% import 'admin/_icones.html.twig' as icone %}
 
-{# Wizard de création d'une saison (docs/wizard-saison/ecrans.md). Variables : etapes (stepper), etape (numéro courant),
+{# Wizard de création d'une saison (docs/wizard-saison/archive/ecrans.md). Variables : etapes (stepper), etape (numéro courant),
    saison (brouillon, absent à l'étape 1 d'une nouvelle saison). Le formulaire de chaque étape porte l'id « wizard-form » :
    les boutons du stepper et de la barre du bas lui sont rattachés (attribut form) et enregistrent avant de changer d'étape. #}
 {% set etape_courante = etapes|filter(e => e.etat == 'en cours')|first %}

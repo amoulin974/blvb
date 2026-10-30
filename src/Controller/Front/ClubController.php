@@ -3,11 +3,16 @@
 namespace App\Controller\Front;
 
 use App\Entity\Club;
+use App\Entity\User;
+use App\Entity\FermetureGymnase;
+use App\Form\FermetureGymnaseType;
 use App\Form\Front\ClubFicheType;
 use App\Repository\ClubRepository;
+use App\Repository\FermetureGymnaseRepository;
 use App\Repository\SaisonRepository;
 use App\Security\ClubVoter;
 use App\Service\ClubImageService;
+use App\Service\FermetureGymnaseService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -75,5 +80,66 @@ final class ClubController extends AbstractController
             'club' => $club,
             'form' => $form,
         ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+    }
+
+    /**
+     * Fermetures des gymnases du club (D60). Un match programmé pendant la période empêche le responsable d'enregistrer :
+     * il écrit aux administrateurs, qui peuvent enregistrer malgré le match puis le replacer.
+     */
+    #[Route('/{id}/fermetures', name: 'fermetures', requirements: ['id' => '\d+'], methods: ['GET', 'POST'])]
+    #[IsGranted(ClubVoter::MODIFIER, subject: 'club')]
+    public function fermetures(Request $request, Club $club, EntityManagerInterface $entityManager, FermetureGymnaseRepository $fermetures, FermetureGymnaseService $service): Response
+    {
+        $fermeture = new FermetureGymnase();
+        $form = $this->createForm(FermetureGymnaseType::class, $fermeture, ['lieux' => $club->getLieux()->toArray()]);
+        $form->handleRequest($request);
+
+        $matchsConcernes = [];
+        $emailsAdmins = [];
+        $contactAdmins = null;
+        if ($form->isSubmitted() && $form->isValid()) {
+            $matchsConcernes = $service->matchsConcernes($fermeture);
+            if ($matchsConcernes === [] || $this->isGranted('ROLE_ADMIN')) {
+                $fermeture->setCreePar($this->getUser() instanceof User ? $this->getUser() : null);
+                $entityManager->persist($fermeture);
+                $entityManager->flush();
+                $this->addFlash('success', sprintf('La fermeture de %s est enregistrée.', $fermeture->getLieu()->getNom()));
+                if ($matchsConcernes !== []) {
+                    $this->addFlash('warning', $service->avertissementAdmin($matchsConcernes));
+                }
+
+                return $this->redirectToRoute('front_club_fermetures', ['id' => $club->getId()], Response::HTTP_SEE_OTHER);
+            }
+            $emailsAdmins = $service->emailsContact();
+            $contactAdmins = $service->lienContactAdmins($fermeture, $matchsConcernes, $emailsAdmins);
+        }
+
+        return $this->render('front/club/fermetures.html.twig', [
+            'club' => $club,
+            'form' => $form,
+            'fermetures' => $fermetures->enCoursOuAVenir($club->getLieux()),
+            'matchsConcernes' => $matchsConcernes,
+            'contactAdmins' => $contactAdmins,
+            'emailsAdmins' => $emailsAdmins,
+        ], new Response(status: $form->isSubmitted() ? Response::HTTP_UNPROCESSABLE_ENTITY : Response::HTTP_OK));
+    }
+
+    /** Tout responsable du club retire une fermeture d'un gymnase rattaché au club, même saisie par un autre club. */
+    #[Route('/{id}/fermetures/{fermeture}/supprimer', name: 'fermeture_supprimer', requirements: ['id' => '\d+', 'fermeture' => '\d+'], methods: ['POST'])]
+    #[IsGranted(ClubVoter::MODIFIER, subject: 'club')]
+    public function supprimerFermeture(Request $request, Club $club, FermetureGymnase $fermeture, EntityManagerInterface $entityManager): Response
+    {
+        if (!$club->getLieux()->contains($fermeture->getLieu())) {
+            throw $this->createNotFoundException('Ce gymnase n\'est pas rattaché à ce club.');
+        }
+        if ($this->isCsrfTokenValid('supprimer_fermeture'.$fermeture->getId(), $request->getPayload()->getString('_token'))) {
+            $entityManager->remove($fermeture);
+            $entityManager->flush();
+            $this->addFlash('success', 'La fermeture est retirée.');
+        } else {
+            $this->addFlash('warning', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        }
+
+        return $this->redirectToRoute('front_club_fermetures', ['id' => $club->getId()], Response::HTTP_SEE_OTHER);
     }
 }

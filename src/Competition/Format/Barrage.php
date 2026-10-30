@@ -88,11 +88,8 @@ final class Barrage implements GenerateurFormat
         if ($lieu !== null) {
             $partie->setLieu($lieu);
         }
-        $creneau = $lieu?->getCreneaux()->first() ?: null;
         $debut = $journees[0]->getDateDebut();
-        $partie->setDate($creneau
-            ? DateMatch::calculer($debut, $creneau->getJourSemaine(), $creneau->getHeureDebut())
-            : $debut->setTime(20, 0));
+        $partie->setDate(($lieu ? DateMatch::premierCreneauOuvert($lieu, $lieu->getCreneaux(), $debut) : null) ?? $debut->setTime(20, 0));
 
         $this->em->persist($partie);
         $this->em->flush();

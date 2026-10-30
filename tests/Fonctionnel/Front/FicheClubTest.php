@@ -379,9 +379,9 @@ final class FicheClubTest extends TestFonctionnel
 
         self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('body', 'Mes clubs (responsable)');
-        $lien = $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club')->getId().'"]');
+        // Le menu du compte contient aussi un lien « Mon club » vers cette fiche
+        $lien = $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club')->getId().'"]:contains("Club test A1-B1 (CTA)")');
         self::assertCount(1, $lien);
-        self::assertStringContainsString('Club test A1-B1 (CTA)', $lien->text());
         self::assertCount(0, $crawler->filter('a[href="/club/'.ChampionnatDeTest::get('club.voisin')->getId().'"]'), 'pas les autres clubs');
 
         $this->connecter('cap.a1');

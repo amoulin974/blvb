@@ -8,7 +8,7 @@
             <a href="{{ retour.url }}" class="inline-flex items-center gap-1 text-sm text-(--color-base-content)/80 hover:text-(--color-primary) hover:underline mb-1">{{ icone.i('retour') }} {{ retour.label }}</a>
         {% endif %}
         <h1 class="leading-tight">{{ titre }}</h1>
-        {% if sous_titre is defined and sous_titre %}<p class="mt-1 text-(--color-base-content)/80">{{ sous_titre }}</p>{% endif %}
+        {% if sous_titre is defined and sous_titre %}<p class="mt-1 max-w-3xl text-(--color-base-content)/80">{{ sous_titre }}</p>{% endif %}
     </div>
     {% if actions is defined and actions|length > 0 %}
         <div class="flex flex-wrap items-center gap-2">

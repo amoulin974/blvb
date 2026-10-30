@@ -17,7 +17,7 @@ use Twig\Environment;
 /**
  * [schema_phases] : phases dans l'ordre, sorties de chaque poule (« 1er et 2e : montent en poule A »), composition des
  * barrages, tableaux des phases finales (tours, matchs, places, sans noms d'équipes) ; D58, maquettes relues par
- * l'ergonome (reglement-maquettes.md).
+ * l'ergonome (archive/reglement-maquettes.md).
  */
 final class SchemaPhases extends BlocParPhase
 {

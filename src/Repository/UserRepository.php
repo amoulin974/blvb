@@ -20,6 +20,18 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
     }
 
     /**
+     * Adresses de connexion des administrateurs.
+     *
+     * @return list<string>
+     */
+    public function emailsAdmins(): array
+    {
+        return $this->getEntityManager()->getConnection()->fetchFirstColumn(
+            'SELECT email FROM `user` WHERE JSON_CONTAINS(roles, \'"ROLE_ADMIN"\') ORDER BY email'
+        );
+    }
+
+    /**
      * Used to upgrade (rehash) the user's password automatically over time.
      */
     public function upgradePassword(PasswordAuthenticatedUserInterface $user, string $newHashedPassword): void

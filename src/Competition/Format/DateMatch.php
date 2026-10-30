@@ -2,6 +2,8 @@
 
 namespace App\Competition\Format;
 
+use App\Entity\Creneau;
+use App\Entity\Lieu;
 use DateTimeImmutable;
 use DateTimeInterface;
 
@@ -51,5 +53,25 @@ final class DateMatch
             (int) $heure->format('H'),
             (int) $heure->format('i')
         );
+    }
+
+    /**
+     * Date du premier de ces créneaux où le gymnase est ouvert (D60) ; si tous tombent pendant une fermeture, date du
+     * premier : le match est alors signalé (PartieService::phraseFermeture). Null s'il n'y a aucun créneau.
+     *
+     * @param iterable<Creneau> $creneaux dans l'ordre de préférence
+     */
+    public static function premierCreneauOuvert(Lieu $lieu, iterable $creneaux, DateTimeImmutable $dateDebut): ?DateTimeImmutable
+    {
+        $premiere = null;
+        foreach ($creneaux as $creneau) {
+            $date = self::calculer($dateDebut, (string) $creneau->getJourSemaine(), $creneau->getHeureDebut());
+            if ($lieu->fermeLe($date) === null) {
+                return $date;
+            }
+            $premiere ??= $date;
+        }
+
+        return $premiere;
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\Equipe;
+use App\Entity\Lieu;
 use App\Entity\Saison;
 use App\Entity\Partie;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
@@ -16,6 +17,27 @@ class PartieRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, Partie::class);
+    }
+
+    /**
+     * Matchs sans score de ce gymnase entre ces deux jours, inclus (D60).
+     *
+     * @return list<Partie>
+     */
+    public function matchsProgrammes(Lieu $lieu, \DateTimeImmutable $premierJour, \DateTimeImmutable $dernierJour): array
+    {
+        return $this->createQueryBuilder('p')
+            ->andWhere('p.lieu = :lieu')
+            ->andWhere('p.date >= :debut')
+            ->andWhere('p.date < :lendemain')
+            ->andWhere('p.nb_set_gagnant_reception IS NULL')
+            ->andWhere('p.nb_set_gagnant_deplacement IS NULL')
+            ->setParameter('lieu', $lieu)
+            ->setParameter('debut', $premierJour->setTime(0, 0))
+            ->setParameter('lendemain', $dernierJour->setTime(0, 0)->modify('+1 day'))
+            ->orderBy('p.date', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
     public function getMatchsParLieuEtDatePourSemaine(array  $journeesIds): array
     {

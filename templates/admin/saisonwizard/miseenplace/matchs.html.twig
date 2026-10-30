@@ -1,7 +1,7 @@
 {% extends 'base_admin.html.twig' %}
 {% import 'admin/_icones.html.twig' as icone %}
 
-{# Mise en place, étape « Matchs » (docs/wizard-saison/ecrans-mise-en-place.md, §15 à §21). Variables : saison, phase,
+{# Mise en place, étape « Matchs » (docs/wizard-saison/archive/ecrans-mise-en-place.md, §15 à §21). Variables : saison, phase,
    phases, etat (MiseEnPlaceMatchs::etat). Chaque action est un envoi du formulaire unique qui enregistre et réaffiche
    l'étape ; la génération passe par la fenêtre de confirmation partagée (qui annonce l'attente du calcul). #}
 {% block title %}Étape 9 sur 9 : Matchs · {{ saison.nom }}{% endblock %}
@@ -108,6 +108,7 @@
                         <li>
                             {% if p.ancre %}<a class="underline" href="#{{ p.ancre }}">{{ p.texte }}</a>{% else %}{{ p.texte }}{% endif %}
                             {% if p.lien == 'equipes' %} <a class="underline" href="{{ path('admin_equipe_index') }}">Voir les équipes</a>{% endif %}
+                            {% if p.partie is defined %} <a class="underline" href="{{ path('admin_partie_edit', {id: p.partie}) }}">Modifier le match</a>{% endif %}
                         </li>
                     {% endfor %}
                 </ul>

@@ -180,6 +180,21 @@ Ainsi, une nouvelle route admin oubliée est testée sans écrire de test. Une l
 
 **SEC-10 — Déconnexion** ✅ : `/logout` termine la session ; une page admin redemande la connexion.
 
+**LIM-01 à LIM-11 — Essais de connexion limités** ✅ *`Unitaire/Security/LimiteurConnexionTest`, `Securite/LimiteConnexionTest`* (D61) :
+- **LIM-01** : attente de 30 s au seuil, doublée à chaque échec, 24 h au plus, sans débordement ; durée écrite en secondes, minutes ou heures, arrondie au-dessus.
+- **LIM-02** : pas d'attente pour les 2 premiers échecs ; après le 3e, même le bon mot de passe est refusé pendant 30 s, puis accepté.
+- **LIM-03** : l'attente double à chaque échec ; un essai pendant l'attente ne la prolonge pas et ne compte pas.
+- **LIM-04** : une connexion réussie remet le compteur du compte à zéro.
+- **LIM-05** : le blocage ne touche ni un autre compte sur la même IP ni le même compte depuis une autre IP ; la casse de l'adresse ne change rien.
+- **LIM-06** : une adresse inconnue est limitée comme une adresse existante.
+- **LIM-07** : 20 échecs sur des comptes différents bloquent l'IP sans toucher les autres ; une connexion réussie après 19 échecs ne remet pas le compteur de l'IP à zéro.
+- **LIM-08** : en IPv6, les adresses d'un même /64 partagent leur compteur ; un autre /64 n'est pas touché.
+- **LIM-09** : changer son mot de passe par le lien reçu par e-mail lève l'attente du compte, même changé depuis une autre IP.
+- **LIM-10** : un essai refusé pour son jeton de sécurité ne compte pas.
+- **LIM-11** : désactivée (D62), aucun essai n'est compté ni bloqué, et une attente en cours ne s'applique plus.
+
+`TestFonctionnel` vide le pool `connexions.cache` avant chaque test : en test, ce pool est sur disque, un cache en mémoire étant vidé entre deux requêtes.
+
 **SEC-11 — Fiche du club** `/club/{id}/modifier` (voter `CLUB_MODIFIER`) ✅ *`FicheClubTest`* :
 
 | Profil | Attendu |
@@ -390,6 +405,7 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 **GYM-03** ✅ — Créneau non prioritaire alors qu'un autre jour l'est → alerte priorité.
 **GYM-04** ✅ — Date pendant des vacances scolaires (indisponibilité) avec match → alerte vacances ; sans match → simple mention.
 **GYM-05 (fonctionnel)** ✅ — La page `/calendrierlieu` affiche aussi les dates de créneau **libres** de la phase, et le filtre « Seulement les dates à problème » s'appuie sur `data-alerte`.
+**GYM-06 (fonctionnel)** ✅ — Pendant une fermeture du gymnase (D60), une date libre affiche « Gymnase fermé » et son motif, échappé, et aucun terrain libre, sans être retenue par le filtre, même sur un créneau non prioritaire ou avec le motif « 0 » ; un match sans score est signalé « à déplacer » et retenu par le filtre, pas un match joué ; le motif disparaît une fois la date passée ; un motif effacé (FGY-17) laisse « Gymnase fermé » ; la fermeture d'un autre gymnase et les jours voisins ne changent rien.
 
 ### 4.12 « Mon équipe » et fonctions Twig — `Fonctionnel/Front/MonEquipeTest`, `Integration/Twig/SaisonCouranteTest` (P2)
 
@@ -555,12 +571,49 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **RGL-10** : rangs en mots publics, avec ou sans effectif, et en sujet de phrase (« le 7e », « l'avant-dernier ») (« du 2e au 6e », « les 2 derniers », « tous sauf les 2 derniers », « à partir du 3e, sauf les 2 derniers », « toutes les équipes ») ; énumération, heure, période, date en français.
 - **RGL-11** : déroulé d'un tableau de 9, 6, 4 et 2 équipes : barrages numérotés (un seul : non numéroté), exemptés, placement standard (1-8, 4-5, 2-7, 3-6), renvois « vainqueur du quart de finale 1 », petite finale (« perdant de la demi-finale 1 »).
 
-### 4.18 Conditions d'utilisation — `Fonctionnel/Front/ConditionsTest` (P2, branche `conditions-utilisation-v2`)
+### 4.20 Conditions d'utilisation — `Fonctionnel/Front/ConditionsTest` (P2, branche `conditions-utilisation-v2`)
 
 **CGU-01** ✅ : la page `/conditions-utilisation` est publique et liée depuis le pied de page de toutes les pages ; sections mentions légales (hébergeur OVH SAS et son adresse), utilisation, données personnelles (CNIL), cookies (`PHPSESSID`). (L'inscription libre étant fermée, le formulaire d'inscription n'est plus affiché : pas de lien à y tester.)
+**CGU-02** ✅ : l'adresse de contact des paramètres du site (D62) est reprise dans les mentions légales et les droits ; sans elle, « À compléter » ; la page décrit les fermetures de gymnase et leur conservation.
 Les informations sur l'éditeur (`editeur` dans `templates/front/conditions.html.twig`) sont à renseigner avant la mise en production : tant qu'elles valent `null`, la page affiche « À compléter » (contrôle de l'agent `deploiement`, point 10).
 
 ---
+
+### 4.18 Fermetures de gymnase — `Fonctionnel/Front/FermetureGymnaseTest` (P1, D60)
+
+- **FGY-01** ✅ : le menu d'un responsable mène à son club par « Mon club », la fiche aux fermetures ; pas de lien pour un visiteur ni pour un capitaine.
+- **FGY-02** ✅ : seuls l'admin et les responsables du club ouvrent la page ; visiteur renvoyé à la connexion ; capitaine et responsable d'un autre club refusés (403).
+- **FGY-03** ✅ : sans match pendant la période, la fermeture est enregistrée et listée.
+- **FGY-04** ✅ : un match sans score, premier ou dernier jour compris, empêche le responsable d'enregistrer (422) ; le match est cité, avec un e-mail prérempli aux admins ; un motif contenant `&bcc=` reste dans le corps du message.
+- **FGY-05** ✅ : ne bloquent pas : un match joué, un match d'un autre gymnase, un match hors de la période.
+- **FGY-06** ✅ : l'admin enregistre malgré un match programmé, qui lui est signalé (page du club et page du gymnase).
+- **FGY-07** ✅ : refus avec message : motif vide, dates inversées, période terminée, plus de 2 ans, fin à plus de 5 ans, caractères de contrôle ou de format invisibles ; refus aussi pour un gymnase d'un autre club forcé dans le formulaire et sans jeton CSRF.
+- **FGY-08** ✅ : retrait par un responsable du gymnase ; jeton requis ; 404 pour un gymnase hors du club ; 403 par l'URL d'un autre club.
+- **FGY-09** ✅ : un match d'une saison en préparation bloque le responsable sans dévoiler ses équipes, ni dans la page ni dans l'e-mail.
+- **FGY-10** ✅ : l'adresse de contact des paramètres (D62) remplace celles des admins dans le lien et le message de refus ; sans elle, FGY-04 reste vrai.
+- **FGY-11** ✅ : l'auteur d'une fermeture est enregistré ; l'admin le voit, pas le responsable ; supprimer son compte par la page d'admin garde la fermeture, sans auteur ; l'adresse n'apparaît pas sur le calendrier public.
+- **FGY-12** ✅ *(`Integration/Service/PlacementFermeturesTest`, FGY-12 à FGY-16)* : le placement automatique reçoit chez l'adversaire plutôt que dans un gymnase fermé, sans rien signaler.
+- **FGY-13** ✅ : sans autre solution, le match passe au créneau suivant du gymnase, la même semaine.
+- **FGY-14** ✅ : sans aucune solution, le match reste placé, et il est signalé dans le rapport et sur la mise en place de la phase, tant qu'il n'a pas de score.
+- **FGY-15** ✅ : replacer les matchs à venir évite une fermeture ajoutée après la génération, sans toucher aux matchs joués.
+- **FGY-16** ✅ : un barrage (format sans optimiseur) prend le créneau suivant ouvert.
+- **FGY-17** ✅ *(`FermetureGymnaseTest`)* : afficher une autre saison efface le motif et l'auteur des fermetures terminées, garde leurs dates, et ne touche pas aux fermetures en cours ou à venir ; une saison qui n'existe plus ne change rien.
+
+`Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
+
+### 4.19 Paramètres du site — `Fonctionnel/Admin/ParametresSiteTest`, `Unitaire/Security/VerificationConnexionTest` (P1, D62)
+
+- **PAR-01** ✅ : seuls les admins ouvrent la page et ses actions ; visiteur renvoyé à la connexion, capitaine refusé (403) ; le menu y mène.
+- **PAR-02** ✅ : au départ, limitation désactivée, activation non proposée ; le tableau de bord le signale tant qu'elle n'est pas activée.
+- **PAR-03** ✅ : contrôles de la vérification : proxy bien déclaré ; proxy non déclaré, à adresse privée ou publique, un seul proxy déclaré sur deux ; toutes les adresses déclarées ; `REMOTE_ADDR`, `::/0` et `0::/0` refusés, réseaux privés acceptés ; accès direct, en-tête écrasé et proxy privé d'entreprise acceptés.
+- **PAR-04** ✅ : une vérification réussie est enregistrée, affichée pendant une heure, et ouvre l'activation ; une vérification échouée efface la précédente.
+- **PAR-05** ✅ : activation après vérification et confirmation, compteurs passés effacés ; refus sans la case, après une heure, ou depuis une adresse privée ; réactiver depuis un onglet ouvert n'efface pas les compteurs en cours ; désactivation sans vérification.
+- **PAR-06** ✅ : jeton de sécurité refusé pour chaque action et pour le formulaire de contact.
+- **PAR-07** ✅ : la commande `app:connexion-limitee:desactiver` coupe la limitation, et dit si elle l'était déjà.
+- **PAR-08** ✅ : adresse de contact en pied de page ; la vider l'en retire ; adresse invalide ou avec `?bcc=` refusée.
+- **PAR-09** ✅ : logo PNG ou WebP dans l'en-tête du site et de l'admin, ancien fichier supprimé ; SVG, faux PNG, fichier trop lourd ou trop grand, aucun fichier : refusés ; retour au logo d'origine.
+
+`Securite/LimiteConnexionTest` active la limitation dans son `setUp` (elle est désactivée par défaut).
 
 ## 5. Analyse statique et qualité du code
 
@@ -652,6 +705,10 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Règlement par saison** (en cours) | RGL-01 à RGL-03 (§4.17), CPS-04 : étape R1, tables `reglement` et `reglement_version` (migration `Version20261020164942`), nettoyage du HTML, versions, copie avec la saison ; RGL-04 à RGL-11 : étape R2, codes courts, ancres, codes inapplicables, quatre éléments calculés ; RGL-12 à RGL-15 : étape R3, page publique, retour du sélecteur de saison ; RGL-16 à RGL-22 : étape R4, page d'édition ; RGL-23 : étape R5, reprise du règlement 2025 (`app:reglement:importer`) | 617 tests verts + 2 lents (branche `reglement`) | R1 à R4 le 20/10/2026, R5 le 21/10/2026 |
 | **Expéditeur des e-mails** ✅ | MAI-01 : un seul expéditeur, `blvb@vblc.fr` (anciennement `admin@blvb.fr` et `tech@vblc.fr`, refusés par le SMTP d'OVH) | 259 tests verts + 2 lents (`main`) | fait le 16/10/2026 |
 | **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
+| **Fermetures de gymnase, lot 1** ✅ | FGY-01 à FGY-09 (§4.18) : saisie par les responsables de club et les admins, refus si un match est programmé | 626 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
+| **Essais de connexion limités** ✅ | LIM-01 à LIM-10 (§4.1) : attente qui double à chaque échec, par compte et IP, puis par IP | 649 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
+| **Fermetures de gymnase, lot 2** ✅ | FGY-11 à FGY-16 (§4.18) : auteur de la fermeture, placement automatique qui évite les gymnases fermés, signalement | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
+| **Paramètres du site** ✅ | PAR-01 à PAR-09 (§4.19), LIM-11, FGY-10 : connexion limitée activée après vérification, adresse de contact, logo | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

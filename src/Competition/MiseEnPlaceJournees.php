@@ -13,7 +13,7 @@ use App\Reglement\Texte;
 use Doctrine\ORM\EntityManagerInterface;
 
 /**
- * Journées d'une phase, étape « Journées » de la mise en place du wizard (docs/wizard-saison/ecrans-mise-en-place.md,
+ * Journées d'une phase, étape « Journées » de la mise en place du wizard (docs/wizard-saison/archive/ecrans-mise-en-place.md,
  * §8 à §14, D35 à D39) : état affiché (journées de chaque poule, nombre prévu pour l'effectif, problèmes) et actions
  * (générer les journées manquantes, générer ou régénérer celles d'une poule). La création elle-même est celle de
  * JourneeService, donc du générateur du format de la phase.

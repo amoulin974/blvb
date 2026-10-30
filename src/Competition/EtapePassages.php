@@ -10,7 +10,7 @@ use App\Enum\PhaseType;
 
 /**
  * Étape 4 du wizard (Passages) : prépare l'affichage de chaque transition « phase → phase suivante » et applique la
- * saisie (docs/wizard-saison/ecrans.md, D29). Une poule est saisie en mode simple (montées, descentes, autres :
+ * saisie (docs/wizard-saison/archive/ecrans.md, D29). Une poule est saisie en mode simple (montées, descentes, autres :
  * PassagesSimples) ou en mode détaillé (une ligne par règle : du rang… au rang… → destination).
  *
  * Champs envoyés, par poule source (identifiant) : p[id][mode] = simple|detail ; mode simple : montee, versMontee,

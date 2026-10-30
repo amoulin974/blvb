@@ -57,7 +57,7 @@ final class BrouillonSaisonTest extends TestFonctionnel
         $id = $this->brouillon();
         $this->connecter('admin');
         $crawler = $this->client->request('GET', '/admin/saison/saison');
-        self::assertCount(0, $crawler->filter('form[action$="/admin/saison/'.$id.'/favorite/"]'), 'le bouton « Afficher sur le site » n\'est pas proposé');
+        self::assertCount(0, $crawler->filter('[data-confirmation-action-param$="/admin/saison/'.$id.'/favorite/"]'), 'le bouton « Afficher sur le site » n\'est pas proposé');
         self::assertSelectorTextContains('body', 'Brouillon · étape');
         // Requête forgée par un administrateur : jeton valide de la session
         $requete = $this->client->getRequest();

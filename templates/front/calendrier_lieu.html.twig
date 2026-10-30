@@ -28,7 +28,7 @@
                                 {% endif %}
                             {% endfor %}
                         </select>
-                        {# Pour les responsables de gymnase : ne garder que les dates en surcharge ou hors créneau #}
+                        {# Pour les responsables de gymnase : ne garder que les dates à problème (surcharge, hors créneau, priorité, vacances, fermeture) #}
                         <label class="flex items-center gap-2 cursor-pointer md:ml-auto py-1">
                             <input type="checkbox" id="alertesSeules_{{phase.id}}" class="checkbox checkbox-sm" onchange="filterLieu({{phase.id}})">
                             Seulement les dates à problème
@@ -42,7 +42,7 @@
                         {# On vérifie s'il y a des matchs pour ce lieu et cette phase #}
                         {% if lieu.partiesByDate[phase.id] is defined %}
 
-                            {% set aAlerte = lieu.analysesByDate[phase.id]|filter(a => a.alerte_horscrenau or a.alerte_capacite or a.alerte_priorite or a.alerte_vacances)|length > 0 %}
+                            {% set aAlerte = lieu.analysesByDate[phase.id]|filter(a => a.alerte_horscrenau or a.alerte_capacite or a.alerte_priorite or a.alerte_vacances or a.alerte_fermeture)|length > 0 %}
                             <div class="pt-6 mt-4 border-t border-base-300" data-idphase="{{ phase.id }}" data-lieu="{{ lieu.id }}" data-a-alerte="{{ aAlerte ? 1 : 0 }}">
 
                                 {# En-tête du gymnase : nom, adresse, créneaux #}

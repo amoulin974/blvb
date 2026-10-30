@@ -12,7 +12,7 @@ use Doctrine\ORM\EntityManagerInterface;
 
 /**
  * Composition des poules d'une phase, étape « Poules » de la mise en place du wizard (docs/wizard-saison/
- * ecrans-mise-en-place.md, D35 à D38) : état affiché (poules, origine de chaque équipe, équipes à placer, problèmes) et
+ * archive/ecrans-mise-en-place.md, D35 à D38) : état affiché (poules, origine de chaque équipe, équipes à placer, problèmes) et
  * actions (déplacer, retirer, placer, ajouter).
  *
  * Une équipe n'a pas de lien direct avec une saison : elle « est dans la saison » parce qu'elle figure dans une poule.

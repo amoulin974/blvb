@@ -16,7 +16,10 @@
                     <h1 class="text-3xl md:text-4xl uppercase tracking-wide">{{ club.nom }}</h1>
                 </div>
                 {% if is_granted('CLUB_MODIFIER', club) %}
-                    <a class="btn btn-outline btn-primary md:btn-sm" href="{{ path('front_club_edit', {id: club.id}) }}">Modifier la fiche du club</a>
+                    <div class="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap">
+                        <a class="btn btn-outline btn-primary md:btn-sm" href="{{ path('front_club_edit', {id: club.id}) }}">Modifier la fiche du club</a>
+                        <a class="btn btn-outline btn-primary md:btn-sm" href="{{ path('front_club_fermetures', {id: club.id}) }}">Fermetures de gymnase</a>
+                    </div>
                 {% endif %}
             </div>
             <p class="mt-1"><span class="badge badge-outline" title="Abréviation, affichée après le nom des équipes">{{ club.nomCourt|upper }}</span></p>

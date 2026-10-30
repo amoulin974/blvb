@@ -30,9 +30,9 @@
 
 <header class="navbar bg-primary text-white min-h-14 px-2 lg:px-4 gap-2">
     <label for="admin-tiroir" aria-label="Ouvrir le menu" class="btn btn-square btn-ghost text-white lg:hidden">{{ icone.i('menu', 'size-6') }}</label>
-    <a href="{{ path('app_admin_dashboard') }}" class="flex items-center gap-3 no-underline">
+    <a href="{{ path('app_admin_dashboard') }}" class="flex min-w-0 items-center gap-3 no-underline">
         {{ include('front/fragments/_logo.html.twig', {class: 'h-7 w-auto'}) }}
-        <span class="font-display text-lg font-semibold uppercase tracking-wider text-white/90 border-l border-white/30 pl-3">Administration</span>
+        <span class="shrink-0 font-display text-lg font-semibold uppercase tracking-wider text-white/90 border-l border-white/30 pl-3">Administration</span>
     </a>
     <div class="flex-1"></div>
     <a href="{{ path('front_index') }}" class="btn btn-ghost btn-sm text-white hidden sm:inline-flex">{{ icone.i('externe') }} Voir le site</a>
@@ -106,7 +106,9 @@
                 {% endfor %}
             </ul>
 
-            <ul class="menu w-full p-0 mt-3">
+            <ul class="menu w-full p-0 mt-3 gap-0.5">
+                {% set actif = route starts with 'admin_parametres_' %}
+                <li><a href="{{ path('admin_parametres_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('reglages', 'size-5') }} Paramètres du site</a></li>
                 <li>
                     <details {{ outilsActifs ? 'open' }}>
                         <summary class="{{ lien }}">{{ icone.i('outils', 'size-5') }} Outils techniques</summary>

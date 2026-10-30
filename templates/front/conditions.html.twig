@@ -11,7 +11,7 @@
      nom                    ex. « Association Championnat Basco Landais Volley-Ball »
      statut                 ex. « association loi 1901, RNA W640000000 »
      adresse                adresse du siège
-     contact                adresse e-mail de contact, aussi utilisée pour les demandes liées aux données personnelles
+     contact                adresse de contact des paramètres du site (D62), aussi utilisée pour les demandes liées aux données personnelles
      directeur_publication  nom de la personne responsable de la publication
    Mettre à jour « mise_a_jour » à chaque modification du contenu.
 #}
@@ -19,10 +19,10 @@
     nom: null,
     statut: null,
     adresse: null,
-    contact: null,
+    contact: parametres_site().adresseContact,
     directeur_publication: null,
 } %}
-{% set mise_a_jour = '11 octobre 2026' %}
+{% set mise_a_jour = '31 octobre 2026' %}
 
 {% macro valeur(texte, libelle) %}
     {%- if texte -%}{{ texte }}{%- else -%}<mark class="bg-(--color-warning)/20 px-1 rounded">À compléter : {{ libelle }}</mark>{%- endif -%}
@@ -85,6 +85,11 @@
             en ajoutant un logo, ils garantissent que le club en a les droits. Les organisateurs peuvent retirer un contenu
             inexact ou inapproprié.
         </p>
+        <h3 class="text-lg font-semibold">Fermetures de gymnase</h3>
+        <p>
+            Le motif d'une fermeture de gymnase est public : il s'affiche sur le calendrier par gymnase. Il doit rester bref,
+            sans nom de personne ni coordonnées. Les organisateurs peuvent retirer une fermeture inexacte ou inappropriée.
+        </p>
         <h3 class="text-lg font-semibold">Coordonnées des joueurs</h3>
         <p>
             Les coordonnées affichées sur le site servent uniquement à l'organisation des matchs. Il est interdit de les
@@ -116,9 +121,9 @@
         <ul class="list-disc pl-5 space-y-1">
             <li><strong>Compte</strong> : adresse e-mail, prénom, nom, téléphone (facultatif), mot de passe (enregistré sous une forme chiffrée qui ne permet pas de le retrouver).</li>
             <li><strong>Fiche joueur</strong> : prénom, nom, adresse e-mail et téléphone, équipe(s) et rôle de capitaine pour chaque saison.</li>
-            <li><strong>Clubs</strong> : comptes désignés comme responsables d'un club.</li>
+            <li><strong>Clubs</strong> : comptes désignés comme responsables d'un club ; compte qui a saisi une fermeture de gymnase.</li>
             <li><strong>Vie du championnat</strong> : équipes, matchs, résultats et classements, conservés comme archives des saisons.</li>
-            <li><strong>Données techniques</strong> : adresse IP et pages consultées, enregistrées par le serveur dans ses journaux pour sa sécurité et son bon fonctionnement.</li>
+            <li><strong>Données techniques</strong> : adresse IP et pages consultées, enregistrées par le serveur dans ses journaux pour sa sécurité et son bon fonctionnement ; nombre d'essais de connexion ratés, par adresse saisie et par adresse IP, si la limitation des essais est activée. Adresses et IP y sont enregistrées sous forme d'empreinte, pas en clair.</li>
         </ul>
 
         <h3 class="text-lg font-semibold">Pourquoi</h3>
@@ -132,7 +137,7 @@
 
         <h3 class="text-lg font-semibold">Qui y a accès</h3>
         <ul class="list-disc pl-5 space-y-1">
-            <li>Les noms des équipes, les calendriers, les résultats, les classements et les fiches des clubs sont publics. Les noms des responsables de club ne sont pas publiés.</li>
+            <li>Les noms des équipes, les calendriers, les résultats, les classements, les fiches des clubs et le motif des fermetures de gymnase en cours ou à venir sont publics. Les noms des responsables de club ne sont pas publiés, ni le compte qui a saisi une fermeture, visible des seuls administrateurs.</li>
             <li>Les coordonnées du capitaine d'une équipe sont visibles par les capitaines de la même poule, les membres de l'équipe et les administrateurs.</li>
             <li>La composition d'une équipe, avec les coordonnées de ses joueurs, est visible par les membres de l'équipe et les administrateurs.</li>
             <li>Les administrateurs bénévoles du championnat accèdent à l'ensemble des données pour l'organiser.</li>
@@ -144,7 +149,10 @@
             Les données des comptes et des fiches joueurs sont conservées tant que la personne participe au championnat, puis
             {{ valeur(null, 'durée de conservation après la dernière saison jouée, ex. supprimées 3 ans après') }}.
             Les résultats et classements sont conservés comme archives du championnat. Les demandes de nouveau mot de passe
-            expirent au bout d'une heure.
+            expirent au bout d'une heure. Les essais de connexion ratés sont oubliés au plus tard 48 heures après le dernier essai.
+            Le motif d'une fermeture de gymnase et le compte qui l'a saisie sont conservés jusqu'au changement de saison affichée
+            sur le site qui suit la fin de la fermeture, puis effacés ; seules les dates restent. Le motif peut rester plus
+            longtemps dans les messageries, s'il a été envoyé par e-mail aux organisateurs.
         </p>
 
         <h3 class="text-lg font-semibold">Vos droits</h3>

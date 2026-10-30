@@ -1,0 +1,51 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Fermetures du gymnase {{ lieu.nom }}{% endblock %}
+
+{% block body %}
+    {% form_theme form 'admin/form/erreurs.html.twig' %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Fermetures du gymnase ' ~ lieu.nom,
+        sous_titre: 'Les matchs générés ou replacés automatiquement évitent ce gymnase pendant sa fermeture. Si c\'est impossible, le match y reste et il est signalé sur la mise en place de la phase. « Modifier le match » ne vérifie pas encore les fermetures.',
+        retour: {url: path('admin_lieu_index'), label: 'Gymnases'},
+    }) }}
+    <div class="admin-carte max-w-3xl">
+        <h2 class="text-lg">Indiquer une fermeture</h2>
+        {{ form_start(form, {'attr': {'class': 'mt-3 space-y-4'}}) }}
+        {{ form_row(form.motif) }}
+        <div class="grid gap-4 sm:grid-cols-2">
+            {{ form_row(form.dateDebut) }}
+            {{ form_row(form.dateFin) }}
+        </div>
+        <p class="text-sm text-(--color-base-content)/80">Si des matchs sont programmés pendant la période, la fermeture est quand même enregistrée et ces matchs vous sont signalés : replacez-les ensuite depuis la mise en place de la phase.</p>
+        <button class="btn btn-primary">Enregistrer la fermeture</button>
+        {{ form_end(form) }}
+    </div>
+    <div class="admin-carte max-w-3xl mt-4">
+        <h2 class="text-lg">Fermetures en cours et à venir</h2>
+        <ul class="mt-2 divide-y divide-(--color-base-300)">
+            {% for fermeture in fermetures %}
+                <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="min-w-0">
+                        <p class="wrap-anywhere">Du {{ fermeture.dateDebut|format_date('long', locale='fr') }} au {{ fermeture.dateFin|format_date('long', locale='fr') }} · {{ fermeture.motif }}</p>
+                        {% if fermeture.creePar %}
+                            <p class="mt-0.5 text-sm wrap-anywhere text-(--color-base-content)/80">Saisie par {% for morceau in fermeture.creePar.email|split('@') %}{% if not loop.first %}@<wbr>{% endif %}{{ morceau }}{% endfor %}</p>
+                        {% endif %}
+                    </div>
+                    {{ include('admin/_confirmation.html.twig', {
+                        action: path('admin_lieu_fermeture_supprimer', {id: lieu.id, fermeture: fermeture.id}),
+                        token: csrf_token('supprimer_fermeture' ~ fermeture.id),
+                        titre: 'Retirer la fermeture « ' ~ fermeture.motif ~ ' » ?',
+                        bouton: 'Retirer la fermeture',
+                        irreversible: false,
+                        declencheur: 'Retirer',
+                        declencheur_classe: 'btn btn-ghost btn-sm btn-danger-discret min-h-11',
+                        declencheur_sr: 'la fermeture du ' ~ fermeture.dateDebut|format_date('long', locale='fr'),
+                    }) }}
+                </li>
+            {% else %}
+                <li class="py-2 text-(--color-base-content)/70">Aucune fermeture en cours ou à venir.</li>
+            {% endfor %}
+        </ul>
+    </div>
+{% endblock %}

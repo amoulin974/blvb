@@ -7,6 +7,75 @@ en gardant la trace de l'ancienne.
 
 ---
 
+## Sommaire
+
+Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (recherche « ## D42. » par exemple).
+
+- D1. Rôle de l'outil
+- D2. Méthode de travail
+- D3. Une saison = une copie de son format
+- D4. Règles de passage écrites avec la notation des places
+- D5. Vérification avant validation
+- D6. Fin de `config/app/saison.yaml` et de la création automatique
+- D7. Ordre des formats : BLVB d'abord
+- D8. Stockage mixte
+- D9. Migration des saisons existantes
+- D10. Point de départ : copie ou modèle
+- D11. Le wizard couvre toute la création
+- D12. Pas de places provisoires dans les calendriers
+- D13. Choix du sport, volley-ball d'abord
+- D14. Règlement généré
+- D15. Une branche par lot
+- D16. Égalité à 3 équipes ou plus : deux critères distincts
+- D17. Critères de départage proposés
+- D18. Équipe exempte : aucun point, sans option
+- D19. Pas d'écran avant le wizard
+- D20. Codes des phases et des poules : automatiques, modifiables
+- D21. Règles des saisons existantes : le schéma 2025 (F1)
+- D22. Montées et descentes pour la saison suivante : enregistrées au lot 3, appliquées au lot 4
+- D23. Points conservés : le champ existe, seule la remise à zéro est appliquée
+- D24. Vérification en échec : avertir et continuer
+- D25. Zones ▲ ▼ du classement : colonnes conservées jusqu'au wizard
+- D26. Phase sans règles enregistrées : règles par défaut
+- D27. Champ `format` de la phase : reporté au lot 4
+- D28. Message de clôture : relu par l'ergonome et le webdesigner
+- D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
+- D30. Effectif d'une poule différent du nombre prévu : avertissement
+- D31. Code d'une phase de barrages : BAR, BAR2…
+- D32. Barrages à l'écran : une carte par match
+- D33. Champ `format` de la phase : reporté au lot 6 (modifie D27)
+- D34. Modifier une saison créée : jusqu'à son lancement, enregistrement à chaque étape (précise D29)
+- D35. Mise en place : écrans dédiés dans le wizard
+- D36. Composition des poules : pré-remplie, ajustable
+- D37. Enchaînement des phases : retour au wizard
+- D38. Étape Poules : version relue du wireframe retenue
+- D39. Étape Journées : version relue du wireframe retenue
+- D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
+- D41. Optimisation des matchs : priorités fixes, replacement des matchs à venir, poule par poule
+- D42. Lot 6 : le type de la phase est son format ; barrage = une poule de deux équipes par match (modifie D33)
+- D43. Barrage de montée et descente : réception par la poule supérieure
+- D44. Modèle « BLVB avec barrages » : 1 montée directe, 1 barrage, 1 descente directe
+- D45. Journée des finales (C3) : derniers tours au choix, dans un gymnase et à une date
+- D46. Journée des finales : planning calculé
+- D47. Championnat aller-retour (A2) : retour en miroir
+- D48. Format de match par phase : 3 ou 2 sets gagnants, barème adapté
+- D49. Durée d'un match : réglable pour la journée des finales, proposée selon le format
+- D50. Barrages de fin de phase 2 : sans effet sur la phase finale, ils décident de la saison suivante
+- D51. Saison lancée : le wizard rouvre en mode ajout (modifie D29, D34)
+- D52. Page « Modifier la poule » : retouches seulement, la composition reste dans la mise en place
+- D53. Barrages de fin de saison : une section dédiée à l'étape Passages (précise D50)
+- D54. Page « Piloter une saison » : suppressions d'une poule dans un menu « Supprimer », refusées une fois la phase jouée
+- D55. Règlement par saison : texte libre édité par les admins, blocs générés insérés par marqueurs (précise D14)
+- D56. Règlement : reprise d'une saison à l'autre, publication et historique
+- D57. Règlement : page publique, accès et liens
+- D58. Règlement : rendu des éléments calculés
+- D59. Règlement : page d'édition des admins (R4)
+- D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
+- D61. Essais de connexion limités, avec une attente qui double à chaque échec
+- D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
+- D63. Fiche du club : éditeur TipTap à barre réduite
+- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants ; PO6. Tableau de bord de l'admin : questions à trancher
+
 ## D1. Rôle de l'outil
 **Décision** : le wizard sert à **créer** une saison. Il doit savoir proposer tous les formats du
 catalogue ; l'administrateur choisit au moment de la création. Les « points à trancher » de la
@@ -219,7 +288,7 @@ icône des messages de succès (modification à part) ; avertissements affichés
 *(2026-10-13, lot 3)*
 
 ## D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
-**Décision** : `ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
+**Décision** : `archive/ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
 comme recommandé (13/10/2026) :
 1. brouillon créé dès l'étape 1, enregistré à chaque changement d'étape ;
 2. à la copie, dates et périodes de fermeture décalées d'un an, bandeau « à vérifier » ;
@@ -307,7 +376,7 @@ suivante. Les avertissements des règles de passage s'affichent **avant** de cli
 *(2026-10-14, lot 5)*
 
 ## D38. Étape Poules : version relue du wireframe retenue
-**Décision** : `ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
+**Décision** : `archive/ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
 déplie une liste et un bouton « Valider » (ergonome), tableau de synthèse des effectifs au-delà de
 4 poules (webdesigner), « Retirer de la poule », pas d'action « Ne participe plus », équipes de la
 saison copiée proposées d'abord.
@@ -316,7 +385,7 @@ l'utilisateur.
 *(2026-10-14, lot 5)*
 
 ## D39. Étape Journées : version relue du wireframe retenue
-**Décision** : `ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
+**Décision** : `archive/ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
 « Régénérer les journées » (confirmation chiffrée, `btn-ghost`) et « Ajuster dans le calendrier » ; dates
 « 14/09 → 20/09 » ; calendrier existant renvoyé tel quel, lien conservé sur téléphone avec une aide ;
 aucune génération à l'ouverture de l'écran.
@@ -325,7 +394,7 @@ l'utilisateur.
 *(2026-10-14, lot 5)*
 
 ## D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
-**Décision** : `ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
+**Décision** : `archive/ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
 traitement en arrière-plan, rapport recalculé à l'affichage, génération par poule limitée aux poules sans
 match, équipe sans gymnase en avertissement). La clôture d'une phase applique les règles de passage puis
 renvoie à l'étape Poules de la phase suivante ; elle **ne crée plus** les journées ni les matchs (D37).
@@ -545,7 +614,7 @@ rendu pour la saison.
 *(2026-10-20, règlement)*
 
 ## D58. Règlement : rendu des éléments calculés
-**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes.md`) :
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `archive/reglement-maquettes.md`) :
 - **Schéma des phases** : chaque poule liste ses sorties dans l'ordre du classement, en une seule liste, chacune avec sa
   phase d'arrivée ; un barrage dit son adversaire et son enjeu (précision de l'utilisateur, 20/10/2026) : « Du 1er au 6e
   restent en poule A dans la phase 2 », « Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s'il reste en
@@ -567,7 +636,7 @@ rendu pour la saison.
 *(2026-10-20, règlement)*
 
 ## D59. Règlement : page d'édition des admins (R4)
-**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `reglement-maquettes-r4.md`) :
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `archive/reglement-maquettes-r4.md`) :
 - **Brouillon** : le règlement d'une saison en brouillon se rédige dès le wizard ; aperçu seulement (jamais public, D57) ;
   statut « Brouillon : visible par le public quand la saison sera lancée », bouton « Enregistrer ». Saison visible :
   « Enregistrer et publier ».
@@ -579,6 +648,81 @@ rendu pour la saison.
 - **Conservation** : toutes les versions sont gardées ; les images envoyées restent sur le serveur (nettoyage plus tard,
   sans jamais supprimer une image citée dans l'historique) ; description d'image obligatoire, ou case « Image décorative ».
 *(2026-10-20, règlement)*
+
+---
+
+## D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
+**Décision** :
+- Une fermeture de gymnase est une entité propre, `FermetureGymnase` (gymnase, motif, premier et dernier jour), et non
+  une `Indisponibilite` avec un gymnase : celle-ci fait sauter la journée à tous les clubs, et chaque usage aurait dû
+  filtrer. Elle n'est liée à aucune saison : ses dates suffisent.
+- **Qui saisit** : les responsables du club, pour les gymnases rattachés au club (même partagés), et les admins. L'auteur est
+  enregistré, visible des admins seulement, depuis que le motif est public (décision de l'utilisateur, 30/10/2026) ; l'aide du
+  formulaire le dit ; il est effacé avec le compte.
+  Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase » sur la fiche.
+- **Conservation** (décision de l'utilisateur, 30/10/2026) : quand un admin affiche une autre saison sur le site, le motif et
+  l'auteur des fermetures terminées sont définitivement effacés, ce que la fenêtre de confirmation annonce. Les dates restent,
+  pour que le calendrier des saisons passées affiche toujours « Gymnase fermé ». Pas de cron ; une fermeture en cours ou à venir
+  n'est pas touchée. Une demande d'effacement en cours de saison sur une fermeture terminée se traite en base.
+- **Match sans score programmé pendant la période** : le responsable est refusé, les matchs lui sont cités, et il écrit
+  aux admins (e-mail prérempli, adresses de connexion des admins). L'admin, lui, enregistre et voit les matchs
+  concernés : le replacement a besoin de la fermeture pour éviter le gymnase.
+- **Quand** : à tout moment, sans date limite. Le moment utile est avant la génération des matchs : c'est aux admins de
+  le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
+- **Placement automatique** (lot 2, générations et replacement) : un gymnase fermé passe avant tout autre critère, surcharge
+  comprise. Dans l'ordre : recevoir chez l'adversaire ou échanger des journées (recherche locale, championnats) ; sinon le
+  créneau suivant du même gymnase, la même semaine, seule exception à « le créneau prioritaire uniquement » ; sinon le match
+  reste placé et il est signalé, avec un lien vers le match, sur la mise en place de la phase, tant qu'il n'a pas de score. Jamais d'autre gymnase ni
+  d'autre semaine sans décision d'un admin. Un match joué ne bouge pas. Le gymnase et la date choisis pour une journée des
+  finales restent ceux de l'admin : ils sont seulement signalés.
+- **Placement manuel** (lot 3) : à faire.
+- **Calendrier des gymnases** (public) : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée
+  « Gymnase fermé » avec son motif (le premier, si des fermetures se chevauchent), et un match sans score y est signalé « à
+  déplacer » (demande de l'utilisateur, 30/10/2026). Le motif étant un texte libre devenu public : l'aide du formulaire
+  l'annonce et écarte noms et coordonnées, et il n'est plus affiché une fois la date passée (relecture sécurité).
+**Pourquoi** : demande de l'utilisateur ; relectures ergonome, webdesigner et sécurité.
+*(2026-10-30)*
+
+## D61. Essais de connexion limités, avec une attente qui double à chaque échec
+**Décision** : à partir du 3e échec pour une même adresse saisie et une même IP, il faut attendre 30 secondes, puis le
+double à chaque nouvel échec, 24 heures au plus. Un second compteur par IP seule s'applique à partir de 20 échecs. Pendant
+l'attente, le mot de passe n'est pas vérifié et l'essai ne compte pas. Une connexion réussie efface le compteur du compte,
+pas celui de l'IP. Changer son mot de passe par le lien reçu par e-mail lève l'attente du compte, depuis toute IP. Une
+IPv6 compte pour son /64. Les échecs sont oubliés 24 heures après la fin de l'attente. Abonné `LimiteurConnexion`, sans la
+dépendance `symfony/rate-limiter`, dont la limite intégrée à la connexion est fixe et non exponentielle.
+**Pourquoi** : demande de l'utilisateur, après la relecture sécurité de D60 (les responsables voient les adresses de
+connexion des admins, et aucune limite n'existait). Le compteur porte sur l'adresse **et** l'IP pour qu'un attaquant ne
+puisse pas bloquer le compte d'un admin depuis chez lui.
+**Condition en production** : l'IP vue par le site doit être fiable (`SYMFONY_TRUSTED_PROXIES`, essai décrit dans
+`deploiement-reglement.md`), sinon la limite se contourne ou bloque tout le monde.
+**Limites acceptées** : des essais simultanés peuvent passer pendant le calcul du mot de passe ; une variante de l'adresse
+reconnue par la collation de la base (`á` pour `a`) échappe au compteur du compte, mais pas à celui de l'IP (gain d'environ
+2) ; des attaquants répartis sur de nombreuses IP ne sont pas freinés ; le temps de réponse révèle si un compte existe
+(antérieur à cette décision) ; un `cache:clear` remet les compteurs à zéro.
+*(2026-10-30)*
+
+## D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
+**Décision** (utilisateur, 30/10/2026) :
+- **Page « Paramètres du site »** (admins), une seule ligne en base (`ParametresSite`) : un `cache:clear` ne perd rien.
+- **Connexion limitée (D61)** : désactivée au déploiement, tant que la vérification n'a pas réussi ; **activation refusée** si
+  elle échoue ; désactivation toujours possible. La vérification se fait depuis la page, par le navigateur de l'admin : IP vue
+  publique et pas celle d'un proxy non déclaré, en-tête `X-Forwarded-For` forgé ignoré, proxys de confiance sans danger (ni
+  tout Internet, ni `REMOTE_ADDR`) ; valable une heure. L'admin confirme par une case ce que le site ne peut pas contrôler
+  (site joignable seulement par le proxy : à demander à l'hébergeur). Une IP partagée ne se voit qu'une fois la limite active :
+  la page décrit l'essai à faire après l'activation, avec une adresse inventée. Le tableau de bord signale une limite
+  désactivée. **Secours** : commande `app:connexion-limitee:desactiver`, si un admin est bloqué.
+- **Adresse de contact** : pied de page, page des conditions d'utilisation, et messages de refus d'une fermeture de gymnase
+  (à la place des adresses de connexion des admins, qui restent le repli tant qu'elle n'est pas renseignée ; précise D60).
+  Distincte de l'expéditeur des e-mails (`MAILER_FROM`).
+- **Logo** : PNG ou WebP, SVG refusé (il peut contenir du script) ; en-tête du site et de l'admin seulement ; retour possible
+  au logo d'origine.
+*(2026-10-30)*
+
+## D63. Fiche du club : éditeur TipTap à barre réduite
+**Décision** (utilisateur, 30/10/2026) : titres, gras, italique, listes, liens ; ni onglet HTML, ni tableaux, ni codes courts,
+ni images dans le texte pour commencer (les responsables de club ne sont pas admins) ; textes existants convertis une fois en
+HTML ; pas d'historique ni de contrôle de conflit au début (le dernier enregistrement l'emporte).
+*(2026-10-30)*
 
 ---
 
@@ -624,3 +768,8 @@ Traités à part de l'optimisation (D41) : règle de forfait (score réglementai
 
 ### PO3. Questions de détail des lots suivants
 Notation des « meilleurs Xe », options exactes de chaque format, écrans du wizard : elles apparaîtront lot par lot.
+
+### PO6. Tableau de bord de l'admin : questions à trancher
+Huit questions (définition de « terminée », saison principale, saisie des scores, seuil des scores manquants, clubs sans
+responsable, « Suivre la saison », nom du menu, rappel avant la génération des matchs) : §3 de `tableau-de-bord.md`, avec les
+recommandations de l'ergonome. *(2026-10-30)*

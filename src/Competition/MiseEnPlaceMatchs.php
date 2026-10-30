@@ -17,7 +17,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Matchs d'une phase, étape « Matchs » de la mise en place du wizard (docs/wizard-saison/ecrans-mise-en-place.md,
+ * Matchs d'une phase, étape « Matchs » de la mise en place du wizard (docs/wizard-saison/archive/ecrans-mise-en-place.md,
  * §15 à §21, D35 à D40) : état affiché (matchs créés et prévus, déplacements de suite, surcharges de gymnase, équipes
  * sans gymnase) recalculé à partir des matchs existants, et actions (générer la phase, générer ou régénérer une poule).
  * La génération elle-même est celle de PartieService (optimiseur pour le championnat).
@@ -159,6 +159,9 @@ final class MiseEnPlaceMatchs
                 'texte' => sprintf('%d équipe%s sans gymnase utilisable : %s. %s matchs à domicile seront joués au gymnase par défaut.', $n, $n > 1 ? 's' : '', implode(', ', $noms), $n > 1 ? 'Leurs' : 'Ses')];
         }
         $surcharges = $this->surcharges($phase);
+        foreach ($this->matchsEnGymnaseFerme($phase) as $partie) {
+            $problemes[] = ['niveau' => 'warning', 'ancre' => null, 'lien' => null, 'partie' => $partie->getId(), 'texte' => PartieService::phraseFermeture($partie)];
+        }
         foreach ($surcharges as $texte) {
             $problemes[] = ['niveau' => 'warning', 'ancre' => null, 'lien' => null, 'texte' => $texte];
         }
@@ -212,6 +215,26 @@ final class MiseEnPlaceMatchs
         }
 
         return $phrases;
+    }
+
+    /**
+     * Matchs sans score de la phase placés dans un gymnase fermé (D60).
+     *
+     * @return list<Partie>
+     */
+    private function matchsEnGymnaseFerme(Phase $phase): array
+    {
+        $matchs = [];
+        foreach ($phase->getPoules() as $poule) {
+            foreach ($poule->getParties() as $partie) {
+                $lieu = $partie->getLieu();
+                if ($lieu instanceof Lieu && $partie->getDate() && !$this->estJoue($partie) && $lieu->fermeLe($partie->getDate()) !== null) {
+                    $matchs[] = $partie;
+                }
+            }
+        }
+
+        return $matchs;
     }
 
     /**
@@ -339,8 +362,8 @@ final class MiseEnPlaceMatchs
         $this->em->clear();
         $phase = $this->em->find(Phase::class, $phase->getId());
         $poule = $pouleId === null ? null : $this->em->find(Poule::class, $pouleId);
-        $surcharges = $this->surcharges($phase);
-        $avertissement = $surcharges === [] ? null : 'Gymnases : '.implode(' ; ', $surcharges);
+        $surcharges = [...array_map(PartieService::phraseFermeture(...), $this->matchsEnGymnaseFerme($phase)), ...$this->surcharges($phase)];
+        $avertissement = $surcharges === [] ? null : implode(' ', $surcharges);
 
         if ($mode === 'replacer') {
             $replaces = array_sum(array_column($rapport, 'replaces'));
