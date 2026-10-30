@@ -557,6 +557,20 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 
 ---
 
+### 4.18 Fermetures de gymnase — `Fonctionnel/Front/FermetureGymnaseTest` (P1, D60)
+
+- **FGY-01** ✅ : le menu d'un responsable mène à son club par « Mon club », la fiche aux fermetures ; pas de lien pour un visiteur ni pour un capitaine.
+- **FGY-02** ✅ : seuls l'admin et les responsables du club ouvrent la page ; visiteur renvoyé à la connexion ; capitaine et responsable d'un autre club refusés (403).
+- **FGY-03** ✅ : sans match pendant la période, la fermeture est enregistrée et listée.
+- **FGY-04** ✅ : un match sans score, premier ou dernier jour compris, empêche le responsable d'enregistrer (422) ; le match est cité, avec un e-mail prérempli aux admins ; un motif contenant `&bcc=` reste dans le corps du message.
+- **FGY-05** ✅ : ne bloquent pas : un match joué, un match d'un autre gymnase, un match hors de la période.
+- **FGY-06** ✅ : l'admin enregistre malgré un match programmé, qui lui est signalé (page du club et page du gymnase).
+- **FGY-07** ✅ : refus avec message : motif vide, dates inversées, période terminée, plus de 2 ans, fin à plus de 5 ans, caractères de contrôle ; refus aussi pour un gymnase d'un autre club forcé dans le formulaire et sans jeton CSRF.
+- **FGY-08** ✅ : retrait par un responsable du gymnase ; jeton requis ; 404 pour un gymnase hors du club ; 403 par l'URL d'un autre club.
+- **FGY-09** ✅ : un match d'une saison en préparation bloque le responsable sans dévoiler ses équipes, ni dans la page ni dans l'e-mail.
+
+`Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
+
 ## 5. Analyse statique et qualité du code
 
 | Outil | Réglage de départ | Cible | Pourquoi |
@@ -647,6 +661,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Règlement par saison** (en cours) | RGL-01 à RGL-03 (§4.17), CPS-04 : étape R1, tables `reglement` et `reglement_version` (migration `Version20261020164942`), nettoyage du HTML, versions, copie avec la saison ; RGL-04 à RGL-11 : étape R2, codes courts, ancres, codes inapplicables, quatre éléments calculés ; RGL-12 à RGL-15 : étape R3, page publique, retour du sélecteur de saison ; RGL-16 à RGL-22 : étape R4, page d'édition ; RGL-23 : étape R5, reprise du règlement 2025 (`app:reglement:importer`) | 617 tests verts + 2 lents (branche `reglement`) | R1 à R4 le 20/10/2026, R5 le 21/10/2026 |
 | **Expéditeur des e-mails** ✅ | MAI-01 : un seul expéditeur, `blvb@vblc.fr` (anciennement `admin@blvb.fr` et `tech@vblc.fr`, refusés par le SMTP d'OVH) | 259 tests verts + 2 lents (`main`) | fait le 16/10/2026 |
 | **Rappel des scores non saisis** ✅ | MAI-02 : e-mail aux capitaines et responsables de club deux jours après un match sans score (`app:scores:rappeler`, cron quotidien) | 269 tests verts + 2 lents (`main`) | fait le 17/10/2026 |
+| **Fermetures de gymnase, lot 1** ✅ | FGY-01 à FGY-09 (§4.18) : saisie par les responsables de club et les admins, refus si un match est programmé | 623 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

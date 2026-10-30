@@ -70,6 +70,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D57. Règlement : page publique, accès et liens
 - D58. Règlement : rendu des éléments calculés
 - D59. Règlement : page d'édition des admins (R4)
+- D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -646,6 +647,23 @@ rendu pour la saison.
 *(2026-10-20, règlement)*
 
 ---
+
+## D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
+**Décision** :
+- Une fermeture de gymnase est une entité propre, `FermetureGymnase` (gymnase, motif, premier et dernier jour), et non
+  une `Indisponibilite` avec un gymnase : celle-ci fait sauter la journée à tous les clubs, et chaque usage aurait dû
+  filtrer. Elle n'est liée à aucune saison : ses dates suffisent.
+- **Qui saisit** : les responsables du club, pour les gymnases rattachés au club (même partagés, sans enregistrer
+  l'auteur), et les admins. Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase »
+  sur la fiche.
+- **Match sans score programmé pendant la période** : le responsable est refusé, les matchs lui sont cités, et il écrit
+  aux admins (e-mail prérempli, adresses de connexion des admins). L'admin, lui, enregistre et voit les matchs
+  concernés : le replacement a besoin de la fermeture pour éviter le gymnase.
+- **Quand** : à tout moment, sans date limite. Le moment utile est avant la génération des matchs : c'est aux admins de
+  le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
+- **Placement** (lots 2 et 3) : aucun match n'est placé dans un gymnase fermé.
+**Pourquoi** : demande de l'utilisateur ; relectures ergonome, webdesigner et sécurité.
+*(2026-10-30)*
 
 ## Points ouverts
 

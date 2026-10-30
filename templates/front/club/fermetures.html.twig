@@ -1,0 +1,78 @@
+{% extends "base_front.html.twig" %}
+{% block title %}Fermetures de gymnase du club {{ club.nom }} - Site du BLVB{% endblock %}
+
+{% block body %}
+    {% form_theme form 'admin/form/erreurs.html.twig' %}
+    <div class="container mx-auto max-w-3xl md:px-4 flex flex-col gap-6">
+        {% for message in app.flashes('success') %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'success'} %}{% block contenu %}{{ message }}{% endblock %}{% endembed %}
+        {% endfor %}
+        {# Avertissement réservé à l'admin, qui peut enregistrer une fermeture malgré des matchs programmés #}
+        {% for message in app.flashes('warning') %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'warning', role: 'alert'} %}{% block contenu %}{{ message }}{% endblock %}{% endembed %}
+        {% endfor %}
+
+        <div>
+            <a class="link link-hover text-sm" href="{{ path('front_club_show', {id: club.id}) }}">← Retour à la fiche du club</a>
+            <h1 class="mt-2 text-3xl uppercase tracking-wide">Fermetures de gymnase</h1>
+            <p class="mt-1 text-(--color-base-content)/80">Club {{ club.nom }}. Aucun match n'est placé dans un gymnase pendant sa fermeture.</p>
+        </div>
+
+        {% if club.lieux is empty %}
+            <p class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">Aucun gymnase n'est renseigné pour ce club : contactez les administrateurs du championnat.</p>
+        {% else %}
+            {# Fermeture refusée : des matchs sont programmés pendant la période #}
+            {% if matchsConcernes %}
+                {% set n = matchsConcernes|length %}
+                {% embed 'admin/_alerte.html.twig' with {type: 'error'} %}{% block contenu %}
+                    <div class="space-y-2">
+                        <p class="font-semibold">La fermeture n'est pas enregistrée : {{ n }} match{{ n > 1 ? 's sont programmés' : ' est programmé' }} dans ce gymnase pendant cette période.</p>
+                        <ul class="list-disc pl-5 space-y-1">
+                            {% for match in matchsConcernes %}
+                                <li>{{ match }}</li>
+                            {% endfor %}
+                        </ul>
+                        <p>Contactez les administrateurs du championnat : ils déplaceront {{ n > 1 ? 'ces matchs' : 'ce match' }} et enregistreront la fermeture.</p>
+                        {% if contactAdmins %}
+                            <a class="btn btn-primary md:btn-sm" href="{{ contactAdmins }}">Écrire aux administrateurs</a>
+                            <p class="text-sm wrap-anywhere">Si le bouton n'ouvre pas votre messagerie, écrivez à : {{ emailsAdmins|join(', ') }}</p>
+                        {% endif %}
+                    </div>
+                {% endblock %}{% endembed %}
+            {% endif %}
+
+            <section aria-labelledby="titre-ajout" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+                <h2 id="titre-ajout" class="text-xl uppercase tracking-wide">Indiquer une fermeture</h2>
+                {{ form_start(form, {'attr': {'class': 'mt-3 space-y-4'}}) }}
+                {{ form_row(form.lieu) }}
+                {{ form_row(form.motif) }}
+                <div class="grid gap-4 sm:grid-cols-2">
+                    {{ form_row(form.dateDebut) }}
+                    {{ form_row(form.dateFin) }}
+                </div>
+                <button class="btn btn-primary">Enregistrer la fermeture</button>
+                {{ form_end(form) }}
+            </section>
+
+            <section aria-labelledby="titre-liste" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
+                <h2 id="titre-liste" class="text-xl uppercase tracking-wide">Fermetures en cours et à venir</h2>
+                <ul class="mt-2 divide-y divide-base-300">
+                    {% for fermeture in fermetures %}
+                        <li class="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="min-w-0 wrap-anywhere">
+                                <p class="font-semibold">{{ fermeture.lieu.nom }}</p>
+                                <p class="text-sm">Du {{ fermeture.dateDebut|format_date('long', locale='fr') }} au {{ fermeture.dateFin|format_date('long', locale='fr') }} · {{ fermeture.motif }}</p>
+                            </div>
+                            <form method="post" action="{{ path('front_club_fermeture_supprimer', {id: club.id, fermeture: fermeture.id}) }}" onsubmit="return confirm('Retirer cette fermeture ?');">
+                                <input type="hidden" name="_token" value="{{ csrf_token('supprimer_fermeture' ~ fermeture.id) }}">
+                                <button class="btn btn-ghost btn-danger-discret md:btn-sm" aria-label="Retirer la fermeture de {{ fermeture.lieu.nom }} du {{ fermeture.dateDebut|format_date('long', locale='fr') }}">Retirer</button>
+                            </form>
+                        </li>
+                    {% else %}
+                        <li class="py-2 text-(--color-base-content)/70">Aucune fermeture en cours ou à venir.</li>
+                    {% endfor %}
+                </ul>
+            </section>
+        {% endif %}
+    </div>
+{% endblock %}

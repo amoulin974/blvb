@@ -53,6 +53,13 @@ class Lieu
     #[ORM\OneToMany(targetEntity: Creneau::class, mappedBy: 'lieu', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $creneaux;
 
+    /**
+     * @var Collection<int, FermetureGymnase>
+     */
+    #[ORM\OneToMany(targetEntity: FermetureGymnase::class, mappedBy: 'lieu')]
+    #[ORM\OrderBy(['dateDebut' => 'ASC'])]
+    private Collection $fermetures;
+
 
 
 
@@ -62,7 +69,16 @@ class Lieu
         $this->equipes = new ArrayCollection();
         $this->parties = new ArrayCollection();
         $this->creneaux = new ArrayCollection();
+        $this->fermetures = new ArrayCollection();
 
+    }
+
+    /**
+     * @return Collection<int, FermetureGymnase>
+     */
+    public function getFermetures(): Collection
+    {
+        return $this->fermetures;
     }
 
     public function getId(): ?int

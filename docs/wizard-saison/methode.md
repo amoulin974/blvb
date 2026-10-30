@@ -163,6 +163,14 @@ production par Francis avec `deploiement-reglement.md`. Ajouter ici les nouvelle
 - **Fusion** (22/10/2026, demande de l'utilisateur) : `reglement` (lot 6 + lot 11, R1 à R5) fusionnée dans
   `formats-competition` en avance rapide, sans conflit. `main` n'est pas encore touchée.
 
+### 2026-10-30 : fermetures de gymnase, lot 1 (branche `fermetures-gymnase`, partie de `main`)
+
+- Saisie des fermetures par les responsables de club (lien « Mon club ») et les admins : D60, FGY-01 à FGY-09.
+  Relectures ergonome, webdesigner et sécurité intégrées.
+- **Suite** : lot 2, placement automatique (générateurs et replacement) ; lot 3, placement manuel et alertes
+  (formulaires et glisser-déposer du calendrier admin, `/calendrierlieu`, mise en place). **Tant que le lot 2 n'est pas
+  fait, une fermeture ne bloque pas encore le placement.**
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout formats-competition && git pull`. Le lot 6 et le lot 11 (règlement,

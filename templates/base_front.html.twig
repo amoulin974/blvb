@@ -115,6 +115,10 @@
 
                                     <div class="divider my-0"></div>
 
+                                    {% for club in app.user.clubsResponsable %}
+                                        <li><a href="{{ path('front_club_show', {id: club.id}) }}" class="py-3">Mon club{{ app.user.clubsResponsable|length > 1 ? ' : ' ~ club.nomCourt|upper }}</a></li>
+                                    {% endfor %}
+
                                     <li>
                                         <a href="{{ path('front_profile_edit') }}" class="py-3">
                                             Mon Profil
@@ -188,6 +192,9 @@
                 </li>
 
                 {% if app.user %}
+                    {% for club in app.user.clubsResponsable %}
+                        <li><a href="{{ path('front_club_show', {id: club.id}) }}">Mon club{{ app.user.clubsResponsable|length > 1 ? ' : ' ~ club.nomCourt|upper }}</a></li>
+                    {% endfor %}
                     {% if is_granted('ROLE_ADMIN') %}
                         <li><a href="{{path('app_admin_dashboard')}}">Administration</a></li>
                 {% endif %}
