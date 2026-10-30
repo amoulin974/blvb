@@ -74,7 +74,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D61. Essais de connexion limités, avec une attente qui double à chaque échec
 - D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
 - D63. Fiche du club : éditeur TipTap à barre réduite
-- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
+- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants ; PO6. Tableau de bord de l'admin : questions à trancher
 
 ## D1. Rôle de l'outil
 **Décision** : le wizard sert à **créer** une saison. Il doit savoir proposer tous les formats du
@@ -755,3 +755,8 @@ Traités à part de l'optimisation (D41) : règle de forfait (score réglementai
 
 ### PO3. Questions de détail des lots suivants
 Notation des « meilleurs Xe », options exactes de chaque format, écrans du wizard : elles apparaîtront lot par lot.
+
+### PO6. Tableau de bord de l'admin : questions à trancher
+Huit questions (définition de « terminée », saison principale, saisie des scores, seuil des scores manquants, clubs sans
+responsable, « Suivre la saison », nom du menu, rappel avant la génération des matchs) : §3 de `tableau-de-bord.md`, avec les
+recommandations de l'ergonome. *(2026-10-30)*

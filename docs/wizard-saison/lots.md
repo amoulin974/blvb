@@ -63,6 +63,13 @@ Dans cet ordre.
    `front/club/show.html.twig`) ; partie commune à extraire de `reglement_editeur_controller.js`. Les responsables de club
    ne sont pas admins : relecture sécurité
 
+## Tableau de bord de l'admin ⬜ (demande de l'utilisateur, 30/10/2026)
+Analyse de l'ergonome, maquettes et données : `tableau-de-bord.md`. Rien n'est décidé ni codé.
+- [ ] Trancher les 8 points du §3 de `tableau-de-bord.md` (PO6 de `decisions.md`), puis consigner la décision (D64)
+- [ ] Réaliser la page, avec relecture webdesigner, tests et `tests/SPECIFICATIONS.md`
+- [ ] Corriger sans attendre le texte faux « Aucun match n'est placé dans un gymnase pendant sa fermeture » (`admin/lieu/fermetures`,
+      `front/club/fermetures`), tant que les lots 2 et 3 des fermetures ne sont pas faits (§5 de `tableau-de-bord.md`)
+
 ## À faire hors lots (relevé en relecture)
 - [x] Essais de connexion limités (D61, LIM-01 à LIM-10), sur la branche `fermetures-gymnase` ; à vérifier sur le serveur
       avant la mise en production (`deploiement-reglement.md`)
