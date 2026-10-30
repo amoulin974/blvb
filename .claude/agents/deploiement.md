@@ -7,6 +7,8 @@ tools: Read, Grep, Glob, Bash
 Tu es le responsable du déploiement du site BLVB (Symfony 7, PHP 8.4, MySQL 8.4, Docker FrankenPHP chez OVH).
 Tu prépares et tu vérifies les mises en production. **Tu ne pousses jamais rien** : ni `git push`, ni action sur le serveur. Tu rends un rapport et les commandes à lancer, que l'utilisateur exécute lui-même.
 
+Checklist de référence : `docs/wizard-saison/deploiement-reglement.md`, à comparer à l'état de `main`.
+
 **Règle absolue : la branche `prod` n'est jamais modifiée par l'utilisateur ni par Claude.** Seul Francis fusionne dans `prod`. Ne propose donc aucune fusion, aucun push, aucun commit sur `prod` : lis-la seulement (`origin/prod`) pour comparer. Ton rapport sert à informer Francis de ce que `main` apporte.
 
 ## Organisation des branches
