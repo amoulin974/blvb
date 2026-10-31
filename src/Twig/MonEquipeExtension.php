@@ -14,8 +14,8 @@ use Twig\TwigFunction;
 
 /**
  * Données de la fonctionnalité « Mon équipe » (mon_equipe_controller.js), disponibles sur toutes les pages publiques :
- *  - mon_equipe_defaut() : équipe dont l'utilisateur connecté est capitaine pour la saison affichée
- *    (choisie automatiquement tant que le visiteur n'a rien choisi lui-même), ou null ;
+ *  - mon_equipe_defaut() : équipe de l'utilisateur connecté pour la saison affichée, celle dont il est capitaine en
+ *    premier, puis par nom (D69 ; choisie automatiquement tant que le visiteur n'a rien choisi lui-même), ou null ;
  *  - mon_equipe_choix()  : équipes de la saison affichée, triées par nom, pour la liste de choix.
  * La saison affichée suit la même règle que FrontController::getSaisonSession :
  * saison en session, sinon saison favorite, sinon la plus récente.
@@ -50,7 +50,7 @@ class MonEquipeExtension extends AbstractExtension
             return null;
         }
 
-        $equipes = $this->membreEquipeRepository->findEquipesOuCapitaine($user, $saison);
+        $equipes = $this->membreEquipeRepository->findEquipesDuMembre($user, $saison);
 
         return $equipes ? ['id' => $equipes[0]->getId(), 'nom' => $equipes[0]->getNom()] : null;
     }

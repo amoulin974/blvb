@@ -409,9 +409,11 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 
 ### 4.12 « Mon équipe » et fonctions Twig — `Fonctionnel/Front/MonEquipeTest`, `Integration/Twig/SaisonCouranteTest` (P2)
 
-**MEQ-01** ✅ — `mon_equipe_defaut()` : capitaine connecté → son équipe de la saison courante ; joueur non capitaine, anonyme → `null` (rendu `{'id': null}`, jamais `[]`, qui casse le contrôleur Stimulus).
+**MEQ-01** ✅ — `mon_equipe_defaut()` : joueur connecté, capitaine ou non (D69) → son équipe de la saison courante ; anonyme ou compte sans équipe → `null` (rendu `{'id': null}`, jamais `[]`, qui casse le contrôleur Stimulus).
 **MEQ-02** ✅ — Capitaine de deux équipes → la première par nom, toujours la même.
 **MEQ-03** ✅ — `mon_equipe_choix()` : équipes de la saison, triées alphabétiquement.
+**MEQ-04** ✅ — Membre de deux équipes : celle dont il est capitaine passe avant l'autre, même plus loin par nom ; simple joueur des deux → la première par nom.
+**MEQ-05** ✅ — Menu latéral (téléphone) : lien « Mon profil » pour un compte connecté, absent pour un visiteur.
 **ADM-01** ✅ — `admin_saison_courante()` : saison favorite, sinon la plus récente.
 **ADM-02 — Alertes de l'admin lisibles** ✅ *`Fonctionnel/Admin/CloturePhaseTest`* (PHA-03, PHA-04) : toutes les alertes de l'admin (messages flash, erreurs des calendriers de poule, du formulaire de compte et du rapport d'import) passent par `admin/_alerte.html.twig` ; texte en couleur de base (classe `.admin-alerte`, contraste AA ; avant : texte coloré à environ 3:1), état porté par une icône pour chaque type (succès, avertissement, erreur, information) et le filet gauche, préfixe lu par les lecteurs d'écran conforme au type (« Succès : », « Attention : », « Erreur : ») ; `role="alert"` pour une erreur, `status` sinon.
 

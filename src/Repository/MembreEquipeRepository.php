@@ -92,6 +92,32 @@ class MembreEquipeRepository extends ServiceEntityRepository
         return $qb->getQuery()->getResult();
     }
 
+    /**
+     * Equipes dont le Joueur lié à cet utilisateur fait partie pour la saison (capitaine ou simple joueur), capitaine en
+     * premier puis par nom.
+     *
+     * @return list<Equipe>
+     */
+    public function findEquipesDuMembre(User $user, Saison $saison): array
+    {
+        $lignes = $this->getEntityManager()->createQueryBuilder()
+            ->select('e', 'MAX(m.capitaine) AS HIDDEN cap')
+            ->from(Equipe::class, 'e')
+            ->innerJoin('e.membres', 'm')
+            ->innerJoin('m.joueur', 'j')
+            ->andWhere('j.user = :user')
+            ->andWhere('m.saison = :saison')
+            ->setParameter('user', $user)
+            ->setParameter('saison', $saison)
+            ->groupBy('e.id')
+            ->orderBy('cap', 'DESC')
+            ->addOrderBy('e.nom', 'ASC')
+            ->getQuery()
+            ->getResult();
+
+        return array_values($lignes);
+    }
+
     public function estCapitaine(User $user, Equipe $equipe, Saison $saison): bool
     {
         $membre = $this->createQueryBuilder('m')

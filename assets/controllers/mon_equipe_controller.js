@@ -7,7 +7,7 @@ import { Controller } from '@hotwired/stimulus';
  * Choisir son équipe :
  *  - bouton de la fiche équipe (cible "bouton", paramètres id / nom) ;
  *  - liste de choix (fragment _choisir_mon_equipe) : invitation de l'accueil et fenêtre ouverte depuis le menu.
- * Capitaine connecté : son équipe (valeur "defaut", fournie par MonEquipeExtension) est utilisée tant que
+ * Joueur connecté : l'équipe dont il fait partie (valeur "defaut", fournie par MonEquipeExtension, D69) est utilisée tant que
  * le visiteur n'a rien choisi lui-même ; « retirer » l'écarte explicitement.
  *
  * Effets sur les pages qui listent les poules (accueil, calendrier, équipes, classement) :
@@ -86,7 +86,7 @@ export default class extends Controller {
         this.minuteur = setTimeout(() => this.confirmationTarget.classList.add('hidden'), 6000);
     }
 
-    // Équipe effective : choix du visiteur, sinon équipe du capitaine connecté, sinon aucune
+    // Équipe effective : choix du visiteur, sinon équipe du joueur connecté, sinon aucune
     equipe() {
         const choix = this.lire(CLE);
         if (choix && choix.aucune) return null;

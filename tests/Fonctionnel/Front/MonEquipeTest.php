@@ -9,8 +9,8 @@ use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * MEQ-01 à MEQ-03 : données de « Mon équipe » fournies au navigateur (mon_equipe_defaut, mon_equipe_choix),
- * lues dans la page : attribut data-mon-equipe-defaut-value de <body> et liste de choix.
+ * MEQ-01 à MEQ-05 : données de « Mon équipe » fournies au navigateur (mon_equipe_defaut, mon_equipe_choix),
+ * lues dans la page : attribut data-mon-equipe-defaut-value de <body> et liste de choix ; lien « Mon profil » du menu latéral.
  */
 final class MonEquipeTest extends TestFonctionnel
 {
@@ -21,13 +21,16 @@ final class MonEquipeTest extends TestFonctionnel
         return json_decode((string) $crawler->filter('body')->attr('data-mon-equipe-defaut-value'), true);
     }
 
-    #[TestDox('MEQ-01 Équipe par défaut : celle du capitaine connecté ; {"id": null} pour un visiteur ou un simple joueur (jamais [])')]
+    #[TestDox('MEQ-01 Équipe par défaut : celle du joueur connecté, capitaine ou non (D69) ; {"id": null} pour un visiteur ou un compte sans équipe (jamais [])')]
     public function test_defaut(): void
     {
         self::assertSame(['id' => null], $this->defaut(), 'visiteur');
 
+        $this->connecter('admin');
+        self::assertSame(['id' => null], $this->defaut(), 'compte sans équipe');
+
         $this->connecter('joueur.a1');
-        self::assertSame(['id' => null], $this->defaut(), 'simple joueur');
+        self::assertSame(ChampionnatDeTest::get('equipe.A1')->getId(), $this->defaut()['id'], 'simple joueur');
 
         $this->connecter('cap.a1');
         self::assertSame(ChampionnatDeTest::get('equipe.A1')->getId(), $this->defaut()['id']);
@@ -42,6 +45,30 @@ final class MonEquipeTest extends TestFonctionnel
         $this->connecter('cap.a1');
         self::assertSame($avant->getId(), $this->defaut()['id']);
         self::assertSame($avant->getId(), $this->defaut()['id'], 'même choix au second affichage');
+    }
+
+    #[TestDox('MEQ-04 Membre de deux équipes : celle dont il est capitaine avant l\'autre, même plus loin par nom')]
+    public function test_membre_de_deux_equipes(): void
+    {
+        $avant = EquipeFactory::createOne(['nom' => 'AAA PREMIERE', 'lieu' => null]);
+        MembreEquipeFactory::createOne(['equipe' => $avant, 'saison' => ChampionnatDeTest::get('saison'), 'joueur' => ChampionnatDeTest::get('joueur.cap.a1'), 'capitaine' => false]);
+
+        $this->connecter('cap.a1');
+        self::assertSame(ChampionnatDeTest::get('equipe.A1')->getId(), $this->defaut()['id']);
+
+        $this->connecter('joueur.a1');
+        MembreEquipeFactory::createOne(['equipe' => $avant, 'saison' => ChampionnatDeTest::get('saison'), 'joueur' => ChampionnatDeTest::get('joueur.joueur.a1'), 'capitaine' => false]);
+        self::assertSame($avant->getId(), $this->defaut()['id'], 'simple joueur des deux : la première par nom');
+    }
+
+    #[TestDox('MEQ-05 Menu latéral (téléphone) : « Mon profil » pour un compte connecté, absent pour un visiteur')]
+    public function test_mon_profil_dans_le_menu_lateral(): void
+    {
+        $lien = fn () => $this->client->request('GET', '/')->filter('.drawer-side a[href="/mon-profil"]');
+        self::assertCount(0, $lien(), 'visiteur');
+
+        $this->connecter('joueur.a1');
+        self::assertSame('Mon profil', trim($lien()->text()));
     }
 
     #[TestDox('MEQ-03 Liste de choix : les équipes de la saison, triées par nom')]

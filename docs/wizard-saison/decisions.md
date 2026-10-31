@@ -79,6 +79,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
 - D67. Volley Stats : on commence par la page match et la composition de chaque set
 - D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
+- D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -894,6 +895,18 @@ implicite**, **service jamais saisi** (déduit de la rotation), **saisie après 
   640 px, « Point pour nous / eux » demande encore un petit défilement (bandeau du site collé en haut) ; à essayer sur un
   vrai match.
 *(2026-10-31)*
+
+## D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
+
+*Décidé le 01/11/2026*, d'après l'avis de l'ergonome (`docs/presentation-par-role.md`), premier pas de la présentation des
+fonctionnalités selon le rôle (le reste n'est pas décidé).
+- **« Mon équipe » par défaut** : l'équipe dont le compte connecté fait partie pour la saison affichée, capitaine ou simple
+  joueur (avant : capitaines seulement). Rien ne l'interdit dans le modèle (la composition est unique par équipe, saison et
+  joueur), mais aucun joueur n'est dans deux équipes la même saison dans les données réelles (2025-2026, 2026-2027) ; si
+  cela arrive, l'équipe dont il est capitaine passe en premier, puis l'ordre des noms. Un choix fait par le visiteur reste
+  prioritaire, comme avant.
+- **Menu latéral (téléphone)** : lien « Mon profil » pour tout compte connecté, après « Mon club » ; libellé « Mon profil »
+  (et non « Mon Profil ») dans le menu du compte.
 
 ---
 

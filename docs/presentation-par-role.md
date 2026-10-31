@@ -14,15 +14,15 @@ rôle à la rentrée. Pas de visite guidée. D'abord, boucher deux trous de navi
 | Rôle | Ce qu'il peut faire | Où |
 |---|---|---|
 | Visiteur | Calendrier, classement, équipes, clubs, règlement ; « Choisir mon équipe » (navigateur) ; « Ajouter à mon agenda » | Menu, fiche équipe |
-| Joueur connecté | En plus : composition et contact du capitaine ; « Page du match » ; « Sets joués » | Fiche équipe seulement |
-| Capitaine | En plus : saisir le score de ses matchs ; « Gérer la composition » ; « Mon équipe » automatique ; rappel 2 jours après un match sans score | Calendrier, fiche équipe, Mon profil |
+| Joueur connecté | En plus : composition et contact du capitaine ; « Page du match » ; « Sets joués » ; « Mon équipe » automatique (D69) | Fiche équipe seulement |
+| Capitaine | En plus : saisir le score de ses matchs ; « Gérer la composition » ; rappel 2 jours après un match sans score | Calendrier, fiche équipe, Mon profil |
 | Responsable de club | En plus : « Mon club », fiche du club (éditeur, D63), fermetures de gymnase (D60), scores et pages du match de toutes les équipes du club, stats de ses joueurs (D68) | Menu du compte, fiche club |
 | Admin | Tableau de bord « À faire » (D64), « Scores à saisir », règlement, Volley Stats, paramètres du site | Menu de l'admin |
 
 **Trous de découvrabilité**, du plus grave au moins grave :
-1. « Mon profil » absent du menu sur téléphone (`base_front.html.twig`, menu latéral), alors que c'est la seule page qui
+1. (Réglé par D69.) « Mon profil » absent du menu sur téléphone (`base_front.html.twig`, menu latéral), alors que c'est la seule page qui
    explique les droits.
-2. « Mon équipe » n'est choisie automatiquement que pour les capitaines (`MonEquipeExtension::equipeDefaut`) : un joueur ne
+2. (Réglé par D69.) « Mon équipe » n'est choisie automatiquement que pour les capitaines (`MonEquipeExtension::equipeDefaut`) : un joueur ne
    découvre jamais « Page du match ».
 3. Le bouton « Saisir » n'apparaît qu'une fois le match passé : le capitaine ne sait pas d'avance qu'il pourra saisir.
 4. « Page du match » seulement sur la fiche équipe (ni accueil ni calendrier).
@@ -68,7 +68,7 @@ encarts empilés ou sans date de fin ; captures d'écran dans l'aide.
 1. Qui envoie le courriel de rentrée : un bouton du tableau de bord, ou un message écrit par le bureau ?
 2. Y a-t-il une réunion des responsables à la rentrée (fiche PDF) ?
 3. Encart fermé : retenu par compte (en base) ou seulement dans le navigateur ?
-4. « Mon équipe » choisie automatiquement pour tous les membres, pas seulement les capitaines ?
+4. (Réglé par D69 : oui.) « Mon équipe » choisie automatiquement pour tous les membres, pas seulement les capitaines ?
 5. Volley Stats annoncé avant la fusion du paragraphe des conditions d'utilisation (D68) ?
 
 Points d'attention : « Mon Profil » → « Mon profil » dans `base_front.html.twig` ; apparence des encarts : webdesigner.
