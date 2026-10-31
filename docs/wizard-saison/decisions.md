@@ -76,6 +76,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D63. Fiche du club : éditeur TipTap à barre réduite
 - D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
 - D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
+- D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -787,6 +788,25 @@ recevra pour cela une **catégorie de jeu**, féminine ou masculine :
 
 *Pourquoi* : ce n'est pas une donnée sensible (art. 9), et la finalité est réelle et sportive (la FFVB l'enregistre aussi sur
 les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne serait pas justifié.
+*(2026-10-31)*
+
+
+## D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
+**Décision** (utilisateur, 31/10/2026), avant toute conception ; analyse complète dans `docs/volley-stats/analyse.md` :
+- **Saisie** par un remplaçant sur le banc ou un accompagnant, sur téléphone ; **matchs du championnat seulement** ;
+  participation **volontaire** des équipes.
+- **Deux modes** au choix de l'équipe, rapide et complet ; les classements publics ne reposent que sur leur socle commun.
+- **Usages** : progresser en équipe, choisir les compositions, suivi individuel, classements individuels sur le site.
+- **Visibilité** : statistiques publiques avec l'**accord de chaque joueur** (case dans son profil, décochable) ; sans
+  accord, visibles de son équipe seulement ; **compositions et rotations visibles de l'équipe seulement**.
+- **Score officiel jamais alimenté** par cette saisie.
+- **Corrections** par le saisisseur et le capitaine pendant 7 jours, puis par l'admin seulement.
+- **Règles 1J et 4J** non contrôlées dans la première version ; le modèle de données le prévoit (catégorie de jeu de D65,
+  licence FFVB) : si ce contrôle est retenu plus tard, D65 sera avancée.
+- Réseau présent dans les gymnases d'après l'utilisateur : pas de mode hors ligne complet.
+
+*Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
+volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.
 *(2026-10-31)*
 
 ---
