@@ -677,6 +677,11 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-18** ✅ : correction d'une touche d'un échange terminé de ce set ; refusée sur l'échange en cours, sur la touche qui a
   fait le point, sur un joueur entré après la touche, avec deux corrections à la fois ; acceptée sur un set terminé, où un
   point est refusé.
+- **VST-19** ✅ *`Unitaire/VolleyStats/StatsFeuilleTest`* : stats d'un set noté « le score et les touches » : réception,
+  passe décisive (la passe juste avant l'attaque gagnante), attaque gagnante ou contrée, efficacité d'attaque ; service
+  crédité au serveur de la rotation (ace, faute) ; ace subi sans joueur ; block gagnant à deux (les deux crédités) ; point
+  marqué en défense, hors attaque ; faute de règlement ; % de réception sans faute ; échange « sans détail » et balle à
+  rejouer non comptés ; touches annulées ignorées ; corrections appliquées (joueur, action, touche retirée) ; cumul de sets.
 
 ## 5. Analyse statique et qualité du code
 
