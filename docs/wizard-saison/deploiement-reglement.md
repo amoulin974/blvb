@@ -2,8 +2,9 @@
 
 Formats de compétition (lots 1 à 6), wizard de saison, règlement par saison (R1 à R5), fermetures de gymnase, paramètres du
 site, limitation des essais de connexion, tableau de bord de l'admin (D64, sans migration), éditeur de la description des
-clubs (D63). Relue par l'agent `deploiement` le 31/10/2026 sur `main` 4e5b37b ; tableau de bord (d76eadb) et éditeur des
-clubs (6d9f8de) ajoutés ensuite, fusion dans `prod` toujours sans conflit. Seul Francis
+clubs (D63), Volley Stats : page du match et saisie des actions (D66 à D68). Relue par l'agent `deploiement` le 31/10/2026
+sur `main` 4e5b37b ; tableau de bord (d76eadb), éditeur des clubs (6d9f8de) et Volley Stats (60fc924) ajoutés ensuite,
+fusion dans `prod` toujours sans conflit. Seul Francis
 fusionne dans `prod` : c'est son site, il décide si et quand déployer, et ce qu'il met en œuvre parmi ce qui suit.
 
 **Faille constatée le 31/10/2026, à corriger avant la mise en production : le port 3307 est ouvert sur Internet.** Depuis
@@ -18,8 +19,8 @@ Les autres ports ouverts (33 SSH, 80/443, 82, 84, 3001, 8080, 8081) relèvent de
 
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env` compris.
 Nouveautés : paquet Composer `symfony/html-sanitizer`, une soixantaine de paquets importmap (éditeur TipTap 3), dossiers
-`public/uploads/reglement` et `public/uploads/site`, 14 migrations (ajouts de colonnes et de tables, `motif` rendu facultatif sur
-une table vide, descriptions des clubs converties en HTML), une variable d'environnement seulement si la limitation facultative est mise en place : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
+`public/uploads/reglement` et `public/uploads/site`, 17 migrations (ajouts de colonnes et de tables, `motif` rendu facultatif sur
+une table vide, descriptions des clubs converties en HTML, quatre tables de Volley Stats), une variable d'environnement seulement si la limitation facultative est mise en place : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
 `Dockerfile`, `compose.yaml` et `frankenphp/` sont inchangés, et le code est monté dans le conteneur.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
@@ -118,6 +119,9 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261030223748 | `fermeture_gymnase.cree_par_id` : auteur de la fermeture |
 | Version20261030225406 | `fermeture_gymnase.motif` facultatif |
 | Version20261031120000 | `club.description` : texte brut converti en HTML pour l'éditeur (paragraphes et retours à la ligne gardés) ; seule migration qui modifie des données existantes, réversible |
+| Version20261031154348 | Volley Stats : tables `feuille_match`, `feuille_match_joueur`, `feuille_match_set`, `feuille_match_evenement` (vides) |
+| Version20261031173937 | `feuille_match_set.saisie` : le score seulement, ou le score et les touches |
+| Version20261031184649 | `parametres_site.seuil_echanges_detailles` (80 %) |
 
 ## Vérifications en ligne
 
@@ -133,6 +137,8 @@ Ne jamais lancer `app:recette:charger` en production.
 - Tableau de bord de l'admin : liste « À faire » et carte de la saison affichée ; « Scores à saisir » s'ouvre depuis la carte.
 - Fiche d'un club : la présentation garde ses paragraphes ; « Modifier la fiche du club » affiche la barre de mise en forme
   (Titre, Gras, listes, Lien…), et un enregistrement s'affiche mis en forme.
+- Volley Stats : connecté avec un compte de capitaine, la fiche de son équipe montre « Page du match » ; la page s'ouvre, et
+  une équipe adverse reçoit « page introuvable ». Admin : entrée « Volley Stats » du menu (seuil à 80 %).
 
 ## Retour arrière
 
@@ -212,15 +218,20 @@ Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
 
 - `APP_SECRET` : le définir s'il est vide (étape 1).
 - Port MySQL 3307 : ouvert sur Internet, voir la faille en tête de page.
-- Crons, facultatifs : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune'`). Le compte qui les
+- Crons, facultatifs : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune|volley-stats'`). Le compte qui les
   exécute doit avoir accès à Docker.
   - Rappel des scores, après le contrôle de `DEFAULT_URI` : le **premier passage envoie tout l'arriéré** de la saison, à voir avec
     `docker compose exec php php bin/console app:scores:rappeler --simulation`.
     `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`
   - Nettoyage des compteurs d'essais, seulement si la limitation est mise en place (sans elle, aucun compteur n'est créé) :
     `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`
+  - Suppression des pages du match des saisons anciennes (Volley Stats, conservation D66 : celles d'une saison partent une
+    fois la saison suivante terminée), une fois par mois ; à voir d'abord avec `--simulation` :
+    `0 5 1 * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:volley-stats:purger`
 - `DATABASE_OLD_URL` dans `compose.yaml` : à retirer s'il ne sert plus.
 - Pas de mentions légales tant que `conditions-utilisation-v2` n'est pas fusionnée : le lien du pied de page reste vide.
+- Volley Stats : les statistiques individuelles des joueurs (saisie des touches) ne sont pas encore décrites dans les
+  conditions d'utilisation (même fusion) ; d'ici là, mieux vaut que les équipes n'utilisent que « le score seulement ».
 - Données 2025 (back-office) : journées de la phase finale aux noms et dates incohérents, journée 3 des poules C et D
   pendant les vacances d'hiver, noms des fermetures, tableaux nommés « Poule A » à « Poule D », date et gymnase de la
   journée des finales.
