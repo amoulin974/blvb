@@ -81,9 +81,9 @@
         <section class="admin-carte mt-6 flex flex-wrap items-center justify-between gap-3" aria-labelledby="titre-volley-stats">
             <div>
                 <h2 id="titre-volley-stats" class="text-lg">Volley Stats</h2>
-                <p class="text-sm text-(--color-base-content)/80">{{ volleyStats.equipes }} équipe{{ volleyStats.equipes > 1 ? 's' }} {{ volleyStats.equipes > 1 ? 'notent' : 'note' }} leurs matchs cette saison · {{ volleyStats.pages }} page{{ volleyStats.pages > 1 ? 's' }} du match · {{ volleyStats.setsTouches }} set{{ volleyStats.setsTouches > 1 ? 's' }} avec les touches des joueurs · seuil des classements : {{ volleyStats.seuil }} %</p>
+                <p class="text-sm text-(--color-base-content)/80">{{ volleyStats.equipes }} équipe{{ volleyStats.equipes > 1 ? 's' }} {{ volleyStats.equipes > 1 ? 'notent leurs' : 'note ses' }} matchs cette saison · {{ volleyStats.pages }} page{{ volleyStats.pages > 1 ? 's' }} de match · {{ volleyStats.setsTouches }} set{{ volleyStats.setsTouches > 1 ? 's' }} avec les touches des joueurs · seuil des classements : {{ volleyStats.seuil }} %</p>
             </div>
-            <a class="btn btn-ghost btn-sm" href="{{ path('admin_volley_stats_index') }}">Réglages</a>
+            <a class="link link-primary inline-flex min-h-[44px] items-center text-sm" href="{{ path('admin_volley_stats_index') }}">Réglages<span class="sr-only"> de Volley Stats</span></a>
         </section>
     {% endif %}
 

@@ -62,6 +62,7 @@ final class VueFeuille
                 'sets' => array_map(fn ($st) => ['numero' => $st['numero'], 'echanges' => $st['echanges'], 'detailles' => $st['detailles'], 'taux' => $st['echanges'] ? (int) round(100 * $st['detailles'] / $st['echanges']) : 0], $parSet),
                 'seuil' => $seuil,
             ],
+            'seuil' => $seuil,
             'etat' => $feuille->getEtat(),
             'joueurs' => array_map(fn ($id, $n) => ['id' => $id, 'nom' => $n], array_keys($joueurs), $joueurs),
             'sets' => $sets,

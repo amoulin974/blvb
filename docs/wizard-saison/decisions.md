@@ -887,6 +887,12 @@ implicite**, **service jamais saisi** (déduit de la rotation), **saisie après 
 - *Précisé le 31/10/2026 (maquette du webdesigner)* : **bouton « Point sans détail »** pour un échange qu'on ne détaille
   pas ; « Point pour nous / Point pour eux » sans touche reste un point sans faute de nos joueurs (ace subi, faute de service
   adverse…), compté détaillé. **Deuxième bloqueur demandé seulement pour un block gagnant.**
+- *Réalisé le 31/10/2026, relectures intégrées* : correction des anciennes touches à l'écran (historique : changer le joueur,
+  l'action, retirer) ; suppression des pages du match par `app:volley-stats:purger` (saison N supprimée une fois N+1
+  terminée, à planifier par Francis). **Reste avant tout usage réel** : le paragraphe des conditions d'utilisation (stats
+  individuelles, destinataires, durée) avec la fusion de `conditions-utilisation-v2`. **Point ouvert** : sur un téléphone de
+  640 px, « Point pour nous / eux » demande encore un petit défilement (bandeau du site collé en haut) ; à essayer sur un
+  vrai match.
 *(2026-10-31)*
 
 ---

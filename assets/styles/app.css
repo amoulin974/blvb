@@ -406,12 +406,21 @@ button.terrain-case { cursor: pointer; }
 .terrain-compact .terrain-nom { font-size: .9375rem; }
 .score-set { font-family: var(--font-display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-primary); }
 /* Saisie des touches (D68, maquette docs/volley-stats/maquette-saisie-actions.md) : action choisie en marine plein
-   (aria-pressed, jamais la couleur seule : l'état est annoncé), mention de la touche dans la case du joueur */
-.btn-bascule { padding-inline: .25rem; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
+   (aria-pressed, jamais la couleur seule : l'état est annoncé ; la coche n'est pas lue), mention de la touche dans la case */
+.btn-bascule { position: relative; padding-inline: .25rem; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
 .btn-bascule[aria-pressed="true"] { --btn-bg: var(--color-primary); --btn-fg: var(--color-primary-content); --btn-border: var(--color-primary); background-color: var(--color-primary); color: var(--color-primary-content); }
-.btn-bascule { position: relative; }
-.btn-bascule[aria-pressed="true"]::after { content: "✓"; position: absolute; top: 1px; right: 4px; font-size: .75rem; line-height: 1; }
+.btn-bascule[aria-pressed="true"]::after { content: "✓" / ""; position: absolute; top: 1px; right: 4px; font-size: .75rem; line-height: 1; }
 .terrain-mention { display: block; font-size: .875rem; font-weight: 600; }
+/* Terrain pendant le jeu : cases plus basses, poste abrégé au-dessus du nom (le nom reste premier dans le code) */
+.terrain-jeu .terrain-case { min-height: 3.5rem; justify-content: flex-start; gap: .125rem; }
+.terrain-jeu .terrain-poste { order: -1; }
+/* Carte de la touche en attente : place réservée (rien ne saute sous le doigt), consigne en pointillé */
+.touche-carte { min-height: 6.5rem; border: 2px solid var(--color-primary); border-radius: var(--radius-box); padding: .5rem; display: flex; flex-direction: column; gap: .5rem; background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); }
+.touche-carte[data-etat="consigne"] { border-style: dashed; border-color: color-mix(in oklab, var(--color-primary) 60%, transparent); background-color: var(--color-base-100); }
+.score-set-compact { font-size: 2rem; }
+/* Tableau qui défile dans sa carte (téléphone) : première colonne figée, défilement au clavier */
+.tableau-defilant th:first-child { position: sticky; left: 0; background-color: var(--color-base-100); }
+.tableau-defilant:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .wizard-navigation { border-top: 1px solid var(--color-base-300); padding-top: 0.75rem; background-color: var(--color-base-100); }
 @media (max-width: 63.99rem) { .wizard-navigation { position: sticky; bottom: 0; z-index: 2; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); } }
 /* Stepper du wizard : six pastilles tiennent sur un téléphone ; « ! » lisible sur orange ; étape en cours cerclée */

@@ -610,9 +610,18 @@ final class FeuilleMatchService
                 $cible = $e;
             }
         }
-        if ($cible === null || $cible->estAnnule() || $cible->getType() !== FeuilleMatchEvenement::ACTION || \in_array($cible, $this->echangeEnCours($set), true)) {
+        if ($cible === null || $cible->estAnnule() || $cible->getType() !== FeuilleMatchEvenement::ACTION || \in_array($cible, $this->echangeEnCours($set), true)
+            || $this->dansUnEchangeRejoue($set, $cible)) {
             throw new SaisieInvalide('Cette touche ne peut pas être corrigée : rechargez la page.');
         }
+        // Action et joueur actuels de la touche (dernière correction active)
+        $actuelle = ['action' => $cible->getDonnees()['action'], 'joueur' => $cible->getDonnees()['joueurs'][0]];
+        foreach ($set->getEvenements() as $e) {
+            if (!$e->estAnnule() && $e->getType() === FeuilleMatchEvenement::MODIFICATION && $e->getDonnees()['cible'] === $cible->getUuid()) {
+                $actuelle = ['action' => $e->getDonnees()['action'] ?? $actuelle['action'], 'joueur' => $e->getDonnees()['joueurs'][0] ?? $actuelle['joueur']];
+            }
+        }
+        $avant = EtatSet::calculer($set, $cible->getOrdre());
         foreach ($set->getEvenements() as $e) {
             if (!$e->estAnnule() && $e->getType() === FeuilleMatchEvenement::POINT && ($e->getDonnees()['sur'] ?? null) === $cible->getUuid()) {
                 throw new SaisieInvalide('Cette touche a fait le point : corrigez le score à la place.');
@@ -633,14 +642,34 @@ final class FeuilleMatchService
             if (!\in_array($choix['action'], FeuilleMatchEvenement::ACTIONS, true)) {
                 throw new SaisieInvalide('Action non reconnue.');
             }
+            if ($choix['action'] === 'block') {
+                $this->joueurSurLeTerrain($set->getFeuille(), $avant, [$actuelle['joueur']], true); // un arrière ne contre pas
+            }
 
             return ['cible' => $cible->getUuid(), 'action' => $choix['action']];
         }
         // Joueur sur le terrain AU MOMENT de l'action corrigée
-        $avant = EtatSet::calculer($set, $cible->getOrdre());
-        $joueur = $this->joueurSurLeTerrain($set->getFeuille(), $avant, $choix['joueurs'], $cible->getDonnees()['action'] === 'block');
+        $joueur = $this->joueurSurLeTerrain($set->getFeuille(), $avant, $choix['joueurs'], $actuelle['action'] === 'block');
 
         return ['cible' => $cible->getUuid(), 'joueurs' => [$joueur]];
+    }
+
+    /** La touche appartient-elle à un échange clos par une balle à rejouer (ses touches ne comptent pas) ? */
+    private function dansUnEchangeRejoue(FeuilleMatchSet $set, FeuilleMatchEvenement $cible): bool
+    {
+        foreach ($set->getEvenements() as $e) {
+            if ($e->getOrdre() <= $cible->getOrdre() || $e->estAnnule()) {
+                continue;
+            }
+            if (\in_array($e->getType(), [FeuilleMatchEvenement::POINT, FeuilleMatchEvenement::CORRECTION], true)) {
+                return false;
+            }
+            if ($e->getType() === FeuilleMatchEvenement::REJOUER) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

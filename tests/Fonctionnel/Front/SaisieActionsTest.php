@@ -8,13 +8,16 @@ use App\Factory\MembreEquipeFactory;
 use App\Tests\Support\Story\ChampionnatDeTest;
 use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
+use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
 /**
- * VST-14 à VST-18, VST-21 : saisie des actions en mode intermédiaire, validation côté serveur (Volley Stats, D68 ;
+ * VST-14 à VST-18, VST-21 à VST-23 : saisie des actions en mode intermédiaire, validation côté serveur (Volley Stats, D68 ;
  * specification-actions.md §3 et §3 bis). Page de A1 sur le match de référence, sept joueurs présents (un sur le banc).
  */
 final class SaisieActionsTest extends TestFonctionnel
 {
+    use ClockSensitiveTrait;
+
     private string $jeton = '';
     /** @var list<int> */
     private array $ids = [];
@@ -227,5 +230,67 @@ final class SaisieActionsTest extends TestFonctionnel
         $premier = $stats['joueurs'][0];
         self::assertSame([1, 1, 100], [$premier['pointsMarques'], $premier['attaquesGagnantes'], $premier['efficacite']]);
         self::assertSame(1, array_sum(array_column($stats['joueurs'], 'passesDecisives')));
+    }
+
+    #[TestDox('VST-22 : références d\'un autre set refusées ; correction refusée sur un échange rejoué, en block pour un arrière ; correction refusée après le gel, sauf pour l\'admin')]
+    public function test_references_et_gel(): void
+    {
+        $this->commencer();
+        $reception = $this->action('reception', 5);
+        $attaque = $this->action('attaque', 4);
+        $this->evenement('point', ['pour' => 'nous', 'sur' => $attaque]);
+        $rejouee = $this->action('defense', 6);
+        $this->evenement('rejouer', []);
+        $this->evenement('modification', ['cible' => $rejouee, 'action' => 'passe']);
+        self::assertResponseStatusCodeSame(400, 'touche d\'un échange rejoué');
+        $this->evenement('modification', ['cible' => $reception, 'action' => 'block']);
+        self::assertResponseStatusCodeSame(400, 'block pour un arrière (poste 5)');
+        for ($p = 1; $p < 25; ++$p) {
+            $this->evenement('point', ['pour' => 'nous', 'sansDetail' => true]);
+        }
+        $this->envoyer(1, 'terminer');
+        // Set 2 : une touche, puis références au set 1 refusées
+        $this->ordre = null;
+        $this->envoyer(2, 'composition', ['composition' => ['postes' => \array_slice($this->ids, 0, 6), 'premierService' => 'eux', 'scoreDepart' => [0, 0]]]);
+        $this->envoyer(2, 'commencer', ['saisie' => 'touches']);
+        $this->action('reception', 5, 2);
+        $this->evenement('point', ['pour' => 'nous', 'sur' => $reception], set: 2);
+        self::assertResponseStatusCodeSame(400, 'sur : touche du set 1');
+        $this->evenement('modification', ['cible' => $reception, 'action' => 'defense'], set: 2);
+        self::assertResponseStatusCodeSame(400, 'cible : touche du set 1');
+        $reponse = json_decode((string) $this->client->getResponse()->getContent(), true);
+        self::assertArrayHasKey('feuille', $reponse);
+        self::assertStringContainsString('no-store', (string) $this->client->getResponse()->headers->get('Cache-Control'));
+
+        // Gel : 31 jours après le match (jamais terminé) ; le membre ne corrige plus, l'admin si
+        self::mockTime((new \DateTimeImmutable())->modify('+31 days'));
+        $this->ordre = 1;
+        $this->evenement('modification', ['cible' => $reception, 'action' => 'defense']);
+        self::assertResponseStatusCodeSame(404, 'page gelée');
+        $this->connecter('admin');
+        $this->jeton = $this->client->request('GET', $this->url())->filter('[data-feuille-match-jeton-value]')->attr('data-feuille-match-jeton-value');
+        $h = json_decode($this->client->getCrawler()->filter('[data-feuille-match-etat-value]')->attr('data-feuille-match-etat-value'), true)['sets'][0]['historique'];
+        $this->ordre = $h[array_key_last($h)]['ordre'];
+        $this->evenement('modification', ['cible' => $reception, 'action' => 'defense']);
+        self::assertResponseIsSuccessful('l\'admin corrige encore');
+    }
+
+    #[TestDox('VST-23 : aucune touche ni stat sur les pages publiques (fiche équipe, calendrier, ICS)')]
+    public function test_isolement(): void
+    {
+        $this->commencer();
+        $this->action('reception', 5);
+        $attaque = $this->action('attaque', 4);
+        $this->evenement('point', ['pour' => 'nous', 'sur' => $attaque]);
+        $this->client->getCookieJar()->clear();
+        $saison = ChampionnatDeTest::get('saison')->getId();
+        $equipe = ChampionnatDeTest::get('equipe.A1')->getId();
+        foreach (['/equipe/'.$equipe, '/calendrier', '/calendar/saison/'.$saison.'/equipe/'.$equipe.'.ics'] as $page) {
+            $this->client->request('GET', $page);
+            $contenu = (string) $this->client->getResponse()->getContent();
+            foreach (['attaque gagnante', 'Statistiques du match', 'feuille-match', 'Ana Ur'] as $interdit) {
+                self::assertStringNotContainsString($interdit, $contenu, $page.' : '.$interdit);
+            }
+        }
     }
 }

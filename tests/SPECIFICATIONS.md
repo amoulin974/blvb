@@ -687,6 +687,12 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
   « Volley Stats », comptages seulement) y mènent.
 - **VST-21** ✅ : une fois le set terminé, la page donne les stats du match (joueurs triés par points, équipe, efficacité,
   passes décisives) et le taux d'échanges détaillés de chaque set, comparé au seuil.
+- **VST-22** ✅ : `sur` et `cible` pris dans un autre set refusés ; correction refusée sur une touche d'un échange rejoué et
+  en « block » pour un joueur arrière ; correction refusée après le gel (404), acceptée pour l'admin ; réponse JSON en
+  `private, no-store`.
+- **VST-23** ✅ : aucune touche ni stat sur la fiche équipe publique, le calendrier ni l'agenda ICS.
+- **VST-24** ✅ *`Integration/Command/PurgerPagesMatchTest`* : `app:volley-stats:purger` supprime les pages du match d'une
+  saison une fois la saison suivante terminée, pas avant ; `--simulation` ne supprime rien.
 
 ## 5. Analyse statique et qualité du code
 
