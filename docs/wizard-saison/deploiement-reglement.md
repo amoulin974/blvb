@@ -39,8 +39,8 @@ git grep -nE '^(<<<<<<< |=======$|>>>>>>> )' prod -- . ':!vendor'     # rien
 ## 1 à 12. Sur le serveur, dans le dossier du projet
 
 Le dossier est monté dans le conteneur (`.:/app`) et le site tourne en environnement dev : **pas de `--no-dev`**. Du
-`git pull` à la fin des migrations, le site est en panne (quelques minutes) : enchaîner les étapes 3 à 9, prévenir le
-bureau. Chaque démarrage du conteneur lance `doctrine:migrations:migrate` : ne pas redémarrer entre le `git pull` et l'étape 4.
+`git pull` à la fin des migrations, le site est en panne (quelques minutes) : enchaîner les étapes 3 à 9.
+Chaque démarrage du conteneur lance `doctrine:migrations:migrate` : ne pas redémarrer entre le `git pull` et l'étape 4.
 
 ```bash
 # 1. Vérifications préalables
