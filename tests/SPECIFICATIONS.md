@@ -655,6 +655,9 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
   clé inconnue (« motif ») refusés ; historique lisible.
 - **VST-11** ✅ : fin de set refusée avant le score de fin ; trois sets gagnés : page terminée, pas de 4ᵉ set ; le score
   officiel du match n'est pas touché.
+- **VST-12** ✅ : la fiche équipe mène à la page du match (« Préparer le match » sur le prochain match, « Page du match » sur
+  chaque match du calendrier) et montre les sets joués, pour l'équipe, le responsable de son club et l'admin ; rien pour
+  l'équipe adverse ni pour un visiteur.
 
 ## 5. Analyse statique et qualité du code
 

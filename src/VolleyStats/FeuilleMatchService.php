@@ -2,11 +2,13 @@
 
 namespace App\VolleyStats;
 
+use App\Entity\Equipe;
 use App\Entity\FeuilleMatch;
 use App\Entity\FeuilleMatchEvenement;
 use App\Entity\FeuilleMatchSet;
 use App\Entity\MembreEquipe;
 use App\Entity\Phase;
+use App\Entity\Saison;
 use App\Entity\User;
 use Doctrine\DBAL\LockMode;
 use App\Repository\FeuilleMatchRepository;
@@ -137,6 +139,43 @@ final class FeuilleMatchService
         }
 
         return array_values(array_unique($ids));
+    }
+
+    /**
+     * Sets joués par chaque membre de l'équipe sur la saison, d'après les pages du match : composition de départ et entrées
+     * en remplacement (D67). Visible de l'équipe seulement.
+     *
+     * @return array<int, int> identifiant du membre => nombre de sets
+     */
+    public function setsJoues(Equipe $equipe, Saison $saison): array
+    {
+        $feuilles = $this->feuilles->createQueryBuilder('f')
+            ->innerJoin('f.partie', 'p')->innerJoin('p.poule', 'po')->innerJoin('po.phase', 'ph')
+            ->andWhere('f.equipe = :equipe')->andWhere('ph.saison = :saison')
+            ->setParameter('equipe', $equipe)->setParameter('saison', $saison)
+            ->getQuery()->getResult();
+        $compte = [];
+        foreach ($feuilles as $feuille) {
+            foreach ($feuille->getSets() as $set) {
+                if ($set->getEtat() === FeuilleMatchSet::COMPOSITION) {
+                    continue;
+                }
+                $joueurs = array_filter($set->getPostes(), fn ($id) => $id !== null);
+                foreach ($set->getEvenements() as $e) {
+                    if (!$e->estAnnule() && $e->getType() === FeuilleMatchEvenement::REMPLACEMENT) {
+                        $joueurs[] = $e->getDonnees()['entre'];
+                    }
+                }
+                foreach (array_unique($joueurs) as $id) {
+                    $membre = $feuille->joueur($id)?->getMembre();
+                    if ($membre !== null) {
+                        $compte[$membre->getId()] = ($compte[$membre->getId()] ?? 0) + 1;
+                    }
+                }
+            }
+        }
+
+        return $compte;
     }
 
     /** Sets gagnants du format de la phase (D48) */

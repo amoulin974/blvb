@@ -2,6 +2,8 @@
 
 namespace App\Security;
 
+use App\Entity\Equipe;
+use App\Entity\Saison;
 use App\Entity\User;
 use App\Repository\MembreEquipeRepository;
 use App\VolleyStats\MatchEquipe;
@@ -58,10 +60,21 @@ final class FeuilleMatchVoter extends Voter
 
     private function ayantDroit(User $user, MatchEquipe $match): bool
     {
-        $saison = $match->saison();
+        return $this->ayantDroitSurEquipe($user, $match->equipe, $match->saison());
+    }
 
-        return $this->membres->estMembre($user, $match->equipe, $saison)
-            || (bool) $match->equipe->getClub()?->estResponsable($user, $saison);
+    /**
+     * Même règle pour les entrées de la fiche équipe (« Préparer le match », « Page du match », « Sets joués ») : admin,
+     * membre de l'équipe ou responsable de son club pour cette saison (celle des matchs listés).
+     */
+    public function ayantDroitSurEquipe(?User $user, Equipe $equipe, ?Saison $saison): bool
+    {
+        if ($this->security->isGranted('ROLE_ADMIN')) {
+            return true;
+        }
+
+        return $user !== null && $saison !== null
+            && ($this->membres->estMembre($user, $equipe, $saison) || (bool) $equipe->getClub()?->estResponsable($user, $saison));
     }
 
     /** Page figée : seule l'admin la corrige encore */

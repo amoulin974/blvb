@@ -17,7 +17,7 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
 /**
- * VST-01 à VST-07, VST-09 à VST-11 : page du match d'une équipe, droits, joueurs présents, composition et journal des sets
+ * VST-01 à VST-07, VST-09 à VST-12 : page du match d'une équipe, droits, joueurs présents, composition et journal des sets
  * (Volley Stats, D67 ; spécification §3 à §5). VST-08 : Unitaire/VolleyStats/EtatSetTest.
  * Match de référence : A1 (club CTA, responsable resp.club) reçoit A2, hier.
  */
@@ -331,5 +331,32 @@ final class FeuilleMatchTest extends TestFonctionnel
 
         $partie = self::getContainer()->get('doctrine')->getManager()->getRepository(Partie::class)->find($match->getId());
         self::assertNull($partie->getNbSetGagnantReception(), 'score officiel intact (D66)');
+    }
+
+    #[TestDox('VST-12 : la fiche équipe mène aux pages du match (« Préparer le match », « Page du match ») et montre les sets joués, pour l\'équipe et le responsable de son club seulement')]
+    public function test_entrees_fiche_equipe(): void
+    {
+        $ids = $this->preparerSix();
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [0, 0]]]);
+        $this->envoyer(1, 'commencer');
+        $fiche = '/equipe/'.ChampionnatDeTest::get('equipe.A1')->getId();
+
+        foreach (['cap.a1', 'resp.club', 'admin'] as $compte) {
+            $this->connecter($compte);
+            $crawler = $this->client->request('GET', $fiche);
+            self::assertGreaterThan(0, $crawler->filter('a[href="'.$this->url().'"]')->count(), $compte.' : page du match de référence');
+            self::assertCount(1, $crawler->selectLink('Préparer le match'), $compte);
+            self::assertStringContainsString('Camille Ar.', $crawler->filter('#titre-sets-joues')->closest('section')->text(), $compte);
+        }
+        foreach (['cap.a2', 'joueur.a2'] as $compte) {
+            $this->connecter($compte);
+            $crawler = $this->client->request('GET', $fiche);
+            self::assertCount(0, $crawler->filter('a[href*="/match/"]'), $compte);
+            self::assertCount(0, $crawler->filter('#titre-sets-joues'), $compte);
+        }
+        $this->client->getCookieJar()->clear();
+        $crawler = $this->client->request('GET', $fiche);
+        self::assertCount(0, $crawler->filter('a[href*="/match/"]'), 'visiteur');
+        self::assertCount(0, $crawler->filter('#titre-sets-joues'), 'visiteur');
     }
 }

@@ -22,7 +22,9 @@ use App\Repository\SaisonRepository;
 use App\Reglement\EditionReglement;
 use App\Reglement\RenduReglement;
 use App\Service\CalendrierAnalyseService;
+use App\Security\FeuilleMatchVoter;
 use App\Security\ScoreVoter;
+use App\VolleyStats\FeuilleMatchService;
 use App\Service\ClassementService;
 use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
@@ -189,7 +191,7 @@ final class FrontController extends AbstractController
     //Route pour afficher le détail d'une équipe : calendrier et classenment et info sur le capitaine dans la saison sélectionnée
     #[Route('/equipe/{id}', name: 'equipe_detail', methods: ['GET'])]
     public function equipe_detail(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository, ContactCapitaineService $contactCapitaineService, SaisieScoreService $saisieScore): Response
+    $saisonRepository, ClassementService $classementService, Equipe $equipe, EquipeRepository $equipeRepository, PartieRepository $partieRepository, MembreEquipeRepository $membreEquipeRepository, ContactCapitaineService $contactCapitaineService, SaisieScoreService $saisieScore, FeuilleMatchVoter $feuilleMatchVoter, FeuilleMatchService $feuilleMatchService): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -266,6 +268,7 @@ final class FrontController extends AbstractController
         //Composition complète (avec coordonnées des joueurs) : seulement pour les membres de l'équipe et les administrateurs
         $membres = $peutVoirMembres ? $membreEquipeRepository->findRosterBySaison($equipe, $saison) : [];
         $estCapitaineDeCetteEquipe = $user !== null && $membreEquipeRepository->estCapitaine($user, $equipe, $saison);
+        $pagesMatch = $feuilleMatchVoter->ayantDroitSurEquipe($user instanceof User ? $user : null, $equipe, $saison);
 
         return $this->render('front/equipe.html.twig', [
             'saisons' => $this->saisons,
@@ -281,6 +284,10 @@ final class FrontController extends AbstractController
             'matchsByPoule'=>$matchsByPoule,
             'membres'=>$membres,
             'estCapitaineDeCetteEquipe'=>$estCapitaineDeCetteEquipe,
+            // Volley Stats (D67) : entrées vers les pages du match et sets joués, pour l'équipe et le responsable de son club
+            'pagesMatch'=>$pagesMatch,
+            'setsJoues'=>$pagesMatch && $saison ? $feuilleMatchService->setsJoues($equipe, $saison) : [],
+            'nomsCourts'=>$pagesMatch && $saison ? \App\VolleyStats\NomsCourts::pour($membreEquipeRepository->findRosterBySaison($equipe, $saison)) : [],
         ]);
     }
 
