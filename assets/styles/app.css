@@ -405,6 +405,13 @@ button.terrain-case { cursor: pointer; }
 .terrain-compact .terrain-case { min-height: 3rem; padding-block: .25rem; }
 .terrain-compact .terrain-nom { font-size: .9375rem; }
 .score-set { font-family: var(--font-display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-primary); }
+/* Saisie des touches (D68, maquette docs/volley-stats/maquette-saisie-actions.md) : action choisie en marine plein
+   (aria-pressed, jamais la couleur seule : l'état est annoncé), mention de la touche dans la case du joueur */
+.btn-bascule { padding-inline: .25rem; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
+.btn-bascule[aria-pressed="true"] { --btn-bg: var(--color-primary); --btn-fg: var(--color-primary-content); --btn-border: var(--color-primary); background-color: var(--color-primary); color: var(--color-primary-content); }
+.btn-bascule { position: relative; }
+.btn-bascule[aria-pressed="true"]::after { content: "✓"; position: absolute; top: 1px; right: 4px; font-size: .75rem; line-height: 1; }
+.terrain-mention { display: block; font-size: .875rem; font-weight: 600; }
 .wizard-navigation { border-top: 1px solid var(--color-base-300); padding-top: 0.75rem; background-color: var(--color-base-100); }
 @media (max-width: 63.99rem) { .wizard-navigation { position: sticky; bottom: 0; z-index: 2; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); } }
 /* Stepper du wizard : six pastilles tiennent sur un téléphone ; « ! » lisible sur orange ; étape en cours cerclée */

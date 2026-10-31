@@ -9,6 +9,12 @@ import { Controller } from '@hotwired/stimulus'
 const LIBELLES = { 1: 'Arrière droit', 2: 'Avant droit', 3: 'Avant centre', 4: 'Avant gauche', 5: 'Arrière gauche', 6: 'Arrière centre' }
 const ORDRE_VISUEL = [4, 3, 2, 5, 6, 1] // filet en haut : avant puis arrière, de gauche à droite
 const DEPARTS = [[0, 0], [0, 8], [8, 0]]
+// Saisie des touches (D68)
+const ACTIONS = [['reception', 'Réception'], ['passe', 'Passe'], ['attaque', 'Attaque'], ['renvoi', 'Renvoi'], ['defense', 'Défense'], ['block', 'Block']]
+const ACTION_NOM = { reception: 'réception', passe: 'passe', attaque: 'attaque', renvoi: 'renvoi', defense: 'défense', block: 'block' }
+const FAUTES_JOUEUR = [['filet', 'Filet'], ['pied', 'Pied sous le filet'], ['double', 'Double touche'], ['tenue', 'Balle tenue'], ['autre', 'Autre faute']]
+const FAUTES_EQUIPE = [['quatre_touches', 'Quatre touches'], ['position', 'Position ou rotation']]
+const AVANTS = [1, 2, 3] // postes 2, 3, 4 (index dans l'ordre officiel)
 
 const echapper = (texte) => String(texte ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
 const uuid = () => (crypto.randomUUID ? crypto.randomUUID() : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -73,7 +79,7 @@ export default class extends Controller {
             morceaux.push(this.vueSetEnCours(enCours))
         } else if (aComposer && this.modifiableValue) {
             if (!this.brouillon || this.brouillon.numero !== aComposer.numero) {
-                this.brouillon = { numero: aComposer.numero, postes: [...aComposer.postes], premierService: aComposer.premierService, scoreDepart: [...aComposer.scoreDepart], pointsFin: aComposer.pointsFin, active: null }
+                this.brouillon = { numero: aComposer.numero, postes: [...aComposer.postes], premierService: aComposer.premierService, scoreDepart: [...aComposer.scoreDepart], pointsFin: aComposer.pointsFin, active: null, saisie: this.dernierSet()?.saisie ?? 'score' }
                 this.brouillon.active = this.premiereVide()
             }
             morceaux.push(this.vueComposition())
@@ -124,6 +130,8 @@ export default class extends Controller {
                 <div class="mt-2 grid grid-cols-3 gap-2">${DEPARTS.map((d, i) => radio('depart', i, d[0] === b.scoreDepart[0] && d[1] === b.scoreDepart[1], `${d[0]}–${d[1]}`)).join('')}</div></fieldset>
             <fieldset><legend class="font-semibold">Premier service <span class="font-normal text-sm">(tiré au gymnase)</span></legend>
                 <div class="mt-2 grid grid-cols-2 gap-2">${radio('service', 'nous', b.premierService === 'nous', 'Nous servons')}${radio('service', 'eux', b.premierService === 'eux', 'Nous recevons')}</div></fieldset>
+            <fieldset><legend class="font-semibold">Que notez-vous pendant le set ${b.numero} ?</legend>
+                <div class="mt-2 grid gap-2 sm:grid-cols-2">${radio('saisie', 'score', b.saisie === 'score', 'Le score seulement')}${radio('saisie', 'touches', b.saisie === 'touches', 'Le score et les touches des joueurs')}</div></fieldset>
             <div class="flex flex-col gap-2">
                 <button type="button" class="btn btn-accent btn-block" data-action="feuille-match#commencer" aria-disabled="${manque.length ? 'true' : 'false'}" aria-describedby="reste-a-faire">Commencer le set ${b.numero}</button>
                 <p class="text-sm" id="reste-a-faire">${manque.length ? 'Reste à faire : ' + manque.join(', ') + '.' : 'Prêt : le set commence au score de départ choisi.'}</p>
@@ -158,12 +166,16 @@ export default class extends Controller {
                 <div class="grid gap-2 sm:grid-cols-2"><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#tournerSet">Tourner d'un poste</button><button type="button" class="btn btn-primary" data-action="feuille-match#fermerOutil">C'est bon</button></div>`
         } else if (m) {
             outils = `<div class="grid gap-2 sm:grid-cols-2">
-                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="remplacement">Remplacer un joueur</button>
+                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="remplacement"${set.saisie === 'touches' && this.echange(set).length ? ' aria-disabled="true"' : ''}>Remplacer un joueur</button>
                 <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="correction">Corriger le score</button></div>`
         }
         const fin = m && c.finAtteinte
             ? `<div role="status" class="rounded-box border-2 border-(--color-primary) bg-base-200 p-3 flex flex-col gap-2"><p><strong>Fin du set : ${c.score[0]}–${c.score[1]}.</strong> Un point mal noté ? Touchez « Précédent ».</p><button type="button" class="btn btn-accent" data-action="feuille-match#terminer">Terminer le set ${set.numero}</button></div>`
             : ''
+        if (set.saisie === 'touches' && m && !['remplacement', 'correction', 'replacer'].includes(this.mode)) {
+            return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-3" aria-labelledby="titre-set-cours">
+                ${this.vueTouches(set)}${fin}${outils}${this.vueEchanges(set)}</section>`
+        }
         return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-set-cours">
             <div class="flex flex-wrap items-baseline justify-between gap-2"><h2 id="titre-set-cours" class="text-xl uppercase tracking-wide">Set ${set.numero} en cours</h2>
             <p class="text-sm">en ${set.pointsFin} points · parti de ${set.scoreDepart[0]}–${set.scoreDepart[1]}</p></div>
@@ -224,6 +236,224 @@ export default class extends Controller {
         return `<div><h3 class="text-lg uppercase tracking-wide">Sets joués</h3><table class="table mt-1"><thead><tr><th scope="col">Joueur</th><th scope="col" class="text-right">Sets</th></tr></thead><tbody>${lignes}</tbody></table></div>`
     }
 
+    // --- Saisie des touches (D68 ; maquette docs/volley-stats/maquette-saisie-actions.md) ------------------------------
+
+    // Touches de l'échange en cours (après le dernier point, la dernière balle à rejouer ou la dernière correction)
+    echange(set) {
+        let touches = []
+        for (const h of set.historique) {
+            if (h.annule) continue
+            if (['point', 'rejouer', 'correction'].includes(h.type)) touches = []
+            else if (h.type === 'action') touches.push(h)
+        }
+        return touches
+    }
+
+    // Action proposée pour la prochaine touche, recalculée après chaque touche (jamais imposée)
+    predire(set) {
+        const touches = this.echange(set)
+        if (!touches.length) return set.calcul.service === 'eux' ? 'reception' : 'defense'
+        return { reception: 'passe', defense: 'passe', passe: 'attaque' }[touches[touches.length - 1].donnees.action] ?? 'defense'
+    }
+
+    vueTouches(set) {
+        const c = set.calcul
+        const touches = this.echange(set)
+        const derniere = touches[touches.length - 1]
+        this.saisie ??= { etape: 'jeu', choix: null, faute: null }
+        const t = this.saisie
+        // Touche en attente d'issue : la dernière de l'échange, sauf si « Le jeu continue » a été touché
+        const enAttente = derniere && t.continue !== derniere.uuid ? derniere : null
+        const action = t.faute ? null : (t.choix ?? this.predire(set))
+        const verrou = ['perdu-attaque', 'block-deux'].includes(t.etape)
+        const refus = verrou ? ' aria-disabled="true"' : ''
+        const actions = ACTIONS.map(([v, l]) => `<button type="button" class="btn btn-outline btn-primary btn-bascule" data-action="feuille-match#choisirAction" data-feuille-match-valeur-param="${v}" aria-pressed="${action === v}"${refus}>${l}</button>`).join('')
+        const cases = ORDRE_VISUEL.map((p) => {
+            const id = c.postes[p - 1]
+            if (id === null) return `<div class="terrain-case" data-etat="vide"><span class="terrain-nom">Place libre</span><span class="terrain-poste">${p}</span></div>`
+            const arriere = (action === 'block' || t.etape === 'block-deux') && !AVANTS.includes(p - 1)
+            const actif = enAttente && enAttente.donnees.joueurs[0] === id && t.etape !== 'block-deux'
+            const mention = actif ? `<span class="terrain-mention">${ACTION_NOM[enAttente.donnees.action]}</span>` : ''
+            const service = p === 1 && c.service === 'nous' ? '<span class="terrain-service">Au service</span>' : ''
+            return `<button type="button" class="terrain-case" data-action="feuille-match#toucherJoueur" data-feuille-match-joueur-param="${id}" data-feuille-match-poste-param="${p}"${actif ? ' aria-current="true"' : ''}${arriere || t.etape === 'perdu-attaque' ? ' aria-disabled="true"' : ''} aria-label="${echapper(this.nom(id))}${action ? ' : noter une ' + ACTION_NOM[action] : ''}"><span class="terrain-nom">${echapper(this.nom(id))}${mention}</span><span class="terrain-poste">${p} · ${LIBELLES[p]}</span>${service}</button>`
+        }).join('')
+        return `<div><h2 id="titre-set-cours" class="text-base uppercase tracking-wide">Set ${set.numero} en cours <span class="normal-case tracking-normal font-sans text-sm font-normal">· en ${set.pointsFin} points · score et touches</span></h2>
+                <p class="mt-1 flex items-baseline justify-center gap-3 font-display"><span class="font-semibold uppercase wrap-anywhere text-right flex-1">${echapper(this.feuille.nous)}</span><span class="score-set">${c.score[0]}–${c.score[1]}</span><span class="font-semibold uppercase wrap-anywhere flex-1">${echapper(this.feuille.eux)}</span></p>
+                <p class="text-sm text-center">Au service : <strong>${c.service === 'nous' ? echapper(this.nom(c.postes[0])) : echapper(this.feuille.eux)}</strong></p></div>
+            <div><p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Prochaine touche${enAttente ? ', si le jeu continue' : ''}</p>
+                <div class="mt-1 grid grid-cols-4 gap-1" role="group" aria-label="Action de la prochaine touche">${actions}<button type="button" class="btn btn-outline btn-primary col-span-2" data-action="feuille-match#menuFaute" aria-expanded="${t.etape === 'faute-menu'}"${refus}>${t.faute ? 'Faute : ' + FAUTES_JOUEUR.find((f) => f[0] === t.faute)[1].toLowerCase() : 'Faute de…'}</button></div></div>
+            <div class="terrain"><p class="terrain-filet">Filet</p><div class="terrain-grille" role="group" aria-label="Joueurs sur le terrain, filet en haut : touchez celui qui a joué le ballon">${cases}</div></div>
+            <div class="rounded-box border-2 p-2 flex flex-col gap-2 ${enAttente || t.etape !== 'jeu' || t.faute ? 'border-(--color-primary) bg-base-200' : 'border-dashed border-base-300'}" aria-live="polite">${this.vueCarteTouche(set, enAttente, action)}</div>
+            <div class="grid grid-cols-2 gap-2">
+                <button type="button" class="btn btn-primary" data-action="feuille-match#pointSansTouche" data-feuille-match-pour-param="nous"${refus}>Point pour nous</button>
+                <button type="button" class="btn btn-primary" data-action="feuille-match#pointSansTouche" data-feuille-match-pour-param="eux"${refus}>Point pour eux</button></div>
+            <div class="grid grid-cols-3 gap-2 items-center"><span class="text-sm">Sans détail :</span>
+                <button type="button" class="btn btn-outline btn-primary btn-sm min-h-11" data-action="feuille-match#pointSansDetail" data-feuille-match-pour-param="nous"${touches.length || verrou ? ' aria-disabled="true"' : ''}>Nous</button>
+                <button type="button" class="btn btn-outline btn-primary btn-sm min-h-11" data-action="feuille-match#pointSansDetail" data-feuille-match-pour-param="eux"${touches.length || verrou ? ' aria-disabled="true"' : ''}>Eux</button></div>
+            <button type="button" class="btn btn-outline btn-primary btn-block" data-action="feuille-match#rejouer"${touches.length && !verrou ? '' : ' aria-disabled="true"'}>Balle à rejouer</button>
+            <div class="grid grid-cols-2 gap-2"><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#precedent" aria-label="Précédent : annuler la dernière saisie" ${set.historique.some((h) => !h.annule) ? '' : 'aria-disabled="true"'}><span aria-hidden="true">←</span> Précédent</button><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#suivant" aria-label="Suivant : rétablir la saisie" ${set.historique.length && set.historique[set.historique.length - 1].annule ? '' : 'aria-disabled="true"'}>Suivant <span aria-hidden="true">→</span></button></div>
+            <p class="text-sm"><strong>Échange en cours :</strong> ${touches.length ? touches.map((h) => `${echapper(this.nom(h.donnees.joueurs[0]))} ${ACTION_NOM[h.donnees.action]}${h.enAttente ? ' <span class="italic">· envoi…</span>' : ''}`).join(' · ') : 'aucune touche notée.'}</p>`
+    }
+
+    vueCarteTouche(set, enAttente, action) {
+        const t = this.saisie
+        if (t.etape === 'faute-menu') {
+            const b = (type, [v, l]) => `<button type="button" class="btn btn-outline btn-primary btn-sm min-h-11" data-action="feuille-match#${type}" data-feuille-match-valeur-param="${v}">${l}</button>`
+            return `<p class="text-sm font-semibold">Faute d'un joueur, puis touchez-le :</p><div class="grid grid-cols-2 gap-1">${FAUTES_JOUEUR.map((f) => b('fauteJoueur', f)).join('')}</div>
+                <p class="text-sm font-semibold">Faute de l'équipe, point pour eux tout de suite :</p><div class="grid grid-cols-2 gap-1">${FAUTES_EQUIPE.map((f) => b('fauteEquipe', f)).join('')}</div>
+                <button type="button" class="btn btn-ghost btn-sm min-h-11" data-action="feuille-match#menuFaute">Fermer</button>`
+        }
+        if (t.etape === 'perdu-attaque') {
+            return `<p class="font-semibold">${echapper(this.nom(enAttente.donnees.joueurs[0]))} · Attaque perdue : comment ?</p><div class="grid grid-cols-2 gap-2">
+                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#issueAttaque" data-feuille-match-valeur-param="contree">Contrée</button>
+                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#issueAttaque" data-feuille-match-valeur-param="faute">Faute</button></div>`
+        }
+        if (t.etape === 'block-deux') {
+            return `<p class="font-semibold">Block gagnant de ${echapper(this.nom(enAttente.donnees.joueurs[0]))} : un deuxième bloqueur ? Touchez-le.</p>
+                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#unSeulBloqueur">Un seul bloqueur</button>`
+        }
+        if (t.faute) {
+            return `<p class="font-semibold">${FAUTES_JOUEUR.find((f) => f[0] === t.faute)[1]} : touchez le joueur fautif.</p><button type="button" class="btn btn-ghost btn-sm min-h-11" data-action="feuille-match#annulerFaute">Ce n'était pas une faute</button>`
+        }
+        if (enAttente) {
+            return `<p class="font-semibold"><span class="text-xs uppercase tracking-wider text-(--color-base-content)/70">En attente</span> ${echapper(this.nom(enAttente.donnees.joueurs[0]))} · ${ACTION_NOM[enAttente.donnees.action]}</p>
+                <div class="grid grid-cols-3 gap-1">
+                    <button type="button" class="btn btn-outline btn-primary btn-sm min-h-12" data-action="feuille-match#issue" data-feuille-match-valeur-param="gagne">Point gagné</button>
+                    <button type="button" class="btn btn-outline btn-primary btn-sm min-h-12" data-action="feuille-match#issue" data-feuille-match-valeur-param="perdu">Point perdu</button>
+                    <button type="button" class="btn btn-outline btn-sm min-h-12" data-action="feuille-match#issue" data-feuille-match-valeur-param="continue">Le jeu continue</button></div>`
+        }
+        const qui = { reception: 'qui réceptionne', defense: 'qui défend', passe: 'qui fait la passe', attaque: 'qui attaque', renvoi: 'qui renvoie', block: 'qui contre' }[action]
+        return `<p class="font-semibold">Touchez le joueur ${qui}.</p><p class="text-sm">Rien à noter ? « Point pour nous » ou « Point pour eux ».</p>`
+    }
+
+    // Historique regroupé par échange (le plus récent en haut)
+    vueEchanges(set) {
+        const echanges = []
+        let touches = []
+        for (const h of set.historique) {
+            if (h.annule || h.type === 'modification') continue
+            if (h.type === 'action') { touches.push(h); continue }
+            if (h.type === 'point' || h.type === 'rejouer') {
+                const d = h.donnees ?? {}
+                const decisive = touches.find((x) => x.uuid === d.sur)
+                const quoi = h.type === 'rejouer' ? 'Balle à rejouer · touches non comptées'
+                    : `${d.pour === 'nous' ? 'Point pour nous' : 'Point pour eux'}${d.sansDetail ? ' · sans détail' : ''}${decisive ? ` · ${echapper(this.nom(decisive.donnees.joueurs[0]))} ${ACTION_NOM[decisive.donnees.action]}${d.detail === 'contree' ? ' contrée' : ''}` : ''}${d.sur === 'service' ? (d.pour === 'nous' ? ' · ace' : ' · faute de service') : ''}${d.fautif ? ` · ${echapper(this.nom(d.fautif))} faute` : ''}`
+                const autres = touches.filter((x) => x !== decisive).map((x) => `${echapper(this.nom(x.donnees.joueurs[0]))} ${ACTION_NOM[x.donnees.action]}`).join(' · ')
+                echanges.push(`<li class="py-1"><span class="tabular-nums font-semibold">${h.score ? `${h.score[0]}–${h.score[1]}` : ''}</span> ${quoi}${autres ? `<span class="block text-(--color-base-content)/80${h.type === 'rejouer' ? ' line-through' : ''}">${autres}</span>` : ''}</li>`)
+                touches = []
+            } else {
+                echanges.push(`<li class="py-1">${echapper(h.texte)}</li>`)
+            }
+        }
+        if (!echanges.length) return ''
+        return `<details class="depliant border-t border-base-300 pt-2"><summary class="cursor-pointer font-semibold min-h-12 flex items-center justify-between">Historique du set (${echanges.length})<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></summary><ol class="divide-y divide-(--color-base-300) text-sm">${echanges.reverse().join('')}</ol></details>`
+    }
+
+    choisirAction({ params: { valeur } }) {
+        this.saisie.choix = valeur
+        this.saisie.faute = null
+        if (this.saisie.etape === 'faute-menu') this.saisie.etape = 'jeu'
+        this.rendre()
+        this.annoncer(`Prochaine touche : ${ACTION_NOM[valeur]}.`)
+    }
+
+    menuFaute() {
+        this.saisie.etape = this.saisie.etape === 'faute-menu' ? 'jeu' : 'faute-menu'
+        this.rendre()
+    }
+
+    fauteJoueur({ params: { valeur } }) {
+        Object.assign(this.saisie, { faute: valeur, etape: 'jeu' })
+        this.rendre()
+        this.annoncer('Touchez le joueur fautif.')
+    }
+
+    annulerFaute() {
+        this.saisie.faute = null
+        this.rendre()
+    }
+
+    fauteEquipe({ params: { valeur } }) {
+        this.saisie.etape = 'jeu'
+        this.noterPoint({ pour: 'eux', detail: valeur })
+    }
+
+    toucherJoueur(e) {
+        if (e.currentTarget.getAttribute('aria-disabled') === 'true') {
+            this.signaler(this.saisie.etape === 'perdu-attaque' ? 'Choisissez d\'abord : contrée ou faute.' : 'Un joueur arrière ne peut pas contrer.')
+            return
+        }
+        const { joueur } = e.params
+        const set = this.setEnCours()
+        const touches = this.echange(set)
+        const derniere = touches[touches.length - 1]
+        const t = this.saisie
+        if (t.etape === 'block-deux') return this.noterPoint({ pour: 'nous', sur: derniere.uuid, avec: joueur })
+        if (t.faute) return this.noterPoint({ pour: 'eux', detail: t.faute, fautif: joueur })
+        const action = t.choix ?? this.predire(set)
+        Object.assign(t, { choix: null, etape: 'jeu', continue: null })
+        this.evenement('action', { action, joueurs: [joueur] })
+        this.annoncer(`${this.nom(joueur)}, ${ACTION_NOM[action]}.`)
+    }
+
+    issue({ params: { valeur } }) {
+        const set = this.setEnCours()
+        const touches = this.echange(set)
+        const derniere = touches[touches.length - 1]
+        if (!derniere) return
+        if (valeur === 'continue') {
+            this.saisie.continue = derniere.uuid
+            this.rendre()
+            this.annoncer(`Le jeu continue. Prochaine touche : ${ACTION_NOM[this.predire(set)]}.`)
+        } else if (valeur === 'gagne' && derniere.donnees.action === 'block') {
+            this.saisie.etape = 'block-deux'
+            this.rendre()
+        } else if (valeur === 'perdu' && derniere.donnees.action === 'attaque') {
+            this.saisie.etape = 'perdu-attaque'
+            this.rendre()
+        } else {
+            this.noterPoint({ pour: valeur === 'gagne' ? 'nous' : 'eux', sur: derniere.uuid })
+        }
+    }
+
+    issueAttaque({ params: { valeur } }) {
+        const touches = this.echange(this.setEnCours())
+        this.noterPoint({ pour: 'eux', sur: touches[touches.length - 1].uuid, detail: valeur })
+    }
+
+    unSeulBloqueur() {
+        const touches = this.echange(this.setEnCours())
+        this.noterPoint({ pour: 'nous', sur: touches[touches.length - 1].uuid })
+    }
+
+    // « Point pour nous / eux » : point sans faute de nos joueurs ; sans touche à notre service, c'est un ace ou une faute
+    // de service de notre serveur (déduit de la rotation)
+    pointSansTouche(e) {
+        if (e.currentTarget.getAttribute('aria-disabled') === 'true') return
+        const set = this.setEnCours()
+        const sansTouche = !this.echange(set).length
+        const donnees = { pour: e.params.pour }
+        if (sansTouche && set.calcul.service === 'nous' && set.calcul.postes[0] !== null) donnees.sur = 'service'
+        this.noterPoint(donnees)
+    }
+
+    pointSansDetail(e) {
+        if (e.currentTarget.getAttribute('aria-disabled') === 'true') return
+        this.noterPoint({ pour: e.params.pour, sansDetail: true })
+    }
+
+    rejouer(e) {
+        if (e.currentTarget.getAttribute('aria-disabled') === 'true') return
+        Object.assign(this.saisie, { etape: 'jeu', choix: null, faute: null, continue: null })
+        this.evenement('rejouer', {})
+        this.annoncer('Balle à rejouer : même service.')
+    }
+
+    noterPoint(donnees) {
+        Object.assign(this.saisie, { etape: 'jeu', choix: null, faute: null, continue: null })
+        this.evenement('point', donnees)
+    }
+
     // --- Composition ---------------------------------------------------------------------------------------------------
 
     premiereVide() {
@@ -267,7 +497,11 @@ export default class extends Controller {
 
     choisir({ params: { champ, valeur } }) {
         if (champ === 'depart') this.brouillon.scoreDepart = [...DEPARTS[valeur]]
-        else this.brouillon.premierService = valeur
+        else if (champ === 'saisie') {
+            this.brouillon.saisie = valeur // choisi au moment de commencer, rien à enregistrer avant
+            this.rendre()
+            return
+        } else this.brouillon.premierService = valeur
         this.enregistrerComposition()
     }
 
@@ -288,7 +522,7 @@ export default class extends Controller {
         const b = this.brouillon
         if (await this.envoyer(b.numero, 'composition', { composition: { postes: b.postes, premierService: b.premierService, scoreDepart: b.scoreDepart } }, false)) {
             // Rechargement : la liste des présents se replie et le score passe en haut de l'écran
-            if (await this.envoyer(b.numero, 'commencer', { aCinq })) window.location.reload()
+            if (await this.envoyer(b.numero, 'commencer', { aCinq, saisie: b.saisie })) window.location.reload()
         }
     }
 
@@ -331,6 +565,11 @@ export default class extends Controller {
     }
 
     ouvrirOutil({ params: { mode } }) {
+        const set = this.setEnCours()
+        if (mode === 'remplacement' && set?.saisie === 'touches' && this.echange(set).length) {
+            this.signaler('Notez d\'abord le point de l\'échange en cours.')
+            return
+        }
         this.mode = mode
         this.sortant = undefined
         this.rendre()
@@ -377,7 +616,7 @@ export default class extends Controller {
     envoyer(numero, action, donnees, rafraichir = true) {
         return new Promise((resoudre) => {
             this.file.push({ numero, action, donnees, rafraichir, resoudre })
-            if (action === 'evenement' && donnees.type === 'point') this.projeter()
+            if (action === 'evenement' && ['point', 'action', 'rejouer'].includes(donnees.type)) this.projeter()
             this.traiter()
         })
     }
@@ -444,9 +683,14 @@ export default class extends Controller {
     projeter(rendre = true) {
         const etat = structuredClone(this.serveur)
         for (const op of this.file) {
-            if (op.action !== 'evenement' || op.donnees.type !== 'point') continue
+            if (op.action !== 'evenement') continue
             const set = etat.sets.find((s) => s.numero === op.numero)
             if (!set) continue
+            if (['action', 'rejouer'].includes(op.donnees.type)) {
+                set.historique.push({ uuid: op.donnees.uuid, ordre: null, type: op.donnees.type, texte: op.donnees.type === 'rejouer' ? 'Balle à rejouer (envoi…)' : 'Touche (envoi…)', annule: false, score: null, entre: null, donnees: op.donnees.donnees, enAttente: true })
+                continue
+            }
+            if (op.donnees.type !== 'point') continue
             const c = set.calcul
             const pour = op.donnees.donnees.pour
             if (pour === 'nous') {
@@ -458,7 +702,7 @@ export default class extends Controller {
                 c.service = 'eux'
             }
             c.finAtteinte = Math.max(...c.score) >= set.pointsFin
-            set.historique.push({ uuid: op.donnees.uuid, ordre: null, type: 'point', texte: `Point pour ${pour === 'nous' ? etat.nous : etat.eux} (envoi…)`, annule: false, score: [...c.score], entre: null, enAttente: true })
+            set.historique.push({ uuid: op.donnees.uuid, ordre: null, type: 'point', texte: `Point pour ${pour === 'nous' ? etat.nous : etat.eux} (envoi…)`, annule: false, score: [...c.score], entre: null, donnees: op.donnees.donnees, enAttente: true })
         }
         this.etatValue = etat
         if (rendre) this.rendre()
