@@ -67,7 +67,7 @@ encarts empilés ou sans date de fin ; captures d'écran dans l'aide.
 
 1. Qui envoie le courriel de rentrée : un bouton du tableau de bord, ou un message écrit par le bureau ?
 2. Y a-t-il une réunion des responsables à la rentrée (fiche PDF) ?
-3. Encart fermé : retenu par compte (en base) ou seulement dans le navigateur ?
+3. (Tranché le 01/11/2026 : par compte, en base, avec le rôle pour lequel il a été vu ; la migration partira avec les autres, Francis ne les a pas encore appliquées.) Encart fermé : retenu par compte (en base) ou seulement dans le navigateur ?
 4. (Réglé par D69 : oui.) « Mon équipe » choisie automatiquement pour tous les membres, pas seulement les capitaines ?
 5. Volley Stats annoncé avant la fusion du paragraphe des conditions d'utilisation (D68) ?
 
