@@ -711,7 +711,8 @@ reconnue par la collation de la base (`á` pour `a`) échappe au compteur du com
 ## D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
 **Décision** (utilisateur, 30/10/2026) :
 - **Page « Paramètres du site »** (admins), une seule ligne en base (`ParametresSite`) : un `cache:clear` ne perd rien.
-- **Connexion limitée (D61)** : désactivée au déploiement, tant que la vérification n'a pas réussi ; **activation refusée** si
+- **Connexion limitée (D61)** : facultative, la mise en place relève de Francis (décision de l'utilisateur, 31/10/2026) ; désactivée
+  au déploiement, tant que la vérification n'a pas réussi ; **activation refusée** si
   elle échoue ; désactivation toujours possible. La vérification se fait depuis la page, par le navigateur de l'admin : IP vue
   publique et pas celle d'un proxy non déclaré, en-tête `X-Forwarded-For` forgé ignoré, proxys de confiance sans danger (ni
   tout Internet, ni `REMOTE_ADDR`) ; valable une heure. L'admin confirme par une case ce que le site ne peut pas contrôler

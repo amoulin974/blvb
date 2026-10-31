@@ -2,12 +2,12 @@
 
 Formats de compétition (lots 1 à 6), wizard de saison, règlement par saison (R1 à R5), fermetures de gymnase, paramètres du
 site, limitation des essais de connexion. Relue par l'agent `deploiement` le 31/10/2026 sur `main` 4e5b37b. Seul Francis
-fusionne dans `prod`.
+fusionne dans `prod` : c'est son site, il décide si et quand déployer, et ce qu'il met en œuvre parmi ce qui suit.
 
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env` compris.
 Nouveautés : paquet Composer `symfony/html-sanitizer`, une soixantaine de paquets importmap (éditeur TipTap 3), dossiers
 `public/uploads/reglement` et `public/uploads/site`, 13 migrations (ajouts de colonnes et de tables, et `motif` rendu facultatif sur
-une table vide), une variable d'environnement à régler pour la limitation : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
+une table vide), une variable d'environnement seulement si la limitation facultative est mise en place : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
 `Dockerfile`, `compose.yaml` et `frankenphp/` sont inchangés, et le code est monté dans le conteneur.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
@@ -141,13 +141,15 @@ docker compose exec -T database sh -c 'exec mysql -uroot -p"$MYSQL_ROOT_PASSWORD
 docker compose restart php
 ```
 
-## Après le déploiement : adresse de contact et limitation des essais de connexion (D61, D62)
+## Après le déploiement : adresse de contact
 
-**Adresse de contact** : à renseigner tout de suite dans « Paramètres du site ». Sinon, les messages de refus d'une fermeture de
-gymnase montrent les adresses de connexion des admins.
+À renseigner dans « Paramètres du site ». Sinon, les messages de refus d'une fermeture de gymnase montrent les adresses de connexion
+des admins.
 
-**Limitation** : elle est **désactivée au déploiement** ; tant qu'elle l'est, les essais de mot de passe sont illimités (le tableau
-de bord le signale). Elle suppose que le site voit la vraie IP des visiteurs. `SYMFONY_TRUSTED_PROXIES` n'est dans aucun fichier
+## Facultatif, à la décision de Francis : limitation des essais de connexion (D61, D62)
+
+Le déploiement n'en dépend pas. La limitation est **désactivée au déploiement** ; tant qu'elle l'est, les essais de mot de passe sont
+illimités (le tableau de bord le signale). Elle suppose que le site voit la vraie IP des visiteurs. `SYMFONY_TRUSTED_PROXIES` n'est dans aucun fichier
 versionné : sans réglage sur le serveur, la vérification échouera très probablement, en montrant une adresse privée.
 
 1. Admin, page « Paramètres du site » : « Lancer la vérification ». Le message dit quoi régler ; l'adresse « Il voit … » est celle du
@@ -183,17 +185,17 @@ docker compose exec php php bin/console cache:pool:clear connexions.cache    # l
 Pour couper la limite, si un admin est bloqué : `docker compose exec php php bin/console app:connexion-limitee:desactiver`.
 Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
 
-## Réserves, à traiter après
+## Points signalés à Francis, à sa décision
 
 - Mot de passe SMTP en clair dans le `.env` versionné de `prod` : le déplacer dans `.env.local` et le changer.
 - `APP_SECRET` : le définir s'il est vide (étape 1).
 - Port MySQL 3307 publié par `compose.yaml` : vérifier que le pare-feu le ferme depuis l'extérieur.
-- Crons : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune'`). Le compte qui les
+- Crons, facultatifs : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune'`). Le compte qui les
   exécute doit avoir accès à Docker.
   - Rappel des scores, après le contrôle de `DEFAULT_URI` : le **premier passage envoie tout l'arriéré** de la saison, à voir avec
     `docker compose exec php php bin/console app:scores:rappeler --simulation`.
     `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`
-  - Nettoyage des compteurs d'essais, à l'activation de la limitation (sans elle, aucun compteur n'est créé) :
+  - Nettoyage des compteurs d'essais, seulement si la limitation est mise en place (sans elle, aucun compteur n'est créé) :
     `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`
 - Mots de passe de la base en clair dans `compose.yaml`, alors que le port 3307 est publié ; `DATABASE_OLD_URL` et phpMyAdmin publié
   sur le port 8080 avec `PMA_ARBITRARY=1` : exposition réelle à vérifier.
