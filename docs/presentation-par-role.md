@@ -114,3 +114,19 @@ recevoir un rappel par courriel si un score manque 2 jours après le match.
 de vos équipes.
 
 Volley Stats n'est annoncé qu'une fois le paragraphe des conditions d'utilisation fusionné (D68).
+
+## 7. Bouton « ? » flottant en bas à droite (avis complémentaire)
+
+**Verdict** : non sur tout le site. Le bas de l'écran est déjà pris : boutons « Point pour eux » de la page du match (une
+touche ratée = action fausse dans la file d'attente), toast « Mon équipe », barre d'enregistrement du règlement,
+navigation du wizard sur mobile ; le bouton remonte au-dessus du clavier et cache les champs. Peu découvert (pris pour une
+publicité ou un robot), dernier dans l'ordre du clavier alors que visible en premier. Assistant conversationnel : non
+(coût, fiabilité sur le règlement, données personnelles, trop peu de questions).
+
+**Alternative** :
+1. Lien « Aide » dans le menu du compte et le menu latéral sur téléphone, vers la page d'aide à l'ancre de la page en cours.
+2. Sur les écrans complexes seulement (page du match, fermetures, fiche du club, saisie du score) : lien « Comment ça
+   marche ? » à droite du titre, ouvrant un `<dialog>` ; jamais pendant la saisie des actions.
+3. Contact du bureau dans le pied de page et la page d'aide, tiré des paramètres du site (D62).
+
+Un seul fragment Twig d'aide par écran, réutilisé par le `<dialog>` et la page d'aide. Forme du lien : webdesigner.
