@@ -4,7 +4,8 @@ Saisie des compositions et des statistiques des joueurs pendant les matchs du ch
 conçu ni codé.** Cadrage consigné dans `docs/wizard-saison/decisions.md` (D66) ; ce dossier rassemble le reste : état des
 lieux, besoins, contraintes, risques et questions encore ouvertes. Démarré le 31/10/2026, branche `volley-stats`.
 
-Toutes les situations de jeu et leurs conséquences : `situations.md`.
+Toutes les situations de jeu et leurs conséquences : `situations.md`. Page match et composition par set (avis de
+l'ergonome) : `page-match.md`.
 
 Maquette existante : artefact « Volley Stats » (https://claude.ai/artifact/L8djveZYGiXZWvPAXdqFbP, septembre 2026).
 
