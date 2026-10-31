@@ -30,7 +30,7 @@ Les sets existants valent `score`.
 | Type | `donnees` | Effet sur le score |
 |---|---|---|
 | `action` | `{action, joueurs}` : `action` ∈ réception, passe, attaque, défense, block, renvoi ; `joueurs` : 1 identifiant de `FeuilleMatchJoueur` sur le terrain, 2 pour un block à deux (D68) | aucun |
-| `point` (existant) | `{pour, sur?, detail?}` : `sur` = uuid de l'action qui termine l'échange, ou `service`, ou absent (point sans action de nos joueurs : faute ou point adverse) ; `detail` = `contree` ou `faute` pour un point perdu sur une attaque (D68), ou le motif d'une faute de règlement (§3) | inchangé |
+| `point` (existant) | `{pour, sur?, detail?, sansDetail?}` : `sansDetail: true` = « Point sans détail » (échange non détaillé, aucune déduction d'ace ni de faute de service, D68) ; `sur` = uuid de l'action qui termine l'échange, ou `service`, ou absent (point sans action de nos joueurs : faute ou point adverse) ; `detail` = `contree` ou `faute` pour un point perdu sur une attaque (D68), ou le motif d'une faute de règlement (§3) | inchangé |
 | `rejouer` | `{}` : balle à rejouer, clôt l'échange sans point ; ses actions ne comptent pas (D68) | aucun |
 | `modification` | `{cible, joueurs?, action?, retirer?}` : corrige une action d'un échange terminé (D68) | aucun |
 
@@ -39,7 +39,8 @@ Sur un set `score`, seuls les types de la page du match sont acceptés (comme au
 ## 3. Règles
 
 - **Joueurs** : identifiants de `FeuilleMatchJoueur` de cette page **et sur le terrain** au moment de l'action (calculé par
-  `EtatSet`) ; block à deux : deux joueurs distincts, avant-centre/aile peu importe (pas de contrôle de position).
+  `EtatSet`) ; block à deux : deux joueurs distincts, **seulement pour un block gagnant** (D68) ; un joueur arrière ne contre pas (faute
+de règlement, refusé à la saisie).
 - **Point portant sur une action** (`sur`) : l'action doit être la dernière de l'échange en cours ; `point gagné` sur
   réception, passe, défense ou renvoi = point marqué par le joueur, pas compté en attaque (D68).
 - **Point portant sur le service** : seulement quand nous servons et qu'aucune action n'a encore été saisie dans l'échange :
@@ -95,7 +96,8 @@ joueur et par set ou par match :
 | Points marqués | aces, attaques, blocks gagnants, et points gagnés sur une autre action |
 | Sets joués | comme aujourd'hui |
 
-**Échange détaillé** : au moins une action, ou un point portant sur le service ou une faute de règlement. **Taux de
+**Échange détaillé** : tout échange dont le point n'est pas « sans détail » (D68) ; un point sans touche ni `sansDetail` se
+lit comme un point sans faute de nos joueurs (ace subi, faute de service adverse, ace ou faute de notre serveur selon `sur`). **Taux de
 détail** d'un set = échanges détaillés ÷ échanges ; un set compte dans les classements publics (brique suivante) s'il est
 en `touches` et au-dessus du seuil réglé par l'admin.
 

@@ -884,6 +884,9 @@ implicite**, **service jamais saisi** (déduit de la rotation), **saisie après 
 - *Précisé le 31/10/2026* (modifie D66 sur ce point) : **le responsable du club voit les statistiques individuelles des
   joueurs de ses équipes, comme l'équipe elle-même**, sans accord du joueur (usage interne au club, jamais public) ; à écrire
   dans les conditions d'utilisation. La publication sur le site reste soumise à l'accord de chaque joueur (D66).
+- *Précisé le 31/10/2026 (maquette du webdesigner)* : **bouton « Point sans détail »** pour un échange qu'on ne détaille
+  pas ; « Point pour nous / Point pour eux » sans touche reste un point sans faute de nos joueurs (ace subi, faute de service
+  adverse…), compté détaillé. **Deuxième bloqueur demandé seulement pour un block gagnant.**
 *(2026-10-31)*
 
 ---
