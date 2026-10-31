@@ -1,10 +1,8 @@
 {# « Qui est là ? » (D67) : toute l'équipe en cases à cocher, cochés d'office d'après le match précédent (ou toute l'équipe).
    Formulaire ordinaire : fonctionne sans JavaScript. #}
-<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4" aria-labelledby="titre-presents">
-    <div class="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 id="titre-presents" class="text-xl uppercase tracking-wide">Joueurs présents</h2>
-        {% if feuille %}<p class="text-sm font-semibold">{{ presents|length }} sur {{ membres|length }}</p>{% endif %}
-    </div>
+{# Une fois un set commencé, la section se replie : le score reste en haut de l'écran au gymnase (relecture ergonome) #}
+{% set setCommence = feuille and feuille.sets|filter(st => st.etat != 'composition')|length > 0 %}
+{% set liste %}
     {% if membres is empty %}
         <p class="mt-2">Aucun joueur dans l'équipe pour cette saison : ajoutez-les depuis la composition de l'équipe.</p>
     {% elseif not modifiable %}
@@ -15,7 +13,7 @@
         <form method="post" action="{{ path('front_feuille_match_presents', {equipe: match.equipe.id, partie: match.partie.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token(jeton) }}">
             <fieldset class="mt-2">
-                <legend class="text-sm">{{ feuille ? 'Qui est là ? Touchez pour changer.' : 'Qui est là ? Cochez les joueurs présents au match.' }}</legend>
+                <legend class="text-sm">{{ feuille ? 'Qui est là ? Cochez ou décochez, puis enregistrez.' : 'Qui est là ? Cochez les joueurs présents au match.' }}</legend>
                 <div class="mt-2 grid grid-cols-2 gap-2">
                     {% for membre in membres %}
                         <label class="choix-carte choix-ligne">
@@ -25,7 +23,25 @@
                     {% endfor %}
                 </div>
             </fieldset>
-            <button type="submit" class="btn btn-primary btn-block mt-3">{{ feuille ? 'Enregistrer les joueurs présents' : 'Préparer le match' }}</button>
+            <button type="submit" class="btn {{ setCommence ? 'btn-outline btn-primary' : 'btn-primary' }} btn-block mt-3">{{ feuille ? 'Enregistrer les joueurs présents' : 'Préparer le match' }}</button>
         </form>
+    {% endif %}
+{% endset %}
+
+<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4" aria-labelledby="titre-presents">
+    {% if setCommence %}
+        <details class="depliant">
+            <summary class="flex min-h-12 cursor-pointer items-center justify-between gap-2">
+                <h2 id="titre-presents" class="text-xl uppercase tracking-wide">Joueurs présents : {{ presents|length }} sur {{ membres|length }}</h2>
+                <span class="flex items-center gap-1 text-sm font-semibold text-(--color-primary)">{{ modifiable ? 'Modifier' : 'Voir' }}<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></span>
+            </summary>
+            {{ liste }}
+        </details>
+    {% else %}
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 id="titre-presents" class="text-xl uppercase tracking-wide">Joueurs présents</h2>
+            {% if feuille %}<p class="text-sm font-semibold">{{ presents|length }} sur {{ membres|length }}</p>{% endif %}
+        </div>
+        {{ liste }}
     {% endif %}
 </section>

@@ -78,10 +78,9 @@ final class FeuilleMatchService
             $this->em->persist($feuille);
             $this->em->flush();
         } catch (UniqueConstraintViolationException) {
-            // Créée entre-temps par un autre téléphone : on relit celle-là
+            // Créée au même instant par un autre téléphone : rien n'est enregistré ici, la page se recharge sur celle-là
             $this->doctrine->resetManager();
-
-            return $this->feuilles->pour($match->partie, $match->equipe) ?? throw new SaisieInvalide('La page du match n\'a pas pu être créée : rechargez la page.');
+            throw new SaisieInvalide('La page du match vient d\'être préparée sur un autre téléphone : vérifiez les joueurs présents.');
         }
 
         return $feuille;
@@ -199,7 +198,23 @@ final class FeuilleMatchService
      */
     public function composition(FeuilleMatch $feuille, int $numero, array $donnees): FeuilleMatchSet
     {
+        $resultat = null;
+        $this->transaction(function () use ($feuille, $numero, $donnees, &$resultat): void {
+            // Verrou sur la page : deux téléphones ne créent pas le même set
+            $this->em->refresh($feuille, LockMode::PESSIMISTIC_WRITE);
+            $resultat = $this->composer($feuille, $numero, $donnees);
+        });
+
+        return $resultat;
+    }
+
+    /** @param array<string, mixed> $donnees */
+    private function composer(FeuilleMatch $feuille, int $numero, array $donnees): FeuilleMatchSet
+    {
         $set = $feuille->set($numero);
+        if ($set !== null) {
+            $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE);
+        }
         if ($set === null) {
             $dernier = $feuille->getSets()->last() ?: null;
             if ($numero !== $feuille->getSets()->count() + 1 || ($dernier !== null && $dernier->getEtat() !== FeuilleMatchSet::TERMINE)
@@ -225,7 +240,6 @@ final class FeuilleMatchService
         }
         $set->setScoreDepart($depart);
         $feuille->marquerModifiee();
-        $this->em->flush();
 
         return $set;
     }
@@ -233,6 +247,12 @@ final class FeuilleMatchService
     /** Commencer le set : composition complète (ou une seule place libre si l'équipe commence à 5), premier service choisi */
     public function commencer(FeuilleMatchSet $set, bool $aCinq): void
     {
+        $this->transaction(fn () => $this->commencerSousVerrou($set, $aCinq));
+    }
+
+    private function commencerSousVerrou(FeuilleMatchSet $set, bool $aCinq): void
+    {
+        $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE);
         if ($set->getEtat() !== FeuilleMatchSet::COMPOSITION) {
             throw new SaisieInvalide('Ce set est déjà commencé.');
         }
@@ -245,7 +265,6 @@ final class FeuilleMatchService
         }
         $set->setEtat(FeuilleMatchSet::EN_COURS);
         $set->getFeuille()->setEtat(FeuilleMatch::EN_COURS)->marquerModifiee();
-        $this->em->flush();
     }
 
     /**
@@ -262,8 +281,13 @@ final class FeuilleMatchService
         }
         $this->transaction(function () use ($set, $uuid, $type, $donnees, $dernierOrdre, $auteur): void {
             $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE); // verrou et journal relu : un autre téléphone a pu saisir
-            if ($this->em->getRepository(FeuilleMatchEvenement::class)->findOneBy(['uuid' => $uuid]) !== null) {
-                return;
+            $existant = $this->em->getRepository(FeuilleMatchEvenement::class)->findOneBy(['uuid' => strtolower($uuid)]);
+            if ($existant !== null) {
+                if ($existant->getSet() !== $set) {
+                    throw new SaisieInvalide('Saisie non reconnue : rechargez la page.');
+                }
+
+                return; // envoi rejoué après une coupure : déjà enregistré
             }
             if ($set->getEtat() !== FeuilleMatchSet::EN_COURS) {
                 throw new SaisieInvalide('Ce set n\'est pas en cours.');
@@ -319,6 +343,12 @@ final class FeuilleMatchService
     /** Fin du set (proposée quand le score de fin est atteint, D67) ; la page passe à « terminée » quand le match est gagné */
     public function terminerSet(FeuilleMatchSet $set): void
     {
+        $this->transaction(fn () => $this->terminerSousVerrou($set));
+    }
+
+    private function terminerSousVerrou(FeuilleMatchSet $set): void
+    {
+        $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE); // un point saisi au même instant compte
         if ($set->getEtat() !== FeuilleMatchSet::EN_COURS) {
             throw new SaisieInvalide('Ce set n\'est pas en cours.');
         }
@@ -331,12 +361,17 @@ final class FeuilleMatchService
             $feuille->setEtat(FeuilleMatch::TERMINEE);
         }
         $feuille->marquerModifiee();
-        $this->em->flush();
     }
 
     /** Rouvre le dernier set terminé (point oublié) ; la page redevient « en cours » */
     public function rouvrirSet(FeuilleMatchSet $set): void
     {
+        $this->transaction(fn () => $this->rouvrirSousVerrou($set));
+    }
+
+    private function rouvrirSousVerrou(FeuilleMatchSet $set): void
+    {
+        $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE);
         if ($set->getEtat() !== FeuilleMatchSet::TERMINE || $set !== $set->getFeuille()->getSets()->last()) {
             throw new SaisieInvalide('Seul le dernier set terminé peut être rouvert.');
         }

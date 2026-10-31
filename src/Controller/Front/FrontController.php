@@ -286,9 +286,24 @@ final class FrontController extends AbstractController
             'estCapitaineDeCetteEquipe'=>$estCapitaineDeCetteEquipe,
             // Volley Stats (D67) : entrées vers les pages du match et sets joués, pour l'équipe et le responsable de son club
             'pagesMatch'=>$pagesMatch,
-            'setsJoues'=>$pagesMatch && $saison ? $feuilleMatchService->setsJoues($equipe, $saison) : [],
-            'nomsCourts'=>$pagesMatch && $saison ? \App\VolleyStats\NomsCourts::pour($membreEquipeRepository->findRosterBySaison($equipe, $saison)) : [],
+            'setsJoues'=>$pagesMatch && $saison ? $this->setsJouesTries($feuilleMatchService->setsJoues($equipe, $saison), $membreEquipeRepository->findRosterBySaison($equipe, $saison)) : [],
         ]);
+    }
+
+    /**
+     * Sets joués (Volley Stats, D67) : du plus grand nombre au plus petit, puis par nom
+     *
+     * @param array<int, int> $sets identifiant du membre => sets
+     * @param list<\App\Entity\MembreEquipe> $membres
+     * @return list<array{nom: string, sets: int}>
+     */
+    private function setsJouesTries(array $sets, array $membres): array
+    {
+        $noms = \App\VolleyStats\NomsCourts::pour($membres);
+        $lignes = array_map(fn (int $id, int $n) => ['nom' => $noms[$id] ?? 'Joueur retiré', 'sets' => $n], array_keys($sets), $sets);
+        usort($lignes, fn ($a, $b) => [$b['sets'], $a['nom']] <=> [$a['sets'], $b['nom']]);
+
+        return $lignes;
     }
 
     //Route pour afficher le calendrier des matchs de la saison sélectionnée

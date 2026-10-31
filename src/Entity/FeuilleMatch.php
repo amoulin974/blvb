@@ -49,7 +49,7 @@ class FeuilleMatch
     #[ORM\Column]
     private \DateTimeImmutable $modifieLe;
 
-    /** Point de départ du délai de correction de 7 jours (D66) */
+    /** Première fin du match : point de départ du délai de correction de 7 jours (D66), gardé si la page est rouverte */
     #[ORM\Column(nullable: true)]
     private ?\DateTimeImmutable $termineeLe = null;
 
@@ -105,7 +105,10 @@ class FeuilleMatch
     public function setEtat(string $etat): static
     {
         $this->etat = $etat;
-        $this->termineeLe = $etat === self::TERMINEE ? new \DateTimeImmutable() : null;
+        // Date de la PREMIÈRE fin, jamais repoussée : rouvrir puis terminer de nouveau ne relance pas le délai de 7 jours
+        if ($etat === self::TERMINEE && $this->termineeLe === null) {
+            $this->termineeLe = new \DateTimeImmutable();
+        }
 
         return $this;
     }

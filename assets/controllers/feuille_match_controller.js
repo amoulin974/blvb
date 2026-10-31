@@ -76,8 +76,7 @@ export default class extends Controller {
             }
             morceaux.push(this.vueComposition())
         } else if (this.matchGagne()) {
-            const [nous, eux] = this.feuille.setsGagnes
-            morceaux.push(`<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4"><h2 class="text-xl uppercase tracking-wide">Match terminé</h2><p class="mt-1">${echapper(this.feuille.nous)} ${nous} – ${eux} ${echapper(this.feuille.eux)}, d'après les sets notés ici.</p></section>`)
+            morceaux.push('<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4"><h2 class="text-xl uppercase tracking-wide">Match terminé, d\'après les sets notés ici.</h2></section>')
         }
         morceaux.push(this.vueReleve())
         this.contenuTarget.innerHTML = morceaux.join('')
@@ -108,13 +107,13 @@ export default class extends Controller {
         const manque = []
         if (vides) manque.push(vides === 1 ? '1 place à remplir' : `${vides} places à remplir`)
         if (!b.premierService) manque.push('premier service à choisir')
-        const consigne = b.active ? `Joueur pour la place ${b.active} · ${LIBELLES[b.active]} :` : (banc.length ? 'Sur le banc (touchez une place pour la changer) :' : 'Tous les joueurs présents sont placés.')
+        const consigne = b.active ? `Joueur pour la place ${b.active} · ${LIBELLES[b.active]} :` : (banc.length ? `Sur le banc : ${banc.map((j) => echapper(j.nom)).join(', ')}. Touchez une place du terrain pour la changer.` : 'Tous les joueurs présents sont placés.')
         const radio = (nom, valeur, coche, libelle) => `<label class="choix-carte choix-ligne"><input type="radio" class="radio radio-primary" name="${nom}-${b.numero}" ${coche ? 'checked' : ''} data-action="feuille-match#choisir" data-feuille-match-champ-param="${nom}" data-feuille-match-valeur-param="${valeur}"> <span class="${nom === 'depart' ? 'font-display text-lg font-bold' : 'font-medium'}">${libelle}</span></label>`
         return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-compo">
             <div><h2 id="titre-compo" class="text-xl uppercase tracking-wide">Composition du set ${b.numero}</h2>
             <p class="text-sm">${b.numero > 1 ? `Reprise du départ du set ${b.numero - 1}. ` : ''}Touchez une place, puis un joueur.${b.pointsFin === 15 ? ' Set en 15 points.' : ''}</p></div>
             ${this.terrain(b.postes, { actif: b.active, cliquable: true, service: b.premierService, etiquette: `Composition du set ${b.numero}` })}
-            <div><p class="font-semibold">${consigne}</p><div class="mt-2 flex flex-wrap gap-2">${banc.map((j) => `<button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#placer" data-feuille-match-joueur-param="${j.id}"${b.active ? '' : ' aria-disabled="true"'}>${echapper(j.nom)}</button>`).join('')}</div></div>
+            <div><p class="font-semibold">${consigne}</p>${b.active ? `<div class="mt-2 flex flex-wrap gap-2">${banc.map((j) => `<button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#placer" data-feuille-match-joueur-param="${j.id}">${echapper(j.nom)}</button>`).join('')}</div>` : ''}</div>
             <div class="grid gap-2 sm:grid-cols-2">
                 <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#tournerBrouillon">Tourner d'un poste</button>
                 <button type="button" class="btn btn-ghost btn-danger-discret" data-action="feuille-match#effacer">Tout effacer</button>
@@ -138,7 +137,7 @@ export default class extends Controller {
         const m = this.modifiableValue
         let outils = ''
         if (m && this.mode === 'remplacement') {
-            outils = `<fieldset><legend class="font-semibold">${this.sortant === undefined ? 'Touchez le joueur qui sort (ou la place libre).' : `Remplacer ${echapper(this.nom(this.sortant))} par…`}</legend>
+            outils = `<fieldset><legend class="font-semibold">${this.sortant === undefined ? `Touchez le joueur qui sort${c.postes.includes(null) ? ' (ou la place libre)' : ''}.` : `Remplacer ${echapper(this.nom(this.sortant))} par…`}</legend>
                 ${this.sortant === undefined ? '' : `<div class="mt-2 flex flex-wrap gap-2">${banc.map((j) => `<button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#remplacer" data-feuille-match-joueur-param="${j.id}">${echapper(j.nom)}</button>`).join('') || '<p>Personne sur le banc.</p>'}</div>`}</fieldset>
                 <button type="button" class="btn btn-ghost" data-action="feuille-match#fermerOutil">Annuler</button>`
         } else if (m && this.mode === 'correction') {
@@ -161,21 +160,22 @@ export default class extends Controller {
                 <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="correction">Corriger le score</button></div>`
         }
         const fin = m && c.finAtteinte
-            ? `<div role="status" class="alert alert-info alert-soft flex flex-col items-stretch gap-2"><p><strong>Fin du set : ${c.score[0]}–${c.score[1]}.</strong> Un point mal noté ? Touchez « Précédent ».</p><button type="button" class="btn btn-accent" data-action="feuille-match#terminer">Terminer le set ${set.numero}</button></div>`
+            ? `<div role="status" class="rounded-box border-2 border-(--color-primary) bg-base-200 p-3 flex flex-col gap-2"><p><strong>Fin du set : ${c.score[0]}–${c.score[1]}.</strong> Un point mal noté ? Touchez « Précédent ».</p><button type="button" class="btn btn-accent" data-action="feuille-match#terminer">Terminer le set ${set.numero}</button></div>`
             : ''
         return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-set-cours">
             <div class="flex flex-wrap items-baseline justify-between gap-2"><h2 id="titre-set-cours" class="text-xl uppercase tracking-wide">Set ${set.numero} en cours</h2>
             <p class="text-sm">en ${set.pointsFin} points · parti de ${set.scoreDepart[0]}–${set.scoreDepart[1]}</p></div>
             <div><p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Score du set, pour l'équipe seulement</p>
                 <div class="mt-2 grid grid-cols-2 gap-2 text-center">
-                    ${[0, 1].map((i) => `<div class="flex flex-col gap-2 min-w-0"><p class="font-display font-semibold uppercase tracking-wide wrap-anywhere">${echapper(i ? this.feuille.eux : this.feuille.nous)}</p><p class="score-set">${c.score[i]}</p>
+                    ${[0, 1].map((i) => `<div class="flex flex-col gap-2 min-w-0"><p class="font-display font-semibold uppercase tracking-wide wrap-anywhere flex-1">${echapper(i ? this.feuille.eux : this.feuille.nous)}</p><p class="score-set">${c.score[i]}</p>
                     ${m ? `<button type="button" class="btn btn-primary" data-action="feuille-match#point" data-feuille-match-pour-param="${i ? 'eux' : 'nous'}" aria-label="Point pour ${echapper(i ? this.feuille.eux : this.feuille.nous)}">+1 point</button>` : ''}</div>`).join('')}
                 </div>
-                ${m ? `<div class="mt-2 grid grid-cols-2 gap-2"><button type="button" class="btn btn-ghost" data-action="feuille-match#precedent" ${actifs.length ? '' : 'aria-disabled="true"'}>← Précédent</button><button type="button" class="btn btn-ghost" data-action="feuille-match#suivant" ${peutSuivant ? '' : 'aria-disabled="true"'}>Suivant →</button></div>` : ''}
+                ${m ? `<div class="mt-2 grid grid-cols-2 gap-2"><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#precedent" aria-label="Précédent : annuler la dernière saisie" ${actifs.length ? '' : 'aria-disabled="true"'}><span aria-hidden="true">←</span> Précédent</button><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#suivant" aria-label="Suivant : rétablir la saisie" ${peutSuivant ? '' : 'aria-disabled="true"'}>Suivant <span aria-hidden="true">→</span></button></div>` : ''}
             </div>
             ${fin}
             ${this.terrain(c.postes, { cliquable: m && this.mode === 'remplacement', service: c.service, etiquette: `Set ${set.numero} sur le terrain`, sortant: this.mode === 'remplacement' ? this.sortant : undefined })}
-            <p class="text-sm">${c.service === 'eux' ? 'Service adverse · ' : ''}Sur le banc : ${banc.length ? banc.map((j) => echapper(j.nom)).join(', ') : 'personne'}</p>
+            ${c.service === 'eux' ? '<p class="text-sm font-semibold">Service adverse</p>' : ''}
+            <p class="text-sm">Sur le banc : ${banc.length ? banc.map((j) => echapper(j.nom)).join(', ') : 'personne'}</p>
             ${outils}
             ${this.vueHistorique(set)}
         </section>`
@@ -183,8 +183,8 @@ export default class extends Controller {
 
     vueHistorique(set) {
         if (!set.historique.length) return ''
-        const lignes = [...set.historique].reverse().map((h) => `<li class="flex justify-between gap-3 py-1${h.annule ? ' line-through opacity-60' : ''}"><span>${echapper(h.texte)}${h.annule ? '<span class="sr-only"> (annulé)</span>' : ''}</span><span class="tabular-nums">${h.score ? `${h.score[0]}–${h.score[1]}` : ''}</span></li>`).join('')
-        return `<details class="border-t border-base-300 pt-2"><summary class="cursor-pointer font-semibold min-h-12 flex items-center">Historique du set (${set.historique.length})</summary><ol class="divide-y divide-(--color-base-300) text-sm">${lignes}</ol></details>`
+        const lignes = [...set.historique].reverse().map((h) => `<li class="flex justify-between gap-3 py-1${h.annule ? ' line-through text-(--color-base-content)/70' : ''}"><span>${echapper(h.texte)}${h.annule ? '<span class="sr-only"> (annulé)</span>' : ''}</span><span class="tabular-nums">${h.score ? `${h.score[0]}–${h.score[1]}` : ''}</span></li>`).join('')
+        return `<details class="depliant border-t border-base-300 pt-2"><summary class="cursor-pointer font-semibold min-h-12 flex items-center justify-between">Historique du set (${set.historique.length})<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></summary><ol class="divide-y divide-(--color-base-300) text-sm">${lignes}</ol></details>`
     }
 
     vueReleve() {
@@ -202,9 +202,11 @@ export default class extends Controller {
                 ${this.terrain(s.postes, { compact: true, etiquette: `Composition de départ du set ${s.numero}` })}
                 <p class="text-sm">${entrees.length ? entrees.join(' · ') : 'Aucun remplacement'}</p>${rouvrir}</article>`
         }).join('')
-        return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-releve"><h2 id="titre-releve" class="text-xl uppercase tracking-wide">Relevé des sets</h2>${cartes}${this.vueSetsJoues()}</section>
-            <section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-2" aria-labelledby="titre-officiel"><h2 id="titre-officiel" class="text-xl uppercase tracking-wide">Score officiel</h2>
-            <p class="text-sm">Il se saisit à part, dans la fenêtre habituelle du site ; les scores ci-dessus ne le remplissent pas.</p><a class="btn btn-accent btn-block" href="${echapper(this.scoreOfficielValue)}">Saisir le score officiel</a></section>`
+        const officiel = this.matchGagne()
+            ? `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-2" aria-labelledby="titre-officiel"><h2 id="titre-officiel" class="text-xl uppercase tracking-wide">Score officiel</h2>
+            <p class="text-sm">Il se saisit à part, sur la fiche de l'équipe (ligne du match). Les scores ci-dessus ne le remplissent pas.</p><a class="btn btn-accent btn-block" href="${echapper(this.scoreOfficielValue)}">Aller à la fiche de l'équipe</a></section>`
+            : ''
+        return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-releve"><h2 id="titre-releve" class="text-xl uppercase tracking-wide">Relevé des sets</h2>${cartes}${this.vueSetsJoues()}</section>${officiel}`
     }
 
     // Sets joués par joueur : composition de départ et entrées en remplacement (D67)
@@ -283,7 +285,8 @@ export default class extends Controller {
         }
         const b = this.brouillon
         if (await this.envoyer(b.numero, 'composition', { composition: { postes: b.postes, premierService: b.premierService, scoreDepart: b.scoreDepart } }, false)) {
-            if (await this.envoyer(b.numero, 'commencer', { aCinq })) this.annoncer(`Set ${b.numero} commencé.`)
+            // Rechargement : la liste des présents se replie et le score passe en haut de l'écran
+            if (await this.envoyer(b.numero, 'commencer', { aCinq })) window.location.reload()
         }
     }
 
@@ -366,6 +369,7 @@ export default class extends Controller {
         if (this.envoiEnCours && action === 'evenement') return false
         this.envoiEnCours = true
         this.signaler('')
+        if (action === 'evenement') this.contenuTarget.querySelectorAll('[data-action="feuille-match#point"]').forEach((b) => { b.disabled = true })
         try {
             const reponse = await fetch(`${this.urlValue}/set/${numero}/${action}`, {
                 method: 'POST',
@@ -384,6 +388,7 @@ export default class extends Controller {
             return true
         } catch {
             this.signaler('La connexion au site a échoué : vérifiez le réseau, puis recommencez.')
+            this.rendre()
             return false
         } finally {
             this.envoiEnCours = false

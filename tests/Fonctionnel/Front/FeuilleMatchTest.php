@@ -17,7 +17,7 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
 /**
- * VST-01 à VST-07, VST-09 à VST-12 : page du match d'une équipe, droits, joueurs présents, composition et journal des sets
+ * VST-01 à VST-07, VST-09 à VST-13 : page du match d'une équipe, droits, joueurs présents, composition et journal des sets
  * (Volley Stats, D67 ; spécification §3 à §5). VST-08 : Unitaire/VolleyStats/EtatSetTest.
  * Match de référence : A1 (club CTA, responsable resp.club) reçoit A2, hier.
  */
@@ -358,5 +358,72 @@ final class FeuilleMatchTest extends TestFonctionnel
         $crawler = $this->client->request('GET', $fiche);
         self::assertCount(0, $crawler->filter('a[href*="/match/"]'), 'visiteur');
         self::assertCount(0, $crawler->filter('#titre-sets-joues'), 'visiteur');
+    }
+
+    #[TestDox('VST-13 : écritures JSON refusées sans jeton ou avec celui des scores (403), à l\'équipe adverse (404), sur une page gelée sauf pour l\'admin ; joueur ou saisie d\'une autre page refusés')]
+    public function test_ecritures_refusees(): void
+    {
+        $ids = $this->preparerSix();
+        $composition = ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [0, 0]]];
+        $this->envoyer(1, 'composition', $composition, '');
+        self::assertResponseStatusCodeSame(403, 'sans jeton');
+        $this->envoyer(1, 'composition', $composition, 'jeton-des-scores');
+        self::assertResponseStatusCodeSame(403, 'jeton des scores');
+
+        // Page de l'équipe adverse, avec ses propres joueurs
+        $this->connecter('cap.a2');
+        $crawler = $this->client->request('GET', $this->url('A2'));
+        $this->client->submit($crawler->selectButton('Préparer le match')->form());
+        $joueurAdverse = $this->feuille('A2')->getJoueurs()->first()->getId();
+        $this->envoyer(1, 'composition', $composition);
+        self::assertResponseStatusCodeSame(404, 'capitaine adverse sur la page de A1');
+
+        $this->connecter('cap.a1');
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => [$joueurAdverse, $ids[1], $ids[2], $ids[3], $ids[4], $ids[5]], 'premierService' => 'nous', 'scoreDepart' => [0, 0]]]);
+        self::assertResponseStatusCodeSame(400, 'joueur de la page adverse dans la composition');
+        $this->envoyer(1, 'composition', $composition);
+        $this->envoyer(1, 'commencer');
+        $this->envoyer(1, 'evenement', ['uuid' => self::uuid(), 'type' => 'remplacement', 'donnees' => ['sort' => $ids[0], 'entre' => $joueurAdverse], 'dernierOrdre' => null]);
+        self::assertResponseStatusCodeSame(400, 'joueur de la page adverse en remplacement');
+
+        // Gel : 31 jours après un match jamais terminé
+        self::mockTime((new \DateTimeImmutable())->modify('+31 days'));
+        $this->point('nous', null);
+        self::assertResponseStatusCodeSame(404, 'page gelée pour le capitaine');
+        $this->connecter('admin');
+        $this->client->request('GET', $this->url());
+        $this->jeton = $this->client->getCrawler()->filter('[data-feuille-match-jeton-value]')->attr('data-feuille-match-jeton-value');
+        $reponse = $this->point('nous', null);
+        self::assertResponseIsSuccessful('l\'admin corrige encore');
+        self::assertSame([1, 0], $reponse['feuille']['sets'][0]['calcul']['score']);
+    }
+
+    #[TestDox('VST-13 : terminer, rouvrir puis terminer de nouveau ne repousse pas le gel ; un uuid d\'un autre set est refusé')]
+    public function test_gel_non_repousse(): void
+    {
+        $ids = $this->preparerSix();
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [8, 0]]]);
+        $this->envoyer(1, 'commencer');
+        $uuidSet1 = null;
+        for ($p = 0, $ordre = null; $p < 17; ++$p, $ordre = ($ordre ?? 0) + 1) {
+            $uuid = self::uuid();
+            $uuidSet1 ??= $uuid;
+            $this->point('nous', $ordre, $uuid);
+        }
+        $this->envoyer(1, 'terminer');
+        $premiereFin = $this->feuille()->getTermineeLe();
+        self::assertNull($premiereFin, 'un set ne termine pas le match');
+
+        $this->envoyer(2, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [0, 0]]]);
+        $this->envoyer(2, 'commencer');
+        $this->envoyer(2, 'evenement', ['uuid' => $uuidSet1, 'type' => 'point', 'donnees' => ['pour' => 'nous'], 'dernierOrdre' => null]);
+        self::assertResponseStatusCodeSame(400, 'uuid d\'un événement du set 1');
+
+        $feuille = new FeuilleMatch(new Partie(), new Equipe());
+        $feuille->setEtat(FeuilleMatch::TERMINEE);
+        $fin = $feuille->getTermineeLe();
+        $feuille->setEtat(FeuilleMatch::EN_COURS);
+        $feuille->setEtat(FeuilleMatch::TERMINEE);
+        self::assertSame($fin, $feuille->getTermineeLe(), 'date de la première fin gardée');
     }
 }

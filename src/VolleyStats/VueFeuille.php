@@ -68,7 +68,7 @@ final class VueFeuille
             }
             $texte = match ($e->getType()) {
                 FeuilleMatchEvenement::POINT => 'Point pour '.($d['pour'] === FeuilleMatchSet::NOUS ? $nomNous : $nomEux),
-                FeuilleMatchEvenement::REMPLACEMENT => $nom($d['entre']).' entre, '.$nom($d['sort']).($d['sort'] === null ? ' remplie' : ' sort'),
+                FeuilleMatchEvenement::REMPLACEMENT => $d['sort'] === null ? $nom($d['entre']).' entre sur la place libre' : $nom($d['entre']).' entre, '.$nom($d['sort']).' sort',
                 FeuilleMatchEvenement::CORRECTION => sprintf('Score corrigé : %d–%d, service %s', $d['nous'], $d['eux'], $d['service'] === FeuilleMatchSet::NOUS ? $nomNous : $nomEux),
                 FeuilleMatchEvenement::ROTATION => 'Joueurs tournés d\'un poste',
                 default => 'Saisie',

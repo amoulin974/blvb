@@ -639,7 +639,7 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-04** ✅ : seule compte la saison du match (membre de la saison précédente seulement : 404) ; gel 30 jours après un
   match jamais terminé, 7 jours après la fin.
 - **VST-05** ✅ : une visite ne crée rien ; « Préparer le match » crée la page, toute l'équipe cochée d'office, puis les
-  présents se modifient (joueurs désignés « Camille Ar. »).
+  présents se modifient (joueurs désignés « Camille Ar. ») ; envoi par Turbo accepté malgré l'en-tête X-CSRF-TOKEN des scores.
 - **VST-06** ✅ : au match suivant, les présents du match précédent sont cochés d'office, à l'affichage comme à la création.
 - **VST-07** ✅ : présents refusés : membre d'une autre équipe (message neutre, sans nom), jeton absent ; équipe adverse :
   404 sur les écritures ; rien n'est enregistré.
@@ -658,6 +658,9 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-12** ✅ : la fiche équipe mène à la page du match (« Préparer le match » sur le prochain match, « Page du match » sur
   chaque match du calendrier) et montre les sets joués, pour l'équipe, le responsable de son club et l'admin ; rien pour
   l'équipe adverse ni pour un visiteur.
+- **VST-13** ✅ : écritures JSON refusées sans jeton ou avec le jeton des scores (403), à l'équipe adverse (404), sur une page
+  gelée (404) sauf pour l'admin ; joueur de la page adverse refusé dans une composition et un remplacement ; uuid d'un autre
+  set refusé ; terminer, rouvrir puis terminer de nouveau garde la date de la première fin (le gel n'est pas repoussé).
 
 ## 5. Analyse statique et qualité du code
 
