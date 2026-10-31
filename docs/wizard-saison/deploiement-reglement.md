@@ -4,6 +4,16 @@ Formats de compétition (lots 1 à 6), wizard de saison, règlement par saison (
 site, limitation des essais de connexion. Relue par l'agent `deploiement` le 31/10/2026 sur `main` 4e5b37b. Seul Francis
 fusionne dans `prod` : c'est son site, il décide si et quand déployer, et ce qu'il met en œuvre parmi ce qui suit.
 
+**Faille constatée le 31/10/2026, à corriger avant la mise en production : le port 3307 est ouvert sur Internet.** Depuis
+l'extérieur, `nmap -sV` sur blvb.fr montre `3307/tcp open mysql MySQL 8.0.41` : la base répond directement, sans passer par
+le site (aucune connexion à la base n'a été tentée). Les mots de passe étant en clair dans `compose.yaml`, versionné :
+- publier le port en local seulement (`127.0.0.1:3307:3306` au lieu de `3307:3306`), ou retirer la ligne si rien ne s'y
+  connecte de l'extérieur ; `ufw` ne suffit pas, Docker ouvre lui-même les ports qu'il publie ;
+- changer les mots de passe de la base, puis regarder les journaux MySQL ;
+- phpMyAdmin (`8080:80` et `PMA_ARBITRARY=1` dans `compose.yaml`) : le 8080 du serveur sert un autre projet, vérifier sur
+  quel port il tourne réellement, s'il tourne (`docker ps`, `sudo ss -tulpn`), et le fermer s'il est joignable.
+Les autres ports ouverts (33 SSH, 80/443, 82, 84, 3001, 8080, 8081) relèvent des autres projets du serveur.
+
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env` compris.
 Nouveautés : paquet Composer `symfony/html-sanitizer`, une soixantaine de paquets importmap (éditeur TipTap 3), dossiers
 `public/uploads/reglement` et `public/uploads/site`, 13 migrations (ajouts de colonnes et de tables, et `motif` rendu facultatif sur
@@ -188,7 +198,7 @@ Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
 ## Points signalés à Francis, à sa décision
 
 - `APP_SECRET` : le définir s'il est vide (étape 1).
-- Port MySQL 3307 publié par `compose.yaml` : vérifier que le pare-feu le ferme depuis l'extérieur.
+- Port MySQL 3307 : ouvert sur Internet, voir la faille en tête de page.
 - Crons, facultatifs : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune'`). Le compte qui les
   exécute doit avoir accès à Docker.
   - Rappel des scores, après le contrôle de `DEFAULT_URI` : le **premier passage envoie tout l'arriéré** de la saison, à voir avec
@@ -196,8 +206,7 @@ Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
     `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`
   - Nettoyage des compteurs d'essais, seulement si la limitation est mise en place (sans elle, aucun compteur n'est créé) :
     `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`
-- Mots de passe de la base en clair dans `compose.yaml`, alors que le port 3307 est publié ; `DATABASE_OLD_URL` et phpMyAdmin publié
-  sur le port 8080 avec `PMA_ARBITRARY=1` : exposition réelle à vérifier.
+- `DATABASE_OLD_URL` dans `compose.yaml` : à retirer s'il ne sert plus.
 - Pas de mentions légales tant que `conditions-utilisation-v2` n'est pas fusionnée : le lien du pied de page reste vide.
 - Données 2025 (back-office) : journées de la phase finale aux noms et dates incohérents, journée 3 des poules C et D
   pendant les vacances d'hiver, noms des fermetures, tableaux nommés « Poule A » à « Poule D », date et gymnase de la
