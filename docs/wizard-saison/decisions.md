@@ -74,7 +74,8 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D61. Essais de connexion limités, avec une attente qui double à chaque échec
 - D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
 - D63. Fiche du club : éditeur TipTap à barre réduite
-- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants ; PO6. Tableau de bord de l'admin : questions à trancher
+- D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
+- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
 **Décision** : le wizard sert à **créer** une saison. Il doit savoir proposer tous les formats du
@@ -732,6 +733,28 @@ ni images dans le texte pour commencer (les responsables de club ne sont pas adm
 HTML ; pas d'historique ni de contrôle de conflit au début (le dernier enregistrement l'emporte).
 *(2026-10-30)*
 
+## D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
+**Décision** (utilisateur, 31/10/2026) : la proposition de l'ergonome (`tableau-de-bord.md`, §2) est retenue, avec ces réponses
+aux huit questions de son §3 :
+1. **Saison terminée** : date de fin dépassée, ou dernière phase dont tous les matchs ont un score. Aucun état en base, pas de
+   bouton « Clôturer » ajouté sur la dernière phase.
+2. **Saison principale** : quand la saison affichée est finie et qu'une autre se prépare, la saison en préparation prend la
+   grande carte ; la saison finie passe en carte réduite.
+3. **Saisie des scores** : une page « Scores à saisir » dédiée, qui liste les matchs sans score et réutilise la fenêtre de
+   saisie existante (`_score_modal`) ; « Voir les matchs » y mène. *Pourquoi* : les admins saisissent souvent sur téléphone,
+   où le calendrier d'une poule est malcommode (choix de l'utilisateur, contre l'avis de commencer par le calendrier).
+4. **Seuil des scores manquants** : 2 jours, comme le rappel automatique.
+5. **Clubs sans responsable, équipes sans capitaine** : toujours une ligne « À faire » tant qu'il en manque (choix de
+   l'utilisateur, contre l'avis de ne la montrer que pendant la mise en place). La ligne ne porte que sur la saison affichée,
+   puisque les responsables ne se désignent que pour elle (§5.2 de `tableau-de-bord.md`).
+6. **Bouton de la saison en cours** : « Suivre la saison », vers la page de la saison ; « Créer une saison » reste proposé
+   tant que PO1.4 n'est pas tranché.
+7. **Menu** : « Saison en cours » devient « Saison affichée ».
+8. **Rappel des fermetures** : ligne « À faire » « Avant de générer les matchs, demandez aux clubs leurs fermetures de
+   gymnase. » pendant la mise en place d'une saison sans matchs. L'aide « Le placement ne tient pas encore compte des
+   fermetures » est abandonnée : les lots 2 et 3 des fermetures sont faits.
+*(2026-10-31)*
+
 ---
 
 ## Points ouverts
@@ -777,7 +800,4 @@ Traités à part de l'optimisation (D41) : règle de forfait (score réglementai
 ### PO3. Questions de détail des lots suivants
 Notation des « meilleurs Xe », options exactes de chaque format, écrans du wizard : elles apparaîtront lot par lot.
 
-### PO6. Tableau de bord de l'admin : questions à trancher
-Huit questions (définition de « terminée », saison principale, saisie des scores, seuil des scores manquants, clubs sans
-responsable, « Suivre la saison », nom du menu, rappel avant la génération des matchs) : §3 de `tableau-de-bord.md`, avec les
-recommandations de l'ergonome. *(2026-10-30)*
+### PO6. Tableau de bord de l'admin : tranché par D64 *(2026-10-31)*

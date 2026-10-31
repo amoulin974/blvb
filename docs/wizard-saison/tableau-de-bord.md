@@ -1,7 +1,7 @@
 # Tableau de bord de l'admin : proposition de l'ergonome (30/10/2026)
 
-À réaliser ; **rien n'est décidé ni codé**. Avant de commencer : trancher les points du §3, puis consigner la décision dans
-`decisions.md` (D64). Suivi : `lots.md`, point ouvert PO6 de `decisions.md`.
+À réaliser. **Points du §3 tranchés le 31/10/2026 : voir D64 dans `decisions.md`**, qui l'emporte sur les recommandations
+ci-dessous (questions 3 et 5 en particulier) ; l'aide sur le placement (bloc A) est abandonnée. Suivi : `lots.md`.
 
 Analyse fondée sur le code et la base de recette, sans voir l'écran. Les chiffres « en local » sont ceux de la recette, ceux
 des maquettes sont des exemples.
