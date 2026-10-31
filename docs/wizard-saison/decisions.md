@@ -75,6 +75,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
 - D63. Fiche du club : éditeur TipTap à barre réduite
 - D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
+- D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -759,6 +760,25 @@ partir de la validation de la saison (pas pendant la préparation du brouillon) 
 lignes commencent par « Nom de la saison, Phase 1 : » ; lignes urgentes (match dans un gymnase fermé, aucune saison affichée)
 marquées par une icône, du gras et un filet, pas par la couleur seule ; la carte de la saison en cours mène aussi à « Scores à
 saisir », qui sinon ne serait accessible qu'en cas de retard ; « Afficher sur le site » depuis le tableau de bord y ramène.
+*(2026-10-31)*
+
+
+## D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
+**Décision** (utilisateur, 31/10/2026) : à terme, des tournois organisés à l'intérieur d'un club, mixtes ou non ; la
+composition des équipes et le nombre de matchs dépendent de la répartition entre joueuses et joueurs. La fiche du joueur
+recevra pour cela une **catégorie de jeu**, féminine ou masculine :
+- **ajoutée avec les tournois seulement** : rien n'est collecté tant que l'usage n'existe pas (minimisation, RGPD art. 5 ;
+  CJUE, Mousse, C-394/23, janvier 2025) ;
+- **libellé « Catégorie de jeu »**, pas « sexe » ni « genre » : c'est la catégorie sportive dont on a besoin, sans toucher à
+  l'identité de genre ;
+- **facultative dans la fiche**, obligatoire seulement à l'inscription à un tournoi ou quand le responsable compose les équipes ;
+- **visible** de l'admin, du responsable du club et du joueur lui-même ; jamais affichée publiquement ;
+- **conditions d'utilisation** complétées à ce moment-là : finalité (composer les équipes des tournois), base légale (le service
+  rendu au joueur), conservation identique à celle de la fiche joueur ;
+- saisie par lot possible par l'import Excel des joueurs.
+
+*Pourquoi* : ce n'est pas une donnée sensible (art. 9), et la finalité est réelle et sportive (la FFVB l'enregistre aussi sur
+les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne serait pas justifié.
 *(2026-10-31)*
 
 ---
