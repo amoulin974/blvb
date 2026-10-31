@@ -80,6 +80,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D67. Volley Stats : on commence par la page match et la composition de chaque set
 - D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
 - D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
+- D70. Saisie du score annoncée avant le match et proposée sur la fiche équipe
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -907,6 +908,23 @@ fonctionnalités selon le rôle (le reste n'est pas décidé).
   prioritaire, comme avant.
 - **Menu latéral (téléphone)** : lien « Mon profil » pour tout compte connecté, après « Mon club » ; libellé « Mon profil »
   (et non « Mon Profil ») dans le menu du compte.
+
+## D70. Saisie du score annoncée avant le match et proposée sur la fiche équipe
+
+*Décidé le 01/11/2026* (avis de l'ergonome, `docs/presentation-par-role.md`).
+- **Pas de bouton « Saisir » grisé** avant le match (on ne sait pas pourquoi il ne répond pas, il se lit mal, il ajoute du
+  bruit pour les autres). À la place, pour les seules personnes qui pourront saisir le score (même règle que
+  `SaisieScoreService::peutSaisir`) : « Saisie après le match » sous le tiret, sur l'accueil et le calendrier ; rien ne
+  change pour les visiteurs et les joueurs. Le bouton « Saisir » apparaît toujours à l'heure du match (saisie au gymnase).
+- **Fiche équipe** : la même saisie dans le calendrier de l'équipe (annonce sous le tiret, bouton « Saisir » à la place du
+  tiret, crayon sous le score) ; « Prochain match » rappelle « Saisie du score après le match » ; un match passé sans score
+  prend la place du « Dernier résultat » (carte « Score à saisir » avec le bouton), pour ces personnes seulement. La page
+  est rechargée après enregistrement (victoire/défaite, prochain match, classement en dépendent), revient à la même
+  hauteur, rend le focus au bouton du match et affiche « Score enregistré. ».
+- **Une seule copie de la règle côté gabarits** : fonction Twig `score_saisissable` (`SaisieScoreExtension`).
+- **Libellés** : « score » plutôt que « résultat » dans les libellés des boutons pour les lecteurs d'écran ; zone tactile
+  de « Saisir » et du crayon portée à 44 px (crayon : sur mobile seulement, la colonne du score est trop étroite sur
+  ordinateur).
 
 ---
 

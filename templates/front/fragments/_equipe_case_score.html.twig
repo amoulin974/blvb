@@ -1,0 +1,19 @@
+{# Case « score » d'un match du calendrier de la fiche équipe (tableau ordinateur : alignement center ; cartes mobiles : end).
+   Pour les seules personnes qui peuvent saisir le score du match (score_saisissable, même règle que _score_partie.html.twig) :
+   « Saisie après le match » sous le tiret avant l'heure du match, bouton « Saisir » à la place du tiret ensuite, crayon sous
+   le score une fois saisi. Variables : match (ligne de PartieRepository::getMatchsByEquipePhase), parties (entités par
+   identifiant), droitsSaisie, alignement. La page est rechargée après enregistrement (score-modal, valeur recharger). #}
+{% set partie = parties[match.match_id] ?? null %}
+{% set joue = match.score_reception_match is not null and match.score_deplacement_match is not null %}
+{% set passe = match.date_match < date() %}
+{% set autorise = partie is not null and score_saisissable(partie, droitsSaisie|default(null)) %}
+<div class="flex flex-col {{ alignement|default('center') == 'end' ? 'items-end text-right' : 'items-center' }} gap-1">
+    {% if not (autorise and passe and not joue) %}
+        {{ include('front/fragments/_equipe_score.html.twig', {annonce: autorise and not passe and not joue}) }}
+    {% endif %}
+    {% if autorise and (passe or joue) %}
+        {{ include('front/fragments/_score_boutons.html.twig') }}
+    {% elseif autorise and not joue %}
+        <span class="text-xs leading-tight text-(--color-base-content)/80" aria-hidden="true">Saisie après le match</span>
+    {% endif %}
+</div>

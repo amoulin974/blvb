@@ -67,12 +67,16 @@
             {% endif %}
         </div>
 
+        {# Saisie du score (_equipe_case_score.html.twig) : la fenêtre recharge la page après enregistrement, puis confirme #}
+        <div class="flex flex-col gap-6" data-controller="score-modal" data-score-modal-recharger-value="true">
         {# Synthèse : classement dans la phase en cours, prochain match, dernier résultat #}
         {% set tousMatchs = [] %}
         {% for liste in matchsByPoule %}{% set tousMatchs = tousMatchs|merge(liste) %}{% endfor %}
         {% set maintenant = date() %}
         {% set prochain = tousMatchs|filter(m => m.date_match >= maintenant and m.score_reception_match is null)|sort((a, b) => a.date_match <=> b.date_match)|first %}
         {% set dernier = tousMatchs|filter(m => m.score_reception_match is not null and m.score_deplacement_match is not null)|sort((a, b) => b.date_match <=> a.date_match)|first %}
+        {# Pour qui peut saisir : le match passé sans score le plus récent prend la place du dernier résultat #}
+        {% set aSaisir = tousMatchs|filter(m => m.date_match < maintenant and m.score_reception_match is null and parties[m.match_id] is defined and score_saisissable(parties[m.match_id], droitsSaisie))|sort((a, b) => b.date_match <=> a.date_match)|first %}
         {% set classementActuel = null %}
         {% for poule in (phaseouverte ? phaseouverte.poules : []) %}
             {% for c in poule.classements %}{% if c.equipe.id == equipe.id %}{% set classementActuel = {poule: poule, ligne: c} %}{% endif %}{% endfor %}
@@ -98,6 +102,9 @@
                     <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
                         {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}{% if prochain.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}</p>
+                    {% if parties[prochain.match_id] is defined and score_saisissable(parties[prochain.match_id], droitsSaisie) %}
+                        <p class="text-sm mt-1 text-(--color-base-content)/80">Saisie du score après le match</p>
+                    {% endif %}
                     <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
                     {% if pagesMatch %}<a class="btn btn-outline btn-primary btn-sm min-h-11 mt-2" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: prochain.match_id}) }}">Préparer le match</a>{% endif %}
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
@@ -109,6 +116,15 @@
                 {% endif %}
             </div>
             <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                {% if aSaisir %}
+                    {% set partie = parties[aSaisir.match_id] %}
+                    {% set passe = true %}{% set joue = false %}{% set autorise = true %}
+                    <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Score à saisir</p>
+                    {% set advSaisirId = aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace_id : aSaisir.equipe_recoit_id %}
+                    <p class="mt-1 text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advSaisirId}) }}">{{ aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace : aSaisir.equipe_recoit }}</a>
+                        · {{ aSaisir.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
+                    <div class="mt-2">{{ include('front/fragments/_score_boutons.html.twig') }}</div>
+                {% else %}
                 <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Dernier résultat</p>
                 {% if dernier %}
                     <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
@@ -117,6 +133,7 @@
                     <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
                 {% else %}
                     <p class="mt-1">Aucun match joué</p>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -154,7 +171,7 @@
                                         <td class="whitespace-nowrap text-(--color-base-content)/80">{{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }}</td>
                                         <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
                                         <td class="text-center">
-                                            {{ include('front/fragments/_equipe_score.html.twig') }}
+                                            {{ include('front/fragments/_equipe_case_score.html.twig') }}
                                         </td>
                                         <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
                                         <td class="text-right">
@@ -177,8 +194,8 @@
                                                 <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
                                                 <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
                                             </div>
-                                            <div class="shrink-0 text-right">
-                                                {{ include('front/fragments/_equipe_score.html.twig') }}
+                                            <div class="shrink-0">
+                                                {{ include('front/fragments/_equipe_case_score.html.twig', {alignement: 'end'}) }}
                                             </div>
                                         </div>
                                         <p class="text-sm">
@@ -195,6 +212,13 @@
                 {% endfor %}
             {% endfor %}
         </section>
+        {% if parties %}
+            {{ include('front/fragments/_score_modal.html.twig') }}
+            <div class="toast toast-end toast-bottom z-[100] pointer-events-none">
+                <div role="status" aria-live="polite" class="alert bg-primary text-primary-content border-0 shadow-lg max-w-sm whitespace-normal empty:hidden" data-score-modal-target="confirmation"></div>
+            </div>
+        {% endif %}
+        </div>
 
         {# Classement #}
         <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">

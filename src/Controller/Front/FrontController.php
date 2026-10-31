@@ -269,6 +269,15 @@ final class FrontController extends AbstractController
         $membres = $peutVoirMembres ? $membreEquipeRepository->findRosterBySaison($equipe, $saison) : [];
         $estCapitaineDeCetteEquipe = $user !== null && $membreEquipeRepository->estCapitaine($user, $equipe, $saison);
         $pagesMatch = $feuilleMatchVoter->ayantDroitSurEquipe($user instanceof User ? $user : null, $equipe, $saison);
+        // Saisie du score (_equipe_case_score.html.twig) : matchs de la page en entités, seulement pour qui peut saisir des scores
+        $droitsSaisie = $saisieScore->droits($user instanceof User ? $user : null, $saison);
+        $parties = [];
+        if ($estAdmin || $droitsSaisie['capitaine'] !== [] || $droitsSaisie['club'] !== []) {
+            $ids = array_merge([], ...array_map(static fn (array $matchs) => array_column($matchs, 'match_id'), array_values($matchsByPoule)));
+            foreach ($ids ? $partieRepository->findBy(['id' => $ids]) : [] as $partie) {
+                $parties[$partie->getId()] = $partie;
+            }
+        }
 
         return $this->render('front/equipe.html.twig', [
             'saisons' => $this->saisons,
@@ -284,6 +293,8 @@ final class FrontController extends AbstractController
             'matchsByPoule'=>$matchsByPoule,
             'membres'=>$membres,
             'estCapitaineDeCetteEquipe'=>$estCapitaineDeCetteEquipe,
+            'parties'=>$parties,
+            'droitsSaisie'=>$droitsSaisie,
             // Volley Stats (D67) : entrées vers les pages du match et sets joués, pour l'équipe et le responsable de son club
             'pagesMatch'=>$pagesMatch,
             'setsJoues'=>$pagesMatch && $saison ? $this->setsJouesTries($feuilleMatchService->setsJoues($equipe, $saison), $membreEquipeRepository->findRosterBySaison($equipe, $saison)) : [],

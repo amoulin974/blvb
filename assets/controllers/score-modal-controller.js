@@ -15,11 +15,15 @@ import { Controller } from '@hotwired/stimulus';
  * Règle de validité d'un match joué (N sets gagnants, 3 par défaut ou 2 en format court) : une équipe exactement à N,
  * l'autre entre 0 et N-1.
  * Les erreurs ne s'affichent qu'à l'enregistrement ou une fois les deux champs remplis, jamais avant la saisie.
+ * Valeur recharger (fiche équipe) : après enregistrement, la page est rechargée (victoire / défaite, prochain match,
+ * classement en dépendent) au lieu d'être mise à jour sur place ; elle revient alors à la même hauteur, rend le focus au
+ * bouton du match et affiche « Score enregistré. » (cible confirmation, quelques secondes).
  */
 export default class extends Controller {
     static targets = ['modal', 'title', 'typeJoue', 'typeInterrompu', 'aideInterrompu', 'typeForfaitReception', 'typeForfaitDeplacement', 'aide3Sets', 'aide2Sets', 'formatSets',
         'nomForfaitReception', 'nomForfaitDeplacement', 'sets', 'labelReception', 'labelDeplacement',
-        'inputReception', 'inputDeplacement', 'resume', 'erreur', 'effacer', 'enregistrer'];
+        'inputReception', 'inputDeplacement', 'resume', 'erreur', 'effacer', 'enregistrer', 'confirmation'];
+    static values = { recharger: Boolean };
 
     connect() {
         // Jeton CSRF : la balise n'existe que pour un utilisateur connecté (les visiteurs n'ont pas accès à la saisie)
@@ -29,6 +33,30 @@ export default class extends Controller {
             if (event.key === 'Escape' && this.modalTarget.classList.contains('modal-open')) this.closeModal(event);
         };
         document.addEventListener('keydown', this.fermerSurEchap);
+        if (this.rechargerValue) this.apresRechargement();
+    }
+
+    // Après le rechargement qui suit un enregistrement (valeur recharger) : position, focus et confirmation
+    apresRechargement() {
+        let etat = null;
+        try {
+            etat = JSON.parse(sessionStorage.getItem('score-enregistre') || 'null');
+            sessionStorage.removeItem('score-enregistre');
+        } catch (e) { /* stockage indisponible : pas de confirmation */ }
+        if (!etat || etat.page !== window.location.pathname) return;
+        window.scrollTo(0, etat.hauteur);
+        const bouton = [...document.querySelectorAll(`[data-partie-id="${etat.partie}"]:not(.hidden)`)].find((b) => b.offsetParent !== null);
+        if (bouton) {
+            bouton.focus({ preventScroll: true });
+            // Le bouton a pu changer de place (carte « Score à saisir » devenue « Dernier résultat ») : le garder visible
+            const r = bouton.getBoundingClientRect();
+            if (r.top < 0 || r.bottom > window.innerHeight) bouton.scrollIntoView({ block: 'nearest' });
+        }
+        if (this.hasConfirmationTarget) {
+            // Zone vide au chargement, texte inséré après le focus : annoncé par les lecteurs d'écran
+            setTimeout(() => { this.confirmationTarget.textContent = 'Score enregistré.'; }, 100);
+            setTimeout(() => { this.confirmationTarget.textContent = ''; }, 4000);
+        }
     }
 
     disconnect() {
@@ -211,12 +239,19 @@ export default class extends Controller {
                 return json;
             })
             .then((json) => {
+                if (this.rechargerValue) {
+                    try {
+                        sessionStorage.setItem('score-enregistre', JSON.stringify({ page: window.location.pathname, hauteur: window.scrollY, partie: this.partieId }));
+                    } catch (e) { /* stockage indisponible : rechargement sans confirmation */ }
+                    window.location.reload();
+                    return;
+                }
                 this.mettreAJourPage(json.newScore);
                 this.closeModal();
             })
             .catch((err) => {
                 // La fenêtre reste ouverte : la saisie n'est pas perdue
-                this.afficherErreur(`Le résultat n'a pas été enregistré : ${err.message}`);
+                this.afficherErreur(`Le score n'a pas été enregistré : ${err.message}`);
             })
             .finally(() => {
                 this.enregistrerTarget.disabled = false;
