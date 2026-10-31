@@ -813,6 +813,11 @@ les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne se
   complet ne classe que les équipes en saisie complète (remplace « socle commun seulement ») ; pourcentage soumis à un
   minimum d'actions réglé par l'admin. Joueur sans accord : **anonyme** dans les classements. Comparaison des rotations,
   export CSV et stats sur la fiche de l'équipe dans la première version.
+- *Modifié le 31/10/2026* : **trois modes emboîtés** au lieu de deux : **rapide** (une saisie par échange : qui termine,
+  comment), **intermédiaire** (chaque touche de l'équipe, trois issues seulement : le jeu continue, point gagné, point
+  perdu ; **aucune notion de qualité**), **complet** (chaque touche avec sa note de qualité). Un critère de classement ne
+  classe que les équipes dont le mode le produit. **Seul le mode intermédiaire est développé en premier** ; rapide et complet
+  viendront ensuite, le modèle de données les prévoit.
 
 *Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
 volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.

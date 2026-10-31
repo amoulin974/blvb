@@ -134,6 +134,9 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
 
 - **Joueur sans accord de publication** : présent dans les classements publics, mais anonyme. Il n'y a pas de numéro de
   maillot : libellé à fixer, par exemple « Joueur anonyme · EQUIPE A1 ».
+- **Trois modes emboîtés** : rapide (une saisie par échange), **intermédiaire** (chaque touche, trois issues : le jeu
+  continue, point gagné, point perdu, sans qualité), complet (chaque touche notée). **Première version : le mode
+  intermédiaire seulement.** Tableau des stats par mode au §9.
 - **Classements publics** : par critère au choix du visiteur (meilleur serveur, meilleur passeur…), soit en nombre, soit en
   pourcentage d'actions réussies.
 - **Première version** : comparaison des rotations, export CSV et stats sur la fiche de l'équipe en font partie.
@@ -152,6 +155,11 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
 2. Formules des classements (`situations.md` §12) et barème des notes du mode complet, à six ou quatre niveaux (§1).
 
 ## 9. Catalogue des statistiques possibles (pour choisir les stats publiques)
+
+Le **mode intermédiaire**, développé en premier, note chaque touche de l'équipe avec trois issues seulement (le jeu
+continue, point gagné, point perdu) : il donne tout ce que donne le mode rapide, plus le nombre d'actions par compétence,
+les pourcentages sans faute, les efficacités au service et en attaque et les passes décisives ; pas la qualité de la
+réception ni de la passe.
 
 Le **mode rapide** ne note que la fin de chaque échange : qui marque, comment (ace, attaque, block), ou qui fait la faute
 (service, attaque, filet ou ligne, autre), ou point et faute adverses. Le **mode complet** note toutes les actions, comme

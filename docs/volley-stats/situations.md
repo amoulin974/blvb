@@ -24,11 +24,13 @@ saisie sache traiter **toutes** les situations d'un match, sans en inventer à l
 | `/` | très mauvais, renvoyé chez l'adversaire | réception qui repasse directement le filet |
 | `=` | faute, point perdu | ace subi, ballon dehors |
 
+  Le **mode intermédiaire** (développé en premier, D66) ne note aucune qualité : seulement l'issue de chaque touche (le jeu
+  continue, point gagné, point perdu). Dans les tableaux, les situations « continue » s'y saisissent toutes de la même façon.
   Le **mode complet** peut proposer ces six notes, ou une version à quatre niveaux pour des bénévoles (`#`, `+`, `-`, `=`) :
   à trancher en atelier ergonomie. Le **mode rapide** ne garde que ce qui termine l'échange (`#` qui marque, `=` qui perd).
 
 - **Colonnes des tableaux** : *Échange* = continue ou se termine ; *Point* = pour qui ; *Crédité* = joueur ou équipe à qui
-  revient l'action dans les stats ; *Mode* = R (rapide), C (complet).
+  revient l'action dans les stats ; *Mode* = R (rapide), C (complet) ; toute situation du mode complet se saisit aussi en intermédiaire, sans sa note.
 
 ## 2. Service (notre équipe sert)
 
@@ -179,5 +181,7 @@ au-dessus d'un minimum d'actions réglé par l'admin. *Formules proposées, à v
 | Meilleur réceptionneur | réceptions `#` | réceptions `#` et `+` ÷ réceptions | C |
 | *Possibles aussi* : meilleur contreur, meilleur défenseur, solde, points par set | | | |
 
-En mode rapide, seuls les classements « en nombre » de service et d'attaque sont calculables ; les autres ne classent que
-les équipes en saisie complète (D66).
+En mode rapide, seuls les classements « en nombre » de service et d'attaque sont calculables. En mode intermédiaire, tous
+sauf le pourcentage du réceptionneur et celui du passeur, qui demandent la qualité : le réceptionneur s'y classe sur le
+% de réceptions sans faute, ou seulement en mode complet (à trancher). Un critère ne classe que les équipes dont le mode le
+produit (D66).
