@@ -84,7 +84,6 @@ R1 à R5 sont faits et fusionnés dans `main` (22/10/2026). Par ordre de priorit
      journée des finales ;
    - puis `app:reglement:importer` (simulation, puis `--force`), juste après le redémarrage (page publique vide avant) ;
    - vérifier que le retour du sélecteur de saison reste sous `/blvb` ;
-   - retirer le mot de passe SMTP du `.env` de `prod` et le changer (avec Francis).
 6. **Pour le bureau, dans l'éditeur** : corriger les coquilles du texte 2025, gardées telles quelles à l'import (« Point
    perdnant », « l'equipe emputée », « troisème », « palier à », « pour enforcer », « envoi le résultat ») ; remplacer à
    terme les images 2025 (schémas, calendrier) par les éléments calculés `[schema_phases]` et `[calendrier]`.

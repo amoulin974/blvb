@@ -39,7 +39,7 @@ docker compose exec php php bin/console doctrine:migrations:status | grep -E 'Cu
 git log -1 --oneline        # noter le commit actuel (3bafba4 attendu) pour un retour arrière
 # Adresse utilisée par les commandes en ligne (cron) : attendu https://www.blvb.fr ou https://www.blvb.fr:443.
 # Si elle vaut localhost, les liens des e-mails de rappel seront faux. À évaluer par Francis (non testé) : SERVER_NAME=www.blvb.fr
-# dans le .env de prod, puis `docker compose up -d php`, car un simple restart ne relit pas l'environnement.
+# (son .env est commun à plusieurs projets : à lui de voir où), puis `docker compose up -d php`, car un simple restart ne relit pas l'environnement.
 docker compose exec php printenv DEFAULT_URI
 
 # 2. Sauvegarde de la base (remplacer blvb_new si SELECT DATABASE() donne un autre nom)
@@ -187,7 +187,6 @@ Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
 
 ## Points signalés à Francis, à sa décision
 
-- Mot de passe SMTP en clair dans le `.env` versionné de `prod` : le déplacer dans `.env.local` et le changer.
 - `APP_SECRET` : le définir s'il est vide (étape 1).
 - Port MySQL 3307 publié par `compose.yaml` : vérifier que le pare-feu le ferme depuis l'extérieur.
 - Crons, facultatifs : vérifier d'abord qu'il n'en existe pas déjà (`crontab -l | grep -E 'scores:rappeler|cache:pool:prune'`). Le compte qui les
