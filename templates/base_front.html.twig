@@ -130,8 +130,8 @@
 
                                     <li>
                                         {# Déconnexion via formulaire POST pour Turbo #}
-                                        <form action="{{ path('app_logout') }}" method="POST" class="p-0 w-full">
-                                            <button type="submit" class="flex items-center w-full px-3 py-2 text-error hover:bg-error/10 transition-colors rounded-lg">
+                                        <form action="{{ path('app_logout') }}" method="POST" class="contents">
+                                            <button type="submit" class="menu-danger flex items-center px-3 rounded-field">
                                                 Se déconnecter
                                             </button>
                                         </form>
@@ -161,32 +161,23 @@
     {# Sidebar #}
     <div class="drawer-side z-[60] print:hidden">
         <label for="my-drawer-2" aria-label="Fermer le menu" class="drawer-overlay"></label>
-        <aside class="menu p-4 w-64 bg-base-200 min-h-full">
+        <aside class="p-4 w-64 bg-base-200 min-h-full">
+            <ul class="menu menu-lateral w-full p-0">
             {% block sidebar_links %}
                 <li><a href="{{ path('front_index') }}">Accueil</a></li>
                 <li class="hidden" data-mon-equipe-target="menu"><a href="#">Mon équipe</a></li>
                 <li data-mon-equipe-target="menuChoisir"><a href="#" data-action="mon-equipe#ouvrirChoix">☆ Choisir mon équipe</a></li>
                 <li><a href="{{ path('front_equipes')}}">Les équipes</a></li>
-                <li tabindex="0">
-                    <a class="justify-between">Calendrier
-                        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </a>
+                <li>
+                    <span class="menu-title">Calendrier</span>
                     <ul class="p-2 bg-base-100">
                         <li><a href="{{ path('front_calendrier')}}">Par équipe</a></li>
                         <li><a href="{{ path('front_calendrierlieu')}}">Par gymnase</a></li>
                     </ul>
                 </li>
                 <li><a href="{{ path('front_classement')}}">Classement</a></li>
-                <li tabindex="0">
-                    <a class="justify-between">Le championnat
-                        <svg class="ml-2 w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </a>
+                <li>
+                    <span class="menu-title">Le championnat</span>
                     <ul class="p-2 bg-base-100">
                         <li><a href="{{ path('front_qui_sommes_nous')}}">Qui sommes-nous ?</a></li>
                         <li><a href="{{ path('front_club_index') }}">Les clubs</a></li>
@@ -195,6 +186,8 @@
                 </li>
 
                 {% if app.user %}
+                    {# Liens du compte : introduits par le nom de la personne connectée, comme dans le menu du compte sur ordinateur #}
+                    <li class="menu-title mt-4">{{ app.user.prenom }} {{ app.user.nom|upper }}</li>
                     {% for club in app.user.clubsResponsable %}
                         <li><a href="{{ path('front_club_show', {id: club.id}) }}">Mon club{{ app.user.clubsResponsable|length > 1 ? ' : ' ~ club.nomCourt|upper }}</a></li>
                     {% endfor %}
@@ -202,10 +195,10 @@
                     <li><a href="{{ path('front_presentation') }}">Ce que vous pouvez faire</a></li>
                     {% if is_granted('ROLE_ADMIN') %}
                         <li><a href="{{path('app_admin_dashboard')}}">Administration</a></li>
-                {% endif %}
+                    {% endif %}
                     <li>
-                        <form method="post" action="{{ path('app_logout') }}" class="inline-flex items-center">
-                            <button type="submit" class="">Se déconnecter</button>
+                        <form method="post" action="{{ path('app_logout') }}" class="contents">
+                            <button type="submit" class="menu-danger flex items-center px-3 rounded-field">Se déconnecter</button>
                         </form>
                     </li>
                 {% else %}
@@ -216,10 +209,10 @@
             {% endblock %}
             {% if saisons is defined %}
                 <li class="menu-title mt-4">Saison</li>
-                <li class="px-2">
-                    <form method="post" action="{{ path('front_set_saison') }}" class="p-0 bg-transparent">
+                <li>
+                    <form method="post" action="{{ path('front_set_saison') }}" class="contents">
                         <input type="hidden" name="retour" value="{{ app.request.pathInfo }}">
-                        <select name="idSaisonSelected" aria-label="Saison" class="select w-full text-base" onchange="this.form.submit()">
+                        <select name="idSaisonSelected" aria-label="Saison" class="select w-full min-h-11 text-base" onchange="this.form.submit()">
                             {% for saison in saisons %}
                                 <option value="{{ saison.id }}" {% if saison.id == idSaisonSelected %}selected{% endif %}>{{ saison.nom }}</option>
                             {% endfor %}
@@ -227,6 +220,7 @@
                     </form>
                 </li>
             {% endif %}
+            </ul>
         </aside>
     </div>
 

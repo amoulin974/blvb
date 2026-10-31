@@ -415,7 +415,7 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 **MEQ-02** ✅ — Capitaine de deux équipes → la première par nom, toujours la même.
 **MEQ-03** ✅ — `mon_equipe_choix()` : équipes de la saison, triées alphabétiquement.
 **MEQ-04** ✅ — Membre de deux équipes : celle dont il est capitaine passe avant l'autre, même plus loin par nom ; simple joueur des deux → la première par nom.
-**MEQ-05** ✅ — Menu latéral (téléphone) : lien « Mon profil » pour un compte connecté, absent pour un visiteur.
+**MEQ-05** ✅ — Menu latéral (téléphone) : lien « Mon profil » pour un compte connecté, absent pour un visiteur ; liens du compte introduits par le nom de la personne (« Jean PREMIER »), « Se déconnecter » en rouge comme sur ordinateur. Entrées d'au moins 44 px de haut (`.menu-lateral`, non vérifié par le test).
 **ADM-01** ✅ — `admin_saison_courante()` : saison favorite, sinon la plus récente.
 **ADM-02 — Alertes de l'admin lisibles** ✅ *`Fonctionnel/Admin/CloturePhaseTest`* (PHA-03, PHA-04) : toutes les alertes de l'admin (messages flash, erreurs des calendriers de poule, du formulaire de compte et du rapport d'import) passent par `admin/_alerte.html.twig` ; texte en couleur de base (classe `.admin-alerte`, contraste AA ; avant : texte coloré à environ 3:1), état porté par une icône pour chaque type (succès, avertissement, erreur, information) et le filet gauche, préfixe lu par les lecteurs d'écran conforme au type (« Succès : », « Attention : », « Erreur : ») ; `role="alert"` pour une erreur, `status` sinon.
 

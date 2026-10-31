@@ -405,11 +405,11 @@ button.terrain-case { cursor: pointer; }
 .terrain-compact .terrain-case { min-height: 3rem; padding-block: .25rem; }
 .terrain-compact .terrain-nom { font-size: .9375rem; }
 .score-set { font-family: var(--font-display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-primary); }
-/* Saisie des touches (D68, maquette docs/volley-stats/maquette-saisie-actions.md) : action choisie en marine plein
-   (aria-pressed, jamais la couleur seule : l'état est annoncé ; la coche n'est pas lue), mention de la touche dans la case */
 /* Lien dans une phrase : zone tactile d'environ 44 px sans agrandir la ligne ; contour de focus resserré sur le texte */
 .lien-texte { padding-block: 0.75rem; }
 .lien-texte:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -0.5rem; border-radius: 2px; }
+/* Saisie des touches (D68, maquette docs/volley-stats/maquette-saisie-actions.md) : action choisie en marine plein
+   (aria-pressed, jamais la couleur seule : l'état est annoncé ; la coche n'est pas lue), mention de la touche dans la case */
 .btn-bascule { position: relative; padding-inline: .25rem; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
 .btn-bascule[aria-pressed="true"] { --btn-bg: var(--color-primary); --btn-fg: var(--color-primary-content); --btn-border: var(--color-primary); background-color: var(--color-primary); color: var(--color-primary-content); }
 .btn-bascule[aria-pressed="true"]::after { content: "✓" / ""; position: absolute; top: 1px; right: 4px; font-size: .75rem; line-height: 1; }
@@ -468,6 +468,11 @@ button.terrain-case { cursor: pointer; }
 .menu .menu-danger { color: color-mix(in oklab, var(--color-error) 70%, black); min-height: 2.75rem; width: 100%; justify-content: flex-start; }
 .menu .menu-danger:hover, .menu .menu-danger:focus-visible { background-color: color-mix(in oklab, var(--color-error) 8%, var(--color-base-100)); }
 .menu .menu-danger:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
+/* Menu latéral (téléphone) : entrées d'au moins 44 px (daisyUI les affiche en grille, d'où align-content), étiquettes
+   lisibles (AA, comme .admin-menu-titre), focus clavier visible sur le fond gris */
+.menu-lateral li > :where(a, button) { min-height: 2.75rem; align-content: center; }
+.menu-lateral .menu-title { color: color-mix(in oklab, var(--color-base-content) 65%, transparent); }
+.menu-lateral :is(a, button):focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; }
 /* Carte repliable ouverte (daisyUI .collapse) qui contient un menu déroulant ouvert : le menu n'est pas rogné en bas
    de carte ni recouvert par la carte suivante ; les autres cartes gardent leur rognage */
 .collapse:has(> input:checked):has(details[open]) { overflow: visible; z-index: 1; }

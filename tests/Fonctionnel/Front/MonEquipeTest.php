@@ -61,7 +61,7 @@ final class MonEquipeTest extends TestFonctionnel
         self::assertSame($avant->getId(), $this->defaut()['id'], 'simple joueur des deux : la première par nom');
     }
 
-    #[TestDox('MEQ-05 Menu latéral (téléphone) : « Mon profil » pour un compte connecté, absent pour un visiteur')]
+    #[TestDox('MEQ-05 Menu latéral (téléphone) : « Mon profil » pour un compte connecté, sous son nom, et « Se déconnecter » en rouge ; rien de cela pour un visiteur')]
     public function test_mon_profil_dans_le_menu_lateral(): void
     {
         $lien = fn () => $this->client->request('GET', '/')->filter('.drawer-side a[href="/mon-profil"]');
@@ -69,6 +69,11 @@ final class MonEquipeTest extends TestFonctionnel
 
         $this->connecter('joueur.a1');
         self::assertSame('Mon profil', trim($lien()->text()));
+
+        // Liens du compte introduits par le nom de la personne ; « Se déconnecter » en rouge, comme sur ordinateur
+        $menu = $this->client->getCrawler()->filter('.drawer-side');
+        self::assertSame('Jean PREMIER', trim($menu->filter('li.menu-title')->eq(0)->text()));
+        self::assertCount(1, $menu->filter('form[action="/logout"] button.menu-danger'));
     }
 
     #[TestDox('MEQ-03 Liste de choix : les équipes de la saison, triées par nom')]
