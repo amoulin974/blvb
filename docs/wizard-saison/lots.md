@@ -76,7 +76,7 @@ Dans cet ordre.
 3. [x] **Adresse de contact** : pied de page, refus d'une fermeture de gymnase. Reste la page des conditions d'utilisation,
    à brancher à la fusion de `conditions-utilisation-v2` (elle n'existe pas sur cette branche ; le lien du pied de page y est corrigé)
 4. [x] **Logo du site** : PNG ou WebP, retour au logo d'origine
-5. [x] **Éditeur TipTap sur la fiche du club** (branche `fiche-club-editeur`, 31/10/2026 ; CLU-02, CLU-08, SEC-13 ; migration
+5. [x] **Éditeur TipTap sur la fiche du club** (fusionné dans `main` le 31/10/2026, ajouté à la checklist de Francis ; CLU-02, CLU-08, SEC-13 ; migration
    Version20261031120000 qui convertit les descriptions existantes) : : indépendant des paramètres, branche à part depuis `main`. Remplace le
    champ de texte de `ClubFicheType` ; la description devient du HTML nettoyé (reprise des textes existants, affichage de
    `front/club/show.html.twig`) ; partie commune à extraire de `reglement_editeur_controller.js`. Les responsables de club

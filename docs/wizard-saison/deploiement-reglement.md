@@ -1,8 +1,9 @@
 # Mise en production de `main` : checklist pour Francis
 
 Formats de compétition (lots 1 à 6), wizard de saison, règlement par saison (R1 à R5), fermetures de gymnase, paramètres du
-site, limitation des essais de connexion, tableau de bord de l'admin (D64, sans migration). Relue par l'agent `deploiement` le
-31/10/2026 sur `main` 4e5b37b ; tableau de bord ajouté ensuite (d76eadb), fusion dans `prod` toujours sans conflit. Seul Francis
+site, limitation des essais de connexion, tableau de bord de l'admin (D64, sans migration), éditeur de la description des
+clubs (D63). Relue par l'agent `deploiement` le 31/10/2026 sur `main` 4e5b37b ; tableau de bord (d76eadb) et éditeur des
+clubs (6d9f8de) ajoutés ensuite, fusion dans `prod` toujours sans conflit. Seul Francis
 fusionne dans `prod` : c'est son site, il décide si et quand déployer, et ce qu'il met en œuvre parmi ce qui suit.
 
 **Faille constatée le 31/10/2026, à corriger avant la mise en production : le port 3307 est ouvert sur Internet.** Depuis
@@ -17,8 +18,8 @@ Les autres ports ouverts (33 SSH, 80/443, 82, 84, 3001, 8080, 8081) relèvent de
 
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env` compris.
 Nouveautés : paquet Composer `symfony/html-sanitizer`, une soixantaine de paquets importmap (éditeur TipTap 3), dossiers
-`public/uploads/reglement` et `public/uploads/site`, 13 migrations (ajouts de colonnes et de tables, et `motif` rendu facultatif sur
-une table vide), une variable d'environnement seulement si la limitation facultative est mise en place : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
+`public/uploads/reglement` et `public/uploads/site`, 14 migrations (ajouts de colonnes et de tables, `motif` rendu facultatif sur
+une table vide, descriptions des clubs converties en HTML), une variable d'environnement seulement si la limitation facultative est mise en place : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
 `Dockerfile`, `compose.yaml` et `frankenphp/` sont inchangés, et le code est monté dans le conteneur.
 
 ## 0. Fusion de `main` dans `prod` (Francis)
@@ -116,6 +117,7 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261030213902 | table `parametres_site`, une ligne : limitation désactivée |
 | Version20261030223748 | `fermeture_gymnase.cree_par_id` : auteur de la fermeture |
 | Version20261030225406 | `fermeture_gymnase.motif` facultatif |
+| Version20261031120000 | `club.description` : texte brut converti en HTML pour l'éditeur (paragraphes et retours à la ligne gardés) ; seule migration qui modifie des données existantes, réversible |
 
 ## Vérifications en ligne
 
@@ -129,11 +131,20 @@ Ne jamais lancer `app:recette:charger` en production.
   « Gymnase fermé ». Retirer la fermeture d'essai ensuite.
 - Liste des saisons sur téléphone : en cartes, sans défilement horizontal.
 - Tableau de bord de l'admin : liste « À faire » et carte de la saison affichée ; « Scores à saisir » s'ouvre depuis la carte.
+- Fiche d'un club : la présentation garde ses paragraphes ; « Modifier la fiche du club » affiche la barre de mise en forme
+  (Titre, Gras, listes, Lien…), et un enregistrement s'affiche mis en forme.
 
 ## Retour arrière
 
 Code seul (cas normal, les migrations n'ont fait qu'ajouter). Le redémarrage relance les migrations avec des versions inconnues du
 code : d'après le code, Doctrine passe outre en mode non interactif, mais ce cas n'a pas été essayé.
+
+Exception : les descriptions des clubs ont été converties en HTML ; l'ancien code les afficherait avec leurs balises. Les
+remettre en texte brut **avant** de changer de code :
+
+```bash
+docker compose exec php php bin/console doctrine:migrations:execute 'DoctrineMigrations\Version20261031120000' --down --no-interaction
+```
 
 ```bash
 git checkout 3bafba4          # le commit noté à l'étape 1
