@@ -130,10 +130,21 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
   effacées.
 - **Stats publiques** : choisies plus tard, sur le catalogue du §9.
 
+- **Joueur sans accord de publication** : présent dans les classements publics, mais anonyme. Il n'y a pas de numéro de
+  maillot : libellé à fixer, par exemple « Joueur anonyme · EQUIPE A1 ».
+- **Classements publics** : par critère au choix du visiteur (meilleur serveur, meilleur passeur…), soit en nombre, soit en
+  pourcentage d'actions réussies.
+- **Première version** : comparaison des rotations, export CSV et stats sur la fiche de l'équipe en font partie.
+
+**Conséquences, à valider** :
+- Un critère du seul mode complet (passe, réception, efficacité en attaque) ne classe que les joueurs des équipes en mode
+  complet ; le classement le dit (« équipes en saisie complète »). Cela remplace la règle « socle commun seulement » de D66.
+- Un pourcentage exige un minimum d'actions (sans quoi 1 service réussi sur 1 donne 100 %) : seuil par critère, réglé par
+  l'admin, par exemple 20 services ou 10 réceptions.
+
 **Ouvertes** :
-1. Le joueur qui a refusé la publication apparaît-il « Joueur 7 » ou pas du tout dans les classements publics ?
-2. Quels classements publier (saison, poule, phase), avec quel minimum de matchs ?
-3. Comparaison des rotations, export CSV, stats sur la fiche publique de l'équipe : première version ou plus tard ?
+1. Périmètre des classements : saison entière, ou aussi par phase et par poule ?
+2. Liste des critères proposés au visiteur, à choisir dans le catalogue du §9.
 
 ## 9. Catalogue des statistiques possibles (pour choisir les stats publiques)
 

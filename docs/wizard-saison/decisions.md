@@ -808,6 +808,11 @@ les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne se
   un seul saisisseur, ni libéro ni temps morts dans la première version ; pas de numéro de maillot, joueur désigné par son
   prénom et les premières lettres de son nom ; conservation tant que le joueur participe à une saison, plus une saison ;
   stats publiques choisies plus tard sur le catalogue de `analyse.md` §9.
+- *Modifié le 31/10/2026* (raison nouvelle : l'utilisateur veut aussi des critères du mode complet, ex. meilleur passeur) :
+  classements publics **par critère au choix**, en nombre ou en pourcentage d'actions réussies ; un critère du seul mode
+  complet ne classe que les équipes en saisie complète (remplace « socle commun seulement ») ; pourcentage soumis à un
+  minimum d'actions réglé par l'admin. Joueur sans accord : **anonyme** dans les classements. Comparaison des rotations,
+  export CSV et stats sur la fiche de l'équipe dans la première version.
 
 *Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
 volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.
