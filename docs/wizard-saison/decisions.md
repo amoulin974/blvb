@@ -77,6 +77,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
 - D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
 - D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
+- D67. Volley Stats : on commence par la page match et la composition de chaque set
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -823,6 +824,22 @@ les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne se
 
 *Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
 volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.
+*(2026-10-31)*
+
+
+## D67. Volley Stats : on commence par la page match et la composition de chaque set
+**Décision** (utilisateur, 31/10/2026) : premier développement de Volley Stats = une **page match** propre à une équipe pour
+un match du championnat, où l'on indique les joueurs au début de chaque set. Parcours proposé par l'ergonome
+(`docs/volley-stats/page-match.md`), avec ces réponses :
+- **Accès et modification** : tous les membres de l'équipe, le responsable du club et les admins ; l'équipe adverse n'y
+  a pas accès (« page introuvable »).
+- **Premier service** saisi à chaque set (tiré par les joueurs : balle de service, chifoumi).
+- **Set commencé à 5** : rotation normale, la place libre tourne avec les autres.
+- **2 sets gagnants** : 3ᵉ set en 15 points.
+- Vocabulaire : « Composition du set N » et « Joueurs présents », pour ne pas confondre avec la composition de l'équipe sur
+  la saison.
+*Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile
+sans les stats.
 *(2026-10-31)*
 
 ---

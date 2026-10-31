@@ -36,8 +36,7 @@ déduisent : présents moins les six placés).
   présents du match précédent ; « Ajouter un joueur de l'équipe ».
 - **Écran B, « Composition du set 1 »** : terrain, filet en haut ; la case en surbrillance avance seule dans l'ordre de
   service (poste 1 à 6) : six noms à toucher ; chaque case reste modifiable.
-- **Écran C, « Premier service »** : « Nous servons » / « Nous recevons », prérempli à partir du set 2 selon la règle du
-  championnat ; « Commencer le set 1 ».
+- **Écran C, « Premier service »** : « Nous servons » / « Nous recevons », choisi à chaque set (tiré par les joueurs, D67) ; « Commencer le set 1 ».
 - **Sets suivants** : préremplis avec le départ du set précédent ; « Tourner d'un poste », « Tout effacer ».
 - **Remplacement** : toucher le joueur, « Remplacer par… », « Valider » ; motif « Blessure » facultatif ; « Annuler le
   remplacement » pendant 10 s.
@@ -71,16 +70,20 @@ annoncée (`aria-live`).
 - **Accompagnant** : le compte d'un joueur donne accès à tout ce compte ; un lien de saisie temporaire limité au match
   serait à étudier.
 
-## 5. Questions à trancher
+## 5. Questions tranchées (utilisateur, 31/10/2026, D67)
 
-1. Qui modifie : tout membre de l'équipe, ou seulement le capitaine et un saisisseur désigné ? Responsable du club en
-   lecture seule ?
-2. Premier service au règlement BLVB : tirage au sort à chaque set, ou alternance ? Et au 5ᵉ set ?
-3. À 5 joueurs (règle 5J), que se passe-t-il au tour de service de la place libre ?
-4. En 2 sets gagnants, le 3ᵉ set se joue-t-il en 15 ? Des matchs où tous les sets se jouent ?
-5. Un renfort hors de l'équipe peut-il être ajouté au gymnase, et par qui ?
-6. Noter le score de chaque set (25–21) sur la page match, en interne ?
-7. Un lien de saisie temporaire pour l'accompagnant ?
+1. **Modification** : tous les membres de l'équipe **et le responsable du club** (pas seulement en lecture, contrairement à
+   la proposition du §4).
+2. **Premier service** : les joueurs le tirent entre eux (balle de service, chifoumi) ; il se **saisit à chaque set**,
+   sans règle d'alternance ni préremplissage imposé.
+3. **Set commencé à 5** : la rotation se fait normalement, la place libre tourne avec les autres.
+4. **Format 2 sets gagnants** : le 3ᵉ set se joue en 15 points.
+
+## 6. Questions encore ouvertes
+
+1. Un renfort hors de l'équipe peut-il être ajouté au gymnase, et par qui ?
+2. Noter le score de chaque set (25–21) sur la page match, en interne ?
+3. Un lien de saisie temporaire pour l'accompagnant ?
 
 Points d'attention : enregistrement de chaque étape aussitôt sur le serveur ; cibles de 48 px, trois colonnes d'environ
 110 px à vérifier avec des noms longs ; couleurs du terrain et de la case active : webdesigner.
