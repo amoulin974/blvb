@@ -42,3 +42,33 @@ framework:
                 allowed_media_hosts: []
                 allow_relative_medias: true
                 max_input_length: 500000 # = EditionReglement::TAILLE_MAX
+            # Description d'un club (App\Service\DescriptionClub, D63) : barre réduite de l'éditeur de la fiche, écrite par
+            # les responsables de club ; ni image, ni tableau, ni attribut class ou style ; liens http, https et mailto.
+            app.club:
+                allow_elements:
+                    h3: []
+                    h4: []
+                    p: []
+                    br: []
+                    strong: []
+                    b: []
+                    em: []
+                    i: []
+                    ul: []
+                    ol: []
+                    li: []
+                    a: [href]
+                # Liens écrits par des non-admins vers des sites tiers : pas de transmission de l'adresse de la page ni
+                # de référencement
+                force_attributes:
+                    a: { rel: 'noopener noreferrer nofollow ugc' }
+                # Balises de mise en forme retirées sans perdre leur texte (titre h2 collé, citation…) ; les autres
+                # (script, style, iframe, image, tableau…) disparaissent avec leur contenu
+                block_elements: [h1, h2, h5, h6, div, span, section, article, blockquote, pre, code, u, s, mark, sub, sup, small]
+                allowed_link_schemes: [http, https, mailto]
+                allow_relative_links: false
+                allowed_media_schemes: []
+                allow_relative_medias: false
+                # Protection contre un envoi démesuré, bien au-delà de la limite de Club::description (Assert\Length, 20000) :
+                # le sanitizer coupe sans prévenir, la validation doit se déclencher avant
+                max_input_length: 100000

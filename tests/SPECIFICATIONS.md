@@ -211,7 +211,7 @@ Il ne peut pas non plus s'attribuer d'équipes ni de responsables en ajoutant de
 **SEC-13 — Saisies de la fiche du club** ✅ *`FicheClubTest`* :
 - abréviation ou nom long avec retour à la ligne ou caractère de contrôle → 422 (l'abréviation est reprise dans le nom des agendas `.ics`) ; abréviation limitée aux lettres, chiffres, espace et `. & ' -` ;
 - lien `javascript:`, `data:` → 422 (seuls http et https sont acceptés) ;
-- HTML saisi (nom, description) affiché comme du texte sur la fiche, la liste des clubs, le calendrier et les équipes ;
+- HTML saisi dans le nom affiché comme du texte sur la fiche, la liste des clubs, le calendrier et les équipes ; description : seule la mise en forme de l'éditeur est gardée (sanitizer `app.club`) ; script, attributs d'événement, style, class, image, iframe, tableau, lien `javascript:` et titre h2 retirés, le texte des balises de mise en forme restant ;
 - modification sans jeton de sécurité, ou envoyée depuis un autre site (en-tête `Origin` étranger) → 422, rien d'enregistré.
 
 **SEC-14 — Agenda `.ics`** ✅ *`Integration/Service/CalendarIcsGeneratorTest`* : un retour à la ligne dans le nom de l'équipe ou du club n'ajoute aucune ligne au fichier (une seule fin d'agenda, aucune propriété injectée).
@@ -437,11 +437,12 @@ Réservé à ce que le PHP ne peut pas voir (JavaScript Stimulus) ; 5 à 8 scén
 
 **Fiche et liste des clubs**
 **CLU-01** ✅ — Fiche publique : nom long, abréviation, description, lien, logo, gymnases ; **seulement les équipes engagées dans la saison en cours**, avec leur poule.
-**CLU-02** ✅ — Modification par le responsable : nom long, abréviation, description, lien ; description et lien vides acceptés (enregistrés `null`) ; lien invalide → 422 avec message.
+**CLU-02** ✅ — Modification par le responsable : nom long, abréviation, description (HTML de l'éditeur : titres, gras, italique, listes, lien e-mail), lien ; description vide (paragraphe vide de l'éditeur compris) et lien vide acceptés (enregistrés `null`) ; lien invalide → 422 avec message.
 **CLU-03** ✅ — Abréviation : avertissement sous le champ (nombre d'équipes, nom actuel) ; après changement, message avec le nouveau nom des équipes.
 **CLU-04** ✅ — Liste `/clubs` triée par nom long, cartes vers les fiches, nombre d'équipes engagées dans la saison ; lien dans le menu « Le championnat ».
 **CLU-05** ✅ — « Qui sommes-nous ? » : clubs tirés de la base, en lien vers leurs fiches.
 **CLU-07** ✅ — « Mon profil » du responsable : rubrique « Mes clubs (responsable) » avec ses seuls clubs de la saison en cours, en lien vers leur fiche ; absente pour un capitaine non responsable.
+**CLU-08** ✅ — Description du club en HTML (D63) : page de modification avec l'éditeur à barre réduite (titre, sous-titre, gras, italique, listes, lien, annuler, rétablir), zone masquée sans JavaScript ; description affichée mise en forme sur la fiche et nettoyée de nouveau à l'affichage ; liens enregistrés avec `rel="noopener noreferrer nofollow ugc"` ; sans JavaScript, un texte brut garde paragraphes et retours à la ligne ; au-delà de 20 000 caractères, refus 422 avec message, rien de coupé ni d'enregistré ; texte d'avant l'éditeur converti en HTML (paragraphes, sauts de ligne, échappement ; vide → `null` ; texte contenant déjà des balises inchangé) *`Unitaire/Service/DescriptionClubTest`* ; la commande `app:clubs:depuis-noms-equipes` remplit la fiche en HTML.
 **CLU-06** ✅ — Rôle `ROLE_RESPONSABLE_CLUB` déduit d'une désignation **pour la saison en cours** (présent pour `resp.club`, absent pour `cap.a1` et pour un responsable d'une saison précédente) ; retiré quand le club est supprimé.
 
 **Administration**

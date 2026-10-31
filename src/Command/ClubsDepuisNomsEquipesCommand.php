@@ -6,6 +6,7 @@ use App\Entity\Equipe;
 use App\Repository\EquipeRepository;
 use App\Repository\LieuRepository;
 use App\Service\ClubDepuisNomEquipeService;
+use App\Service\DescriptionClub;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
@@ -150,7 +151,7 @@ final class ClubsDepuisNomsEquipesCommand extends Command
                 $club->setUrl($def['url']);
             }
             if ($club->getDescription() === null && isset($def['description'])) {
-                $club->setDescription($def['description']);
+                $club->setDescription(DescriptionClub::depuisTexte($def['description']));
             }
             foreach ($def['sigles'] ?? [] as $sigle) {
                 $alias[$sigle] = $def['court'];

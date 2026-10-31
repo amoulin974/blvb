@@ -44,9 +44,9 @@ class Club
     #[Assert\Regex(pattern: "/^[\\p{L}\\p{N}][\\p{L}\\p{N} .&'-]*$/u", message: 'L\'abréviation ne peut contenir que des lettres, des chiffres, des espaces et les signes . & \' -')]
     private ?string $nomCourt = null;
 
-    /** Présentation du club (fiche publique), modifiable par ses responsables */
+    /** Présentation du club (fiche publique), modifiable par ses responsables : HTML nettoyé (App\Service\DescriptionClub, D63) */
     #[ORM\Column(type: 'text', nullable: true)]
-    #[Assert\Length(max: 5000)]
+    #[Assert\Length(max: 20000, maxMessage: 'La description est trop longue : raccourcissez-la.')]
     private ?string $description = null;
 
     /** Lien vers le site du club ou sa page de réseau social */

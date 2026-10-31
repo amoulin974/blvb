@@ -732,7 +732,15 @@ reconnue par la collation de la base (`á` pour `a`) échappe au compteur du com
 **Décision** (utilisateur, 30/10/2026) : titres, gras, italique, listes, liens ; ni onglet HTML, ni tableaux, ni codes courts,
 ni images dans le texte pour commencer (les responsables de club ne sont pas admins) ; textes existants convertis une fois en
 HTML ; pas d'historique ni de contrôle de conflit au début (le dernier enregistrement l'emporte).
-*(2026-10-30)*
+
+**Précisions à la réalisation** (31/10/2026, relectures ergonome, webdesigner et sécurité) : titres en h3 (« Titre ») et h4
+(« Sous-titre »), la section « Présentation » de la fiche étant un h2 ; liens vers un site ou une adresse e-mail seulement
+(http, https, mailto), reconnus aussi quand on les tape, et enregistrés avec `rel="noopener noreferrer nofollow ugc"` ;
+HTML nettoyé à l'envoi et de nouveau à l'affichage (sanitizer `app.club`), le texte des balises de mise en forme non gardées
+restant ; description limitée à 20 000 caractères, refusée avec un message au-delà (jamais coupée) ; sans JavaScript, le
+champ reste une zone de texte et un texte brut y garde ses paragraphes ; l'aide du champ prévient qu'un texte collé perd ses
+images, tableaux et couleurs.
+*(2026-10-30, précisé le 2026-10-31)*
 
 ## D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
 **Décision** (utilisateur, 31/10/2026) : la proposition de l'ergonome (`tableau-de-bord.md`, §2) est retenue, avec ces réponses

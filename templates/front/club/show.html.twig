@@ -31,7 +31,8 @@
         {% if club.description %}
             <section aria-labelledby="titre-presentation" class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
                 <h2 id="titre-presentation" class="text-xl uppercase tracking-wide">Présentation</h2>
-                <p class="mt-2 whitespace-pre-line">{{ club.description }}</p>
+                {# HTML de l'éditeur (D63), nettoyé à l'enregistrement et de nouveau ici #}
+                <div class="texte-riche mt-2">{{ club.description|sanitize_html('app.club') }}</div>
             </section>
         {% endif %}
 

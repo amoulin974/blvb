@@ -99,7 +99,7 @@ final class ClubDepuisNomEquipeTest extends TestIntegration
         self::assertSame('Nom long saisi dans l\'admin', $clubs->findOneBy(['nomCourt' => 'ASPTT'])->getNom(), 'nom long existant conservé');
         self::assertSame('Saisie du responsable', $clubs->findOneBy(['nomCourt' => 'ASPTT'])->getDescription(), 'description existante conservée');
         self::assertSame('https://bayonnecotebasque.asptt.com/activity/volley-ball/', $clubs->findOneBy(['nomCourt' => 'ASPTT'])->getUrl(), 'lien vide complété');
-        self::assertStringStartsWith('Section volley-ball de l\'Anglet Olympique', $aovb->getDescription(), 'fiche remplie à la création');
+        self::assertStringStartsWith('<p>Section volley-ball de l\'Anglet Olympique', $aovb->getDescription(), 'fiche remplie à la création, en HTML (D63)');
         self::assertSame('https://anglet-omnisports.fr/sections/anglet-olympique-volleyball.html', $aovb->getUrl());
 
         self::assertSame('Léo Lagrange (LÉO)', $this->equipe('LEO LAGRANGE')->getNom(), 'équipe sans sigle du référentiel');

@@ -55,7 +55,7 @@ final class FicheClubTest extends TestFonctionnel
         $form = $crawler->selectButton('Enregistrer')->form();
         $form['club_fiche[nom]'] = 'Club test renommé';
         $form['club_fiche[nomCourt]'] = 'CTR';
-        $form['club_fiche[description]'] = "Entraînements le mardi.\nTous niveaux.";
+        $form['club_fiche[description]'] = '<h3>Entraînements</h3><p>Le <strong>mardi</strong>, <em>tous niveaux</em>.</p><ul><li>Loisir</li></ul><p><a href="mailto:contact@club.example.org">contact@club.example.org</a></p>';
         $form['club_fiche[url]'] = 'https://club.example.org';
         $this->client->submit($form);
 
@@ -63,7 +63,7 @@ final class FicheClubTest extends TestFonctionnel
         $club = $this->club();
         self::assertSame('Club test renommé', $club->getNom());
         self::assertSame('CTR', $club->getNomCourt());
-        self::assertSame("Entraînements le mardi.\nTous niveaux.", $club->getDescription());
+        self::assertSame('<h3>Entraînements</h3><p>Le <strong>mardi</strong>, <em>tous niveaux</em>.</p><ul><li>Loisir</li></ul><p><a href="mailto:contact&#64;club.example.org" rel="noopener noreferrer nofollow ugc">contact&#64;club.example.org</a></p>', $club->getDescription(), 'liens de non-admins sans transmission de l\'adresse ni référencement');
         self::assertSame('https://club.example.org', $club->getUrl());
         self::assertSame('EQUIPE A1 (CTR)', $club->getEquipes()->first()->getNom());
     }
@@ -74,12 +74,12 @@ final class FicheClubTest extends TestFonctionnel
         $this->connecter('resp.club');
         $crawler = $this->client->request('GET', $this->urlModifier());
         $form = $crawler->selectButton('Enregistrer')->form();
-        $form['club_fiche[description]'] = '   ';
+        $form['club_fiche[description]'] = '<p></p>';
         $form['club_fiche[url]'] = '';
         $this->client->submit($form);
 
         self::assertResponseRedirects();
-        self::assertNull($this->club()->getDescription());
+        self::assertNull($this->club()->getDescription(), 'paragraphe vide laissé par l\'éditeur');
         self::assertNull($this->club()->getUrl());
     }
 
@@ -332,15 +332,23 @@ final class FicheClubTest extends TestFonctionnel
         self::assertNull($this->club()->getUrl());
     }
 
-    #[TestDox('Du HTML saisi dans la fiche s\'affiche comme du texte (fiche, liste des clubs, calendrier)')]
+    #[TestDox('Description : seule la mise en forme de l\'éditeur est gardée, le reste est retiré ; le nom s\'affiche comme du texte (fiche, liste des clubs, calendrier)')]
     public function test_html_echappe(): void
     {
         $this->connecter('resp.club');
         $valeurs = $this->valeursFiche();
         $valeurs['club_fiche']['nom'] = 'Club <b>gras</b>';
-        $valeurs['club_fiche']['description'] = "<script>alert('piege')</script>\nDeuxième ligne";
+        $valeurs['club_fiche']['description'] = "<script>alert('piege')</script><p onclick=\"alert(1)\" style=\"color:red\" class=\"x\">Deuxième <img src=\"/x.png\" onerror=\"alert(1)\">ligne</p>"
+            .'<h2>Grand titre</h2><a href="javascript:alert(1)">piège</a><iframe src="https://exemple.org"></iframe><table><tr><td>case</td></tr></table>';
         $this->client->request('POST', $this->urlModifier(), $valeurs);
         self::assertResponseRedirects();
+
+        $description = (string) $this->club()->getDescription();
+        foreach (['<script', 'onclick', 'style=', 'class=', '<img', 'onerror', '<h2', 'javascript:', '<iframe', '<table'] as $interdit) {
+            self::assertStringNotContainsString($interdit, $description, $interdit);
+        }
+        self::assertStringContainsString('<p>Deuxième ligne</p>', $description);
+        self::assertStringContainsString('Grand titre', $description, 'le texte d\'une balise retirée reste');
 
         foreach (['/club/'.ChampionnatDeTest::get('club')->getId(), '/clubs', '/calendrier', '/equipes'] as $page) {
             $this->client->request('GET', $page);
@@ -348,8 +356,50 @@ final class FicheClubTest extends TestFonctionnel
             self::assertStringNotContainsString("<script>alert('piege')", $html, $page);
             self::assertStringNotContainsString('<b>gras</b>', $html, $page);
         }
-        $this->client->request('GET', '/club/'.ChampionnatDeTest::get('club')->getId());
-        self::assertStringContainsString('&lt;script&gt;', (string) $this->client->getResponse()->getContent());
+    }
+
+    #[TestDox('Description : sans JavaScript, un texte brut garde ses paragraphes et ses retours à la ligne ; trop longue, elle est refusée avec un message, sans rien couper')]
+    public function test_description_texte_brut_et_longueur(): void
+    {
+        $this->connecter('resp.club');
+        $valeurs = $this->valeursFiche();
+        $valeurs['club_fiche']['description'] = "Entraînements le mardi.\nTous niveaux.\n\nContact : a < b";
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+        self::assertResponseRedirects();
+        self::assertSame('<p>Entraînements le mardi.<br />Tous niveaux.</p><p>Contact : a &lt; b</p>', $this->club()->getDescription());
+
+        $valeurs['club_fiche']['description'] = '<p>'.str_repeat('é', 21000).'</p>';
+        $this->client->request('POST', $this->urlModifier(), $valeurs);
+        self::assertResponseStatusCodeSame(422);
+        self::assertSelectorTextContains('body', 'La description est trop longue : raccourcissez-la.');
+        self::assertStringStartsWith('<p>Entraînements', (string) $this->club()->getDescription(), 'rien d\'enregistré');
+    }
+
+    #[TestDox('Description : affichée mise en forme sur la fiche, nettoyée de nouveau à l\'affichage (texte enregistré avant l\'éditeur)')]
+    public function test_description_affichee(): void
+    {
+        $club = $this->club();
+        $club->setDescription('<h3>Entraînements</h3><p>Le <strong>mardi</strong></p><script>alert(1)</script><img src="/x.png">');
+        self::getContainer()->get('doctrine')->getManager()->flush();
+
+        $crawler = $this->client->request('GET', '/club/'.$club->getId());
+        $texte = $crawler->filter('#titre-presentation + .texte-riche');
+        self::assertSame('Entraînements', $texte->filter('h3')->text());
+        self::assertSame('mardi', $texte->filter('strong')->text());
+        self::assertCount(0, $texte->filter('script, img'));
+    }
+
+    #[TestDox('Page de modification : éditeur à barre réduite sur la description (titres, gras, italique, listes, lien), sans image ni tableau')]
+    public function test_editeur_description(): void
+    {
+        $this->connecter('resp.club');
+        $crawler = $this->client->request('GET', $this->urlModifier());
+
+        $editeur = $crawler->filter('[data-controller="editeur-texte"]');
+        self::assertCount(1, $editeur->filter('textarea[name="club_fiche[description]"][data-editeur-texte-target="champ"]'));
+        $commandes = $editeur->filter('[role="toolbar"] [data-commande]')->each(fn ($b) => $b->attr('data-commande'));
+        self::assertSame(['titre', 'sous-titre', 'gras', 'italique', 'puces', 'numeros', 'lien', 'annuler', 'retablir'], $commandes);
+        self::assertNotNull($editeur->filter('[data-editeur-texte-target="zone"]')->attr('hidden'), 'masqué sans JavaScript');
     }
 
     #[TestDox('La fiche ne peut pas être modifiée sans jeton de sécurité, ni depuis un autre site')]

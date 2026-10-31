@@ -10,6 +10,7 @@ import { Superscript } from '@tiptap/extension-superscript'
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table'
 import { Plugin } from '@tiptap/pm/state'
 import { Decoration, DecorationSet } from '@tiptap/pm/view'
+import { adresseDeLien, naviguerDansBarre } from '../editeur/commun.js'
 
 // Page d'édition du règlement (templates/admin/reglement/edit.html.twig, D55 à D59) : éditeur TipTap, barre d'outils,
 // enregistrement (conflit entre deux admins), aperçu, éléments calculés (insérer, copier, voir le résultat), lien, image.
@@ -420,24 +421,7 @@ export default class extends Controller {
     // actifs) ; Échap revient au texte
     flecheBarre(evenement) {
         // Le menu d'alignement compte pour un bouton (son summary) ; ses entrées se parcourent au clavier dans le menu ouvert
-        if (evenement.target.closest('.dropdown-content')) {
-            return
-        }
-        const boutons = [...this.barreTarget.querySelectorAll('button[data-commande], summary')]
-            .filter((b) => b.offsetParent !== null && !b.disabled && !b.closest('.dropdown-content'))
-        const index = boutons.indexOf(document.activeElement)
-        const cible = { ArrowRight: index + 1, ArrowLeft: index - 1, Home: 0, End: boutons.length - 1 }[evenement.key]
-        if (evenement.key === 'Escape') {
-            this.editor.commands.focus()
-            return
-        }
-        if (cible === undefined || index < 0) {
-            return
-        }
-        evenement.preventDefault()
-        const suivant = boutons[(cible + boutons.length) % boutons.length]
-        boutons.forEach((b) => b.setAttribute('tabindex', b === suivant ? '0' : '-1'))
-        suivant.focus()
+        naviguerDansBarre(evenement, this.barreTarget, this.editor)
     }
 
     raccourci(evenement) {
@@ -728,13 +712,8 @@ export default class extends Controller {
     // https://, mailto:, #ancre, chemin du site ; « contact@… » → mailto:, « www.… » → https://
     validerLien(evenement) {
         evenement.preventDefault()
-        let adresse = this.adresseTarget.value.trim()
-        if (/^[^\s@/]+@[^\s@/]+\.[^\s@/]+$/.test(adresse)) {
-            adresse = 'mailto:' + adresse
-        } else if (/^www\.[^\s]+$/i.test(adresse)) {
-            adresse = 'https://' + adresse
-        }
-        if (!/^(https?:\/\/[^\s]+|mailto:[^\s]+|#[A-Za-z0-9_-]+|\/(?!\/)[^\s]*)$/i.test(adresse)) {
+        const adresse = adresseDeLien(this.adresseTarget.value, { ancres: true, chemins: true })
+        if (adresse === null) {
             this.erreurLienTarget.textContent = 'Adresse non reconnue. Exemples : https://www.ffvolley.org, contact@blvb.fr ou #regle-1r.'
             return
         }

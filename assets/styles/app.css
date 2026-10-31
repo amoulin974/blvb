@@ -159,6 +159,19 @@ body{
 
 /* Règlement : typographie de lecture (longue page de texte), sans toucher au contenu balise par balise. */
 @layer components {
+    /* Description d'un club (D63) : HTML de l'éditeur à barre réduite, affiché et en cours d'édition */
+    .texte-riche { line-height: 1.6; }
+    .texte-riche h3 { font-size: 1.125rem; font-weight: 600; margin-top: 1.25rem; margin-bottom: 0.5rem; }
+    .texte-riche h4 { font-size: 1rem; font-weight: 600; margin-top: 1rem; margin-bottom: 0.25rem; }
+    .texte-riche > :first-child { margin-top: 0; }
+    .texte-riche p { margin-bottom: 0.75rem; max-width: 70ch; }
+    .texte-riche p:last-child { margin-bottom: 0; }
+    .texte-riche ul, .texte-riche ol { margin: 0 0 0.75rem 1.25rem; list-style: disc; }
+    .texte-riche ol { list-style: decimal; }
+    .texte-riche li { margin-bottom: 0.25rem; }
+    .texte-riche li p { margin-bottom: 0; }
+    .texte-riche a { color: var(--color-primary); text-decoration: underline; overflow-wrap: anywhere; }
+    .texte-riche a:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
     .reglement-article { line-height: 1.6; }
     .reglement-article h1 { margin-bottom: 1rem; }
     .reglement-article h2 {
@@ -267,6 +280,12 @@ body{
 .reglement-calendrier tbody { break-inside: avoid; }
 .reglement-inapplicable p:last-child { margin-bottom: 0; }
 @media print { .reglement-article h2, .reglement-article h3 { break-after: avoid; } }
+
+/* Éditeur de la description du club (D63, front/club/_editeur_description.html.twig) */
+/* Bordure et contour au focus comme les zones de texte voisines (daisyUI) */
+.editeur-texte { border-color: color-mix(in oklab, var(--color-base-content) 20%, transparent); }
+.editeur-texte .ProseMirror { min-height: 10rem; outline: none; }
+.editeur-texte:has(.ProseMirror:focus) { outline: 2px solid var(--color-base-content); outline-offset: 2px; }
 
 /* Page d'édition du règlement (admin/reglement/edit.html.twig) : zone d'édition TipTap, codes courts reconnus */
 .reglement-editeur { min-height: 60vh; padding: 1rem; }

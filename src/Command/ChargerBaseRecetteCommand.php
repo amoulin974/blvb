@@ -19,6 +19,7 @@ use App\Entity\User;
 use App\Enum\PhaseType;
 use App\Service\ClassementService;
 use App\Service\ClubImageService;
+use App\Service\DescriptionClub;
 use App\Reglement\EditionReglement;
 use App\Service\JourneeService;
 use App\Service\PartieService;
@@ -568,7 +569,7 @@ class ChargerBaseRecetteCommand extends Command
     private function creerClubs(array $equipes, array $lieux, Saison $saison, Saison $archive): void
     {
         foreach (self::CLUBS as $nomCourt => $def) {
-            $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription($def['description'])->setUrl($def['url']);
+            $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription(DescriptionClub::depuisTexte($def['description']))->setUrl($def['url']);
             foreach ($def['gymnases'] as $gymnase) {
                 $club->addLieu($lieux[$gymnase]);
             }

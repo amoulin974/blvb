@@ -1,6 +1,9 @@
-{# Champs de la fiche d'un club (ClubFicheType) : nom long, abréviation, description, lien, image.
+{# Champs de la fiche d'un club (ClubFicheType) : nom long, abréviation, description (éditeur, D63), lien, image.
    Partagé par la page de modification du club (responsables) et le formulaire de l'admin. #}
 {% for champ in [form.nom, form.nomCourt, form.description, form.url] %}
+    {% if champ.vars.name == 'description' %}
+        {{ include('front/club/_editeur_description.html.twig') }}
+    {% else %}
     <div class="form-control w-full">
         {{ form_label(champ, null, {'label_attr': {'class': 'label font-semibold'}}) }}
         {% set classe = champ.vars.block_prefixes[1] == 'textarea' ? 'textarea textarea-bordered w-full' : 'input input-bordered w-full' ~ (champ.vars.name == 'nomCourt' ? ' max-w-xs' : '') %}
@@ -19,6 +22,7 @@
             </div>
         {% endif %}
     </div>
+    {% endif %}
 {% endfor %}
 
 {# Image : aperçu de l'image actuelle, envoi d'une nouvelle, ou retrait #}
