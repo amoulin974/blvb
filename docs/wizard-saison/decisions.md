@@ -78,6 +78,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
 - D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
 - D67. Volley Stats : on commence par la page match et la composition de chaque set
+- D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -856,6 +857,30 @@ un match du championnat, où l'on indique les joueurs au début de chaque set. P
   la saison.
 *Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile
 sans les stats.
+*(2026-10-31)*
+
+
+## D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
+**Décision** (utilisateur, 31/10/2026) : la saisie des actions suit le parcours de l'ergonome (`docs/volley-stats/
+saisie-actions.md`) et ses cinq conditions : **action prédite** (on ne touche que le joueur), **« le jeu continue »
+implicite**, **service jamais saisi** (déduit de la rotation), **saisie après le point**, **échange non détaillé possible**
+(seulement le point). Réponses aux questions :
+- **Seuil d'échanges détaillés** pour qu'un set compte dans les classements publics : **réglable par l'admin**, dans une
+  nouvelle partie « Volley Stats » du menu de l'admin, avec une section sur le tableau de bord (contenu à concevoir).
+- **Le block ne compte pas comme une touche** : trois touches après un block.
+- **Ballon facile renvoyé en 3ᵉ touche** : action **« Renvoi »** à part (ne compte pas comme une attaque).
+- **Attaque contrée** : si le ballon contré revient dans notre camp et reste jouable, **le jeu continue et un nouveau cycle de
+  trois touches commence** (couverture ou défense, passe, attaque) ; un contre adverse gagnant est un point perdu
+  « contrée », distinct de la faute d'attaque (dehors, filet).
+- **Block gagnant à deux** : **chacun des bloqueurs** est crédité (deux joueurs touchés).
+- **Choix « le score seulement » / « le score et les touches des joueurs »** : à chaque set, au moment de le commencer.
+- **Corrections** d'une action d'un échange terminé (changer le joueur ou l'action, retirer une touche) : pendant le set et
+  pendant les 7 jours de correction ; pas d'ajout de touche oubliée dans un ancien échange en première version ; l'issue d'un
+  ancien échange ne se change pas (« Corriger le score »).
+- **Point gagné sur une réception, une passe ou une défense** : compté comme point marqué par le joueur, pas dans les
+  classements d'attaque. Les touches d'une **balle à rejouer** ne comptent pas.
+- **Préalable technique** : file d'attente des saisies sur le téléphone (affichage immédiat, envois l'un après l'autre),
+  sans quoi des touches rapides seraient perdues.
 *(2026-10-31)*
 
 ---

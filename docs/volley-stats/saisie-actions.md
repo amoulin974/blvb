@@ -1,7 +1,8 @@
 # Volley Stats : saisie des actions en mode intermédiaire, avis de l'ergonome (31/10/2026)
 
-Deuxième brique (D66 : chaque touche de notre équipe, trois issues, sans qualité). **Rien n'est décidé ni codé** : les
-questions du §5 sont à trancher, puis à consigner dans `decisions.md`.
+Deuxième brique (D66 : chaque touche de notre équipe, trois issues, sans qualité). **Questions tranchées le 31/10/2026 : voir D68**
+dans `decisions.md`, qui l'emporte sur les propositions ci-dessous (block à deux : chacun crédité ; seuil réglable par
+l'admin ; attaque contrée récupérée : nouveau cycle de trois touches). Rien n'est encore codé.
 
 ## Verdict
 
