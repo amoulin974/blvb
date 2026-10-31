@@ -32,6 +32,10 @@ Le détail coché des lots 0 à 6 (terminés) est dans [`archive/lots-0-6.md`](a
 
 ## Reprendre ici (31/10/2026)
 `main` contient les fermetures de gymnase et les paramètres du site ; rien n'est en production (`prod` sur 3bafba4). Dans l'ordre :
+**Volley Stats** (D66 à D68) fusionné dans `main` le 31/10/2026 : page du match, composition des sets, saisie des touches en
+mode intermédiaire, stats du match, seuil dans l'admin, commande `app:volley-stats:purger` ; dossier `docs/volley-stats/`.
+Restent : conditions d'utilisation (stats individuelles), place à l'écran sur un téléphone de 640 px (essai sur un vrai
+match), puis les classements publics (brique suivante, accord des joueurs, D66).
 1. **Mise à jour des paquets : faite**, fusionnée dans `main` le 31/10/2026 (`symfony/mime` 7.4.22, TipTap 3.32.2, `composer audit` et `importmap:audit` propres, tests, tests lents et navigateur verts).
 2. **Consignes pour Francis** : rédigées, page à lui partager : https://claude.ai/artifact/L4ehYBkk4uJt9fTwtXsp6f (`mail-francis.md` n'est plus que l'ancien brouillon).
 3. **Ensuite, au choix de l'utilisateur** : trancher le tableau de bord (PO6, `tableau-de-bord.md`) ; éditeur de la fiche club (D63,
