@@ -6,6 +6,8 @@ lieux, besoins, contraintes, risques et questions encore ouvertes. Démarré le 
 
 Maquette dans la charte : `maquette-page-match.md`, page publiée https://claude.ai/artifact/D2CTBo9Ze9dHN1E9iUq6k5. Spécification : `specification-page-match.md`.
 
+Saisie des actions en mode intermédiaire (avis de l'ergonome, deuxième brique) : `saisie-actions.md`.
+
 Toutes les situations de jeu et leurs conséquences : `situations.md`. Page match et composition par set (avis de
 l'ergonome) : `page-match.md`.
 
