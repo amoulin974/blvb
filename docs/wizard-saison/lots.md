@@ -32,15 +32,11 @@ Le détail coché des lots 0 à 6 (terminés) est dans [`archive/lots-0-6.md`](a
 
 ## Reprendre ici (31/10/2026)
 `main` contient les fermetures de gymnase et les paramètres du site ; rien n'est en production (`prod` sur 3bafba4). Dans l'ordre :
-1. **Mise à jour des paquets, interrompue avant les tests** : branche `maj-paquets`, commit non vérifié (`composer update` dans
-   les limites de `composer.json`, dont `symfony/mime` 7.4.22 pour CVE-2026-45070 ; `importmap:update`, dont TipTap 3.32 et
-   `@hotwired/stimulus`). À faire : `composer tests`, `composer qualite`, tests lents (`--group lent`), `composer audit` (son dernier
-   essai a échoué sur le réseau), `importmap:audit`, essai dans un navigateur de l'éditeur du règlement et du calendrier admin. Si
-   tout est bon, fusionner dans `main` ; mettre à jour `conditions-utilisation-v2` et la mention de TipTap dans `reglement.md`.
+1. **Mise à jour des paquets : faite**, fusionnée dans `main` le 31/10/2026 (`symfony/mime` 7.4.22, TipTap 3.32.2, `composer audit` et `importmap:audit` propres, tests, tests lents et navigateur verts).
 2. **Mail à Francis** : compléter `mail-francis.md`, à partir de `deploiement-reglement.md`, déjà à jour.
 3. **Ensuite, au choix de l'utilisateur** : trancher le tableau de bord (PO6, `tableau-de-bord.md`) ; éditeur de la fiche club (D63,
    branche à part depuis `main`).
-4. Branche `parametres-site` : identique à `main` avant ce point, à supprimer une fois `maj-paquets` traitée (demander d'abord).
+4. Branches `parametres-site` et `maj-paquets` : à supprimer, contenues dans `main` (demander d'abord).
 L'application tourne peut-être sur `blvb_recette` : voir `CLAUDE.md`, section Environnement. Un logo d'essai de l'utilisateur y est envoyé.
 
 ## Lot 11 : règlement par saison 🟡 (branche `reglement`, R1 à R5 fusionnés dans `formats-competition` le 22/10/2026 ; R6 en attente ; détail dans `reglement.md`)
@@ -51,7 +47,7 @@ La branche `reglement` part de `formats-competition-lot6` : elle contient le lot
 - [x] `prosemirror-view` monté en 1.42.3 (faille XSS au collage)
 - [ ] R6 : schémas dessinés dans un canvas (bibliothèque à choisir, décision à consigner)
 - [ ] Essais restants dans un navigateur : conflit entre deux onglets, historique et restauration, Firefox et Safari
-- [x] TipTap monté en version 3 (3.31.4, faille moyenne de `@tiptap/core` corrigée), vérifié dans Chromium, Firefox et WebKit
+- [x] TipTap monté en version 3 (3.31.4, puis 3.32.2 le 31/10/2026, faille moyenne de `@tiptap/core` corrigée), vérifié dans Chromium, Firefox et WebKit
 - [x] Éditeur : menu « Plus » sur téléphone, avertissement des boutons Précédent / Suivant, compteur de l'historique
 - [ ] En production (après la fusion par Francis) : corriger les données 2025, puis lancer `app:reglement:importer`
 

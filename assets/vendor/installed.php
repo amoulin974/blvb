@@ -11,7 +11,7 @@
   ),
   'tom-select/dist/css/tom-select.css' => 
   array (
-    'version' => '2.5.1',
+    'version' => '2.6.2',
     'dependencies' => 
     array (
     ),
@@ -21,7 +21,7 @@
   ),
   'tocbot/dist/tocbot.css' => 
   array (
-    'version' => '4.36.4',
+    'version' => '4.36.8',
     'dependencies' => 
     array (
     ),
@@ -31,7 +31,7 @@
   ),
   'daisyui' => 
   array (
-    'version' => '5.5.18',
+    'version' => '5.7.50',
     'dependencies' => 
     array (
     ),
@@ -41,7 +41,7 @@
   ),
   'daisyui/daisyui.min.css' => 
   array (
-    'version' => '5.5.18',
+    'version' => '5.7.50',
     'dependencies' => 
     array (
     ),
@@ -51,7 +51,7 @@
   ),
   'tom-select' => 
   array (
-    'version' => '2.5.1',
+    'version' => '2.6.2',
     'dependencies' => 
     array (
       0 => '@orchidjs/sifter',
@@ -75,7 +75,7 @@
   ),
   '@orchidjs/unicode-variants' => 
   array (
-    'version' => '1.1.2',
+    'version' => '1.2.2',
     'dependencies' => 
     array (
     ),
@@ -85,7 +85,7 @@
   ),
   'tom-select/dist/css/tom-select.default.min.css' => 
   array (
-    'version' => '2.5.1',
+    'version' => '2.6.2',
     'dependencies' => 
     array (
     ),
@@ -95,7 +95,7 @@
   ),
   'tocbot' => 
   array (
-    'version' => '4.36.4',
+    'version' => '4.36.8',
     'dependencies' => 
     array (
     ),
@@ -135,7 +135,7 @@
   ),
   'prosemirror-view' => 
   array (
-    'version' => '1.42.6',
+    'version' => '1.42.8',
     'dependencies' => 
     array (
       0 => 'prosemirror-state',
@@ -224,7 +224,7 @@
   ),
   'prosemirror-changeset' => 
   array (
-    'version' => '2.4.4',
+    'version' => '2.4.5',
     'dependencies' => 
     array (
     ),
@@ -248,7 +248,7 @@
   ),
   'prosemirror-transform' => 
   array (
-    'version' => '1.12.2',
+    'version' => '1.12.4',
     'dependencies' => 
     array (
       0 => 'prosemirror-model',
@@ -283,7 +283,7 @@
   ),
   'prosemirror-schema-list' => 
   array (
-    'version' => '1.5.1',
+    'version' => '1.6.0',
     'dependencies' => 
     array (
       0 => 'prosemirror-transform',
@@ -296,7 +296,7 @@
   ),
   'linkifyjs' => 
   array (
-    'version' => '4.3.3',
+    'version' => '4.4.0',
     'dependencies' => 
     array (
     ),
@@ -336,7 +336,7 @@
   ),
   '@tiptap/core' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/pm/transform',
@@ -354,7 +354,7 @@
   ),
   '@tiptap/starter-kit' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -381,7 +381,7 @@
   ),
   '@tiptap/extension-image' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -392,7 +392,7 @@
   ),
   '@tiptap/extension-highlight' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -403,7 +403,7 @@
   ),
   '@tiptap/extension-subscript' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -414,7 +414,7 @@
   ),
   '@tiptap/extension-superscript' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -425,7 +425,7 @@
   ),
   '@tiptap/extension-table' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -438,7 +438,7 @@
   ),
   '@tiptap/pm/state' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-state',
@@ -449,7 +449,7 @@
   ),
   '@tiptap/pm/view' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-view',
@@ -460,7 +460,7 @@
   ),
   '@tiptap/pm/transform' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-transform',
@@ -471,7 +471,7 @@
   ),
   '@tiptap/pm/commands' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-commands',
@@ -482,7 +482,7 @@
   ),
   '@tiptap/pm/model' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-model',
@@ -493,7 +493,7 @@
   ),
   '@tiptap/pm/schema-list' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-schema-list',
@@ -504,7 +504,7 @@
   ),
   '@tiptap/pm/keymap' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-keymap',
@@ -515,7 +515,7 @@
   ),
   '@tiptap/pm/history' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-history',
@@ -526,7 +526,7 @@
   ),
   '@tiptap/extension-blockquote' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -540,7 +540,7 @@
   ),
   '@tiptap/extension-bold' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -552,7 +552,7 @@
   ),
   '@tiptap/extension-code' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -563,7 +563,7 @@
   ),
   '@tiptap/extension-code-block' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -575,7 +575,7 @@
   ),
   '@tiptap/extension-document' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -586,7 +586,7 @@
   ),
   '@tiptap/extension-hard-break' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -597,7 +597,7 @@
   ),
   '@tiptap/extension-heading' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -608,7 +608,7 @@
   ),
   '@tiptap/extension-horizontal-rule' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -620,7 +620,7 @@
   ),
   '@tiptap/extension-italic' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -631,7 +631,7 @@
   ),
   '@tiptap/extension-link' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -646,12 +646,13 @@
   ),
   '@tiptap/extension-list' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
       1 => '@tiptap/pm/model',
-      2 => '@tiptap/pm/state',
+      2 => '@tiptap/pm/commands',
+      3 => '@tiptap/pm/state',
     ),
     'extraFiles' => 
     array (
@@ -659,7 +660,7 @@
   ),
   '@tiptap/extension-paragraph' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -670,7 +671,7 @@
   ),
   '@tiptap/extension-strike' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -681,7 +682,7 @@
   ),
   '@tiptap/extension-text' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -692,7 +693,7 @@
   ),
   '@tiptap/extension-underline' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -703,7 +704,7 @@
   ),
   '@tiptap/extensions' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => '@tiptap/core',
@@ -719,7 +720,7 @@
   ),
   '@tiptap/pm/tables' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-tables',
@@ -730,7 +731,7 @@
   ),
   'prosemirror-view/style/prosemirror.min.css' => 
   array (
-    'version' => '1.42.6',
+    'version' => '1.42.8',
     'dependencies' => 
     array (
     ),
@@ -760,7 +761,7 @@
   ),
   '@tiptap/core/jsx-runtime' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
     ),
@@ -770,7 +771,7 @@
   ),
   '@tiptap/pm/dropcursor' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-dropcursor',
@@ -781,7 +782,7 @@
   ),
   '@tiptap/pm/gapcursor' => 
   array (
-    'version' => '3.31.4',
+    'version' => '3.32.2',
     'dependencies' => 
     array (
       0 => 'prosemirror-gapcursor',

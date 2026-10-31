@@ -204,6 +204,8 @@ Fusion de `parametres-site` dans `main` (31/10/2026) : fermetures de gymnase, pa
 Checklist de déploiement complétée par l'agent `deploiement`. Mise à jour des paquets interrompue avant les tests, sur `maj-paquets` ; mail
 à Francis à compléter (`mail-francis.md`). Reprise : section « Reprendre ici » de `lots.md`.
 
+Paquets mis à jour et fusionnés dans `main` après vérification. Reste le mail à Francis (`mail-francis.md`).
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)
