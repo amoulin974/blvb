@@ -658,7 +658,8 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-12** ✅ : la fiche équipe mène à la page du match (« Préparer le match » sur le prochain match, « Page du match » sur
   chaque match du calendrier) et montre les sets joués, pour l'équipe, le responsable de son club et l'admin ; rien pour
   l'équipe adverse ni pour un visiteur.
-- **VST-13** ✅ : écritures JSON refusées sans jeton ou avec le jeton des scores (403), à l'équipe adverse (404), sur une page
+- **VST-13** ✅ : écritures JSON refusées sans jeton ou avec le jeton des scores (403), session expirée (401 et non une
+  redirection vers la connexion, pour que la file d'attente du téléphone s'arrête et le dise), à l'équipe adverse (404), sur une page
   gelée (404) sauf pour l'admin ; joueur de la page adverse refusé dans une composition et un remplacement ; uuid d'un autre
   set refusé ; terminer, rouvrir puis terminer de nouveau garde la date de la première fin (le gel n'est pas repoussé).
 

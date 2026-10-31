@@ -85,7 +85,7 @@ final class FeuilleMatchController extends AbstractController
     #[Route('/set/{numero}/{action}', name: '_set', requirements: ['numero' => '[1-5]', 'action' => 'composition|commencer|evenement|precedent|suivant|terminer|rouvrir'], methods: ['POST'])]
     public function set(Equipe $equipe, Partie $partie, int $numero, string $action, Request $request): JsonResponse
     {
-        $match = $this->match($equipe, $partie, FeuilleMatchVoter::MODIFIER);
+        $match = $this->match($equipe, $partie, FeuilleMatchVoter::MODIFIER, json: true);
         $jeton = $request->headers->get('X-CSRF-TOKEN');
         if (!$this->isCsrfTokenValid(self::jeton($match), $jeton)) {
             return $this->json(['message' => 'La page a expiré : rechargez-la.'], 403);
@@ -163,11 +163,15 @@ final class FeuilleMatchController extends AbstractController
     }
 
     /** Contrôles communs, dans l'ordre de la spécification (§4) ; renvoie le match avec sa page si elle existe */
-    private function match(Equipe $equipe, Partie $partie, string $droit): MatchEquipe
+    private function match(Equipe $equipe, Partie $partie, string $droit, bool $json = false): MatchEquipe
     {
         $match = new MatchEquipe($equipe, $partie, $this->feuilles->pour($partie, $equipe));
         if (!$match->estValide()) {
             throw $this->createNotFoundException();
+        }
+        // Écritures JSON : 401 au lieu de la redirection vers la connexion (la file d'attente du téléphone s'arrête et le dit)
+        if ($json && !$this->isGranted('IS_AUTHENTICATED')) {
+            throw new \Symfony\Component\HttpKernel\Exception\HttpException(401, 'Session expirée.');
         }
         $this->denyAccessUnlessGranted('IS_AUTHENTICATED');
         if (!$this->isGranted(FeuilleMatchVoter::VOIR, $match) || !$this->isGranted($droit, $match)) {

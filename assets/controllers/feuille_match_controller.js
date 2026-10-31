@@ -394,11 +394,24 @@ export default class extends Controller {
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': this.jetonValue },
                 body: JSON.stringify(donnees),
             })
-            const resultat = await reponse.json().catch(() => ({ message: 'Réponse inattendue : rechargez la page.' }))
+            const resultat = await reponse.json().catch(() => null)
+            // Session expirée ou portail du wifi : page de connexion au lieu de la réponse. La file s'arrête SANS se vider,
+            // les saisies attendent la reconnexion (relecture sécurité)
+            if (reponse.redirected || resultat === null || [401, 403, 404].includes(reponse.status)) {
+                const n = this.file.length
+                this.signaler(`Votre session a expiré : reconnectez-vous dans un autre onglet, puis rechargez cette page. ${n > 1 ? `${n} saisies n'ont pas été enregistrées` : 'La dernière saisie n\'a pas été enregistrée'} : notez-les avant de recharger.`)
+                return // envoiEnCours reste vrai : plus rien ne part tant que la page n'est pas rechargée
+            }
             this.file.shift()
             this.attente = 0
             if (resultat.feuille) this.serveur = resultat.feuille
-            if (reponse.status === 409) {
+            if (!reponse.ok && reponse.status !== 409 && op.action === 'evenement') {
+                // Saisie refusée : les suivantes du même set en dépendent (point qui porte sur elle…) ; elles sont abandonnées
+                const abandonnees = this.file.filter((autre) => autre.numero === op.numero)
+                this.file = this.file.filter((autre) => autre.numero !== op.numero)
+                abandonnees.forEach((autre) => autre.resoudre(false))
+                this.signaler((resultat.message ?? 'La saisie n\'a pas été enregistrée.') + (abandonnees.length ? ` ${abandonnees.length + 1} saisies n'ont pas été enregistrées : vérifiez le score.` : ''))
+            } else if (reponse.status === 409) {
                 // Saisie faite sur un autre téléphone : les saisies en attente, fondées sur l'ancien état, sont abandonnées
                 this.file.splice(0).forEach((autre) => autre.resoudre(false))
                 this.brouillon = null

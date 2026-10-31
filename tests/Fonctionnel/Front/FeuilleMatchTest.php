@@ -369,6 +369,11 @@ final class FeuilleMatchTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(403, 'sans jeton');
         $this->envoyer(1, 'composition', $composition, 'jeton-des-scores');
         self::assertResponseStatusCodeSame(403, 'jeton des scores');
+        $this->client->getCookieJar()->clear();
+        $this->envoyer(1, 'composition', $composition);
+        self::assertResponseStatusCodeSame(401, 'session expirée : 401, pas de redirection vers la connexion');
+        $this->connecter('cap.a1');
+        $this->jeton = $this->client->request('GET', $this->url())->filter('input[name="_token"]')->attr('value'); // nouvelle session, nouveau jeton
 
         // Page de l'équipe adverse, avec ses propres joueurs
         $this->connecter('cap.a2');
