@@ -38,8 +38,8 @@ déduisent : présents moins les six placés).
   service (poste 1 à 6) : six noms à toucher ; chaque case reste modifiable.
 - **Écran C, « Premier service »** : « Nous servons » / « Nous recevons », choisi à chaque set (tiré par les joueurs, D67) ; « Commencer le set 1 ».
 - **Sets suivants** : préremplis avec le départ du set précédent ; « Tourner d'un poste », « Tout effacer ».
-- **Remplacement** : toucher le joueur, « Remplacer par… », « Valider » ; motif « Blessure » facultatif ; « Annuler le
-  remplacement » pendant 10 s.
+- **Remplacement** : toucher le joueur, « Remplacer par… », « Valider » ; « Annuler le remplacement » pendant 10 s. Pas
+  de motif « Blessure » : donnée de santé (relecture sécurité, spécification §6).
 - **Set à 5** : « Commencer à 5 joueurs », case « Place libre » remplissable en cours de set.
 - **Score de départ** : « 0–0 · 0–8 · 8–0 » (règle 1J non contrôlée, mais nécessaire pour savoir quand le set finit).
 
