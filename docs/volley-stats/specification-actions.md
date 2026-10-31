@@ -14,8 +14,8 @@ réalisée). Rédigé le 31/10/2026, relu par l'agent `securite` le même jour (
   faute de règlement.
 - **Un échange** = les événements entre deux points (ou une balle à rejouer). Il n'est pas stocké : il se déduit du journal.
 - **Le service n'est jamais saisi** (D68) : il se déduit de la rotation (serveur au poste 1 quand nous servons).
-- **Rien n'est public dans cette brique** : stats visibles de l'équipe ; **le responsable du club : à trancher** (D66 dit
-  « son équipe seulement » ; D67 lui a ouvert la composition, pas les stats de performance) ;
+- **Rien n'est public dans cette brique** : stats visibles de l'équipe et du responsable de son club (D68, précision du
+  31/10/2026, à écrire dans les conditions d'utilisation) ;
   les classements publics, avec l'accord de chaque joueur (D66), viendront dans la brique suivante.
 
 ## 2. Données
@@ -135,7 +135,7 @@ touche sur la fiche équipe publique, le calendrier, l'ICS, l'API du score, le c
 
 ## 9. Données personnelles
 
-Stats de performance individuelles, internes à l'équipe dans cette brique : à ajouter aux conditions d'utilisation (finalité,
+Stats de performance individuelles, internes à l'équipe et au responsable de son club dans cette brique (D68) : à ajouter aux conditions d'utilisation (finalité,
 qui les voit, durée ; publication plus tard avec accord, D66), page à brancher à la fusion de `conditions-utilisation-v2`.
 Conservation (D66) : les touches sont dans le journal des pages du match, donc supprimées avec elles par la commande prévue
 (`specification-page-match.md` §6, feuilles de la saison N supprimées à la fin de N+1), **encore à réaliser** avant l'essai

@@ -881,6 +881,9 @@ implicite**, **service jamais saisi** (déduit de la rotation), **saisie après 
   classements d'attaque. Les touches d'une **balle à rejouer** ne comptent pas.
 - **Préalable technique** : file d'attente des saisies sur le téléphone (affichage immédiat, envois l'un après l'autre),
   sans quoi des touches rapides seraient perdues.
+- *Précisé le 31/10/2026* (modifie D66 sur ce point) : **le responsable du club voit les statistiques individuelles des
+  joueurs de ses équipes, comme l'équipe elle-même**, sans accord du joueur (usage interne au club, jamais public) ; à écrire
+  dans les conditions d'utilisation. La publication sur le site reste soumise à l'accord de chaque joueur (D66).
 *(2026-10-31)*
 
 ---
