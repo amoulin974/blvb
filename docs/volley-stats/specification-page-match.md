@@ -68,7 +68,7 @@ deux présents) : rien de nouveau n'est stocké sur le joueur.
 | `set_id` | FK | |
 | `ordre` | int | croissant dans le set, **calculé par le serveur** ; unique (`set_id`, `ordre`) |
 | `uuid` | chaîne | généré par le téléphone, unique : un envoi rejoué après une coupure est sans effet |
-| `type` | chaîne | `remplacement`, `point`, `correction` (score corrigé : `{nous, eux}`, puis serveur confirmé) ; plus tard `action` |
+| `type` | chaîne | `remplacement`, `point`, `correction` (score corrigé et service : `{nous, eux, service}`), `rotation` (un cran, « Tourner d'un poste ») ; plus tard `action` |
 | `donnees` | JSON | remplacement : `{sort, entre}` (**pas de motif** : « blessure » serait une donnée de santé, §6) ; point : `{pour: "nous" ou "eux"}` ; schéma strict |
 | `annule_le` | datetime | rempli par « Précédent » (l'événement reste dans l'historique, barré) ; vidé par « Suivant » |
 | `saisi_par_id` | FK `user` | compte qui a saisi : aide à la correction, pas une preuve (un compte peut être prêté, D66) |
@@ -138,7 +138,7 @@ jamais. Saison introuvable : 404.
 | `POST …/preparer` | crée la feuille (bouton « Préparer le match ») ; idempotent : feuille existante relue en cas de conflit |
 | `POST …/presents` | joueurs présents (crée la feuille si besoin) |
 | `POST …/set/{numero}/composition` | postes, premier service, score de départ |
-| `POST …/set/{numero}/commencer`, `…/terminer` | changements d'état |
+| `POST …/set/{numero}/commencer`, `…/terminer`, `…/rouvrir` | changements d'état (rouvrir : le dernier set terminé, point oublié) |
 | `POST …/set/{numero}/evenement` | remplacement, point ; renvoie l'état recalculé (JSON) |
 | `POST …/set/{numero}/precedent`, `…/suivant` | annule le dernier événement actif / rétablit le dernier annulé (désigné par son `uuid`, refusé s'il a changé) |
 

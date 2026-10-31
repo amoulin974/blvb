@@ -17,7 +17,8 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
 /**
- * VST-01 à VST-07 : page du match d'une équipe, droits et joueurs présents (Volley Stats, D67 ; spécification §4, §5).
+ * VST-01 à VST-07, VST-09 à VST-11 : page du match d'une équipe, droits, joueurs présents, composition et journal des sets
+ * (Volley Stats, D67 ; spécification §3 à §5). VST-08 : Unitaire/VolleyStats/EtatSetTest.
  * Match de référence : A1 (club CTA, responsable resp.club) reçoit A2, hier.
  */
 final class FeuilleMatchTest extends TestFonctionnel
@@ -181,5 +182,148 @@ final class FeuilleMatchTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(404);
         $this->client->request('POST', $this->url().'/preparer', ['_token' => $jeton]);
         self::assertResponseStatusCodeSame(404);
+    }
+
+    private string $jeton = '';
+
+    /** Prépare la page de A1 avec six joueurs présents (trois membres ajoutés) ; renvoie les identifiants des présents */
+    private function preparerSix(): array
+    {
+        foreach (['Ana Ur', 'Beñat Lo', 'Maite Ze'] as $i => $nom) {
+            [$prenom, $famille] = explode(' ', $nom);
+            $joueur = JoueurFactory::createOne(['prenom' => $prenom, 'nom' => $famille, 'email' => 'extra'.$i.'@blvb.test']);
+            MembreEquipeFactory::createOne(['equipe' => ChampionnatDeTest::get('equipe.A1'), 'saison' => ChampionnatDeTest::get('saison'), 'joueur' => $joueur]);
+        }
+        $this->connecter('cap.a1');
+        $crawler = $this->client->request('GET', $this->url());
+        $this->jeton = $crawler->filter('input[name="_token"]')->attr('value');
+        $this->client->submit($crawler->selectButton('Préparer le match')->form());
+
+        return array_map(fn ($j) => $j->getId(), $this->feuille()->getJoueurs()->toArray());
+    }
+
+    /** @param array<string, mixed> $donnees @return array<string, mixed> */
+    private function envoyer(int $set, string $action, array $donnees = [], ?string $jeton = null): array
+    {
+        $this->client->request('POST', $this->url().'/set/'.$set.'/'.$action, [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $jeton ?? $this->jeton], json_encode($donnees));
+
+        return json_decode((string) $this->client->getResponse()->getContent(), true) ?? [];
+    }
+
+    private function point(string $pour, ?int $dernierOrdre, ?string $uuid = null): array
+    {
+        return $this->envoyer(1, 'evenement', ['uuid' => $uuid ?? self::uuid(), 'type' => 'point', 'donnees' => ['pour' => $pour], 'dernierOrdre' => $dernierOrdre]);
+    }
+
+    private static function uuid(): string
+    {
+        $o = random_bytes(16);
+        $o[6] = \chr(\ord($o[6]) & 0x0f | 0x40);
+        $o[8] = \chr(\ord($o[8]) & 0x3f | 0x80);
+
+        return vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($o), 4));
+    }
+
+    #[TestDox('VST-09 : composition du set 1 validée côté serveur (six joueurs de cette page, distincts, une place libre au plus) ; commencer exige le premier service')]
+    public function test_composition(): void
+    {
+        $ids = $this->preparerSix();
+        $refus = [
+            'doublon' => [$ids[0], $ids[0], $ids[2], $ids[3], $ids[4], $ids[5]],
+            'sept places' => [...$ids, null],
+            'deux places libres' => [$ids[0], $ids[1], $ids[2], $ids[3], null, null],
+            'joueur inconnu' => [999999, $ids[1], $ids[2], $ids[3], $ids[4], $ids[5]],
+            'texte' => ['1', $ids[1], $ids[2], $ids[3], $ids[4], $ids[5]],
+        ];
+        foreach ($refus as $cas => $postes) {
+            $reponse = $this->envoyer(1, 'composition', ['composition' => ['postes' => $postes, 'premierService' => null, 'scoreDepart' => [0, 0]]]);
+            self::assertResponseStatusCodeSame(400, $cas);
+            self::assertStringNotContainsString('Camille', $reponse['message'], $cas);
+        }
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => null, 'scoreDepart' => [0, 8], 'inconnu' => 1]]);
+        self::assertResponseStatusCodeSame(400, 'clé inconnue');
+
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => null, 'scoreDepart' => [0, 8]]]);
+        self::assertResponseIsSuccessful();
+        $reponse = $this->envoyer(1, 'commencer');
+        self::assertResponseStatusCodeSame(400);
+        self::assertSame('Choisissez le premier service.', $reponse['message']);
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'eux', 'scoreDepart' => [0, 8]]]);
+        $reponse = $this->envoyer(1, 'commencer');
+        self::assertResponseIsSuccessful();
+        self::assertSame('en_cours', $reponse['feuille']['sets'][0]['etat']);
+        self::assertSame([0, 8], $reponse['feuille']['sets'][0]['calcul']['score']);
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [0, 0]]]);
+        self::assertResponseStatusCodeSame(400, 'set commencé : composition figée');
+        $this->envoyer(2, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [0, 0]]]);
+        self::assertResponseStatusCodeSame(400, 'set 2 avant la fin du set 1');
+    }
+
+    #[TestDox('VST-10 : points et rotation, envoi rejoué sans effet, saisie concurrente refusée (409), « Précédent » et « Suivant », historique')]
+    public function test_journal(): void
+    {
+        $ids = $this->preparerSix();
+        $this->envoyer(1, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'eux', 'scoreDepart' => [0, 0]]]);
+        $this->envoyer(1, 'commencer');
+
+        $uuid = self::uuid();
+        $reponse = $this->point('nous', null, $uuid);
+        self::assertSame([1, 0], $reponse['feuille']['sets'][0]['calcul']['score']);
+        self::assertSame([$ids[1], $ids[2], $ids[3], $ids[4], $ids[5], $ids[0]], $reponse['feuille']['sets'][0]['calcul']['postes'], 'rotation');
+        $reponse = $this->point('nous', null, $uuid);
+        self::assertSame([1, 0], $reponse['feuille']['sets'][0]['calcul']['score'], 'même uuid : sans effet');
+
+        $this->point('eux', null);
+        self::assertResponseStatusCodeSame(409, 'un autre téléphone a saisi');
+        $reponse = $this->point('eux', 1);
+        self::assertSame([1, 1], $reponse['feuille']['sets'][0]['calcul']['score']);
+        $historique = $reponse['feuille']['sets'][0]['historique'];
+        self::assertSame(['Point pour EQUIPE A1 (CTA)', 'Point pour EQUIPE A2'], array_column($historique, 'texte'));
+
+        $reponse = $this->envoyer(1, 'precedent', ['uuid' => $historique[1]['uuid']]);
+        self::assertSame([1, 0], $reponse['feuille']['sets'][0]['calcul']['score']);
+        self::assertTrue($reponse['feuille']['sets'][0]['historique'][1]['annule'], 'gardé dans l\'historique, barré');
+        $reponse = $this->envoyer(1, 'suivant', ['uuid' => $historique[1]['uuid']]);
+        self::assertSame([1, 1], $reponse['feuille']['sets'][0]['calcul']['score']);
+
+        $this->envoyer(1, 'precedent', ['uuid' => $historique[1]['uuid']]);
+        $this->point('nous', 2);
+        $this->envoyer(1, 'suivant', ['uuid' => $historique[1]['uuid']]);
+        self::assertResponseStatusCodeSame(400, 'nouvel événement depuis : plus rétablissable');
+
+        $reponse = $this->envoyer(1, 'evenement', ['uuid' => self::uuid(), 'type' => 'remplacement', 'donnees' => ['sort' => $ids[0], 'entre' => $ids[1]], 'dernierOrdre' => 3]);
+        self::assertResponseStatusCodeSame(400, 'l\'entrant est déjà sur le terrain');
+        $this->envoyer(1, 'evenement', ['uuid' => self::uuid(), 'type' => 'point', 'donnees' => ['pour' => 'nous', 'motif' => 'blessure'], 'dernierOrdre' => 3]);
+        self::assertResponseStatusCodeSame(400, 'clé inconnue');
+    }
+
+    #[TestDox('VST-11 : fin de set refusée avant le score de fin, puis set suivant ; match gagné : page terminée ; rien n\'est écrit dans le match ni le classement')]
+    public function test_fin_de_set(): void
+    {
+        $ids = $this->preparerSix();
+        $match = ChampionnatDeTest::get('match.reference');
+        for ($n = 1; $n <= 3; ++$n) {
+            $this->envoyer($n, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [8, 0]]]);
+            $this->envoyer($n, 'commencer');
+            $ordre = null;
+            for ($p = 0; $p < 17; ++$p) {
+                $this->client->request('POST', $this->url().'/set/'.$n.'/evenement', [], [], ['CONTENT_TYPE' => 'application/json', 'HTTP_X_CSRF_TOKEN' => $this->jeton],
+                    json_encode(['uuid' => self::uuid(), 'type' => 'point', 'donnees' => ['pour' => 'nous'], 'dernierOrdre' => $ordre]));
+                $ordre = ($ordre ?? 0) + 1;
+                if ($p === 15) {
+                    $this->envoyer($n, 'terminer');
+                    self::assertResponseStatusCodeSame(400, '24 points');
+                }
+            }
+            $reponse = $this->envoyer($n, 'terminer');
+            self::assertResponseIsSuccessful();
+        }
+        self::assertSame([3, 0], $reponse['feuille']['setsGagnes']);
+        self::assertSame('terminee', $reponse['feuille']['etat']);
+        $this->envoyer(4, 'composition', ['composition' => ['postes' => $ids, 'premierService' => 'nous', 'scoreDepart' => [0, 0]]]);
+        self::assertResponseStatusCodeSame(400, 'match gagné : pas de 4ᵉ set');
+
+        $partie = self::getContainer()->get('doctrine')->getManager()->getRepository(Partie::class)->find($match->getId());
+        self::assertNull($partie->getNbSetGagnantReception(), 'score officiel intact (D66)');
     }
 }

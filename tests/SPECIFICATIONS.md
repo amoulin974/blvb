@@ -643,6 +643,18 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-06** ✅ : au match suivant, les présents du match précédent sont cochés d'office, à l'affichage comme à la création.
 - **VST-07** ✅ : présents refusés : membre d'une autre équipe (message neutre, sans nom), jeton absent ; équipe adverse :
   404 sur les écritures ; rien n'est enregistré.
+- **VST-08** ✅ *`Unitaire/VolleyStats/EtatSetTest`* : rotation au point gagné sur le service adverse, pas sur son propre
+  service ; place libre qui tourne ; remplacements ; correction du score et du service ; « Tourner d'un poste » cran par
+  cran ; événements annulés ignorés ; fin à 25 points secs, 15 pour le set décisif (5ᵉ en 3 sets gagnants, 3ᵉ en 2) ;
+  départ à 0–8.
+- **VST-09** ✅ : composition validée côté serveur (doublon, sept places, deux places libres, joueur inconnu ou non entier,
+  clé inconnue : 400, message sans nom) ; commencer exige le premier service ; composition figée une fois le set commencé ;
+  pas de set 2 avant la fin du set 1.
+- **VST-10** ✅ : point et rotation ; envoi rejoué (même uuid) sans effet ; saisie concurrente (ordre périmé) : 409 ;
+  « Précédent » garde l'événement barré, « Suivant » le rétablit, refusé après un nouvel événement ; remplacement invalide et
+  clé inconnue (« motif ») refusés ; historique lisible.
+- **VST-11** ✅ : fin de set refusée avant le score de fin ; trois sets gagnés : page terminée, pas de 4ᵉ set ; le score
+  officiel du match n'est pas touché.
 
 ## 5. Analyse statique et qualité du code
 

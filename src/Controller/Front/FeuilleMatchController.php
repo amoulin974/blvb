@@ -9,7 +9,11 @@ use App\Security\FeuilleMatchVoter;
 use App\VolleyStats\FeuilleMatchService;
 use App\VolleyStats\MatchEquipe;
 use App\VolleyStats\NomsCourts;
+use App\VolleyStats\SaisieConcurrente;
 use App\VolleyStats\SaisieInvalide;
+use App\VolleyStats\VueFeuille;
+use App\Entity\User;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -71,6 +75,58 @@ final class FeuilleMatchController extends AbstractController
         }
 
         return $this->retour($match);
+    }
+
+    /**
+     * Écritures d'un set, en JSON (feuille_match_controller.js) : composition, commencer, événement, précédent, suivant,
+     * terminer, rouvrir. Réponse : l'état complet de la page ; 400 saisie refusée, 409 saisie concurrente (recharger).
+     */
+    #[Route('/set/{numero}/{action}', name: '_set', requirements: ['numero' => '[1-5]', 'action' => 'composition|commencer|evenement|precedent|suivant|terminer|rouvrir'], methods: ['POST'])]
+    public function set(Equipe $equipe, Partie $partie, int $numero, string $action, Request $request): JsonResponse
+    {
+        $match = $this->match($equipe, $partie, FeuilleMatchVoter::MODIFIER);
+        $jeton = $request->headers->get('X-CSRF-TOKEN');
+        if (!$this->isCsrfTokenValid(self::jeton($match), $jeton)) {
+            return $this->json(['message' => 'La page a expiré : rechargez-la.'], 403);
+        }
+        $donnees = json_decode($request->getContent(), true);
+        if (!\is_array($donnees)) {
+            return $this->json(['message' => 'Saisie non reconnue : rechargez la page.'], 400);
+        }
+        try {
+            $feuille = $match->feuille ?? throw new SaisieInvalide('Préparez d\'abord le match : cochez les joueurs présents.');
+            $set = $action === 'composition' ? null : ($feuille->set($numero) ?? throw new SaisieInvalide('Ce set n\'existe pas encore.'));
+            $chaine = fn (string $cle) => \is_string($donnees[$cle] ?? null) ? $donnees[$cle] : '';
+            match ($action) {
+                'composition' => $this->service->composition($feuille, $numero, \is_array($donnees['composition'] ?? null) ? $donnees['composition'] : []),
+                'commencer' => $this->service->commencer($set, ($donnees['aCinq'] ?? false) === true),
+                'evenement' => $this->service->evenement($set, $chaine('uuid'), $chaine('type'), \is_array($donnees['donnees'] ?? null) ? $donnees['donnees'] : [],
+                    \is_int($donnees['dernierOrdre'] ?? null) ? $donnees['dernierOrdre'] : null, $this->getUser() instanceof User ? $this->getUser() : null),
+                'precedent' => $this->service->precedent($set, $chaine('uuid')),
+                'suivant' => $this->service->suivant($set, $chaine('uuid')),
+                'terminer' => $this->service->terminerSet($set),
+                'rouvrir' => $this->service->rouvrirSet($set),
+            };
+            $statut = 200;
+        } catch (SaisieConcurrente $e) {
+            $statut = 409;
+            $message = $e->getMessage();
+        } catch (SaisieInvalide $e) {
+            $statut = 400;
+            $message = $e->getMessage();
+        }
+        $reponse = $this->json(['message' => $message ?? null, 'feuille' => $match->feuille ? $this->vue($match) : null], $statut);
+        $reponse->headers->set('Cache-Control', 'private, no-store');
+
+        return $reponse;
+    }
+
+    /** @return array<string, mixed> */
+    private function vue(MatchEquipe $match): array
+    {
+        $this->feuilles->getEntityManager()->refresh($match->feuille);
+
+        return VueFeuille::tableau($match->feuille, NomsCourts::pour($this->service->membres($match)), $match->equipe->getNom(), (string) $match->adversaire()?->getNom());
     }
 
     private static function jeton(MatchEquipe $match): string

@@ -18,6 +18,8 @@ class FeuilleMatchEvenement
     public const POINT = 'point';
     public const REMPLACEMENT = 'remplacement';
     public const CORRECTION = 'correction';
+    /** Un cran de rotation, pour remettre les joueurs à leur place après une correction du score (« Tourner d'un poste ») */
+    public const ROTATION = 'rotation';
 
     #[ORM\Id]
     #[ORM\GeneratedValue]
@@ -39,7 +41,7 @@ class FeuilleMatchEvenement
 
     /**
      * point : {pour: nous|eux} ; remplacement : {sort: ?int, entre: int} (identifiants de FeuilleMatchJoueur, sort null
-     * pour une place libre) ; correction : {nous: int, eux: int, service: nous|eux}. Pas de motif de remplacement
+     * pour une place libre) ; correction : {nous: int, eux: int, service: nous|eux} ; rotation : {}. Pas de motif de remplacement
      * (« blessure » serait une donnée de santé).
      *
      * @var array<string, mixed>
