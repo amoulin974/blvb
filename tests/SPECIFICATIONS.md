@@ -598,7 +598,7 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-20** ✅ : la fenêtre du calendrier admin refuse un gymnase fermé et se réaffiche avec le message, motif échappé.
 - **FGY-21** ✅ : un match sans score dans un gymnase fermé est signalé sur le calendrier, la fiche de l'équipe et le calendrier admin ; un match joué ne l'est pas, ni pour le public un match passé sans score.
 
-`Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
+`Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` et la page du match `front_feuille_match` (match de référence de A1) ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
 
 ### 4.19 Paramètres du site — `Fonctionnel/Admin/ParametresSiteTest`, `Unitaire/Security/VerificationConnexionTest` (P1, D62)
 

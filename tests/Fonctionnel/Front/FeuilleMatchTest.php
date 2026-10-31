@@ -143,6 +143,12 @@ final class FeuilleMatchTest extends TestFonctionnel
         self::assertSelectorTextContains('[role="status"]', 'Joueurs présents enregistrés.');
         self::assertSame(['Camille Ar.', 'Jean Pr.'], $this->coches());
         self::assertCount(2, $this->feuille()->getJoueurs());
+
+        // Envoi par Turbo : l'en-tête X-CSRF-TOKEN de la page (jeton des scores) accompagne le champ du formulaire
+        $jeton = $this->client->getCrawler()->filter('input[name="_token"]')->attr('value');
+        $this->client->request('POST', $this->url().'/presents', ['_token' => $jeton, 'presents' => [(string) $this->membre('cap.a1')->getId()]], [], ['HTTP_X_CSRF_TOKEN' => 'jeton-des-scores']);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="status"]', 'Joueurs présents enregistrés.');
     }
 
     #[TestDox('VST-06 : au match suivant, les présents du match précédent sont cochés d\'office')]

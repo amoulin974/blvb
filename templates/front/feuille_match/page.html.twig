@@ -30,5 +30,21 @@
         {% endfor %}
 
         {{ include('front/feuille_match/_presents.html.twig') }}
+
+        {# Composition de chaque set, set en cours, historique, relevé : feuille_match_controller.js (état servi par VueFeuille) #}
+        {% if vue %}
+            <div class="flex flex-col gap-4" data-controller="feuille-match"
+                 data-feuille-match-etat-value="{{ vue|json_encode }}"
+                 data-feuille-match-url-value="{{ path('front_feuille_match', {equipe: match.equipe.id, partie: match.partie.id}) }}"
+                 data-feuille-match-jeton-value="{{ csrf_token(jeton) }}"
+                 data-feuille-match-modifiable-value="{{ modifiable ? 'true' : 'false' }}"
+                 data-feuille-match-score-officiel-value="{{ path('front_equipe_detail', {id: match.equipe.id}) }}">
+                <p role="alert" class="alert alert-error alert-soft" data-feuille-match-target="erreur" hidden></p>
+                <p class="sr-only" aria-live="polite" data-feuille-match-target="annonce"></p>
+                <div class="flex flex-col gap-4" data-feuille-match-target="contenu">
+                    <noscript><p class="bg-base-100 border border-base-300 rounded-box p-3">La composition des sets a besoin de JavaScript.</p></noscript>
+                </div>
+            </div>
+        {% endif %}
     </div>
 {% endblock %}

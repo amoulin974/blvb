@@ -73,7 +73,8 @@ final class VueFeuille
                 FeuilleMatchEvenement::ROTATION => 'Joueurs tournés d\'un poste',
                 default => 'Saisie',
             };
-            $lignes[] = ['uuid' => $e->getUuid(), 'ordre' => $e->getOrdre(), 'texte' => $texte, 'annule' => $e->estAnnule(), 'score' => $e->estAnnule() ? null : $score];
+            $lignes[] = ['uuid' => $e->getUuid(), 'ordre' => $e->getOrdre(), 'type' => $e->getType(), 'texte' => $texte, 'annule' => $e->estAnnule(),
+                'score' => $e->estAnnule() ? null : $score, 'entre' => $e->getType() === FeuilleMatchEvenement::REMPLACEMENT ? $d['entre'] : null];
         }
 
         return $lignes;

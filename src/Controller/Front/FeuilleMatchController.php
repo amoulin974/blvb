@@ -46,6 +46,7 @@ final class FeuilleMatchController extends AbstractController
             'noms' => NomsCourts::pour($membres),
             'presents' => $match->feuille ? array_map(fn ($j) => $j->getMembre()->getId(), $match->feuille->getJoueurs()->toArray()) : $this->service->presentsProposes($match),
             'jeton' => self::jeton($match),
+            'vue' => $match->feuille ? $this->vue($match) : null,
         ]));
     }
 
@@ -136,7 +137,8 @@ final class FeuilleMatchController extends AbstractController
 
     private function jetonValide(Request $request, MatchEquipe $match): bool
     {
-        $jeton = $request->headers->get('X-CSRF-TOKEN') ?? $request->getPayload()->getString('_token');
+        // Champ du formulaire d'abord : Turbo envoie aussi l'en-tête X-CSRF-TOKEN de la page (jeton de saisie des scores)
+        $jeton = $request->getPayload()->getString('_token') ?: $request->headers->get('X-CSRF-TOKEN');
         if ($this->isCsrfTokenValid(self::jeton($match), $jeton)) {
             return true;
         }
