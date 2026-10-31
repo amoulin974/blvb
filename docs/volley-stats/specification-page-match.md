@@ -41,7 +41,7 @@ Nom proposé : « feuille de match » côté code, « page du match » à l'écr
 | `membre_id` | FK `membre_equipe` | un membre de l'équipe **pour la saison du match** (pas de renfort, D67) |
 | unique | | (`feuille_id`, `membre_id`) |
 
-Retrait d'un joueur de l'équipe (page de composition de l'équipe) : `ON DELETE CASCADE` sur la présence ; les postes et
+Retrait d'un joueur de l'équipe (page de composition de l'équipe), validé (D67) : `ON DELETE CASCADE` sur la présence ; les postes et
 événements qui le citaient affichent « Joueur retiré » (calcul robuste aux identifiants disparus). Même règle pour
 l'effacement de conservation.
 
@@ -79,6 +79,12 @@ adverse). Le score de chaque set est donc tenu ici, pour l'équipe seulement (D6
 
 ## 3. Règles de calcul
 
+- **Ordre officiel seulement** (D67) : `postes` et la rotation décrivent l'ordre au moment du service (celui que juge
+  l'arbitre). Les changements de place pendant l'échange (passeur au centre…) sont libres et ne se saisissent pas ; le
+  terrain affiché est celui du service ; les futures actions désignent un joueur par son nom, jamais une case.
+- **« Tourner d'un poste »** : chaque touche fait tourner d'un cran ; on touche autant de fois qu'il faut (composition d'un
+  set, remise en place après une correction du score).
+
 - **Serveur** : poste 1 quand l'équipe sert ; la place libre tourne avec les autres (D67).
 - **Fin de set** : premier à `points_fin` (sets secs, sans deux points d'écart).
 - **Fin de match** : selon le format de la phase (`Phase::getSetsGagnants`, D48) ; proposée, jamais imposée.
@@ -114,7 +120,7 @@ jamais. Saison introuvable : 404.
   tous ; puis visiteur → connexion ; puis connecté sans droit → 404 (`createNotFoundException` après le voter, pas le 403 de
   `#[IsGranted]`). La réponse ne dépend jamais de l'existence d'une feuille.
 - **Gel** calculé par le voter, sans commande planifiée : `MODIFIER` refusé (sauf admin) quand `terminee_le` + 7 jours est
-  passé, ou quand la date du match + 30 jours est passée pour une feuille jamais terminée. Rouvrir une feuille terminée :
+  passé, ou quand la date du match + 30 jours est passée pour une feuille jamais terminée (validé, D67). Rouvrir une feuille terminée :
   ayant droit pendant 7 jours, ensuite l'admin.
 - **Cas acceptés** (D67), avec un test chacun : un joueur membre des deux équipes du match (contrainte
   `membre_equipe_unique` par équipe), un responsable de club dont deux équipes se rencontrent : ils voient les deux pages.

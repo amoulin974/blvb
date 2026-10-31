@@ -154,6 +154,14 @@ saisie sache traiter **toutes** les situations d'un match, sans en inventer à l
 | Temps mort | ignoré dans la première version | D66 |
 | Retour en arrière | annuler le dernier point, ou corriger une action ancienne | indispensable au bord du terrain |
 
+## 10 bis. Changements de place pendant l'échange
+
+L'ordre des postes n'est imposé qu'à la frappe du service (faute de position jugée à cet instant). Ensuite, chacun se place
+où il veut : passeur qui « pénètre » au poste 3 depuis le poste 4 (dès le début de l'échange au service, juste après la
+frappe adverse en réception), attaquants qui changent d'aile, centraux qui passent à l'avant. Ce n'est pas une faute, la
+rotation ne change pas, et rien ne se saisit (D67) : on enregistre l'ordre officiel, et chaque action désigne un joueur par
+son nom.
+
 ## 11. Ce que cela impose à l'interface
 
 1. **Un échange = une suite d'actions qui se termine par un point** (ou une balle à rejouer). En mode rapide, une seule

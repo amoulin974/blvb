@@ -846,6 +846,12 @@ un match du championnat, où l'on indique les joueurs au début de chaque set. P
   « Qui est là ? » : **toute l'équipe** en cases à cocher ; **historique des actions du set avec « Précédent » et
   « Suivant »** (annuler, rétablir) au lieu du message d'annulation de 10 s ; « Sets joués » repris sur la fiche équipe
   (visible de l'équipe seulement) ; libellés « Page du match », « Reste à faire », « Sur le banc », « Sets joués » validés.
+- *Précisé le 31/10/2026* : **« Tourner d'un poste » peut être touché plusieurs fois** jusqu'à la bonne position ; gel d'une
+  page jamais terminée **30 jours après le match** ; joueur retiré de l'équipe affiché « Joueur retiré » sur les pages
+  passées. **On enregistre l'ordre de rotation officiel au moment du service**, jamais les places prises pendant l'échange :
+  les changements de place après le service (passeur qui joue au centre, attaquant à l'aile) sont libres au volley, ne
+  modifient pas la rotation et ne se saisissent pas ; les actions seront attribuées au joueur par son nom, pas par une case
+  du terrain. Rôle des joueurs (passeur, attaquant, central) pour lire les stats par rotation : plus tard.
 - Vocabulaire : « Composition du set N » et « Joueurs présents », pour ne pas confondre avec la composition de l'équipe sur
   la saison.
 *Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile
