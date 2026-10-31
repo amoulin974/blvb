@@ -33,7 +33,7 @@ Le détail coché des lots 0 à 6 (terminés) est dans [`archive/lots-0-6.md`](a
 ## Reprendre ici (31/10/2026)
 `main` contient les fermetures de gymnase et les paramètres du site ; rien n'est en production (`prod` sur 3bafba4). Dans l'ordre :
 1. **Mise à jour des paquets : faite**, fusionnée dans `main` le 31/10/2026 (`symfony/mime` 7.4.22, TipTap 3.32.2, `composer audit` et `importmap:audit` propres, tests, tests lents et navigateur verts).
-2. **Mail à Francis** : compléter `mail-francis.md`, à partir de `deploiement-reglement.md`, déjà à jour.
+2. **Consignes pour Francis** : rédigées, page à lui partager : https://claude.ai/artifact/L4ehYBkk4uJt9fTwtXsp6f (`mail-francis.md` n'est plus que l'ancien brouillon).
 3. **Ensuite, au choix de l'utilisateur** : trancher le tableau de bord (PO6, `tableau-de-bord.md`) ; éditeur de la fiche club (D63,
    branche à part depuis `main`).
 4. Branches `parametres-site` et `maj-paquets` : à supprimer, contenues dans `main` (demander d'abord).
