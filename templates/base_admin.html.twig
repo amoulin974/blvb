@@ -107,6 +107,8 @@
             </ul>
 
             <ul class="menu w-full p-0 mt-3 gap-0.5">
+                {% set actif = route starts with 'admin_volley_stats_' %}
+                <li><a href="{{ path('admin_volley_stats_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('equipes', 'size-5') }} Volley Stats</a></li>
                 {% set actif = route starts with 'admin_parametres_' %}
                 <li><a href="{{ path('admin_parametres_index') }}" class="{{ lien }} {{ actif ? 'menu-active' }}" {% if actif %}aria-current="page"{% endif %}>{{ icone.i('reglages', 'size-5') }} Paramètres du site</a></li>
                 <li>

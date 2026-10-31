@@ -18,7 +18,7 @@ final class VueFeuille
      * @param array<int, string> $noms identifiant du membre => nom court
      * @return array<string, mixed>
      */
-    public static function tableau(FeuilleMatch $feuille, array $noms, string $nomNous, string $nomEux): array
+    public static function tableau(FeuilleMatch $feuille, array $noms, string $nomNous, string $nomEux, int $seuil = 80): array
     {
         $joueurs = [];
         foreach ($feuille->getJoueurs() as $joueur) {
@@ -40,7 +40,28 @@ final class VueFeuille
             ];
         }
 
+        // Stats des sets notés « le score et les touches » (D68) : équipe et joueurs, visibles de l'équipe et du responsable
+        $parSet = [];
+        foreach ($feuille->getSets() as $set) {
+            if ($set->noteLesTouches() && $set->getEtat() !== FeuilleMatchSet::COMPOSITION) {
+                $parSet[] = StatsFeuille::calculer($set) + ['numero' => $set->getNumero()];
+            }
+        }
+        $total = StatsFeuille::cumuler($parSet);
+        $joueursStats = [];
+        foreach ($total['joueurs'] as $id => $st) {
+            $joueursStats[] = ['nom' => $joueurs[$id] ?? 'Joueur retiré', 'efficacite' => StatsFeuille::efficaciteAttaque($st), 'receptionSansFaute' => StatsFeuille::receptionSansFaute($st)] + $st;
+        }
+        usort($joueursStats, fn ($a, $b) => [$b['pointsMarques'], $a['nom']] <=> [$a['pointsMarques'], $b['nom']]);
+
         return [
+            'stats' => $parSet === [] ? null : [
+                'joueurs' => $joueursStats,
+                'equipe' => $total['equipe'] + ['efficacite' => StatsFeuille::efficaciteAttaque($total['equipe']), 'receptionSansFaute' => StatsFeuille::receptionSansFaute($total['equipe'])],
+                'acesSubis' => $total['acesSubis'],
+                'sets' => array_map(fn ($st) => ['numero' => $st['numero'], 'echanges' => $st['echanges'], 'detailles' => $st['detailles'], 'taux' => $st['echanges'] ? (int) round(100 * $st['detailles'] / $st['echanges']) : 0], $parSet),
+                'seuil' => $seuil,
+            ],
             'etat' => $feuille->getEtat(),
             'joueurs' => array_map(fn ($id, $n) => ['id' => $id, 'nom' => $n], array_keys($joueurs), $joueurs),
             'sets' => $sets,

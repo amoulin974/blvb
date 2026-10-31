@@ -83,6 +83,7 @@ final class TableauDeBord
             'fermetures' => $this->fermetures->prochaines(3),
             'nombreFermetures' => $this->fermetures->nombreEnCoursOuAVenir(),
             'tuiles' => $this->tuiles($affichee ?? $this->saisons->findCourante()),
+            'volleyStats' => $this->volleyStats($affichee ?? $this->saisons->findCourante()),
         ];
     }
 
@@ -325,6 +326,27 @@ final class TableauDeBord
             'SELECT COUNT(DISTINCT e.id) FROM '.Equipe::class.' e JOIN e.Poules po JOIN po.phase ph
              WHERE ph.saison = :saison AND NOT EXISTS (SELECT m.id FROM '.MembreEquipe::class.' m WHERE m.equipe = e AND m.saison = :saison AND m.capitaine = true)'
         )->setParameter('saison', $saison)->getSingleScalarResult();
+    }
+
+    /**
+     * Volley Stats (D68) : participation des équipes sur la saison, comptages seulement (aucun nom de joueur).
+     *
+     * @return array{equipes: int, pages: int, setsTouches: int, seuil: int}|null
+     */
+    private function volleyStats(?Saison $saison): ?array
+    {
+        if ($saison === null) {
+            return null;
+        }
+        $base = ' FROM '.\App\Entity\FeuilleMatch::class.' f JOIN f.partie p JOIN p.poule po JOIN po.phase ph WHERE ph.saison = :saison';
+        $compter = fn (string $dql) => (int) $this->em->createQuery($dql)->setParameter('saison', $saison)->getSingleScalarResult();
+
+        return [
+            'equipes' => $compter('SELECT COUNT(DISTINCT IDENTITY(f.equipe))'.$base),
+            'pages' => $compter('SELECT COUNT(f.id)'.$base),
+            'setsTouches' => $compter('SELECT COUNT(s.id) FROM '.\App\Entity\FeuilleMatchSet::class.' s JOIN s.feuille f JOIN f.partie p JOIN p.poule po JOIN po.phase ph WHERE ph.saison = :saison AND s.saisie = \'touches\''),
+            'seuil' => (int) $this->parametres->courants()->getSeuilEchangesDetailles(),
+        ];
     }
 
     /** @return array<string, mixed> chiffres des accès rapides, pour la saison affichée quand il y en a une */

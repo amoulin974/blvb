@@ -220,7 +220,26 @@ export default class extends Controller {
             ? `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-2" aria-labelledby="titre-officiel"><h2 id="titre-officiel" class="text-xl uppercase tracking-wide">Score officiel</h2>
             <p class="text-sm">Il se saisit à part, sur la fiche de l'équipe (ligne du match). Les scores ci-dessus ne le remplissent pas.</p><a class="btn btn-accent btn-block" href="${echapper(this.scoreOfficielValue)}">Aller à la fiche de l'équipe</a></section>`
             : ''
-        return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-releve"><h2 id="titre-releve" class="text-xl uppercase tracking-wide">Relevé des sets</h2>${cartes}${this.vueSetsJoues()}</section>${officiel}`
+        return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-releve"><h2 id="titre-releve" class="text-xl uppercase tracking-wide">Relevé des sets</h2>${cartes}${this.vueSetsJoues()}</section>${this.vueStats()}${officiel}`
+    }
+
+    // Stats des sets notés « le score et les touches » (D68), visibles de l'équipe et du responsable de son club
+    vueStats() {
+        const st = this.feuille.stats
+        if (!st) return ''
+        const pct = (v) => (v === null || v === undefined ? '–' : `${v} %`)
+        const lignes = st.joueurs.map((j) => `<tr><th scope="row" class="font-normal whitespace-nowrap">${echapper(j.nom)}</th>
+            <td class="tabular-nums text-right">${j.pointsMarques}</td><td class="tabular-nums text-right">${j.services ? `${j.aces} / ${j.fautesService}` : '–'}</td>
+            <td class="tabular-nums text-right">${pct(j.receptionSansFaute)}</td><td class="tabular-nums text-right">${j.passes ? `${j.passesDecisives}` : '–'}</td>
+            <td class="tabular-nums text-right">${j.attaques ? `${j.attaquesGagnantes} / ${j.attaques}` : '–'}</td><td class="tabular-nums text-right">${pct(j.efficacite)}</td>
+            <td class="tabular-nums text-right">${j.blocksGagnants}</td></tr>`).join('')
+        const sets = st.sets.map((s) => `Set ${s.numero} : ${s.detailles} échanges détaillés sur ${s.echanges} (${s.taux} %)${s.taux >= st.seuil ? '' : ` · <strong>sous le seuil de ${st.seuil} %</strong>`}`).join('<br>')
+        return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-3" aria-labelledby="titre-stats">
+            <h2 id="titre-stats" class="text-xl uppercase tracking-wide">Statistiques du match</h2>
+            <p class="text-sm">Visibles de l'équipe et du responsable du club seulement. ${sets}</p>
+            <div class="overflow-x-auto"><table class="table table-sm"><thead><tr><th scope="col">Joueur</th><th scope="col" class="text-right">Points</th><th scope="col" class="text-right">Aces / fautes de service</th><th scope="col" class="text-right">Réception sans faute</th><th scope="col" class="text-right">Passes décisives</th><th scope="col" class="text-right">Attaques gagnantes</th><th scope="col" class="text-right">Efficacité d'attaque</th><th scope="col" class="text-right">Blocks gagnants</th></tr></thead>
+            <tbody>${lignes}</tbody></table></div>
+            <p class="text-sm text-(--color-base-content)/80">Efficacité d'attaque : (attaques gagnantes − fautes − contrées) ÷ attaques. Aces subis sans contact : ${st.acesSubis}.</p></section>`
     }
 
     // Sets joués par joueur : composition de départ et entrées en remplacement (D67)

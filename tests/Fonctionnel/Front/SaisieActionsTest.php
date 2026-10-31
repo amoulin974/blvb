@@ -10,7 +10,7 @@ use App\Tests\Support\TestFonctionnel;
 use PHPUnit\Framework\Attributes\TestDox;
 
 /**
- * VST-14 à VST-18 : saisie des actions en mode intermédiaire, validation côté serveur (Volley Stats, D68 ;
+ * VST-14 à VST-18, VST-21 : saisie des actions en mode intermédiaire, validation côté serveur (Volley Stats, D68 ;
  * specification-actions.md §3 et §3 bis). Page de A1 sur le match de référence, sept joueurs présents (un sur le banc).
  */
 final class SaisieActionsTest extends TestFonctionnel
@@ -206,5 +206,26 @@ final class SaisieActionsTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(400, 'point sur un set terminé');
         $this->evenement('modification', ['cible' => $reception, 'action' => 'defense']);
         self::assertResponseIsSuccessful('correction sur un set terminé');
+    }
+
+    #[TestDox('VST-21 : une fois le set terminé, la page donne les stats du match (joueurs, équipe, taux de détail comparé au seuil)')]
+    public function test_stats_de_la_page(): void
+    {
+        $this->commencer();
+        $this->action('reception', 5);
+        $this->action('passe', 6);
+        $attaque = $this->action('attaque', 4);
+        $this->evenement('point', ['pour' => 'nous', 'sur' => $attaque]);
+        for ($p = 1; $p < 25; ++$p) {
+            $this->evenement('point', ['pour' => 'nous', 'sansDetail' => true]);
+        }
+        $reponse = $this->envoyer(1, 'terminer');
+        $stats = $reponse['feuille']['stats'];
+        self::assertSame([['numero' => 1, 'echanges' => 25, 'detailles' => 1, 'taux' => 4]], $stats['sets']);
+        self::assertSame(80, $stats['seuil']);
+        self::assertSame(1, $stats['equipe']['attaquesGagnantes']);
+        $premier = $stats['joueurs'][0];
+        self::assertSame([1, 1, 100], [$premier['pointsMarques'], $premier['attaquesGagnantes'], $premier['efficacite']]);
+        self::assertSame(1, array_sum(array_column($stats['joueurs'], 'passesDecisives')));
     }
 }

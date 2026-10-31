@@ -682,6 +682,11 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
   crédité au serveur de la rotation (ace, faute) ; ace subi sans joueur ; block gagnant à deux (les deux crédités) ; point
   marqué en défense, hors attaque ; faute de règlement ; % de réception sans faute ; échange « sans détail » et balle à
   rejouer non comptés ; touches annulées ignorées ; corrections appliquées (joueur, action, touche retirée) ; cumul de sets.
+- **VST-20** ✅ *`Admin/VolleyStatsAdminTest`* : seul l'admin règle le seuil d'échanges détaillés (80 % par défaut) ; -1, 101,
+  décimale, texte et jeton absent refusés (422, rien d'enregistré) ; le menu de l'admin et le tableau de bord (section
+  « Volley Stats », comptages seulement) y mènent.
+- **VST-21** ✅ : une fois le set terminé, la page donne les stats du match (joueurs triés par points, équipe, efficacité,
+  passes décisives) et le taux d'échanges détaillés de chaque set, comparé au seuil.
 
 ## 5. Analyse statique et qualité du code
 

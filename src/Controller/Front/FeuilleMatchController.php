@@ -28,7 +28,7 @@ use Symfony\Component\Routing\Attribute\Route;
 #[Route('/equipe/{equipe}/match/{partie}', name: 'front_feuille_match', requirements: ['equipe' => '\d+', 'partie' => '\d+'])]
 final class FeuilleMatchController extends AbstractController
 {
-    public function __construct(private FeuilleMatchRepository $feuilles, private FeuilleMatchService $service)
+    public function __construct(private FeuilleMatchRepository $feuilles, private FeuilleMatchService $service, private \App\Repository\ParametresSiteRepository $parametres)
     {
     }
 
@@ -128,7 +128,8 @@ final class FeuilleMatchController extends AbstractController
     {
         $this->feuilles->getEntityManager()->refresh($match->feuille);
 
-        return VueFeuille::tableau($match->feuille, NomsCourts::pour($this->service->membres($match)), $match->equipe->getNom(), (string) $match->adversaire()?->getNom());
+        return VueFeuille::tableau($match->feuille, NomsCourts::pour($this->service->membres($match)), $match->equipe->getNom(), (string) $match->adversaire()?->getNom(),
+            (int) $this->parametres->courants()->getSeuilEchangesDetailles());
     }
 
     private static function jeton(MatchEquipe $match): string
