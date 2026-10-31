@@ -118,20 +118,53 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
 | Publication mal comprise | plainte d'un joueur | accord explicite, retrait immédiat, texte clair dans le profil |
 | Comparaison injuste entre équipes | contestation | socle commun, minimum de matchs, mention de la source |
 
-## 8. Questions encore ouvertes
+## 8. Questions tranchées et questions ouvertes
 
-1. Qui peut saisir : n'importe quel membre de l'équipe, ou une personne désignée par le capitaine ? Un accompagnant sans
-   compte sur le site peut-il saisir (lien à usage unique ?) ?
-2. Quelles statistiques composent le socle commun des classements publics (points marqués, aces, fautes de service…) ?
-3. Quels classements publier : par saison, par poule, par phase ? Quel minimum de matchs ?
-4. Durée de conservation des actions et des stats (saison en cours, puis agrégats seulement ?).
-5. Libéro, temps morts, plusieurs saisisseurs : dans la première version ou plus tard ?
-6. Numéros de maillot : saisis à chaque match, ou gardés dans la composition de l'équipe sur le site ?
-7. Le joueur qui a refusé la publication apparaît-il « Joueur n° 7 » ou pas du tout dans les classements publics ?
+**Tranchées** (utilisateur, 31/10/2026, ajoutées à D66) :
+- **Qui saisit** : un membre de l'équipe, avec son compte. Un accompagnant utilise le compte d'un joueur : pour le site,
+  c'est ce joueur qui saisit (le journal de la saisie garde le compte utilisé).
+- **Première version** : un seul saisisseur à la fois, pas de libéro, pas de temps morts.
+- **Pas de numéro de maillot** : le joueur est désigné par son prénom et les premières lettres de son nom (« Camille Ar. »),
+  autant de lettres qu'il faut pour distinguer deux joueurs de la même équipe.
+- **Conservation** : tant que le joueur participe à une saison, plus une saison ; au-delà, ses actions et ses stats sont
+  effacées.
+- **Stats publiques** : choisies plus tard, sur le catalogue du §10.
+
+**Ouvertes** :
+1. Le joueur qui a refusé la publication apparaît-il « Joueur 7 » ou pas du tout dans les classements publics ?
+2. Quels classements publier (saison, poule, phase), avec quel minimum de matchs ?
+3. Comparaison des rotations, export CSV, stats sur la fiche publique de l'équipe : première version ou plus tard ?
+
+## 10. Catalogue des statistiques possibles (pour choisir les stats publiques)
+
+Le **mode rapide** ne note que la fin de chaque échange : qui marque, comment (ace, attaque, block), ou qui fait la faute
+(service, attaque, filet ou ligne, autre), ou point et faute adverses. Le **mode complet** note toutes les actions, comme
+la maquette (service, réception notée 0 à 3, passe, attaque, block, défense). Les sets joués se déduisent des compositions.
+
+| Statistique | Définition | Rapide | Complet | Socle commun |
+|---|---|:-:|:-:|:-:|
+| Sets joués | sets où le joueur est dans la composition ou entré en remplacement | oui | oui | oui |
+| Points marqués | points gagnés sur une action du joueur | oui | oui | oui |
+| Dont aces, attaques gagnantes, blocks gagnants | détail des points marqués | oui | oui | oui |
+| Fautes | points perdus sur une faute du joueur | oui | oui | oui |
+| Dont fautes de service, d'attaque | détail des fautes | oui | oui | oui |
+| Solde | points marqués − fautes | oui | oui | oui |
+| Points par set joué | points marqués ÷ sets joués : compare des joueurs qui n'ont pas joué autant | oui | oui | oui |
+| Services | services tentés, % de services en jeu | non | oui | non |
+| Réception | réceptions, note moyenne sur 3, % de réceptions notées 2 ou 3 | non | oui | non |
+| Attaque | attaques tentées, efficacité (points − fautes − bloquées) ÷ tentatives | non | oui | non |
+| Block | blocks gagnants, touches, fautes | non | oui | non |
+| Défense | défenses tentées, réussies | non | oui | non |
+| Passe | passes, fautes de main | non | oui | non |
+| Rotation | points marqués et perdus dans chaque rotation (équipe) | oui | oui | oui (équipe seulement, jamais publique : D66) |
+
+Candidats naturels aux classements publics : points marqués, aces, blocks gagnants, solde, points par set joué (tous du
+socle commun) ; les statistiques du seul mode complet resteraient dans l'équipe, ou feraient l'objet d'un classement à part
+des équipes en mode complet.
 
 ## 9. Suite proposée
 
-1. Répondre aux questions du §8.
+1. Répondre aux questions ouvertes du §8 et choisir les stats publiques dans le catalogue du §10.
 2. Atelier ergonomie (agent `ergonome`) : parcours détaillé du saisisseur, mode rapide et mode complet, sur téléphone.
 3. Relecture RGPD (agent `securite`) : publication, consentement, conservation, conditions d'utilisation.
 4. Spécification de la première version et des classements publics ; décisions dans `decisions.md`.

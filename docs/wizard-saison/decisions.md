@@ -804,6 +804,10 @@ les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne se
 - **Règles 1J et 4J** non contrôlées dans la première version ; le modèle de données le prévoit (catégorie de jeu de D65,
   licence FFVB) : si ce contrôle est retenu plus tard, D65 sera avancée.
 - Réseau présent dans les gymnases d'après l'utilisateur : pas de mode hors ligne complet.
+- *Précisé le 31/10/2026* : saisie par un membre de l'équipe avec son compte (un accompagnant utilise le compte d'un joueur) ;
+  un seul saisisseur, ni libéro ni temps morts dans la première version ; pas de numéro de maillot, joueur désigné par son
+  prénom et les premières lettres de son nom ; conservation tant que le joueur participe à une saison, plus une saison ;
+  stats publiques choisies plus tard sur le catalogue de `analyse.md` §10.
 
 *Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
 volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.
