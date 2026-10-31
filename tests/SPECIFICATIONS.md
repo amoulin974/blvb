@@ -629,6 +629,16 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **TDB-11** ✅ : saison prête : « Afficher sur le site » avec confirmation, retour au tableau de bord.
 - **TDB-12** ✅ : « Scores à saisir » : matchs passés sans score seulement, bouton de la fenêtre de saisie du calendrier, jeton de sécurité ; accès rapides : chiffres de la saison affichée.
 
+### 4.21 Volley Stats : page du match — `Fonctionnel/Front/FeuilleMatchTest` (P1, D66, D67)
+
+- **VST-01** ✅ : la page du match d'une équipe s'ouvre pour ses membres, le responsable de son club et l'admin ; réponse
+  `private, no-store`.
+- **VST-02** ✅ : équipe adverse (capitaine, joueur), autre équipe du même club, compte sans équipe : 404 ; visiteur renvoyé
+  à la connexion ; chacun ouvre la page de sa propre équipe.
+- **VST-03** ✅ : équipe qui ne joue pas ce match, match inexistant : 404, même pour l'admin.
+- **VST-04** ✅ : seule compte la saison du match (membre de la saison précédente seulement : 404) ; gel 30 jours après un
+  match jamais terminé, 7 jours après la fin.
+
 ## 5. Analyse statique et qualité du code
 
 | Outil | Réglage de départ | Cible | Pourquoi |
