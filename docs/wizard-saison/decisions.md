@@ -836,6 +836,10 @@ un match du championnat, où l'on indique les joueurs au début de chaque set. P
 - **Premier service** saisi à chaque set (tiré par les joueurs : balle de service, chifoumi).
 - **Set commencé à 5** : rotation normale, la place libre tourne avec les autres.
 - **2 sets gagnants** : 3ᵉ set en 15 points.
+- **Joueurs de l'équipe seulement** : pas de renfort ajouté au gymnase.
+- **Score de chaque set** noté sur la page match, **pour l'équipe seulement** : la page ne sert à rien d'autre sur le site
+  (ni score officiel, ni classement, ni affichage public).
+- **Pas de lien de saisie temporaire** pour l'accompagnant pour l'instant (il utilise le compte d'un joueur).
 - Vocabulaire : « Composition du set N » et « Joueurs présents », pour ne pas confondre avec la composition de l'équipe sur
   la saison.
 *Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile

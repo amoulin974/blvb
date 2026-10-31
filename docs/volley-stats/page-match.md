@@ -70,7 +70,7 @@ annoncée (`aria-live`).
 - **Accompagnant** : le compte d'un joueur donne accès à tout ce compte ; un lien de saisie temporaire limité au match
   serait à étudier.
 
-## 5. Questions tranchées (utilisateur, 31/10/2026, D67)
+## 5. Questions tranchées (utilisateur, 31/10/2026, D67) : toutes
 
 1. **Modification** : tous les membres de l'équipe **et le responsable du club** (pas seulement en lecture, contrairement à
    la proposition du §4).
@@ -79,11 +79,10 @@ annoncée (`aria-live`).
 3. **Set commencé à 5** : la rotation se fait normalement, la place libre tourne avec les autres.
 4. **Format 2 sets gagnants** : le 3ᵉ set se joue en 15 points.
 
-## 6. Questions encore ouvertes
-
-1. Un renfort hors de l'équipe peut-il être ajouté au gymnase, et par qui ?
-2. Noter le score de chaque set (25–21) sur la page match, en interne ?
-3. Un lien de saisie temporaire pour l'accompagnant ?
+5. **Renfort hors de l'équipe** : non, seuls les joueurs de l'équipe peuvent figurer sur la page match.
+6. **Score de chaque set** : noté sur la page match, pour l'équipe seulement ; **la page ne sert à rien d'autre sur le
+   site** (ni score officiel, ni classement, ni affichage public).
+7. **Lien de saisie temporaire** pour l'accompagnant : non, pas pour l'instant.
 
 Points d'attention : enregistrement de chaque étape aussitôt sur le serveur ; cibles de 48 px, trois colonnes d'environ
 110 px à vérifier avec des noms longs ; couleurs du terrain et de la case active : webdesigner.
