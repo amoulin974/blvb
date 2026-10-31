@@ -72,3 +72,45 @@ encarts empilés ou sans date de fin ; captures d'écran dans l'aide.
 5. Volley Stats annoncé avant la fusion du paragraphe des conditions d'utilisation (D68) ?
 
 Points d'attention : « Mon Profil » → « Mon profil » dans `base_front.html.twig` ; apparence des encarts : webdesigner.
+
+## 6. Page « Ce que vous pouvez faire » à la première connexion (avis complémentaire)
+
+**Verdict** : oui, mais sous la forme d'un encart en haut de l'accueil, affiché une fois, qui mène à une page « Ce que
+vous pouvez faire ». Pas de page ouverte d'office : la connexion ramène à la page d'origine (`use_referer`), et une page
+imposée couperait l'élan de quelqu'un venu saisir un score.
+
+**Corrections de la proposition** :
+1. La liste « joueur » est en fait celle du visiteur (rien ne demande d'être connecté) : le dire, puis mettre en avant ce
+   que le compte ajoute.
+2. Pas de rappel de la liste précédente : « Vous pouvez faire tout ce que fait un joueur (voir la liste), et aussi : ».
+3. Un compte à plusieurs rôles voit une seule page qui empile ses sections sans répétition ; rôles calculés d'après les
+   droits (`SaisieScoreService::droits`, `clubsResponsable`, `estMembre`).
+4. En tête, ce qui est propre au rôle (capitaine : saisir le score d'abord).
+5. Un lien par ligne (zone tactile de 44 px), aucun quand l'action se fait sur place.
+6. 4 à 5 lignes par section au plus.
+7. Encart fermé retenu en base ; réaffiché seulement si le rôle change.
+8. Lien « Ce que vous pouvez faire » dans « Mon profil » et le menu du compte (ajouter d'abord « Mon profil » au menu
+   sur téléphone).
+
+**Vérifié dans le code** : calendrier par gymnase (terrains libres, complet, fermé) ; le nom du gymnase ouvre Google Maps
+(le site ne calcule pas l'itinéraire) ; téléphone du capitaine adverse réservé aux capitaines et responsables d'un club de
+la poule et aux admins, dans la liste des matchs de la fiche équipe ; classement aussi sur la fiche équipe.
+
+**Liste réécrite**
+
+*Sans compte, tout le monde peut :* choisir son équipe (le site s'ouvre ensuite sur elle) ; voir les matchs et le
+classement de son équipe sur sa fiche ; ajouter les matchs à son agenda depuis la fiche de l'équipe ; ouvrir la carte d'un
+gymnase en touchant son nom ; voir les terrains libres de chaque gymnase dans « Calendrier par gymnase ».
+
+*Avec votre compte de joueur, vous pouvez aussi :* voir la composition de votre équipe et le contact de votre capitaine ;
+ouvrir la page du match pour noter qui joue chaque set ; suivre les sets joués par chacun, sur la fiche de votre équipe.
+
+*Capitaine, vous pouvez aussi :* saisir le score après chaque match (le bouton « Saisir » apparaît sur le match) ; appeler
+le capitaine de l'équipe adverse (son téléphone est dans la liste des matchs) ; gérer la composition de votre équipe ;
+recevoir un rappel par courriel si un score manque 2 jours après le match.
+
+*Responsable de club, vous pouvez aussi :* saisir le score de toutes les équipes du club ; modifier la fiche du club
+(« Mon club ») ; indiquer les fermetures de vos gymnases dès que vous les connaissez ; voir les statistiques des joueurs
+de vos équipes.
+
+Volley Stats n'est annoncé qu'une fois le paragraphe des conditions d'utilisation fusionné (D68).
