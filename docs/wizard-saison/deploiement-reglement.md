@@ -1,7 +1,8 @@
 # Mise en production de `main` : checklist pour Francis
 
 Formats de compétition (lots 1 à 6), wizard de saison, règlement par saison (R1 à R5), fermetures de gymnase, paramètres du
-site, limitation des essais de connexion. Relue par l'agent `deploiement` le 31/10/2026 sur `main` 4e5b37b. Seul Francis
+site, limitation des essais de connexion, tableau de bord de l'admin (D64, sans migration). Relue par l'agent `deploiement` le
+31/10/2026 sur `main` 4e5b37b ; tableau de bord ajouté ensuite (d76eadb), fusion dans `prod` toujours sans conflit. Seul Francis
 fusionne dans `prod` : c'est son site, il décide si et quand déployer, et ce qu'il met en œuvre parmi ce qui suit.
 
 **Faille constatée le 31/10/2026, à corriger avant la mise en production : le port 3307 est ouvert sur Internet.** Depuis
@@ -127,6 +128,7 @@ Ne jamais lancer `app:recette:charger` en production.
 - Fermeture de gymnase : création depuis « Mon club » ; un match à la main dans ce gymnase est refusé ; `/blvb/calendrierlieu` affiche
   « Gymnase fermé ». Retirer la fermeture d'essai ensuite.
 - Liste des saisons sur téléphone : en cartes, sans défilement horizontal.
+- Tableau de bord de l'admin : liste « À faire » et carte de la saison affichée ; « Scores à saisir » s'ouvre depuis la carte.
 
 ## Retour arrière
 
