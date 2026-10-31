@@ -99,6 +99,7 @@
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
                         {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}{% if prochain.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}</p>
                     <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
+                    {% if pagesMatch %}<a class="btn btn-outline btn-primary btn-sm min-h-11 mt-2" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: prochain.match_id}) }}">Préparer le match</a>{% endif %}
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
                     {% if canViewCapitaine %}
                         {{ include('front/fragments/_contact_capitaine.html.twig', {contact: capitainesAdverses[advId] ?? null}) }}
@@ -158,6 +159,7 @@
                                         <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
                                         <td class="text-right">
                                             {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
+                                            {% if pagesMatch %}<a class="link link-primary block text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -183,6 +185,7 @@
                                             {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
                                             {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
                                         </p>
+                                        {% if pagesMatch %}<a class="link link-primary inline-flex min-h-11 items-center text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -205,6 +208,22 @@
                 {% endfor %}
             {% endfor %}
         </section>
+
+        {# Sets joués d'après les pages du match (Volley Stats, D67) : équipe et responsable de son club seulement #}
+        {% if pagesMatch and setsJoues is not empty %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-sets-joues">
+                <h2 id="titre-sets-joues" class="uppercase tracking-wide">Sets joués</h2>
+                <p class="text-sm text-(--color-base-content)/80">D'après les pages du match, visibles de l'équipe seulement.</p>
+                <table class="table mt-1 max-w-md">
+                    <thead><tr><th scope="col">Joueur</th><th scope="col" class="text-right">Sets</th></tr></thead>
+                    <tbody>
+                        {% for ligne in setsJoues %}
+                            <tr><th scope="row" class="font-normal">{{ ligne.nom }}</th><td class="text-right tabular-nums">{{ ligne.sets }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        {% endif %}
 
         {# Composition complète avec coordonnées : réservée aux membres de l'équipe et aux administrateurs.
            Les autres capitaines de la poule ne voient que le capitaine (bloc en haut de page). #}

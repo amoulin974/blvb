@@ -1,0 +1,20 @@
+{% extends 'base_admin.html.twig' %}
+
+{% block title %}Volley Stats{% endblock %}
+
+{% block body %}
+    {{ include('admin/_entete.html.twig', {titre: 'Volley Stats', sous_titre: 'Saisie des compositions et des touches des joueurs pendant les matchs, par les équipes volontaires.'}) }}
+
+    <section class="admin-carte max-w-2xl space-y-4" aria-labelledby="titre-seuil">
+        <h2 id="titre-seuil" class="text-lg">Classements des joueurs</h2>
+        {{ form_start(form) }}
+            <div class="form-control w-full">
+                {{ form_label(form.seuilEchangesDetailles, null, {'label_attr': {'class': 'label font-semibold text-base-content'}}) }}
+                {{ form_widget(form.seuilEchangesDetailles, {'attr': {'aria-describedby': form.seuilEchangesDetailles.vars.id ~ '_aide'}}) }}
+                <p id="{{ form.seuilEchangesDetailles.vars.id }}_aide" class="mt-1 text-sm text-(--color-base-content)/80">{{ form.seuilEchangesDetailles.vars.help }}</p>
+                {{ form_errors(form.seuilEchangesDetailles) }}
+            </div>
+            <button type="submit" class="btn btn-primary mt-4">Enregistrer</button>
+        {{ form_end(form) }}
+    </section>
+{% endblock %}

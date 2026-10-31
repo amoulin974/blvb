@@ -28,6 +28,8 @@ final class PagesTest extends TestFonctionnel
             'equipe' => ChampionnatDeTest::get('equipe.A1')->getId(),
             'saison' => ChampionnatDeTest::get('saison')->getId(),
             'poule' => ChampionnatDeTest::get('poule.A')->getId(),
+            // Page du match d'une équipe (Volley Stats) : le match de référence de A1
+            'partie' => ChampionnatDeTest::get('match.reference')->getId(),
         ];
         $pages = [];
         foreach ($routeur->getRouteCollection()->all() as $nom => $route) {

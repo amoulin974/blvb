@@ -598,7 +598,7 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **FGY-20** ✅ : la fenêtre du calendrier admin refuse un gymnase fermé et se réaffiche avec le message, motif échappé.
 - **FGY-21** ✅ : un match sans score dans un gymnase fermé est signalé sur le calendrier, la fiche de l'équipe et le calendrier admin ; un match joué ne l'est pas, ni pour le public un match passé sans score.
 
-`Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
+`Fumee/PagesTest` (FUM-01) parcourt aussi `front_club_fermetures` et la page du match `front_feuille_match` (match de référence de A1) ; `FicheClubTest` (CLU-07) ne compte plus que le lien du profil, le menu du compte ayant son propre lien vers le club.
 
 ### 4.19 Paramètres du site — `Fonctionnel/Admin/ParametresSiteTest`, `Unitaire/Security/VerificationConnexionTest` (P1, D62)
 
@@ -628,6 +628,71 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **TDB-10** ✅ : saison validée à mettre en place : carte, reprise à l'étape incomplète, rappel des fermetures avant les matchs, lignes préfixées du nom de la saison ; au-delà de cinq lignes, « Voir les N autres points ».
 - **TDB-11** ✅ : saison prête : « Afficher sur le site » avec confirmation, retour au tableau de bord.
 - **TDB-12** ✅ : « Scores à saisir » : matchs passés sans score seulement, bouton de la fenêtre de saisie du calendrier, jeton de sécurité ; accès rapides : chiffres de la saison affichée.
+
+### 4.21 Volley Stats : page du match — `Fonctionnel/Front/FeuilleMatchTest` (P1, D66, D67)
+
+- **VST-01** ✅ : la page du match d'une équipe s'ouvre pour ses membres, le responsable de son club et l'admin ; réponse
+  `private, no-store`.
+- **VST-02** ✅ : équipe adverse (capitaine, joueur), autre équipe du même club, compte sans équipe : 404 ; visiteur renvoyé
+  à la connexion ; chacun ouvre la page de sa propre équipe.
+- **VST-03** ✅ : équipe qui ne joue pas ce match, match inexistant : 404, même pour l'admin.
+- **VST-04** ✅ : seule compte la saison du match (membre de la saison précédente seulement : 404) ; gel 30 jours après un
+  match jamais terminé, 7 jours après la fin.
+- **VST-05** ✅ : une visite ne crée rien ; « Préparer le match » crée la page, toute l'équipe cochée d'office, puis les
+  présents se modifient (joueurs désignés « Camille Ar. ») ; envoi par Turbo accepté malgré l'en-tête X-CSRF-TOKEN des scores.
+- **VST-06** ✅ : au match suivant, les présents du match précédent sont cochés d'office, à l'affichage comme à la création.
+- **VST-07** ✅ : présents refusés : membre d'une autre équipe (message neutre, sans nom), jeton absent ; équipe adverse :
+  404 sur les écritures ; rien n'est enregistré.
+- **VST-08** ✅ *`Unitaire/VolleyStats/EtatSetTest`* : rotation au point gagné sur le service adverse, pas sur son propre
+  service ; place libre qui tourne ; remplacements ; correction du score et du service ; « Tourner d'un poste » cran par
+  cran ; événements annulés ignorés ; fin à 25 points secs, 15 pour le set décisif (5ᵉ en 3 sets gagnants, 3ᵉ en 2) ;
+  départ à 0–8.
+- **VST-09** ✅ : composition validée côté serveur (doublon, sept places, deux places libres, joueur inconnu ou non entier,
+  clé inconnue : 400, message sans nom) ; commencer exige le premier service ; composition figée une fois le set commencé ;
+  pas de set 2 avant la fin du set 1.
+- **VST-10** ✅ : point et rotation ; envoi rejoué (même uuid) sans effet ; saisie concurrente (ordre périmé) : 409 ;
+  « Précédent » garde l'événement barré, « Suivant » le rétablit, refusé après un nouvel événement ; remplacement invalide et
+  clé inconnue (« motif ») refusés ; historique lisible.
+- **VST-11** ✅ : fin de set refusée avant le score de fin ; trois sets gagnés : page terminée, pas de 4ᵉ set ; le score
+  officiel du match n'est pas touché.
+- **VST-12** ✅ : la fiche équipe mène à la page du match (« Préparer le match » sur le prochain match, « Page du match » sur
+  chaque match du calendrier) et montre les sets joués, pour l'équipe, le responsable de son club et l'admin ; rien pour
+  l'équipe adverse ni pour un visiteur.
+- **VST-13** ✅ : écritures JSON refusées sans jeton ou avec le jeton des scores (403), session expirée (401 et non une
+  redirection vers la connexion, pour que la file d'attente du téléphone s'arrête et le dise), à l'équipe adverse (404), sur une page
+  gelée (404) sauf pour l'admin ; joueur de la page adverse refusé dans une composition et un remplacement ; uuid d'un autre
+  set refusé ; terminer, rouvrir puis terminer de nouveau garde la date de la première fin (le gel n'est pas repoussé).
+
+### 4.22 Volley Stats : saisie des actions — `Fonctionnel/Front/SaisieActionsTest` (P1, D68)
+
+- **VST-14** ✅ : mode choisi au début du set (`score` ou `touches`, autre valeur refusée) ; en « score seulement », touches,
+  balle à rejouer et détail du point refusés.
+- **VST-15** ✅ : une touche désigne un seul joueur de cette page, sur le terrain (banc refusé) ; au block, un avant
+  seulement ; deux joueurs, action ou joueur inconnus, clé inconnue refusés.
+- **VST-16** ✅ : le point porte sur la dernière touche de l'échange (sinon refus) ou sur notre service (refusé au service
+  adverse) ; « contrée » seulement sur une attaque perdue, aucun détail sur un point gagné ; « sans détail » refusé s'il y a
+  des touches ; faute de règlement d'un joueur avec le fautif, faute de l'équipe sans ; deuxième bloqueur distinct ;
+  remplacement refusé pendant un échange.
+- **VST-17** ✅ : balle à rejouer : échange clos sans point ni changement de service.
+- **VST-18** ✅ : correction d'une touche d'un échange terminé de ce set ; refusée sur l'échange en cours, sur la touche qui a
+  fait le point, sur un joueur entré après la touche, avec deux corrections à la fois ; acceptée sur un set terminé, où un
+  point est refusé.
+- **VST-19** ✅ *`Unitaire/VolleyStats/StatsFeuilleTest`* : stats d'un set noté « le score et les touches » : réception,
+  passe décisive (la passe juste avant l'attaque gagnante), attaque gagnante ou contrée, efficacité d'attaque ; service
+  crédité au serveur de la rotation (ace, faute) ; ace subi sans joueur ; block gagnant à deux (les deux crédités) ; point
+  marqué en défense, hors attaque ; faute de règlement ; % de réception sans faute ; échange « sans détail » et balle à
+  rejouer non comptés ; touches annulées ignorées ; corrections appliquées (joueur, action, touche retirée) ; cumul de sets.
+- **VST-20** ✅ *`Admin/VolleyStatsAdminTest`* : seul l'admin règle le seuil d'échanges détaillés (80 % par défaut) ; -1, 101,
+  décimale, texte et jeton absent refusés (422, rien d'enregistré) ; le menu de l'admin et le tableau de bord (section
+  « Volley Stats », comptages seulement) y mènent.
+- **VST-21** ✅ : une fois le set terminé, la page donne les stats du match (joueurs triés par points, équipe, efficacité,
+  passes décisives) et le taux d'échanges détaillés de chaque set, comparé au seuil.
+- **VST-22** ✅ : `sur` et `cible` pris dans un autre set refusés ; correction refusée sur une touche d'un échange rejoué et
+  en « block » pour un joueur arrière ; correction refusée après le gel (404), acceptée pour l'admin ; réponse JSON en
+  `private, no-store`.
+- **VST-23** ✅ : aucune touche ni stat sur la fiche équipe publique, le calendrier ni l'agenda ICS.
+- **VST-24** ✅ *`Integration/Command/PurgerPagesMatchTest`* : `app:volley-stats:purger` supprime les pages du match d'une
+  saison une fois la saison suivante terminée, pas avant ; `--simulation` ne supprime rien.
 
 ## 5. Analyse statique et qualité du code
 

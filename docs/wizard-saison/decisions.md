@@ -76,6 +76,9 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D63. Fiche du club : éditeur TipTap à barre réduite
 - D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
 - D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
+- D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
+- D67. Volley Stats : on commence par la page match et la composition de chaque set
+- D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -787,6 +790,109 @@ recevra pour cela une **catégorie de jeu**, féminine ou masculine :
 
 *Pourquoi* : ce n'est pas une donnée sensible (art. 9), et la finalité est réelle et sportive (la FFVB l'enregistre aussi sur
 les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne serait pas justifié.
+*(2026-10-31)*
+
+
+## D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
+**Décision** (utilisateur, 31/10/2026), avant toute conception ; analyse complète dans `docs/volley-stats/analyse.md` :
+- **Saisie** par un remplaçant sur le banc ou un accompagnant, sur téléphone ; **matchs du championnat seulement** ;
+  participation **volontaire** des équipes.
+- **Deux modes** au choix de l'équipe, rapide et complet ; les classements publics ne reposent que sur leur socle commun.
+- **Usages** : progresser en équipe, choisir les compositions, suivi individuel, classements individuels sur le site.
+- **Visibilité** : statistiques publiques avec l'**accord de chaque joueur** (case dans son profil, décochable) ; sans
+  accord, visibles de son équipe seulement ; **compositions et rotations visibles de l'équipe seulement**.
+- **Score officiel jamais alimenté** par cette saisie.
+- **Corrections** par le saisisseur et le capitaine pendant 7 jours, puis par l'admin seulement.
+- **Règles 1J et 4J** non contrôlées dans la première version ; le modèle de données le prévoit (catégorie de jeu de D65,
+  licence FFVB) : si ce contrôle est retenu plus tard, D65 sera avancée.
+- Réseau présent dans les gymnases d'après l'utilisateur : pas de mode hors ligne complet.
+- *Précisé le 31/10/2026* : saisie par un membre de l'équipe avec son compte (un accompagnant utilise le compte d'un joueur) ;
+  un seul saisisseur, ni libéro ni temps morts dans la première version ; pas de numéro de maillot, joueur désigné par son
+  prénom et les premières lettres de son nom ; conservation tant que le joueur participe à une saison, plus une saison ;
+  stats publiques choisies plus tard sur le catalogue de `analyse.md` §9.
+- *Modifié le 31/10/2026* (raison nouvelle : l'utilisateur veut aussi des critères du mode complet, ex. meilleur passeur) :
+  classements publics **par critère au choix**, en nombre ou en pourcentage d'actions réussies ; un critère du seul mode
+  complet ne classe que les équipes en saisie complète (remplace « socle commun seulement ») ; pourcentage soumis à un
+  minimum d'actions réglé par l'admin. Joueur sans accord : **anonyme** dans les classements. Comparaison des rotations,
+  export CSV et stats sur la fiche de l'équipe dans la première version.
+- *Modifié le 31/10/2026* : **trois modes emboîtés** au lieu de deux : **rapide** (une saisie par échange : qui termine,
+  comment), **intermédiaire** (chaque touche de l'équipe, trois issues seulement : le jeu continue, point gagné, point
+  perdu ; **aucune notion de qualité**), **complet** (chaque touche avec sa note de qualité). Un critère de classement ne
+  classe que les équipes dont le mode le produit. **Seul le mode intermédiaire est développé en premier** ; rapide et complet
+  viendront ensuite, le modèle de données les prévoit.
+- *Précisé le 31/10/2026* : classements **par phase et par poule** ; formules de `situations.md` §12 validées ; en mode
+  intermédiaire, le meilleur réceptionneur est classé sur le **pourcentage de réceptions sans faute**.
+
+*Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
+volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.
+*(2026-10-31)*
+
+
+## D67. Volley Stats : on commence par la page match et la composition de chaque set
+**Décision** (utilisateur, 31/10/2026) : premier développement de Volley Stats = une **page match** propre à une équipe pour
+un match du championnat, où l'on indique les joueurs au début de chaque set. Parcours proposé par l'ergonome
+(`docs/volley-stats/page-match.md`), avec ces réponses :
+- **Accès et modification** : tous les membres de l'équipe, le responsable du club et les admins ; l'équipe adverse n'y
+  a pas accès (« page introuvable »).
+- **Premier service** saisi à chaque set (tiré par les joueurs : balle de service, chifoumi).
+- **Set commencé à 5** : rotation normale, la place libre tourne avec les autres.
+- **2 sets gagnants** : 3ᵉ set en 15 points.
+- **Joueurs de l'équipe seulement** : pas de renfort ajouté au gymnase.
+- **Score de chaque set** noté sur la page match, **pour l'équipe seulement** : la page ne sert à rien d'autre sur le site
+  (ni score officiel, ni classement, ni affichage public).
+- **Pas de lien de saisie temporaire** pour l'accompagnant pour l'instant (il utilise le compte d'un joueur).
+- *Précisé le 31/10/2026 (maquette du webdesigner)* : score du set **point par point**, **corrigeable** quand des points
+  n'ont pas été notés (correction du score, puis « Qui sert maintenant ? » et place des joueurs à confirmer) ; pas de
+  « Servira en premier » sur le poste 2 ; **fin de set proposée automatiquement** quand le score de fin est atteint ;
+  « Qui est là ? » : **toute l'équipe** en cases à cocher ; **historique des actions du set avec « Précédent » et
+  « Suivant »** (annuler, rétablir) au lieu du message d'annulation de 10 s ; « Sets joués » repris sur la fiche équipe
+  (visible de l'équipe seulement) ; libellés « Page du match », « Reste à faire », « Sur le banc », « Sets joués » validés.
+- *Précisé le 31/10/2026* : **« Tourner d'un poste » peut être touché plusieurs fois** jusqu'à la bonne position ; gel d'une
+  page jamais terminée **30 jours après le match** ; joueur retiré de l'équipe affiché « Joueur retiré » sur les pages
+  passées. **On enregistre l'ordre de rotation officiel au moment du service**, jamais les places prises pendant l'échange :
+  les changements de place après le service (passeur qui joue au centre, attaquant à l'aile) sont libres au volley, ne
+  modifient pas la rotation et ne se saisissent pas ; les actions seront attribuées au joueur par son nom, pas par une case
+  du terrain. Rôle des joueurs (passeur, attaquant, central) pour lire les stats par rotation : plus tard.
+- Vocabulaire : « Composition du set N » et « Joueurs présents », pour ne pas confondre avec la composition de l'équipe sur
+  la saison.
+*Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile
+sans les stats.
+*(2026-10-31)*
+
+
+## D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
+**Décision** (utilisateur, 31/10/2026) : la saisie des actions suit le parcours de l'ergonome (`docs/volley-stats/
+saisie-actions.md`) et ses cinq conditions : **action prédite** (on ne touche que le joueur), **« le jeu continue »
+implicite**, **service jamais saisi** (déduit de la rotation), **saisie après le point**, **échange non détaillé possible**
+(seulement le point). Réponses aux questions :
+- **Seuil d'échanges détaillés** pour qu'un set compte dans les classements publics : **réglable par l'admin**, dans une
+  nouvelle partie « Volley Stats » du menu de l'admin, avec une section sur le tableau de bord (contenu à concevoir).
+- **Le block ne compte pas comme une touche** : trois touches après un block.
+- **Ballon facile renvoyé en 3ᵉ touche** : action **« Renvoi »** à part (ne compte pas comme une attaque).
+- **Attaque contrée** : si le ballon contré revient dans notre camp et reste jouable, **le jeu continue et un nouveau cycle de
+  trois touches commence** (couverture ou défense, passe, attaque) ; un contre adverse gagnant est un point perdu
+  « contrée », distinct de la faute d'attaque (dehors, filet).
+- **Block gagnant à deux** : **chacun des bloqueurs** est crédité (deux joueurs touchés).
+- **Choix « le score seulement » / « le score et les touches des joueurs »** : à chaque set, au moment de le commencer.
+- **Corrections** d'une action d'un échange terminé (changer le joueur ou l'action, retirer une touche) : pendant le set et
+  pendant les 7 jours de correction ; pas d'ajout de touche oubliée dans un ancien échange en première version ; l'issue d'un
+  ancien échange ne se change pas (« Corriger le score »).
+- **Point gagné sur une réception, une passe ou une défense** : compté comme point marqué par le joueur, pas dans les
+  classements d'attaque. Les touches d'une **balle à rejouer** ne comptent pas.
+- **Préalable technique** : file d'attente des saisies sur le téléphone (affichage immédiat, envois l'un après l'autre),
+  sans quoi des touches rapides seraient perdues.
+- *Précisé le 31/10/2026* (modifie D66 sur ce point) : **le responsable du club voit les statistiques individuelles des
+  joueurs de ses équipes, comme l'équipe elle-même**, sans accord du joueur (usage interne au club, jamais public) ; à écrire
+  dans les conditions d'utilisation. La publication sur le site reste soumise à l'accord de chaque joueur (D66).
+- *Précisé le 31/10/2026 (maquette du webdesigner)* : **bouton « Point sans détail »** pour un échange qu'on ne détaille
+  pas ; « Point pour nous / Point pour eux » sans touche reste un point sans faute de nos joueurs (ace subi, faute de service
+  adverse…), compté détaillé. **Deuxième bloqueur demandé seulement pour un block gagnant.**
+- *Réalisé le 31/10/2026, relectures intégrées* : correction des anciennes touches à l'écran (historique : changer le joueur,
+  l'action, retirer) ; suppression des pages du match par `app:volley-stats:purger` (saison N supprimée une fois N+1
+  terminée, à planifier par Francis). **Reste avant tout usage réel** : le paragraphe des conditions d'utilisation (stats
+  individuelles, destinataires, durée) avec la fusion de `conditions-utilisation-v2`. **Point ouvert** : sur un téléphone de
+  640 px, « Point pour nous / eux » demande encore un petit défilement (bandeau du site collé en haut) ; à essayer sur un
+  vrai match.
 *(2026-10-31)*
 
 ---

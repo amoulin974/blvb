@@ -381,6 +381,46 @@ details.depliant[open] { width: 100%; }
 .choix-carte { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background-color: var(--color-base-100); cursor: pointer; }
 .choix-carte:has(:checked) { border-color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); }
 .choix-carte:has(:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+/* Choix compact sur une ligne (case ou bouton radio visible) : page du match (D67) */
+.choix-carte.choix-ligne { flex-direction: row; align-items: center; gap: .625rem; min-height: 3rem; padding: .5rem .75rem; }
+.choix-carte.choix-ligne .checkbox, .choix-carte.choix-ligne .radio { flex-shrink: 0; }
+/* Page du match : toutes les cibles à 48 px (gymnase, téléphone tenu d'une main) */
+.page-match .btn { min-height: 3rem; }
+/* Page du match : terrain vu du banc, filet en haut (maquette du webdesigner, docs/volley-stats/maquette-page-match.md).
+   Trois états de case, jamais par la couleur seule : remplie (nom), vide (pointillé, « Place libre »), active (bordure
+   épaisse, « À choisir », aria-current). */
+.terrain { background-color: color-mix(in oklab, var(--color-secondary) 12%, var(--color-base-100)); border: 2px solid var(--color-secondary); border-radius: var(--radius-box); padding: 0 .25rem .25rem; }
+.terrain-filet { margin: 0 -.25rem .375rem; padding: .125rem; background-color: var(--color-primary); color: var(--color-primary-content); font-family: var(--font-display); font-weight: 600; font-size: .75rem; letter-spacing: .2em; text-transform: uppercase; text-align: center; border-radius: calc(var(--radius-box) - 2px) calc(var(--radius-box) - 2px) 0 0; }
+.terrain-grille { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .25rem; }
+.terrain-case { min-width: 0; min-height: 4.5rem; display: flex; flex-direction: column; justify-content: space-between; align-items: flex-start; gap: .25rem; padding: .375rem .25rem; text-align: left; color: var(--color-base-content); background-color: var(--color-base-100); border: 1px solid var(--color-secondary); border-radius: var(--radius-field); }
+button.terrain-case { cursor: pointer; }
+.terrain-case:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.terrain-poste { font-family: var(--font-display); font-weight: 600; font-size: .75rem; line-height: 1.1; text-transform: uppercase; letter-spacing: .03em; color: color-mix(in oklab, var(--color-base-content) 80%, transparent); }
+.terrain-nom { font-family: var(--font-display); font-weight: 700; font-size: 1rem; line-height: 1.15; overflow-wrap: anywhere; }
+.terrain-case[data-etat="vide"] { border-style: dashed; }
+.terrain-case[data-etat="vide"] .terrain-nom { font-weight: 500; }
+.terrain-case[aria-current="true"] { border: 3px solid var(--color-primary); padding: calc(.375rem - 2px) calc(.25rem - 2px); background-color: color-mix(in oklab, var(--color-primary) 8%, var(--color-base-100)); }
+.terrain-case[aria-current="true"] .terrain-nom { color: var(--color-primary); }
+.terrain-service { display: inline-block; padding: 0 .375rem; border-radius: var(--radius-selector); background-color: color-mix(in oklab, var(--color-secondary) 70%, black); color: var(--color-secondary-content); font-size: .75rem; font-weight: 600; line-height: 1.25rem; }
+.terrain-compact .terrain-case { min-height: 3rem; padding-block: .25rem; }
+.terrain-compact .terrain-nom { font-size: .9375rem; }
+.score-set { font-family: var(--font-display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-primary); }
+/* Saisie des touches (D68, maquette docs/volley-stats/maquette-saisie-actions.md) : action choisie en marine plein
+   (aria-pressed, jamais la couleur seule : l'état est annoncé ; la coche n'est pas lue), mention de la touche dans la case */
+.btn-bascule { position: relative; padding-inline: .25rem; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
+.btn-bascule[aria-pressed="true"] { --btn-bg: var(--color-primary); --btn-fg: var(--color-primary-content); --btn-border: var(--color-primary); background-color: var(--color-primary); color: var(--color-primary-content); }
+.btn-bascule[aria-pressed="true"]::after { content: "✓" / ""; position: absolute; top: 1px; right: 4px; font-size: .75rem; line-height: 1; }
+.terrain-mention { display: block; font-size: .875rem; font-weight: 600; }
+/* Terrain pendant le jeu : cases plus basses, poste abrégé au-dessus du nom (le nom reste premier dans le code) */
+.terrain-jeu .terrain-case { min-height: 3.5rem; justify-content: flex-start; gap: .125rem; }
+.terrain-jeu .terrain-poste { order: -1; }
+/* Carte de la touche en attente : place réservée (rien ne saute sous le doigt), consigne en pointillé */
+.touche-carte { min-height: 6.5rem; border: 2px solid var(--color-primary); border-radius: var(--radius-box); padding: .5rem; display: flex; flex-direction: column; gap: .5rem; background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); }
+.touche-carte[data-etat="consigne"] { border-style: dashed; border-color: color-mix(in oklab, var(--color-primary) 60%, transparent); background-color: var(--color-base-100); }
+.score-set-compact { font-size: 2rem; }
+/* Tableau qui défile dans sa carte (téléphone) : première colonne figée, défilement au clavier */
+.tableau-defilant th:first-child { position: sticky; left: 0; background-color: var(--color-base-100); }
+.tableau-defilant:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 .wizard-navigation { border-top: 1px solid var(--color-base-300); padding-top: 0.75rem; background-color: var(--color-base-100); }
 @media (max-width: 63.99rem) { .wizard-navigation { position: sticky; bottom: 0; z-index: 2; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); } }
 /* Stepper du wizard : six pastilles tiennent sur un téléphone ; « ! » lisible sur orange ; étape en cours cerclée */

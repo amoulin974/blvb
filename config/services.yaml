@@ -34,6 +34,11 @@ services:
     App\Service\:
         resource: '../src/Service/'
 
+    # Volley Stats (D66, D67) : calculs et écritures de la page du match (MatchEquipe est une valeur, pas un service)
+    App\VolleyStats\:
+        resource: '../src/VolleyStats/'
+        exclude: '../src/VolleyStats/{MatchEquipe.php,EtatSet.php,SaisieInvalide.php,SaisieConcurrente.php,VueFeuille.php,NomsCourts.php,StatsFeuille.php}'
+
     # Fiche du club : la description y est nettoyée à l'envoi (App\Service\DescriptionClub, D63)
     App\Form\Front\ClubFicheType: ~
 

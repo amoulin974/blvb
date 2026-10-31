@@ -36,6 +36,12 @@ class ParametresSite
     #[ORM\Column(length: 100, nullable: true)]
     private ?string $logo = null;
 
+    /** Volley Stats (D68) : part d'échanges détaillés, en %, pour qu'un set compte dans les classements des joueurs */
+    #[ORM\Column(options: ['default' => 80])]
+    #[\Symfony\Component\Validator\Constraints\NotNull]
+    #[\Symfony\Component\Validator\Constraints\Range(min: 0, max: 100, notInRangeMessage: 'Indiquez un pourcentage entre {{ min }} et {{ max }}.')]
+    private ?int $seuilEchangesDetailles = 80;
+
     public function getId(): int
     {
         return $this->id;
@@ -86,6 +92,18 @@ class ParametresSite
     public function setLogo(?string $logo): static
     {
         $this->logo = $logo;
+
+        return $this;
+    }
+
+    public function getSeuilEchangesDetailles(): ?int
+    {
+        return $this->seuilEchangesDetailles;
+    }
+
+    public function setSeuilEchangesDetailles(?int $seuil): static
+    {
+        $this->seuilEchangesDetailles = $seuil;
 
         return $this;
     }

@@ -1,0 +1,51 @@
+{% extends 'base_front.html.twig' %}
+{# Page du match d'une équipe (Volley Stats, D67 ; maquette docs/volley-stats/maquette-page-match.md). Variables : match
+   (App\VolleyStats\MatchEquipe), feuille (ou null), modifiable. #}
+{% set partie = match.partie %}
+{% set adversaire = match.adversaire %}
+{% block title %}Page du match contre {{ adversaire.nom }} - Site du BLVB{% endblock %}
+
+{% block body %}
+    <div class="page-match container mx-auto max-w-3xl md:px-4 flex flex-col gap-4">
+        <div>
+            <a href="{{ path('front_equipe_detail', {id: match.equipe.id}) }}" class="link link-hover link-primary inline-flex items-center min-h-12 font-semibold">← {{ match.equipe.nom }}</a>
+            <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Page du match</p>
+            <h1 class="text-3xl uppercase tracking-wide leading-tight">Contre {{ adversaire.nom }}</h1>
+            {% if partie.date %}
+                <p class="mt-2 font-display text-2xl font-bold text-(--color-primary)">{{ partie.date|format_datetime(pattern: 'EEE dd/MM · HH:mm', locale: 'fr')|capitalize }}</p>
+            {% endif %}
+            <p class="text-sm">
+                {{ partie.idEquipeRecoit == match.equipe ? 'À domicile' : 'À l\'extérieur' }}{% if partie.lieu %} · {{ include('front/fragments/_lieu_lien.html.twig', {nom: partie.lieu.nom, adresse: partie.lieu.adresse}) }}{% endif %}
+                {% if partie.aDeplacerPourLePublic %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
+            </p>
+            <p class="mt-3 flex items-start gap-2 text-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5 shrink-0" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 1 0-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 0 0 2.25-2.25v-6.75a2.25 2.25 0 0 0-2.25-2.25H6.75a2.25 2.25 0 0 0-2.25 2.25v6.75a2.25 2.25 0 0 0 2.25 2.25Z"/></svg>
+                <span><strong>Visible de l'équipe seulement</strong> (ses membres, le responsable du club et les admins). Ni score officiel ni classement : ce qui est noté ici reste dans l'équipe.</span>
+            </p>
+        </div>
+
+        {% for type, messages in {success: app.flashes('success'), error: app.flashes('error')} %}
+            {% for message in messages %}
+                <div role="{{ type == 'error' ? 'alert' : 'status' }}" class="alert {{ type == 'error' ? 'alert-error' : 'alert-success' }}">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        {{ include('front/feuille_match/_presents.html.twig') }}
+
+        {# Composition de chaque set, set en cours, historique, relevé : feuille_match_controller.js (état servi par VueFeuille) #}
+        {% if vue %}
+            <div class="flex flex-col gap-4" data-controller="feuille-match"
+                 data-feuille-match-etat-value="{{ vue|json_encode }}"
+                 data-feuille-match-url-value="{{ path('front_feuille_match', {equipe: match.equipe.id, partie: match.partie.id}) }}"
+                 data-feuille-match-jeton-value="{{ csrf_token(jeton) }}"
+                 data-feuille-match-modifiable-value="{{ modifiable ? 'true' : 'false' }}"
+                 data-feuille-match-score-officiel-value="{{ path('front_equipe_detail', {id: match.equipe.id}) }}">
+                <p role="alert" class="alert alert-error" data-feuille-match-target="erreur" hidden></p>
+                <p class="sr-only" aria-live="polite" data-feuille-match-target="annonce"></p>
+                <div class="flex flex-col gap-4" data-feuille-match-target="contenu">
+                    <noscript><p class="bg-base-100 border border-base-300 rounded-box p-3">La composition des sets a besoin de JavaScript.</p></noscript>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
