@@ -164,8 +164,10 @@ ligne du match dans le calendrier de l'équipe ; affichées selon le voter, calc
 favorite du navigateur).
 
 Technique : Twig pour la page, un contrôleur Stimulus pour la composition et le set en cours (comme `score-modal`), réponses
-JSON pour les écritures ; file d'attente locale tant que le serveur n'a pas répondu (proposition d'`analyse.md` §5, à
-valider), rendue sûre par l'`uuid`.
+JSON pour les écritures ; **file d'attente locale** (D68, réalisée le 31/10/2026) : chaque saisie s'affiche tout de suite
+(un point compte aussitôt, score et rotation recalculés comme `EtatSet`), part au serveur l'une après l'autre avec l'ordre
+attendu lu au moment de l'envoi ; sans réseau, elle repart seule (attente doublée jusqu'à 16 s) avec le même `uuid` ; un 409
+abandonne les saisies en attente et le dit ; « Précédent » attend la fin des envois.
 
 ## 6. Données personnelles
 

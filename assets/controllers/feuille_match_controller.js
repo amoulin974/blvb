@@ -26,6 +26,8 @@ export default class extends Controller {
         this.mode = null // 'remplacement', 'correction'
         this.sortant = undefined
         this.envoiEnCours = false
+        this.file = []
+        this.serveur = this.etatValue
         this.rendre()
     }
 
@@ -57,7 +59,7 @@ export default class extends Controller {
     }
 
     dernierOrdre(set) {
-        const h = set.historique
+        const h = set.historique.filter((l) => !l.enAttente)
         return h.length ? h[h.length - 1].ordre : null
     }
 
@@ -183,7 +185,7 @@ export default class extends Controller {
 
     vueHistorique(set) {
         if (!set.historique.length) return ''
-        const lignes = [...set.historique].reverse().map((h) => `<li class="flex justify-between gap-3 py-1${h.annule ? ' line-through text-(--color-base-content)/70' : ''}"><span>${echapper(h.texte)}${h.annule ? '<span class="sr-only"> (annulé)</span>' : ''}</span><span class="tabular-nums">${h.score ? `${h.score[0]}–${h.score[1]}` : ''}</span></li>`).join('')
+        const lignes = [...set.historique].reverse().map((h) => `<li class="flex justify-between gap-3 py-1${h.annule ? ' line-through text-(--color-base-content)/70' : ''}${h.enAttente ? ' italic' : ''}"><span>${echapper(h.texte)}${h.annule ? '<span class="sr-only"> (annulé)</span>' : ''}</span><span class="tabular-nums">${h.score ? `${h.score[0]}–${h.score[1]}` : ''}</span></li>`).join('')
         return `<details class="depliant border-t border-base-300 pt-2"><summary class="cursor-pointer font-semibold min-h-12 flex items-center justify-between">Historique du set (${set.historique.length})<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></summary><ol class="divide-y divide-(--color-base-300) text-sm">${lignes}</ol></details>`
     }
 
@@ -310,6 +312,10 @@ export default class extends Controller {
 
     async precedent(e) {
         if (e.currentTarget.getAttribute('aria-disabled') === 'true') return
+        if (this.file.length) {
+            this.signaler('Attendez l\'envoi de la dernière saisie, puis touchez « Précédent ».')
+            return
+        }
         const set = this.setEnCours()
         const actifs = set.historique.filter((h) => !h.annule)
         if (await this.envoyer(set.numero, 'precedent', { uuid: actifs[actifs.length - 1].uuid })) this.annoncer('Dernière saisie annulée.')
@@ -365,34 +371,84 @@ export default class extends Controller {
 
     // --- Échanges avec le serveur --------------------------------------------------------------------------------------
 
-    async envoyer(numero, action, donnees, rafraichir = true) {
-        if (this.envoiEnCours && action === 'evenement') return false
+    // File d'attente des saisies (D68) : chaque saisie s'affiche tout de suite (un point compte aussitôt à l'écran) et part
+    // au serveur l'une après l'autre, dans l'ordre. Sans réseau, elle est renvoyée seule, avec le même uuid (le serveur
+    // ignore un envoi déjà reçu). Une saisie faite pendant l'envoi de la précédente n'est donc jamais perdue.
+    envoyer(numero, action, donnees, rafraichir = true) {
+        return new Promise((resoudre) => {
+            this.file.push({ numero, action, donnees, rafraichir, resoudre })
+            if (action === 'evenement' && donnees.type === 'point') this.projeter()
+            this.traiter()
+        })
+    }
+
+    async traiter() {
+        if (this.envoiEnCours || !this.file.length) return
         this.envoiEnCours = true
-        this.signaler('')
-        if (action === 'evenement') this.contenuTarget.querySelectorAll('[data-action="feuille-match#point"]').forEach((b) => { b.disabled = true })
+        const op = this.file[0]
+        // L'ordre attendu se lit sur le dernier état reçu du serveur, au moment de l'envoi
+        const donnees = op.action === 'evenement' ? { ...op.donnees, dernierOrdre: this.dernierOrdreServeur(op.numero) } : op.donnees
         try {
-            const reponse = await fetch(`${this.urlValue}/set/${numero}/${action}`, {
+            const reponse = await fetch(`${this.urlValue}/set/${op.numero}/${op.action}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': this.jetonValue },
                 body: JSON.stringify(donnees),
             })
             const resultat = await reponse.json().catch(() => ({ message: 'Réponse inattendue : rechargez la page.' }))
-            if (resultat.feuille) this.etatValue = resultat.feuille
-            if (!reponse.ok) {
-                if (reponse.status === 409) this.brouillon = null
+            this.file.shift()
+            this.attente = 0
+            if (resultat.feuille) this.serveur = resultat.feuille
+            if (reponse.status === 409) {
+                // Saisie faite sur un autre téléphone : les saisies en attente, fondées sur l'ancien état, sont abandonnées
+                this.file.splice(0).forEach((autre) => autre.resoudre(false))
+                this.brouillon = null
+                this.signaler((resultat.message ?? '') + ' Vérifiez le score : vos dernières saisies n\'ont peut-être pas été enregistrées.')
+            } else if (!reponse.ok) {
                 this.signaler(resultat.message ?? 'La saisie n\'a pas été enregistrée : rechargez la page.')
-                this.rendre()
-                return false
+            } else if (!this.file.length) {
+                this.signaler('')
             }
-            if (rafraichir || action !== 'composition') this.rendre()
-            return true
+            this.projeter(op.rafraichir || op.action !== 'composition' || !reponse.ok)
+            op.resoudre(reponse.ok)
         } catch {
-            this.signaler('La connexion au site a échoué : vérifiez le réseau, puis recommencez.')
-            this.rendre()
-            return false
-        } finally {
-            this.envoiEnCours = false
+            // Réseau coupé : la saisie reste en tête de file et repart toute seule
+            this.attente = Math.min((this.attente || 1) * 2, 16)
+            this.signaler(`Connexion perdue : ${this.file.length > 1 ? `${this.file.length} saisies seront renvoyées` : 'la saisie sera renvoyée'} automatiquement.`)
+            setTimeout(() => { this.envoiEnCours = false; this.traiter() }, this.attente * 1000)
+            return
         }
+        this.envoiEnCours = false
+        this.traiter()
+    }
+
+    // Dernier ordre connu du serveur pour ce set (les saisies en attente n'en ont pas encore)
+    dernierOrdreServeur(numero) {
+        const set = this.serveur.sets.find((s) => s.numero === numero)
+        return set ? this.dernierOrdre(set) : null
+    }
+
+    // État affiché = dernier état du serveur + points encore en attente (score et rotation recalculés comme EtatSet)
+    projeter(rendre = true) {
+        const etat = structuredClone(this.serveur)
+        for (const op of this.file) {
+            if (op.action !== 'evenement' || op.donnees.type !== 'point') continue
+            const set = etat.sets.find((s) => s.numero === op.numero)
+            if (!set) continue
+            const c = set.calcul
+            const pour = op.donnees.donnees.pour
+            if (pour === 'nous') {
+                c.score[0]++
+                if (c.service === 'eux') c.postes = tourner(c.postes)
+                c.service = 'nous'
+            } else {
+                c.score[1]++
+                c.service = 'eux'
+            }
+            c.finAtteinte = Math.max(...c.score) >= set.pointsFin
+            set.historique.push({ uuid: op.donnees.uuid, ordre: null, type: 'point', texte: `Point pour ${pour === 'nous' ? etat.nous : etat.eux} (envoi…)`, annule: false, score: [...c.score], entre: null, enAttente: true })
+        }
+        this.etatValue = etat
+        if (rendre) this.rendre()
     }
 
     signaler(message) {
