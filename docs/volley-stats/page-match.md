@@ -84,5 +84,15 @@ annoncée (`aria-live`).
    site** (ni score officiel, ni classement, ni affichage public).
 7. **Lien de saisie temporaire** pour l'accompagnant : non, pas pour l'instant.
 
+## 7. Arbitrages sur la maquette (utilisateur, 31/10/2026, D67)
+
+1. **Score point par point**, corrigeable quand des points n'ont pas été notés.
+2. Pas de « Servira en premier » sur le poste 2.
+3. **Fin de set proposée automatiquement** au score de fin.
+4. « Qui est là ? » : toute l'équipe, en cases à cocher.
+5. **Historique des actions du set, avec « Précédent » et « Suivant »** (annuler, rétablir), à la place du message de 10 s.
+6. « Sets joués » repris sur la fiche équipe, pour l'équipe seulement.
+7. Libellés « Page du match », « Reste à faire », « Sur le banc », « Sets joués » validés.
+
 Points d'attention : enregistrement de chaque étape aussitôt sur le serveur ; cibles de 48 px, trois colonnes d'environ
 110 px à vérifier avec des noms longs ; couleurs du terrain et de la case active : webdesigner.

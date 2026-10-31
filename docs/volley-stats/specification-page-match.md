@@ -68,8 +68,9 @@ deux présents) : rien de nouveau n'est stocké sur le joueur.
 | `set_id` | FK | |
 | `ordre` | int | croissant dans le set, **calculé par le serveur** ; unique (`set_id`, `ordre`) |
 | `uuid` | chaîne | généré par le téléphone, unique : un envoi rejoué après une coupure est sans effet |
-| `type` | chaîne | `remplacement`, `point` ; plus tard `action` (mode intermédiaire) |
+| `type` | chaîne | `remplacement`, `point`, `correction` (score corrigé : `{nous, eux}`, puis serveur confirmé) ; plus tard `action` |
 | `donnees` | JSON | remplacement : `{sort, entre}` (**pas de motif** : « blessure » serait une donnée de santé, §6) ; point : `{pour: "nous" ou "eux"}` ; schéma strict |
+| `annule_le` | datetime | rempli par « Précédent » (l'événement reste dans l'historique, barré) ; vidé par « Suivant » |
 | `saisi_par_id` | FK `user` | compte qui a saisi : aide à la correction, pas une preuve (un compte peut être prêté, D66) |
 | `saisi_le` | datetime | |
 
@@ -79,11 +80,17 @@ adverse). Le score de chaque set est donc tenu ici, pour l'équipe seulement (D6
 ## 3. Règles de calcul
 
 - **Serveur** : poste 1 quand l'équipe sert ; la place libre tourne avec les autres (D67).
-- **Fin de set** : premier à `points_fin` (sets secs, sans deux points d'écart) ; l'interface propose « Terminer le set »,
-  elle ne termine pas d'elle-même (erreur de saisie possible).
+- **Fin de set** : premier à `points_fin` (sets secs, sans deux points d'écart).
 - **Fin de match** : selon le format de la phase (`Phase::getSetsGagnants`, D48) ; proposée, jamais imposée.
 - **Remplacement** : le sortant doit être sur le terrain, l'entrant présent et sur le banc ; une place libre se remplit par
   un « remplacement » sans sortant.
+- **Précédent / Suivant** (D67) : « Précédent » annule le dernier événement actif (`annule_le`) ; « Suivant » rétablit le
+  dernier annulé, tant qu'aucun événement nouveau n'a été saisi depuis (sinon l'annulé reste définitivement barré). Le
+  calcul ignore les événements annulés. Valable sur tous les téléphones (rien n'est gardé dans le navigateur).
+- **Correction du score** (D67) : un événement `correction` fixe le score ; comme la rotation n'est plus sûre, l'interface
+  demande aussitôt « Qui sert maintenant ? » et propose « Tourner d'un poste » pour remettre les joueurs à leur place.
+- **Fin de set** (précision D67) : proposée automatiquement dès que le score de fin est atteint ; l'utilisateur confirme ou
+  continue (point mal saisi).
 - **Composition du set suivant** : préremplie avec les `postes` de départ du set précédent (pas ceux de fin de set).
 
 ## 4. Droits
@@ -127,7 +134,7 @@ jamais. Saison introuvable : 404.
 | `POST …/set/{numero}/composition` | postes, premier service, score de départ |
 | `POST …/set/{numero}/commencer`, `…/terminer` | changements d'état |
 | `POST …/set/{numero}/evenement` | remplacement, point ; renvoie l'état recalculé (JSON) |
-| `POST …/set/{numero}/annuler` | retire l'événement désigné par son `uuid`, refusé s'il n'est plus le dernier |
+| `POST …/set/{numero}/precedent`, `…/suivant` | annule le dernier événement actif / rétablit le dernier annulé (désigné par son `uuid`, refusé s'il a changé) |
 
 **Validation** (serveur) :
 - jeton CSRF sur chaque POST (en-tête `X-CSRF-TOKEN`, comme l'API du score) ;
@@ -180,8 +187,8 @@ valider), rendue sûre par l'`uuid`.
   terminé.
 - Composition : préremplissage du set suivant ; place libre.
 - Calculs : rotation et serveur sur une suite de points (place libre comprise) ; fin de set à 25 et à 15 secs ; départ 0–8.
-- Événements : remplacement valide et refusé ; annulation par `uuid`, refusée si ce n'est plus le dernier ; rejeu du même
-  `uuid` sans effet ; ordre attendu périmé → 409.
+- Événements : remplacement valide et refusé ; « Précédent » puis « Suivant » ; « Suivant » refusé après un nouvel
+  événement ; correction du score puis serveur confirmé ; rejeu du même `uuid` sans effet ; ordre attendu périmé → 409.
 - Joueur retiré de l'équipe : la page s'affiche (« Joueur retiré »).
 - Isolement : rien dans `partie` ni `classement` ; aucune donnée de feuille dans le calendrier, la fiche équipe publique,
   l'ICS ni l'API du score ; en-têtes `private, no-store`.

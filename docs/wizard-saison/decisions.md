@@ -840,6 +840,12 @@ un match du championnat, où l'on indique les joueurs au début de chaque set. P
 - **Score de chaque set** noté sur la page match, **pour l'équipe seulement** : la page ne sert à rien d'autre sur le site
   (ni score officiel, ni classement, ni affichage public).
 - **Pas de lien de saisie temporaire** pour l'accompagnant pour l'instant (il utilise le compte d'un joueur).
+- *Précisé le 31/10/2026 (maquette du webdesigner)* : score du set **point par point**, **corrigeable** quand des points
+  n'ont pas été notés (correction du score, puis « Qui sert maintenant ? » et place des joueurs à confirmer) ; pas de
+  « Servira en premier » sur le poste 2 ; **fin de set proposée automatiquement** quand le score de fin est atteint ;
+  « Qui est là ? » : **toute l'équipe** en cases à cocher ; **historique des actions du set avec « Précédent » et
+  « Suivant »** (annuler, rétablir) au lieu du message d'annulation de 10 s ; « Sets joués » repris sur la fiche équipe
+  (visible de l'équipe seulement) ; libellés « Page du match », « Reste à faire », « Sur le banc », « Sets joués » validés.
 - Vocabulaire : « Composition du set N » et « Joueurs présents », pour ne pas confondre avec la composition de l'équipe sur
   la saison.
 *Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile
