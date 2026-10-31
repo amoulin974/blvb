@@ -177,6 +177,9 @@ final class FeuilleMatchService
         return $compte;
     }
 
+    /** Plafond par set : un téléphone qui boucle ne remplit pas la base (relecture sécurité) */
+    public const EVENEMENTS_MAX = 1500;
+
     /** Sets gagnants du format de la phase (D48) */
     public static function setsGagnants(FeuilleMatch $feuille): int
     {
@@ -245,12 +248,15 @@ final class FeuilleMatchService
     }
 
     /** Commencer le set : composition complète (ou une seule place libre si l'équipe commence à 5), premier service choisi */
-    public function commencer(FeuilleMatchSet $set, bool $aCinq): void
+    public function commencer(FeuilleMatchSet $set, bool $aCinq, string $saisie = FeuilleMatchSet::SAISIE_SCORE): void
     {
-        $this->transaction(fn () => $this->commencerSousVerrou($set, $aCinq));
+        if (!\in_array($saisie, [FeuilleMatchSet::SAISIE_SCORE, FeuilleMatchSet::SAISIE_TOUCHES], true)) {
+            throw new SaisieInvalide('Choisissez ce que vous notez : le score seulement, ou le score et les touches.');
+        }
+        $this->transaction(fn () => $this->commencerSousVerrou($set, $aCinq, $saisie));
     }
 
-    private function commencerSousVerrou(FeuilleMatchSet $set, bool $aCinq): void
+    private function commencerSousVerrou(FeuilleMatchSet $set, bool $aCinq, string $saisie): void
     {
         $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE);
         if ($set->getEtat() !== FeuilleMatchSet::COMPOSITION) {
@@ -263,7 +269,7 @@ final class FeuilleMatchService
         if ($set->getPremierService() === null) {
             throw new SaisieInvalide('Choisissez le premier service.');
         }
-        $set->setEtat(FeuilleMatchSet::EN_COURS);
+        $set->setEtat(FeuilleMatchSet::EN_COURS)->setSaisie($saisie);
         $set->getFeuille()->setEtat(FeuilleMatch::EN_COURS)->marquerModifiee();
     }
 
@@ -289,8 +295,13 @@ final class FeuilleMatchService
 
                 return; // envoi rejoué après une coupure : déjà enregistré
             }
-            if ($set->getEtat() !== FeuilleMatchSet::EN_COURS) {
+            // Set terminé : seules les corrections d'actions (D68, relecture sécurité) ; le gel est vérifié par le voter
+            $termine = $set->getEtat() === FeuilleMatchSet::TERMINE && $type === FeuilleMatchEvenement::MODIFICATION;
+            if ($set->getEtat() !== FeuilleMatchSet::EN_COURS && !$termine) {
                 throw new SaisieInvalide('Ce set n\'est pas en cours.');
+            }
+            if ($set->getEvenements()->count() >= self::EVENEMENTS_MAX) {
+                throw new SaisieInvalide('Ce set compte trop de saisies : rechargez la page.');
             }
             $this->verifierOrdre($set, $dernierOrdre);
             $donnees = $this->donneesValides($set, $type, $donnees);
@@ -438,14 +449,34 @@ final class FeuilleMatchService
     private function donneesValides(FeuilleMatchSet $set, string $type, array $donnees): array
     {
         $etat = EtatSet::calculer($set);
+        $touches = $set->noteLesTouches();
+        $echange = $touches ? $this->echangeEnCours($set) : [];
+        if (\in_array($type, [FeuilleMatchEvenement::REMPLACEMENT, FeuilleMatchEvenement::CORRECTION, FeuilleMatchEvenement::ROTATION], true) && $echange !== []) {
+            throw new SaisieInvalide('Notez d\'abord le point de l\'échange en cours.');
+        }
+        if (!$touches && \in_array($type, [FeuilleMatchEvenement::ACTION, FeuilleMatchEvenement::REJOUER, FeuilleMatchEvenement::MODIFICATION], true)) {
+            throw new SaisieInvalide('Ce set ne note que le score.');
+        }
         switch ($type) {
             case FeuilleMatchEvenement::POINT:
-                self::cles($donnees, ['pour']);
-                if (!\in_array($donnees['pour'] ?? null, [FeuilleMatchSet::NOUS, FeuilleMatchSet::EUX], true)) {
-                    throw new SaisieInvalide('Point non reconnu.');
+                return $touches ? $this->pointDetaille($set, $etat, $echange, $donnees) : $this->pointSimple($donnees);
+            case FeuilleMatchEvenement::ACTION:
+                self::cles($donnees, ['action', 'joueurs']);
+                if (!\in_array($donnees['action'] ?? null, FeuilleMatchEvenement::ACTIONS, true)) {
+                    throw new SaisieInvalide('Action non reconnue.');
                 }
+                if ($etat->finAtteinte) {
+                    throw new SaisieInvalide(sprintf('Le set est fini (%d–%d) : terminez-le, ou touchez « Précédent ».', ...$etat->score));
+                }
+                $joueur = $this->joueurSurLeTerrain($set->getFeuille(), $etat, $donnees['joueurs'] ?? null, $donnees['action'] === 'block');
 
-                return ['pour' => $donnees['pour']];
+                return ['action' => $donnees['action'], 'joueurs' => [$joueur]];
+            case FeuilleMatchEvenement::REJOUER:
+                self::cles($donnees, []);
+
+                return [];
+            case FeuilleMatchEvenement::MODIFICATION:
+                return $this->modificationValide($set, $donnees);
             case FeuilleMatchEvenement::REMPLACEMENT:
                 self::cles($donnees, ['sort', 'entre']);
                 $sort = $donnees['sort'] ?? null;
@@ -479,6 +510,182 @@ final class FeuilleMatchService
                 return [];
         }
         throw new SaisieInvalide('Saisie non reconnue.');
+    }
+
+    /** @param array<string, mixed> $donnees @return array<string, mixed> */
+    private function pointSimple(array $donnees): array
+    {
+        self::cles($donnees, ['pour']);
+        if (!\in_array($donnees['pour'] ?? null, [FeuilleMatchSet::NOUS, FeuilleMatchSet::EUX], true)) {
+            throw new SaisieInvalide('Point non reconnu.');
+        }
+
+        return ['pour' => $donnees['pour']];
+    }
+
+    /**
+     * Point d'un set où l'on note les touches (D68) : sur quoi il porte (la dernière action de l'échange, le service, rien),
+     * le détail d'un point perdu (contrée, faute, faute de règlement), le deuxième bloqueur d'un block gagnant, ou « sans
+     * détail ». Toute référence est cherchée dans CE set.
+     *
+     * @param list<FeuilleMatchEvenement> $echange
+     * @param array<string, mixed> $donnees
+     * @return array<string, mixed>
+     */
+    private function pointDetaille(FeuilleMatchSet $set, EtatSet $etat, array $echange, array $donnees): array
+    {
+        self::cles($donnees, ['pour', 'sur', 'detail', 'avec', 'fautif', 'sansDetail']);
+        $point = $this->pointSimple(['pour' => $donnees['pour'] ?? null]);
+        $nous = $point['pour'] === FeuilleMatchSet::NOUS;
+        $sur = $donnees['sur'] ?? null;
+        $detail = $donnees['detail'] ?? null;
+        $derniere = $echange === [] ? null : $echange[array_key_last($echange)];
+        if (($donnees['sansDetail'] ?? false) === true) {
+            if ($sur !== null || $detail !== null || isset($donnees['avec']) || isset($donnees['fautif']) || $echange !== []) {
+                throw new SaisieInvalide('Des touches sont notées dans cet échange : choisissez son issue.');
+            }
+
+            return $point + ['sansDetail' => true];
+        }
+        if (isset($donnees['sansDetail'])) {
+            throw new SaisieInvalide('Saisie non reconnue : rechargez la page.');
+        }
+        if ($sur === 'service') {
+            if ($echange !== [] || $etat->service !== FeuilleMatchSet::NOUS || $etat->serveur() === null) {
+                throw new SaisieInvalide('Le point sur le service ne vaut que pour notre service, avant toute touche.');
+            }
+            $point['sur'] = 'service';
+        } elseif ($sur !== null) {
+            if ($derniere === null || !\is_string($sur) || $derniere->getUuid() !== strtolower($sur)) {
+                throw new SaisieInvalide('Le point porte sur la dernière touche de l\'échange : rechargez la page.');
+            }
+            $point['sur'] = $derniere->getUuid();
+        }
+        $action = isset($point['sur']) && $point['sur'] !== 'service' ? $derniere->getDonnees()['action'] : null;
+        if ($detail !== null) {
+            $surAttaque = $action === 'attaque' && \in_array($detail, ['contree', 'faute'], true);
+            $faute = \in_array($detail, [...FeuilleMatchEvenement::FAUTES_JOUEUR, ...FeuilleMatchEvenement::FAUTES_EQUIPE], true);
+            if ($nous || (!$surAttaque && !$faute)) {
+                throw new SaisieInvalide('Détail du point non reconnu.');
+            }
+            $point['detail'] = $detail;
+        }
+        if (isset($donnees['fautif'])) {
+            if (!\in_array($detail, FeuilleMatchEvenement::FAUTES_JOUEUR, true) || isset($point['sur'])) {
+                throw new SaisieInvalide('Faute non reconnue.');
+            }
+            $point['fautif'] = $this->joueurSurLeTerrain($set->getFeuille(), $etat, [$donnees['fautif']], false);
+        } elseif (\in_array($detail, FeuilleMatchEvenement::FAUTES_JOUEUR, true) && !isset($point['sur'])) {
+            throw new SaisieInvalide('Touchez le joueur fautif.');
+        }
+        if (isset($donnees['avec'])) {
+            // Deuxième bloqueur, seulement pour un block gagnant (D68)
+            $premier = $derniere?->getDonnees()['joueurs'][0] ?? null;
+            if (!$nous || $action !== 'block') {
+                throw new SaisieInvalide('Le deuxième bloqueur ne se note que pour un block gagnant.');
+            }
+            $avec = $this->joueurSurLeTerrain($set->getFeuille(), $etat, [$donnees['avec']], true);
+            if ($avec === $premier) {
+                throw new SaisieInvalide('Choisissez un autre joueur pour le deuxième bloqueur.');
+            }
+            $point['avec'] = $avec;
+        }
+
+        return $point;
+    }
+
+    /**
+     * Correction d'une action d'un échange terminé de CE set (D68) : changer le joueur, l'action, ou la retirer. Refusée sur
+     * l'action qui a fait le point (« Corriger le score »).
+     *
+     * @param array<string, mixed> $donnees
+     * @return array<string, mixed>
+     */
+    private function modificationValide(FeuilleMatchSet $set, array $donnees): array
+    {
+        self::cles($donnees, ['cible', 'joueurs', 'action', 'retirer']);
+        $cible = null;
+        foreach ($set->getEvenements() as $e) {
+            if (\is_string($donnees['cible'] ?? null) && $e->getUuid() === strtolower($donnees['cible'])) {
+                $cible = $e;
+            }
+        }
+        if ($cible === null || $cible->estAnnule() || $cible->getType() !== FeuilleMatchEvenement::ACTION || \in_array($cible, $this->echangeEnCours($set), true)) {
+            throw new SaisieInvalide('Cette touche ne peut pas être corrigée : rechargez la page.');
+        }
+        foreach ($set->getEvenements() as $e) {
+            if (!$e->estAnnule() && $e->getType() === FeuilleMatchEvenement::POINT && ($e->getDonnees()['sur'] ?? null) === $cible->getUuid()) {
+                throw new SaisieInvalide('Cette touche a fait le point : corrigez le score à la place.');
+            }
+        }
+        $choix = array_filter(['joueurs' => $donnees['joueurs'] ?? null, 'action' => $donnees['action'] ?? null, 'retirer' => $donnees['retirer'] ?? null], fn ($v) => $v !== null);
+        if (\count($choix) !== 1) {
+            throw new SaisieInvalide('Saisie non reconnue : rechargez la page.');
+        }
+        if (isset($choix['retirer'])) {
+            if ($choix['retirer'] !== true) {
+                throw new SaisieInvalide('Saisie non reconnue : rechargez la page.');
+            }
+
+            return ['cible' => $cible->getUuid(), 'retirer' => true];
+        }
+        if (isset($choix['action'])) {
+            if (!\in_array($choix['action'], FeuilleMatchEvenement::ACTIONS, true)) {
+                throw new SaisieInvalide('Action non reconnue.');
+            }
+
+            return ['cible' => $cible->getUuid(), 'action' => $choix['action']];
+        }
+        // Joueur sur le terrain AU MOMENT de l'action corrigée
+        $avant = EtatSet::calculer($set, $cible->getOrdre());
+        $joueur = $this->joueurSurLeTerrain($set->getFeuille(), $avant, $choix['joueurs'], $cible->getDonnees()['action'] === 'block');
+
+        return ['cible' => $cible->getUuid(), 'joueurs' => [$joueur]];
+    }
+
+    /**
+     * Actions actives de l'échange en cours : après le dernier point, la dernière balle à rejouer ou la dernière correction.
+     *
+     * @return list<FeuilleMatchEvenement>
+     */
+    public function echangeEnCours(FeuilleMatchSet $set): array
+    {
+        $echange = [];
+        foreach ($set->getEvenements() as $e) {
+            if ($e->estAnnule()) {
+                continue;
+            }
+            if (\in_array($e->getType(), [FeuilleMatchEvenement::POINT, FeuilleMatchEvenement::REJOUER, FeuilleMatchEvenement::CORRECTION], true)) {
+                $echange = [];
+            } elseif ($e->getType() === FeuilleMatchEvenement::ACTION) {
+                $echange[] = $e;
+            }
+        }
+
+        return $echange;
+    }
+
+    /**
+     * Un seul joueur de CETTE page, sur le terrain dans l'état donné ; au block, un avant seulement (poste 2, 3 ou 4 : un
+     * arrière ne contre pas).
+     *
+     * @return int identifiant de FeuilleMatchJoueur
+     */
+    private function joueurSurLeTerrain(FeuilleMatch $feuille, EtatSet $etat, mixed $joueurs, bool $block): int
+    {
+        if (!\is_array($joueurs) || !array_is_list($joueurs) || \count($joueurs) !== 1) {
+            throw new SaisieInvalide('Saisie non reconnue : rechargez la page.');
+        }
+        $id = $this->joueurDeLaFeuille($feuille, $joueurs[0]);
+        $poste = array_search($id, $etat->postes, true);
+        if ($poste === false) {
+            throw new SaisieInvalide('Ce joueur n\'est pas sur le terrain.');
+        }
+        if ($block && !\in_array($poste, [1, 2, 3], true)) {
+            throw new SaisieInvalide('Un joueur arrière ne peut pas contrer.');
+        }
+
+        return $id;
     }
 
     /** @param mixed $postes @return list<?int> */

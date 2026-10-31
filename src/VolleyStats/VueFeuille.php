@@ -12,6 +12,8 @@ use App\Entity\FeuilleMatchSet;
  */
 final class VueFeuille
 {
+    public const ACTIONS = ['reception' => 'réception', 'passe' => 'passe', 'attaque' => 'attaque', 'defense' => 'défense', 'block' => 'block', 'renvoi' => 'renvoi'];
+
     /**
      * @param array<int, string> $noms identifiant du membre => nom court
      * @return array<string, mixed>
@@ -32,6 +34,7 @@ final class VueFeuille
                 'premierService' => $set->getPremierService(),
                 'scoreDepart' => $set->getScoreDepart(),
                 'pointsFin' => $set->getPointsFin(),
+                'saisie' => $set->getSaisie(),
                 'calcul' => EtatSet::calculer($set)->versTableau(),
                 'historique' => self::historique($set, $nom, $nomNous, $nomEux),
             ];
@@ -71,9 +74,12 @@ final class VueFeuille
                 FeuilleMatchEvenement::REMPLACEMENT => $d['sort'] === null ? $nom($d['entre']).' entre sur la place libre' : $nom($d['entre']).' entre, '.$nom($d['sort']).' sort',
                 FeuilleMatchEvenement::CORRECTION => sprintf('Score corrigé : %d–%d, service %s', $d['nous'], $d['eux'], $d['service'] === FeuilleMatchSet::NOUS ? $nomNous : $nomEux),
                 FeuilleMatchEvenement::ROTATION => 'Joueurs tournés d\'un poste',
+                FeuilleMatchEvenement::ACTION => $nom($d['joueurs'][0]).' : '.self::ACTIONS[$d['action']],
+                FeuilleMatchEvenement::REJOUER => 'Balle à rejouer',
+                FeuilleMatchEvenement::MODIFICATION => 'Touche corrigée',
                 default => 'Saisie',
             };
-            $lignes[] = ['uuid' => $e->getUuid(), 'ordre' => $e->getOrdre(), 'type' => $e->getType(), 'texte' => $texte, 'annule' => $e->estAnnule(),
+            $lignes[] = ['uuid' => $e->getUuid(), 'ordre' => $e->getOrdre(), 'type' => $e->getType(), 'texte' => $texte, 'annule' => $e->estAnnule(), 'donnees' => $d,
                 'score' => $e->estAnnule() ? null : $score, 'entre' => $e->getType() === FeuilleMatchEvenement::REMPLACEMENT ? $d['entre'] : null];
         }
 

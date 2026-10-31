@@ -20,6 +20,19 @@ class FeuilleMatchEvenement
     public const CORRECTION = 'correction';
     /** Un cran de rotation, pour remettre les joueurs à leur place après une correction du score (« Tourner d'un poste ») */
     public const ROTATION = 'rotation';
+    /** Touche d'un joueur, mode « le score et les touches » (D68) : {action, joueurs} */
+    public const ACTION = 'action';
+    /** Balle à rejouer : clôt l'échange sans point, ses touches ne comptent pas (D68) */
+    public const REJOUER = 'rejouer';
+    /** Correction d'une action d'un échange terminé : {cible, joueurs | action | retirer} (D68) */
+    public const MODIFICATION = 'modification';
+
+    /** Actions possibles d'une touche (D68) */
+    public const ACTIONS = ['reception', 'passe', 'attaque', 'defense', 'block', 'renvoi'];
+
+    /** Motifs d'une faute de règlement (menu « Faute de… ») ; quatre touches et position : faute de l'équipe */
+    public const FAUTES_JOUEUR = ['filet', 'pied', 'double', 'tenue', 'autre'];
+    public const FAUTES_EQUIPE = ['quatre_touches', 'position'];
 
     #[ORM\Id]
     #[ORM\GeneratedValue]

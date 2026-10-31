@@ -3,6 +3,7 @@
 namespace App\Controller\Front;
 
 use App\Entity\Equipe;
+use App\Entity\FeuilleMatchSet;
 use App\Entity\Partie;
 use App\Repository\FeuilleMatchRepository;
 use App\Security\FeuilleMatchVoter;
@@ -100,7 +101,7 @@ final class FeuilleMatchController extends AbstractController
             $chaine = fn (string $cle) => \is_string($donnees[$cle] ?? null) ? $donnees[$cle] : '';
             match ($action) {
                 'composition' => $this->service->composition($feuille, $numero, \is_array($donnees['composition'] ?? null) ? $donnees['composition'] : []),
-                'commencer' => $this->service->commencer($set, ($donnees['aCinq'] ?? false) === true),
+                'commencer' => $this->service->commencer($set, ($donnees['aCinq'] ?? false) === true, \is_string($donnees['saisie'] ?? null) ? $donnees['saisie'] : FeuilleMatchSet::SAISIE_SCORE),
                 'evenement' => $this->service->evenement($set, $chaine('uuid'), $chaine('type'), \is_array($donnees['donnees'] ?? null) ? $donnees['donnees'] : [],
                     \is_int($donnees['dernierOrdre'] ?? null) ? $donnees['dernierOrdre'] : null, $this->getUser() instanceof User ? $this->getUser() : null),
                 'precedent' => $this->service->precedent($set, $chaine('uuid')),

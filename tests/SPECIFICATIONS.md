@@ -663,6 +663,21 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
   gelée (404) sauf pour l'admin ; joueur de la page adverse refusé dans une composition et un remplacement ; uuid d'un autre
   set refusé ; terminer, rouvrir puis terminer de nouveau garde la date de la première fin (le gel n'est pas repoussé).
 
+### 4.22 Volley Stats : saisie des actions — `Fonctionnel/Front/SaisieActionsTest` (P1, D68)
+
+- **VST-14** ✅ : mode choisi au début du set (`score` ou `touches`, autre valeur refusée) ; en « score seulement », touches,
+  balle à rejouer et détail du point refusés.
+- **VST-15** ✅ : une touche désigne un seul joueur de cette page, sur le terrain (banc refusé) ; au block, un avant
+  seulement ; deux joueurs, action ou joueur inconnus, clé inconnue refusés.
+- **VST-16** ✅ : le point porte sur la dernière touche de l'échange (sinon refus) ou sur notre service (refusé au service
+  adverse) ; « contrée » seulement sur une attaque perdue, aucun détail sur un point gagné ; « sans détail » refusé s'il y a
+  des touches ; faute de règlement d'un joueur avec le fautif, faute de l'équipe sans ; deuxième bloqueur distinct ;
+  remplacement refusé pendant un échange.
+- **VST-17** ✅ : balle à rejouer : échange clos sans point ni changement de service.
+- **VST-18** ✅ : correction d'une touche d'un échange terminé de ce set ; refusée sur l'échange en cours, sur la touche qui a
+  fait le point, sur un joueur entré après la touche, avec deux corrections à la fois ; acceptée sur un set terminé, où un
+  point est refusé.
+
 ## 5. Analyse statique et qualité du code
 
 | Outil | Réglage de départ | Cible | Pourquoi |

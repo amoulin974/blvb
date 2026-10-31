@@ -26,12 +26,16 @@ final readonly class EtatSet
     ) {
     }
 
-    public static function calculer(FeuilleMatchSet $set): self
+    /** État du set, ou juste avant l'événement d'ordre $avantOrdre (joueurs sur le terrain au moment d'une action) */
+    public static function calculer(FeuilleMatchSet $set, ?int $avantOrdre = null): self
     {
         $score = $set->getScoreDepart();
         $postes = $set->getPostes();
         $service = $set->getPremierService();
         foreach ($set->getEvenements() as $evenement) {
+            if ($avantOrdre !== null && $evenement->getOrdre() >= $avantOrdre) {
+                break;
+            }
             if ($evenement->estAnnule()) {
                 continue;
             }

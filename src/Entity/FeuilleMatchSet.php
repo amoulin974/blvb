@@ -20,6 +20,10 @@ class FeuilleMatchSet
     public const EN_COURS = 'en_cours';
     public const TERMINE = 'termine';
 
+    /** Ce que l'équipe note pendant le set (D68) : le score seulement, ou le score et les touches des joueurs */
+    public const SAISIE_SCORE = 'score';
+    public const SAISIE_TOUCHES = 'touches';
+
     public const NOUS = 'nous';
     public const EUX = 'eux';
 
@@ -56,6 +60,10 @@ class FeuilleMatchSet
 
     #[ORM\Column(length: 12)]
     private string $etat = self::COMPOSITION;
+
+    /** Choisi au moment de commencer le set, figé ensuite (D68) */
+    #[ORM\Column(length: 8, options: ['default' => self::SAISIE_SCORE])]
+    private string $saisie = self::SAISIE_SCORE;
 
     /** @var Collection<int, FeuilleMatchEvenement> */
     #[ORM\OneToMany(targetEntity: FeuilleMatchEvenement::class, mappedBy: 'set', cascade: ['persist'], orphanRemoval: true)]
@@ -140,6 +148,23 @@ class FeuilleMatchSet
         $this->etat = $etat;
 
         return $this;
+    }
+
+    public function getSaisie(): string
+    {
+        return $this->saisie;
+    }
+
+    public function setSaisie(string $saisie): static
+    {
+        $this->saisie = $saisie;
+
+        return $this;
+    }
+
+    public function noteLesTouches(): bool
+    {
+        return $this->saisie === self::SAISIE_TOUCHES;
     }
 
     /** @return Collection<int, FeuilleMatchEvenement> */
