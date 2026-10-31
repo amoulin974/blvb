@@ -21,7 +21,7 @@ reçu depuis ; la référence reste `deploiement-reglement.md`.
   mot de passe SMTP et `APP_SECRET` ; pas de mentions légales tant que `conditions-utilisation-v2` n'est pas fusionnée.
 - **À lui demander pour les conditions** : nom de l'éditeur, statut, adresse, directeur de publication, durée de conservation des comptes
   après la dernière saison, durée de conservation des journaux du serveur.
-- **Paquets** : mis à jour si la branche `maj-paquets` est fusionnée avant l'envoi (dont `symfony/mime`, CVE-2026-45070). Sinon, le dire.
+- **Paquets** : mis à jour le 31/10/2026 (dont `symfony/mime`, CVE-2026-45070) ; `composer audit` et `importmap:audit` ne doivent rien signaler.
 
 ## Texte de départ
 

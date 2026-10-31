@@ -81,7 +81,7 @@ docker compose exec php php bin/console app:saison:ajouter-barrages
 docker compose exec php php bin/console app:saison:ajouter-barrages --force
 # ou seulement les barrages de fin de saison : --seulement=fin --force
 
-# 12. Paquets : voir la réserve sur symfony/mime
+# 12. Paquets : aucune faille attendue
 docker compose exec php composer audit
 docker compose exec php php bin/console importmap:audit
 ```
@@ -195,7 +195,6 @@ Un `cache:clear`, donc un déploiement, remet aussi les compteurs à zéro.
     `0 9 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console app:scores:rappeler`
   - Nettoyage des compteurs d'essais, à l'activation de la limitation (sans elle, aucun compteur n'est créé) :
     `0 4 * * * cd /chemin/du/projet && docker compose exec -T php php bin/console cache:pool:prune`
-- `symfony/mime` : `composer audit` signale CVE-2026-45070 (gravité moyenne), en 7.4.19 sur `main` comme sur `prod`, corrigée en 7.4.22.
 - Mots de passe de la base en clair dans `compose.yaml`, alors que le port 3307 est publié ; `DATABASE_OLD_URL` et phpMyAdmin publié
   sur le port 8080 avec `PMA_ARBITRARY=1` : exposition réelle à vérifier.
 - Pas de mentions légales tant que `conditions-utilisation-v2` n'est pas fusionnée : le lien du pied de page reste vide.
