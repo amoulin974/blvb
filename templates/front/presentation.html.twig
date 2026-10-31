@@ -1,0 +1,78 @@
+{% extends 'base_front.html.twig' %}
+
+{% block title %}Ce que vous pouvez faire - Site du BLVB{% endblock %}
+
+{# Ce que vous pouvez faire (D71) : une section par rôle du compte (PresentationRoles), de la plus large à la plus précise,
+   sans répétition ; 5 lignes au plus par section, un lien quand l'action se fait sur une autre page.
+   Volley Stats n'est pas annoncé tant qu'il n'a pas été essayé avec des joueurs. #}
+{% block body %}
+    {% set roles = compte.roles %}
+    {% set lien = 'link link-primary lien-texte' %}
+    <div class="container mx-auto max-w-3xl md:px-4 flex flex-col gap-4">
+        <div>
+            <h1 class="text-3xl md:text-4xl uppercase tracking-wide">Ce que vous pouvez faire</h1>
+            <p class="mt-1">{{ app.user ? 'Selon votre compte, pour : ' ~ saison.nom ~ '.' : 'Sur le site du championnat, avec ou sans compte.' }}</p>
+        </div>
+
+        <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-tous">
+            <h2 id="titre-tous" class="text-xl uppercase tracking-wide">Sans compte, tout le monde peut :</h2>
+            <ul class="mt-2 list-disc pl-5 flex flex-col gap-2 leading-relaxed">
+                <li>choisir son équipe : le site s'ouvre ensuite sur elle (<button type="button" class="{{ lien }}" data-action="mon-equipe#ouvrirChoix">Choisir mon équipe</button>) ;</li>
+                <li>voir les matchs et le classement de son équipe sur sa fiche (<a href="{{ path('front_equipes') }}" class="{{ lien }}">Les équipes</a>) ;</li>
+                <li>ajouter les matchs de son équipe à son agenda, avec le bouton « Ajouter à mon agenda » de sa fiche ;</li>
+                <li>ouvrir la carte d'un gymnase en touchant son nom ;</li>
+                <li>voir les terrains libres de chaque gymnase (<a href="{{ path('front_calendrierlieu') }}" class="{{ lien }}">Calendrier par gymnase</a>).</li>
+            </ul>
+            {% if not app.user %}
+                <p class="mt-3">Joueurs, capitaines et responsables de club : <a href="{{ path('app_login') }}" class="{{ lien }}">connectez-vous</a> pour voir ce que votre compte vous permet en plus.</p>
+            {% endif %}
+        </section>
+
+        {% if 'joueur' in roles %}
+            {% set equipe = compte.equipes|first %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-joueur">
+                <h2 id="titre-joueur" class="text-xl uppercase tracking-wide">Avec votre compte de joueur, vous pouvez aussi :</h2>
+                <ul class="mt-2 list-disc pl-5 flex flex-col gap-2 leading-relaxed">
+                    <li>retrouver directement votre équipe, choisie pour vous : <a href="{{ path('front_equipe_detail', {id: equipe.id}) }}" class="{{ lien }}">{{ equipe.nom }}</a> ;</li>
+                    <li>voir la composition de votre équipe et le contact de votre capitaine, sur la fiche de l'équipe.</li>
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if 'capitaine' in roles %}
+            {% set equipe = compte.capitaine|first %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-capitaine">
+                <h2 id="titre-capitaine" class="text-xl uppercase tracking-wide">Capitaine, vous pouvez aussi :</h2>
+                <ul class="mt-2 list-disc pl-5 flex flex-col gap-2 leading-relaxed">
+                    <li>saisir le score de vos matchs : le bouton « Saisir » apparaît à l'heure du match, sur l'accueil, le calendrier et la fiche de votre équipe ;</li>
+                    <li>appeler le capitaine de l'équipe adverse : son téléphone est dans l'encadré « Prochain match » de la fiche de votre équipe ;</li>
+                    <li>gérer la composition de votre équipe : <a href="{{ path('front_equipe_composition_index', {equipe: equipe.id, saison: saison.id}) }}" class="{{ lien }}">Composition de {{ equipe.nom }}</a> ;</li>
+                    <li>recevoir un rappel par courriel si un score manque 2 jours après le match.</li>
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if 'responsable' in roles %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-responsable">
+                <h2 id="titre-responsable" class="text-xl uppercase tracking-wide">Responsable de club, vous pouvez aussi :</h2>
+                <ul class="mt-2 list-disc pl-5 flex flex-col gap-2 leading-relaxed">
+                    <li>saisir le score de toutes les équipes du club, à domicile comme à l'extérieur ;</li>
+                    {% set plusieurs = compte.clubs|length > 1 %}
+                    <li>modifier la fiche du club ({% for club in compte.clubs %}<a href="{{ path('front_club_edit', {id: club.id}) }}" class="{{ lien }}">Fiche du club{{ plusieurs ? ' : ' ~ club.nomCourt|upper }}</a>{{ loop.last ? '' : ', ' }}{% endfor %}) ;</li>
+                    <li>indiquer les fermetures de vos gymnases dès que vous les connaissez ({% for club in compte.clubs %}<a href="{{ path('front_club_fermetures', {id: club.id}) }}" class="{{ lien }}">Fermetures{{ plusieurs ? ' : ' ~ club.nomCourt|upper }}</a>{{ loop.last ? '' : ', ' }}{% endfor %}).</li>
+                </ul>
+            </section>
+        {% endif %}
+
+        {% if 'admin' in roles %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-admin">
+                <h2 id="titre-admin" class="text-xl uppercase tracking-wide">Administrateur, vous pouvez aussi :</h2>
+                <ul class="mt-2 list-disc pl-5 flex flex-col gap-2 leading-relaxed">
+                    <li>commencer par la liste « À faire » du tableau de bord : elle indique ce qui reste à faire (<a href="{{ path('app_admin_dashboard') }}" class="{{ lien }}">Administration</a>) ;</li>
+                    <li>saisir le score de tous les matchs ;</li>
+                    <li>retrouver le règlement, les saisons et les paramètres du site dans le menu de l'administration.</li>
+                </ul>
+            </section>
+        {% endif %}
+    </div>
+{% endblock %}

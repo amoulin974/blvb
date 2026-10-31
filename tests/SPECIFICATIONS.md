@@ -698,6 +698,14 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-24** ✅ *`Integration/Command/PurgerPagesMatchTest`* : `app:volley-stats:purger` supprime les pages du match d'une
   saison une fois la saison suivante terminée, pas avant ; `--simulation` ne supprime rien.
 
+### 4.23 Ce que vous pouvez faire — `Fonctionnel/Front/PresentationTest` (P2, D71)
+
+**PRE-01** ✅ — Visiteur : la page ne montre que « Sans compte, tout le monde peut : », avec un lien vers la connexion ; pas d'encart sur l'accueil.
+**PRE-02** ✅ — Sections calculées d'après les droits : `joueur.a1` → tous + joueur ; `cap.a1` → tous + joueur + capitaine ; `resp.club` → section responsable avec le lien des fermetures ; admin → section administrateur ; ni « page du match » ni « statistique » (Volley Stats pas annoncé).
+**PRE-03** ✅ — Encart d'accueil affiché tant que la page n'a pas été vue ; la consulter le retire, retenu en base (`presentationAVoir`) ; il revient quand le compte gagne un rôle (seul « joueur » déjà présenté → encart pour « capitaine »).
+**PRE-04** ✅ — Fermer l'encart : visiteur renvoyé à la connexion, jeton faux → 403 et encart toujours là ; formulaire de la page → retour à l'accueil, encart fermé.
+**PRE-05** ✅ — Lien « Ce que vous pouvez faire » dans le menu du compte, le menu latéral et « Mon profil » ; pour le visiteur, dans le sous-menu « Le championnat » de la barre et le menu latéral.
+
 ## 5. Analyse statique et qualité du code
 
 | Outil | Réglage de départ | Cible | Pourquoi |

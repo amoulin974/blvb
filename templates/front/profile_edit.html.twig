@@ -5,7 +5,10 @@
 
 {% block body %}
     <div class="max-w-2xl mx-auto flex flex-col gap-4">
-        <h1>Mon profil</h1>
+        <div>
+            <h1>Mon profil</h1>
+            <a href="{{ path('front_presentation') }}" class="link link-primary inline-flex min-h-11 items-center">Ce que vous pouvez faire</a>
+        </div>
 
         <div role="tablist" class="tabs tabs-lift">
 
@@ -62,7 +65,7 @@
                 {% if user.clubsResponsable is not empty %}
                     <div class="mt-6">
                         <h3 class="font-semibold">Mes clubs (responsable)</h3>
-                        <p class="text-sm text-(--color-base-content)/80">Vous pouvez saisir les résultats de toutes les équipes de ces clubs et modifier leur fiche.</p>
+                        <p class="text-sm text-(--color-base-content)/80">Vous pouvez saisir le score de toutes les équipes de ces clubs et modifier leur fiche.</p>
                         <div class="mt-2 flex flex-wrap gap-2">
                             {% for club in user.clubsResponsable %}
                                 <a href="{{ path('front_club_show', {id: club.id}) }}" class="badge badge-outline badge-md hover:badge-primary">{{ club.nom }} ({{ club.nomCourt|upper }})</a>

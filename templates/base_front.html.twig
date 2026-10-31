@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     {# Turbo 8 : pas de préchargement des liens au survol (navigation identique à Turbo 7) #}
+    {# Préchargement désactivé : ne pas le réactiver sans data-turbo-prefetch="false" sur les liens vers front_presentation (les ouvrir marque la présentation vue, D71) #}
     <meta name="turbo-prefetch" content="false">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {# Jeton CSRF de la saisie des scores (score-modal-controller.js, vérifié par FrontController::api_score_update).
@@ -86,6 +87,7 @@
                                     <li><a href="{{ path('front_qui_sommes_nous')}}">Qui sommes-nous ?</a></li>
                                     <li><a href="{{ path('front_club_index') }}">Les clubs</a></li>
                                     <li><a href="{{ path('front_reglement')}}">Règlement</a></li>
+                                    <li><a href="{{ path('front_presentation') }}">Ce que vous pouvez faire</a></li>
                                 </ul>
                             </details>
                         </li>
@@ -110,7 +112,7 @@
                                 {# Le menu s'affiche grâce au focus sur le déclencheur ci-dessus #}
                                 <ul tabindex="-1" class="menu menu-sm dropdown-content bg-base-100 text-base-content rounded-box z-[100] mt-3 w-52 p-2 shadow-2xl border border-base-300">
                                     <li class="menu-title px-4 py-2 opacity-60">
-                                        {{ app.user.prenom|capitalize }} {{ app.user.nom|upper }}
+                                        {{ app.user.prenom }} {{ app.user.nom|upper }}
                                     </li>
 
                                     <div class="divider my-0"></div>
@@ -124,6 +126,7 @@
                                             Mon profil
                                         </a>
                                     </li>
+                                    <li><a href="{{ path('front_presentation') }}" class="py-3">Ce que vous pouvez faire</a></li>
 
                                     <li>
                                         {# Déconnexion via formulaire POST pour Turbo #}
@@ -196,6 +199,7 @@
                         <li><a href="{{ path('front_club_show', {id: club.id}) }}">Mon club{{ app.user.clubsResponsable|length > 1 ? ' : ' ~ club.nomCourt|upper }}</a></li>
                     {% endfor %}
                     <li><a href="{{ path('front_profile_edit') }}">Mon profil</a></li>
+                    <li><a href="{{ path('front_presentation') }}">Ce que vous pouvez faire</a></li>
                     {% if is_granted('ROLE_ADMIN') %}
                         <li><a href="{{path('app_admin_dashboard')}}">Administration</a></li>
                 {% endif %}
@@ -206,6 +210,7 @@
                     </li>
                 {% else %}
 {#                <li><a href="{{path('app_register')}}">Créer un compte</a></li>#}
+                <li><a href="{{ path('front_presentation') }}">Ce que vous pouvez faire</a></li>
                 <li><a href="{{path('app_login')}}">Se connecter</a></li>
                 {% endif %}
             {% endblock %}

@@ -28,6 +28,7 @@ use App\VolleyStats\FeuilleMatchService;
 use App\Service\ClassementService;
 use App\Service\SaisieScoreService;
 use App\Service\ContactCapitaineService;
+use App\Service\PresentationRoles;
 use App\Twig\ScoreExtension;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Doctrine\ORM\EntityManagerInterface;
@@ -51,7 +52,7 @@ final class FrontController extends AbstractController
 
     #[Route('', name: 'index')]
     public function index(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository
-    $saisonRepository, EquipeRepository $equipeRepository, MembreEquipeRepository $membreEquipeRepository, SaisieScoreService $saisieScore): Response
+    $saisonRepository, EquipeRepository $equipeRepository, MembreEquipeRepository $membreEquipeRepository, SaisieScoreService $saisieScore, PresentationRoles $presentationRoles): Response
     {
         //Rajouter ces deux lignes dans toutes les fonctions du front pour initialiser le menu des saisons
         $this->getSaisonsCache($saisonRepository, $cache);
@@ -79,7 +80,52 @@ final class FrontController extends AbstractController
             'droitsSaisie'=>$saisieScore->droits($user, $saison),
             'saison' => $saison,
             'phaseouverte' => $phaseouverte,
+            // Encart « Ce que vous pouvez faire » (D71) : tant qu'un rôle du compte n'a pas été présenté
+            'presentation' => $user instanceof User && $user->presentationAVoir($presentationRoles->pour($user, $saison, $this->isGranted('ROLE_ADMIN'))['roles']),
         ]);
+    }
+
+    /** Ce que vous pouvez faire (D71) : une section par rôle du compte ; la consulter vaut présentation vue */
+    #[Route('ce-que-vous-pouvez-faire', name: 'presentation', methods: ['GET'])]
+    public function presentation(SessionInterface $session, Request $request, CacheInterface $cache, SaisonRepository $saisonRepository, PresentationRoles $presentationRoles, EntityManagerInterface $entityManager): Response
+    {
+        $this->getSaisonsCache($saisonRepository, $cache);
+        if ($redirect = $this->getSaisonSession($session, $request, $saisonRepository)) {
+            return $redirect;
+        }
+        $saison = $saisonRepository->find($this->idSaisonSelected);
+        $user = $this->getUser();
+        $compte = $presentationRoles->pour($user instanceof User ? $user : null, $saison, $this->isGranted('ROLE_ADMIN'));
+        if ($user instanceof User && $user->presentationAVoir($compte['roles'])) {
+            $user->marquerPresentationVue($compte['roles']);
+            $entityManager->flush();
+        }
+
+        return $this->render('front/presentation.html.twig', [
+            'saisons' => $this->saisons,
+            'idSaisonSelected' => $this->idSaisonSelected,
+            'saison' => $saison,
+            'compte' => $compte,
+        ]);
+    }
+
+    /** Fermer l'encart « Ce que vous pouvez faire » de l'accueil : il ne revient que si le compte gagne un rôle (D71) */
+    #[Route('ce-que-vous-pouvez-faire/fermer', name: 'presentation_fermer', methods: ['POST'])]
+    public function fermerPresentation(Request $request, SaisonRepository $saisonRepository, SessionInterface $session, PresentationRoles $presentationRoles, EntityManagerInterface $entityManager): Response
+    {
+        $user = $this->getUser();
+        if (!$user instanceof User) {
+            throw $this->createAccessDeniedException();
+        }
+        if (!$this->isCsrfTokenValid('presentation_fermer', (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton invalide.');
+        }
+        $saison = $saisonRepository->findPubliee($session->get('idSaisonSelected'))
+            ?? $saisonRepository->findFavoritePubliee() ?? $saisonRepository->findPlusRecentePubliee();
+        $user->marquerPresentationVue($presentationRoles->pour($user, $saison, $this->isGranted('ROLE_ADMIN'))['roles']);
+        $entityManager->flush();
+
+        return $this->redirectToRoute('front_index');
     }
 
     //Route pour afficher la liste des équipes qui participent à la saison sélectionnée

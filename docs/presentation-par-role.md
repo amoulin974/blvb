@@ -1,7 +1,7 @@
 # Présenter les fonctionnalités selon le rôle : avis de l'ergonome (31/10/2026)
 
-**Rien n'est décidé ni réalisé** : questions du §5 à trancher, puis décision à consigner dans
-`docs/wizard-saison/decisions.md`.
+**Décidé** : D69 (Mon équipe, Mon profil sur téléphone), D70 (saisie du score), D71 (page « Ce que vous pouvez faire »,
+encart d'accueil ; pas de courriel ni de fiche PDF pour l'instant, Volley Stats pas annoncé avant des essais avec des joueurs).
 
 ## Verdict
 

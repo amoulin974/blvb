@@ -81,6 +81,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
 - D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
 - D70. Saisie du score annoncée avant le match et proposée sur la fiche équipe
+- D71. Page « Ce que vous pouvez faire », encart d'accueil une fois par rôle
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -925,6 +926,23 @@ fonctionnalités selon le rôle (le reste n'est pas décidé).
 - **Libellés** : « score » plutôt que « résultat » dans les libellés des boutons pour les lecteurs d'écran ; zone tactile
   de « Saisir » et du crayon portée à 44 px (crayon : sur mobile seulement, la colonne du score est trop étroite sur
   ordinateur).
+
+## D71. Page « Ce que vous pouvez faire », encart d'accueil une fois par rôle
+
+*Décidé le 01/11/2026*, d'après l'avis de l'ergonome (`docs/presentation-par-role.md` §6, §7).
+- **Page `/ce-que-vous-pouvez-faire`**, ouverte à tous : une section par rôle du compte, de la plus large à la plus
+  précise, sans répétition (« Sans compte, tout le monde peut : », puis « Avec votre compte de joueur, vous pouvez
+  aussi : », capitaine, responsable de club, administrateur), 5 lignes au plus, un lien par ligne quand l'action se fait
+  ailleurs. Rôles calculés d'après les droits réels de la saison affichée (composition, capitaine, responsable désigné,
+  ROLE_ADMIN), jamais écrits à la main.
+- **Encart en haut de l'accueil**, pour un compte connecté, tant qu'il n'a pas vu la page ou fermé l'encart pour chacun
+  de ses rôles : retenu **par compte, en base** (`user.presentation_vue`, rôles déjà présentés), pour ne pas revenir sur
+  un autre appareil ; il revient seulement quand le compte gagne un rôle (nouveau capitaine…). Pas de page ouverte
+  d'office à la connexion, pas de bouton d'aide flottant, pas de visite guidée.
+- **La retrouver** : lien « Ce que vous pouvez faire » dans le menu du compte (ordinateur et menu latéral), sur
+  « Mon profil », et dans le sous-menu « Le championnat » de la barre (seul accès d'un visiteur sur ordinateur).
+- **Pas pour l'instant** : courriel de rentrée, fiche PDF pour les responsables de club ; **Volley Stats n'est pas
+  annoncé** (ni page du match ni sets joués ni statistiques) tant qu'il n'a pas été essayé avec quelques joueurs.
 
 ---
 

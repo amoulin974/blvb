@@ -19,7 +19,7 @@ Les autres ports ouverts (33 SSH, 80/443, 82, 84, 3001, 8080, 8081) relèvent de
 
 **Verdict : prêt avec réserves.** Fusion de `main` dans `prod` simulée (`git merge-tree`) : aucun conflit, `.env` compris.
 Nouveautés : paquet Composer `symfony/html-sanitizer`, une soixantaine de paquets importmap (éditeur TipTap 3), dossiers
-`public/uploads/reglement` et `public/uploads/site`, 17 migrations (ajouts de colonnes et de tables, `motif` rendu facultatif sur
+`public/uploads/reglement` et `public/uploads/site`, 18 migrations (ajouts de colonnes et de tables, `motif` rendu facultatif sur
 une table vide, descriptions des clubs converties en HTML, quatre tables de Volley Stats), une variable d'environnement seulement si la limitation facultative est mise en place : `SYMFONY_TRUSTED_PROXIES`. Pas de reconstruction d'image :
 `Dockerfile`, `compose.yaml` et `frankenphp/` sont inchangés, et le code est monté dans le conteneur.
 
@@ -122,6 +122,7 @@ Ne jamais lancer `app:recette:charger` en production.
 | Version20261031154348 | Volley Stats : tables `feuille_match`, `feuille_match_joueur`, `feuille_match_set`, `feuille_match_evenement` (vides) |
 | Version20261031173937 | `feuille_match_set.saisie` : le score seulement, ou le score et les touches |
 | Version20261031184649 | `parametres_site.seuil_echanges_detailles` (80 %) |
+| Version20261101100000 | `user.presentation_vue` : rôles déjà présentés par « Ce que vous pouvez faire » (vide) |
 
 ## Vérifications en ligne
 
@@ -139,6 +140,8 @@ Ne jamais lancer `app:recette:charger` en production.
   (Titre, Gras, listes, Lien…), et un enregistrement s'affiche mis en forme.
 - Volley Stats : connecté avec un compte de capitaine, la fiche de son équipe montre « Page du match » ; la page s'ouvre, et
   une équipe adverse reçoit « page introuvable ». Admin : entrée « Volley Stats » du menu (seuil à 80 %).
+- Connecté en capitaine : l'accueil montre l'encart « Bonjour, … » ; « Ce que vous pouvez faire » s'ouvre (sections joueur et
+  capitaine), puis l'encart ne revient plus. Sur la fiche de son équipe, « Saisir » sur un match passé sans score.
 
 ## Retour arrière
 

@@ -407,6 +407,9 @@ button.terrain-case { cursor: pointer; }
 .score-set { font-family: var(--font-display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-primary); }
 /* Saisie des touches (D68, maquette docs/volley-stats/maquette-saisie-actions.md) : action choisie en marine plein
    (aria-pressed, jamais la couleur seule : l'état est annoncé ; la coche n'est pas lue), mention de la touche dans la case */
+/* Lien dans une phrase : zone tactile d'environ 44 px sans agrandir la ligne ; contour de focus resserré sur le texte */
+.lien-texte { padding-block: 0.75rem; }
+.lien-texte:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -0.5rem; border-radius: 2px; }
 .btn-bascule { position: relative; padding-inline: .25rem; font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
 .btn-bascule[aria-pressed="true"] { --btn-bg: var(--color-primary); --btn-fg: var(--color-primary-content); --btn-border: var(--color-primary); background-color: var(--color-primary); color: var(--color-primary-content); }
 .btn-bascule[aria-pressed="true"]::after { content: "✓" / ""; position: absolute; top: 1px; right: 4px; font-size: .75rem; line-height: 1; }
