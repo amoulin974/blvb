@@ -818,6 +818,8 @@ les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne se
   perdu ; **aucune notion de qualité**), **complet** (chaque touche avec sa note de qualité). Un critère de classement ne
   classe que les équipes dont le mode le produit. **Seul le mode intermédiaire est développé en premier** ; rapide et complet
   viendront ensuite, le modèle de données les prévoit.
+- *Précisé le 31/10/2026* : classements **par phase et par poule** ; formules de `situations.md` §12 validées ; en mode
+  intermédiaire, le meilleur réceptionneur est classé sur le **pourcentage de réceptions sans faute**.
 
 *Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
 volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.

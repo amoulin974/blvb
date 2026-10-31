@@ -150,9 +150,12 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
 - **Page des classements** : plusieurs classements sur la même page : meilleur serveur, meilleur passeur, meilleur attaquant,
   meilleur réceptionneur ; formules proposées dans `situations.md` §12.
 
+- **Classements** par phase et par poule ; formules de `situations.md` §12 validées ; réceptionneur classé en mode
+  intermédiaire sur le % de réceptions sans faute.
+
 **Ouvertes** :
-1. Périmètre des classements : saison entière, ou aussi par phase et par poule ?
-2. Formules des classements (`situations.md` §12) et barème des notes du mode complet, à six ou quatre niveaux (§1).
+1. Barème des notes du mode complet, à six ou quatre niveaux (`situations.md` §1) : sans urgence, le mode complet vient
+   après l'intermédiaire.
 
 ## 9. Catalogue des statistiques possibles (pour choisir les stats publiques)
 

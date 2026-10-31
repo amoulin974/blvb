@@ -168,7 +168,7 @@ saisie sache traiter **toutes** les situations d'un match, sans en inventer à l
 7. **Serveur attendu** toujours affiché, et alerte si la composition saisie ne correspond plus.
 8. **Correction** : annuler le dernier point en une touche ; modifier une action plus ancienne depuis le journal.
 
-## 12. Classements publics (page unique, D66)
+## 12. Classements publics (page unique, par phase et par poule, formules validées, D66)
 
 Plusieurs classements sur la même page, chacun en nombre ou en pourcentage ; les pourcentages ne retiennent que les joueurs
 au-dessus d'un minimum d'actions réglé par l'admin. *Formules proposées, à valider* :
@@ -183,5 +183,5 @@ au-dessus d'un minimum d'actions réglé par l'admin. *Formules proposées, à v
 
 En mode rapide, seuls les classements « en nombre » de service et d'attaque sont calculables. En mode intermédiaire, tous
 sauf le pourcentage du réceptionneur et celui du passeur, qui demandent la qualité : le réceptionneur s'y classe sur le
-% de réceptions sans faute, ou seulement en mode complet (à trancher). Un critère ne classe que les équipes dont le mode le
+% de réceptions sans faute (D66). Un critère ne classe que les équipes dont le mode le
 produit (D66).
