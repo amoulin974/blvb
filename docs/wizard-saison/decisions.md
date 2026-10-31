@@ -807,7 +807,7 @@ les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne se
 - *Précisé le 31/10/2026* : saisie par un membre de l'équipe avec son compte (un accompagnant utilise le compte d'un joueur) ;
   un seul saisisseur, ni libéro ni temps morts dans la première version ; pas de numéro de maillot, joueur désigné par son
   prénom et les premières lettres de son nom ; conservation tant que le joueur participe à une saison, plus une saison ;
-  stats publiques choisies plus tard sur le catalogue de `analyse.md` §10.
+  stats publiques choisies plus tard sur le catalogue de `analyse.md` §9.
 
 *Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
 volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.

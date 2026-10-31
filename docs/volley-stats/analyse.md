@@ -128,14 +128,14 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
   autant de lettres qu'il faut pour distinguer deux joueurs de la même équipe.
 - **Conservation** : tant que le joueur participe à une saison, plus une saison ; au-delà, ses actions et ses stats sont
   effacées.
-- **Stats publiques** : choisies plus tard, sur le catalogue du §10.
+- **Stats publiques** : choisies plus tard, sur le catalogue du §9.
 
 **Ouvertes** :
 1. Le joueur qui a refusé la publication apparaît-il « Joueur 7 » ou pas du tout dans les classements publics ?
 2. Quels classements publier (saison, poule, phase), avec quel minimum de matchs ?
 3. Comparaison des rotations, export CSV, stats sur la fiche publique de l'équipe : première version ou plus tard ?
 
-## 10. Catalogue des statistiques possibles (pour choisir les stats publiques)
+## 9. Catalogue des statistiques possibles (pour choisir les stats publiques)
 
 Le **mode rapide** ne note que la fin de chaque échange : qui marque, comment (ace, attaque, block), ou qui fait la faute
 (service, attaque, filet ou ligne, autre), ou point et faute adverses. Le **mode complet** note toutes les actions, comme
@@ -162,9 +162,9 @@ Candidats naturels aux classements publics : points marqués, aces, blocks gagna
 socle commun) ; les statistiques du seul mode complet resteraient dans l'équipe, ou feraient l'objet d'un classement à part
 des équipes en mode complet.
 
-## 9. Suite proposée
+## 10. Suite proposée
 
-1. Répondre aux questions ouvertes du §8 et choisir les stats publiques dans le catalogue du §10.
+1. Répondre aux questions ouvertes du §8 et choisir les stats publiques dans le catalogue du §9.
 2. Atelier ergonomie (agent `ergonome`) : parcours détaillé du saisisseur, mode rapide et mode complet, sur téléphone.
 3. Relecture RGPD (agent `securite`) : publication, consentement, conservation, conditions d'utilisation.
 4. Spécification de la première version et des classements publics ; décisions dans `decisions.md`.
