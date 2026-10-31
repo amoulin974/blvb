@@ -381,6 +381,11 @@ details.depliant[open] { width: 100%; }
 .choix-carte { display: flex; flex-direction: column; gap: 0.5rem; padding: 1rem; border: 1px solid var(--color-base-300); border-radius: var(--radius-box); background-color: var(--color-base-100); cursor: pointer; }
 .choix-carte:has(:checked) { border-color: var(--color-primary); box-shadow: inset 0 0 0 1px var(--color-primary); background-color: color-mix(in oklab, var(--color-primary) 6%, var(--color-base-100)); }
 .choix-carte:has(:focus-visible) { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+/* Choix compact sur une ligne (case ou bouton radio visible) : page du match (D67) */
+.choix-carte.choix-ligne { flex-direction: row; align-items: center; gap: .625rem; min-height: 3rem; padding: .5rem .75rem; }
+.choix-carte.choix-ligne .checkbox, .choix-carte.choix-ligne .radio { flex-shrink: 0; }
+/* Page du match : toutes les cibles à 48 px (gymnase, téléphone tenu d'une main) */
+.page-match .btn { min-height: 3rem; }
 .wizard-navigation { border-top: 1px solid var(--color-base-300); padding-top: 0.75rem; background-color: var(--color-base-100); }
 @media (max-width: 63.99rem) { .wizard-navigation { position: sticky; bottom: 0; z-index: 2; padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); } }
 /* Stepper du wizard : six pastilles tiennent sur un téléphone ; « ! » lisible sur orange ; étape en cours cerclée */

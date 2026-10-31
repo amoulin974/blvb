@@ -638,6 +638,11 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **VST-03** ✅ : équipe qui ne joue pas ce match, match inexistant : 404, même pour l'admin.
 - **VST-04** ✅ : seule compte la saison du match (membre de la saison précédente seulement : 404) ; gel 30 jours après un
   match jamais terminé, 7 jours après la fin.
+- **VST-05** ✅ : une visite ne crée rien ; « Préparer le match » crée la page, toute l'équipe cochée d'office, puis les
+  présents se modifient (joueurs désignés « Camille Ar. »).
+- **VST-06** ✅ : au match suivant, les présents du match précédent sont cochés d'office, à l'affichage comme à la création.
+- **VST-07** ✅ : présents refusés : membre d'une autre équipe (message neutre, sans nom), jeton absent ; équipe adverse :
+  404 sur les écritures ; rien n'est enregistré.
 
 ## 5. Analyse statique et qualité du code
 

@@ -4,6 +4,7 @@ namespace App\Tests\Fonctionnel\Front;
 
 use App\Entity\Equipe;
 use App\Entity\FeuilleMatch;
+use App\Entity\MembreEquipe;
 use App\Entity\Partie;
 use App\Factory\JoueurFactory;
 use App\Factory\MembreEquipeFactory;
@@ -16,7 +17,7 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
 /**
- * VST-01 à VST-04 : page du match d'une équipe, droits (Volley Stats, D67 ; spécification §4).
+ * VST-01 à VST-07 : page du match d'une équipe, droits et joueurs présents (Volley Stats, D67 ; spécification §4, §5).
  * Match de référence : A1 (club CTA, responsable resp.club) reçoit A2, hier.
  */
 final class FeuilleMatchTest extends TestFonctionnel
@@ -100,5 +101,85 @@ final class FeuilleMatchTest extends TestFonctionnel
         self::assertFalse($voter->estGelee(new MatchEquipe($equipe, $partie, $feuille)), '6 jours après la fin');
         self::mockTime($maintenant->modify('+8 days'));
         self::assertTrue($voter->estGelee(new MatchEquipe($equipe, $partie, $feuille)), '8 jours après la fin');
+    }
+
+    private function feuille(string $equipe = 'A1', string $match = 'match.reference'): ?FeuilleMatch
+    {
+        $em = self::getContainer()->get('doctrine')->getManager();
+        $em->clear();
+
+        return $em->getRepository(FeuilleMatch::class)->findOneBy(['partie' => ChampionnatDeTest::get($match)->getId(), 'equipe' => ChampionnatDeTest::get('equipe.'.$equipe)->getId()]);
+    }
+
+    private function membre(string $compte, string $equipe = 'A1'): MembreEquipe
+    {
+        return self::getContainer()->get('doctrine')->getManager()->getRepository(MembreEquipe::class)->findOneBy([
+            'joueur' => ChampionnatDeTest::get('joueur.'.$compte)->getId(),
+            'equipe' => ChampionnatDeTest::get('equipe.'.$equipe)->getId(),
+            'saison' => ChampionnatDeTest::get('saison')->getId(),
+        ]);
+    }
+
+    /** @return list<string> noms des joueurs cochés sur la page */
+    private function coches(): array
+    {
+        return $this->client->getCrawler()->filter('input[name="presents[]"]:checked')->each(fn ($c) => trim($c->closest('label')->text()));
+    }
+
+    #[TestDox('VST-05 : une visite ne crée rien ; « Préparer le match » crée la page avec toute l\'équipe cochée, puis les présents se modifient')]
+    public function test_presents(): void
+    {
+        $this->connecter('joueur.a1');
+        $crawler = $this->client->request('GET', $this->url());
+        self::assertNull($this->feuille(), 'rien n\'est créé par une visite');
+        self::assertSame(['Camille Ar.', 'Jean Pr.', 'Pat An.'], $this->coches(), 'toute l\'équipe cochée d\'office');
+
+        $form = $crawler->selectButton('Préparer le match')->form();
+        $form['presents'][2]->untick();
+        $this->client->submit($form);
+        self::assertResponseRedirects($this->url());
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="status"]', 'Joueurs présents enregistrés.');
+        self::assertSame(['Camille Ar.', 'Jean Pr.'], $this->coches());
+        self::assertCount(2, $this->feuille()->getJoueurs());
+    }
+
+    #[TestDox('VST-06 : au match suivant, les présents du match précédent sont cochés d\'office')]
+    public function test_presents_repris(): void
+    {
+        $this->connecter('cap.a1');
+        $crawler = $this->client->request('GET', $this->url('A1', 'match.A2-A1'));
+        $form = $crawler->selectButton('Préparer le match')->form();
+        $form['presents'][1]->untick();
+        $this->client->submit($form);
+
+        $crawler = $this->client->request('GET', $this->url());
+        self::assertSame(['Camille Ar.', 'Pat An.'], $this->coches(), 'repris du match du '.ChampionnatDeTest::get('match.A2-A1')->getDate()->format('d/m'));
+        $this->client->request('POST', $this->url().'/preparer', ['_token' => $crawler->filter('input[name="_token"]')->attr('value')]);
+        self::assertResponseRedirects($this->url());
+        self::assertCount(2, $this->feuille()->getJoueurs());
+    }
+
+    #[TestDox('VST-07 : présents refusés : membre d\'une autre équipe, jeton absent, équipe adverse (404) ; rien n\'est enregistré')]
+    public function test_presents_refuses(): void
+    {
+        $this->connecter('cap.a1');
+        $crawler = $this->client->request('GET', $this->url());
+        $jeton = $crawler->filter('input[name="_token"]')->attr('value');
+
+        $this->client->request('POST', $this->url().'/presents', ['_token' => $jeton, 'presents' => [(string) $this->membre('cap.a2', 'A2')->getId()]]);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'ne fait pas partie de l\'équipe');
+        self::assertSelectorTextNotContains('[role="alert"]', 'Claude', 'aucun nom repris');
+
+        $this->client->request('POST', $this->url().'/presents', ['presents' => [(string) $this->membre('cap.a1')->getId()]]);
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('[role="alert"]', 'La page a expiré');
+
+        $this->connecter('cap.a2');
+        $this->client->request('POST', $this->url().'/presents', ['_token' => $jeton, 'presents' => []]);
+        self::assertResponseStatusCodeSame(404);
+        $this->client->request('POST', $this->url().'/preparer', ['_token' => $jeton]);
+        self::assertResponseStatusCodeSame(404);
     }
 }

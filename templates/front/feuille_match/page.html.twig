@@ -22,5 +22,13 @@
                 <span><strong>Visible de l'équipe seulement</strong> (ses membres, le responsable du club et les admins). Ni score officiel ni classement : ce qui est noté ici reste dans l'équipe.</span>
             </p>
         </div>
+
+        {% for type, messages in {success: app.flashes('success'), error: app.flashes('error')} %}
+            {% for message in messages %}
+                <div role="{{ type == 'error' ? 'alert' : 'status' }}" class="alert {{ type == 'error' ? 'alert-error' : 'alert-success' }} alert-soft">{{ message }}</div>
+            {% endfor %}
+        {% endfor %}
+
+        {{ include('front/feuille_match/_presents.html.twig') }}
     </div>
 {% endblock %}

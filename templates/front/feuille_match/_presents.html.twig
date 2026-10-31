@@ -1,0 +1,31 @@
+{# « Qui est là ? » (D67) : toute l'équipe en cases à cocher, cochés d'office d'après le match précédent (ou toute l'équipe).
+   Formulaire ordinaire : fonctionne sans JavaScript. #}
+<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4" aria-labelledby="titre-presents">
+    <div class="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="titre-presents" class="text-xl uppercase tracking-wide">Joueurs présents</h2>
+        {% if feuille %}<p class="text-sm font-semibold">{{ presents|length }} sur {{ membres|length }}</p>{% endif %}
+    </div>
+    {% if membres is empty %}
+        <p class="mt-2">Aucun joueur dans l'équipe pour cette saison : ajoutez-les depuis la composition de l'équipe.</p>
+    {% elseif not modifiable %}
+        <ul class="mt-2 grid grid-cols-2 gap-2">
+            {% for membre in membres|filter(m => m.id in presents) %}<li>{{ noms[membre.id] }}</li>{% else %}<li class="col-span-2">Aucun joueur noté présent.</li>{% endfor %}
+        </ul>
+    {% else %}
+        <form method="post" action="{{ path('front_feuille_match_presents', {equipe: match.equipe.id, partie: match.partie.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token(jeton) }}">
+            <fieldset class="mt-2">
+                <legend class="text-sm">{{ feuille ? 'Qui est là ? Touchez pour changer.' : 'Qui est là ? Cochez les joueurs présents au match.' }}</legend>
+                <div class="mt-2 grid grid-cols-2 gap-2">
+                    {% for membre in membres %}
+                        <label class="choix-carte choix-ligne">
+                            <input type="checkbox" class="checkbox checkbox-primary" name="presents[]" value="{{ membre.id }}" {{ membre.id in presents ? 'checked' }}>
+                            <span class="font-medium wrap-anywhere">{{ noms[membre.id] }}</span>
+                        </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            <button type="submit" class="btn btn-primary btn-block mt-3">{{ feuille ? 'Enregistrer les joueurs présents' : 'Préparer le match' }}</button>
+        </form>
+    {% endif %}
+</section>
