@@ -28,24 +28,7 @@
                         {% elseif saison.favori %}
                             <span class="badge badge-accent gap-1">{{ icone.i('etoile', 'size-3.5') }} Affichée sur le site</span>
                         {% else %}
-                            {{ include('admin/_confirmation.html.twig', {
-                                action: path('admin_saison_favorite', {id: saison.id}),
-                                token: csrf_token('favorite' ~ saison.id),
-                                titre: 'Afficher « ' ~ saison.nom ~ ' » sur le site ?',
-                                consequences: [
-                                    'Les visiteurs verront cette saison en arrivant sur le site.',
-                                    'Les motifs et les auteurs des fermetures de gymnase déjà terminées seront définitivement effacés. Les dates restent : le calendrier affichera toujours « Gymnase fermé ».',
-                                    'La fiche du club et les fermetures de gymnase ne seront modifiables que par les responsables désignés pour cette saison. Désignez-les ensuite dans chaque club. Les scores ne changent pas : chacun garde la saisie des saisons pour lesquelles il est désigné.',
-                                    'Les rappels de score ne concerneront plus que les matchs de cette saison.',
-                                ],
-                                bouton: 'Afficher sur le site',
-                                ton: 'warning',
-                                irreversible: false,
-                                declencheur: 'Afficher sur le site',
-                                declencheur_sr: saison.nom,
-                                declencheur_classe: 'btn btn-ghost btn-sm',
-                                declencheur_icone: false,
-                            }) }}
+                            {{ include('admin/saison/_afficher_sur_le_site.html.twig') }}
                         {% endif %}
                     </td>
                     <td class="pleine-largeur text-right whitespace-nowrap max-md:text-left">

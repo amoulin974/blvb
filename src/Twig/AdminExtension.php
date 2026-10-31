@@ -8,7 +8,7 @@ use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
 /**
- * Back-office : saison mise en avant dans le menu (« Saison en cours »).
+ * Back-office : saison mise en avant dans le menu (« Saison affichée », D64).
  * Saison favorite (celle affichée sur le site), sinon la plus récente.
  */
 class AdminExtension extends AbstractExtension

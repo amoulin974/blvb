@@ -602,7 +602,7 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 ### 4.19 Paramètres du site — `Fonctionnel/Admin/ParametresSiteTest`, `Unitaire/Security/VerificationConnexionTest` (P1, D62)
 
 - **PAR-01** ✅ : seuls les admins ouvrent la page et ses actions ; visiteur renvoyé à la connexion, capitaine refusé (403) ; le menu y mène.
-- **PAR-02** ✅ : au départ, limitation désactivée, activation non proposée ; le tableau de bord le signale tant qu'elle n'est pas activée.
+- **PAR-02** ✅ : au départ, limitation désactivée, activation non proposée ; le tableau de bord le signale par une ligne « À faire » tant qu'elle n'est pas activée.
 - **PAR-03** ✅ : contrôles de la vérification : proxy bien déclaré ; proxy non déclaré, à adresse privée ou publique, un seul proxy déclaré sur deux ; toutes les adresses déclarées ; `REMOTE_ADDR`, `::/0` et `0::/0` refusés, réseaux privés acceptés ; accès direct, en-tête écrasé et proxy privé d'entreprise acceptés.
 - **PAR-04** ✅ : une vérification réussie est enregistrée, affichée pendant une heure, et ouvre l'activation ; une vérification échouée efface la précédente.
 - **PAR-05** ✅ : activation après vérification et confirmation, compteurs passés effacés ; refus sans la case, après une heure, ou depuis une adresse privée ; réactiver depuis un onglet ouvert n'efface pas les compteurs en cours ; désactivation sans vérification.
@@ -612,6 +612,21 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 - **PAR-09** ✅ : logo PNG ou WebP dans l'en-tête du site et de l'admin, ancien fichier supprimé ; SVG, faux PNG, fichier trop lourd ou trop grand, aucun fichier : refusés ; retour au logo d'origine.
 
 `Securite/LimiteConnexionTest` active la limitation dans son `setUp` (elle est désactivée par défaut).
+
+### 4.20 Tableau de bord de l'admin — `Fonctionnel/Admin/TableauDeBordTest` (P1, D64)
+
+- **TDB-01** ✅ : tableau de bord et « Scores à saisir » réservés aux admins ; visiteur renvoyé à la connexion, capitaine refusé (403).
+- **TDB-02** ✅ : carte de la saison en cours : état, phase en cours, matchs joués, prochain match, « Suivre la saison » ; menu « Saison affichée » ; plus d'« Outils techniques » sur la page.
+- **TDB-03** ✅ : lignes « À faire » du championnat de référence, dans l'ordre : club sans responsable, équipes sans capitaine, règlement, limitation, adresse de contact ; cinq lignes, rien de replié.
+- **TDB-04** ✅ : un score absent n'est signalé qu'au-delà de 2 jours ; la ligne mène à « Scores à saisir ».
+- **TDB-05** ✅ : un match sans score dans un gymnase fermé est signalé en tête comme urgent (préfixe lu), « Afficher le match » déplie un lien « Déplacer » vers le calendrier de sa poule ; plus signalé une fois joué.
+- **TDB-06** ✅ : phase dont tous les scores sont saisis : clôture proposée, lien vers la phase.
+- **TDB-07** ✅ : brouillon du wizard en carte réduite (étape, « Reprendre la création ») ; son règlement n'est pas réclamé avant la validation.
+- **TDB-08** ✅ : saison affichée terminée et une autre en préparation : la saison en préparation prend la grande carte, la saison terminée passe en carte réduite ; plus de ligne « responsables » pour elle.
+- **TDB-09** ✅ : aucune saison choisie pour le site : ligne « Choisir la saison ».
+- **TDB-10** ✅ : saison validée à mettre en place : carte, reprise à l'étape incomplète, rappel des fermetures avant les matchs, lignes préfixées du nom de la saison ; au-delà de cinq lignes, « Voir les N autres points ».
+- **TDB-11** ✅ : saison prête : « Afficher sur le site » avec confirmation, retour au tableau de bord.
+- **TDB-12** ✅ : « Scores à saisir » : matchs passés sans score seulement, bouton de la fenêtre de saisie du calendrier, jeton de sécurité ; accès rapides : chiffres de la saison affichée.
 
 ## 5. Analyse statique et qualité du code
 
@@ -707,6 +722,7 @@ La CI produit un statut ; le déploiement reste manuel. Étape suivante possible
 | **Essais de connexion limités** ✅ | LIM-01 à LIM-10 (§4.1) : attente qui double à chaque échec, par compte et IP, puis par IP | 649 tests verts (branche `fermetures-gymnase`) | fait le 30/10/2026 |
 | **Fermetures de gymnase, lot 2** ✅ | FGY-11 à FGY-16 (§4.18) : auteur de la fermeture, placement automatique qui évite les gymnases fermés, signalement | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
 | **Paramètres du site** ✅ | PAR-01 à PAR-09 (§4.19), LIM-11, FGY-10 : connexion limitée activée après vérification, adresse de contact, logo | tests verts (branche `parametres-site`) | fait le 30/10/2026 |
+| **Tableau de bord** ✅ | TDB-01 à TDB-12 (§4.20) : « À faire », saisons suivies, scores à saisir (D64) | tests verts (branche `tableau-de-bord`) | fait le 31/10/2026 |
 | **5 — Durcissement** | PHPStan niveau 6+, PHP-CS-Fixer étendu, Infection sur le classement, E2E Playwright | Baseline PHPStan réduite | 1 j |
 
 Ordre conseillé : 0 → 1 → 2 (les lots 1 et 2 couvrent les risques P0). Chaque lot = une pull request relue, CI verte.

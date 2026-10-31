@@ -294,6 +294,13 @@ details[data-code] > summary::-webkit-details-marker { display: none; }
 details[data-code] > summary svg { transition: rotate 0.15s; }
 @media (prefers-reduced-motion: reduce) { details[data-code] > summary svg { transition: none; } }
 details[data-code][open] > summary svg { rotate: 180deg; }
+/* Tableau de bord : bouton qui déplie les matchs d'un gymnase fermé, même chevron */
+details.depliant > summary { list-style: none; }
+details.depliant > summary::-webkit-details-marker { display: none; }
+details.depliant > summary svg { transition: rotate 0.15s; }
+@media (prefers-reduced-motion: reduce) { details.depliant > summary svg { transition: none; } }
+details.depliant[open] > summary svg { rotate: 180deg; }
+details.depliant[open] { width: 100%; }
 
 /* Sommaire du règlement : tocbot recopie le texte des titres tel qu'il est écrit (les capitales des h2 ne viennent que du
    CSS) ; hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */

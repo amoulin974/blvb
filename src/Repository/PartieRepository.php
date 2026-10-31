@@ -5,9 +5,11 @@ namespace App\Repository;
 use App\Entity\Equipe;
 use App\Entity\FermetureGymnase;
 use App\Entity\Lieu;
+use App\Entity\Phase;
 use App\Entity\Saison;
 use App\Entity\Partie;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
+use Doctrine\ORM\QueryBuilder;
 use Doctrine\Persistence\ManagerRegistry;
 
 /**
@@ -107,6 +109,134 @@ class PartieRepository extends ServiceEntityRepository
             ->addOrderBy('m.id', 'ASC')
             ->getQuery()
             ->getResult();
+    }
+
+    /**
+     * Matchs de ces saisons joués au plus tard à cette date, entre deux équipes connues, sans score saisi : du plus
+     * ancien au plus récent (tableau de bord et page « Scores à saisir », D64).
+     *
+     * @param list<Saison> $saisons
+     * @return list<Partie>
+     */
+    public function sansScoreAvant(array $saisons, \DateTimeImmutable $limite, ?int $max = null): array
+    {
+        if ($saisons === []) {
+            return [];
+        }
+
+        return $this->requeteSansScoreAvant($saisons, $limite)
+            ->addSelect('er', 'ed', 'po', 'ph', 'l')
+            ->leftJoin('m.lieu', 'l')
+            ->orderBy('m.date', 'ASC')
+            ->addOrderBy('m.id', 'ASC')
+            ->setMaxResults($max)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @param list<Saison> $saisons */
+    public function nombreSansScoreAvant(array $saisons, \DateTimeImmutable $limite): int
+    {
+        if ($saisons === []) {
+            return 0;
+        }
+
+        return (int) $this->requeteSansScoreAvant($saisons, $limite)
+            ->select('COUNT(m.id)')
+            ->getQuery()
+            ->getSingleScalarResult();
+    }
+
+    /** @param list<Saison> $saisons */
+    private function requeteSansScoreAvant(array $saisons, \DateTimeImmutable $limite): QueryBuilder
+    {
+        return $this->createQueryBuilder('m')
+            ->innerJoin('m.poule', 'po')
+            ->innerJoin('po.phase', 'ph')
+            ->innerJoin('m.id_equipe_recoit', 'er')
+            ->innerJoin('m.id_equipe_deplace', 'ed')
+            ->andWhere('ph.saison IN (:saisons)')
+            ->andWhere('m.date IS NOT NULL AND m.date <= :limite')
+            ->andWhere('m.nb_set_gagnant_reception IS NULL AND m.nb_set_gagnant_deplacement IS NULL')
+            ->setParameter('saisons', $saisons)
+            ->setParameter('limite', $limite);
+    }
+
+    /**
+     * Matchs de ces saisons, sans score, programmés aujourd'hui ou plus tard dans un gymnase fermé ce jour-là (D60) :
+     * à déplacer. Même règle que Partie::aDeplacerPourLePublic.
+     *
+     * @param list<Saison> $saisons
+     * @return list<Partie>
+     */
+    public function enGymnaseFermeAVenir(array $saisons): array
+    {
+        if ($saisons === []) {
+            return [];
+        }
+
+        return $this->createQueryBuilder('m')
+            ->addSelect('po', 'ph', 'l')
+            ->innerJoin('m.poule', 'po')
+            ->innerJoin('po.phase', 'ph')
+            ->innerJoin('m.lieu', 'l')
+            ->innerJoin(FermetureGymnase::class, 'f', 'WITH', 'f.lieu = l AND m.date >= f.dateDebut AND m.date < DATE_ADD(f.dateFin, 1, \'day\')')
+            ->andWhere('ph.saison IN (:saisons)')
+            ->andWhere('m.date >= :aujourdhui')
+            ->andWhere('m.nb_set_gagnant_reception IS NULL OR m.nb_set_gagnant_deplacement IS NULL')
+            ->setParameter('saisons', $saisons)
+            ->setParameter('aujourdhui', new \DateTimeImmutable('today'))
+            ->distinct()
+            ->orderBy('m.date', 'ASC')
+            ->addOrderBy('m.id', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Matchs d'une saison : nombre de matchs, nombre de matchs avec un score, date du prochain match sans score.
+     *
+     * @return array{total: int, joues: int, prochain: ?\DateTimeImmutable}
+     */
+    public function bilanSaison(Saison $saison): array
+    {
+        $ligne = $this->createQueryBuilder('m')
+            ->select('COUNT(m.id) AS total')
+            ->addSelect('SUM(CASE WHEN m.nb_set_gagnant_reception IS NOT NULL AND m.nb_set_gagnant_deplacement IS NOT NULL THEN 1 ELSE 0 END) AS joues')
+            ->innerJoin('m.poule', 'po')
+            ->innerJoin('po.phase', 'ph')
+            ->andWhere('ph.saison = :saison')
+            ->setParameter('saison', $saison)
+            ->getQuery()
+            ->getSingleResult();
+        $prochain = $this->createQueryBuilder('m')
+            ->select('MIN(m.date)')
+            ->innerJoin('m.poule', 'po')
+            ->innerJoin('po.phase', 'ph')
+            ->andWhere('ph.saison = :saison')
+            ->andWhere('m.date >= :maintenant')
+            ->andWhere('m.nb_set_gagnant_reception IS NULL OR m.nb_set_gagnant_deplacement IS NULL')
+            ->setParameter('saison', $saison)
+            ->setParameter('maintenant', new \DateTimeImmutable())
+            ->getQuery()
+            ->getSingleScalarResult();
+
+        return ['total' => (int) $ligne['total'], 'joues' => (int) $ligne['joues'], 'prochain' => $prochain !== null ? new \DateTimeImmutable($prochain) : null];
+    }
+
+    /** Nombre de matchs de cette phase, et nombre de matchs sans score. @return array{total: int, sansScore: int} */
+    public function bilanPhase(Phase $phase): array
+    {
+        $ligne = $this->createQueryBuilder('m')
+            ->select('COUNT(m.id) AS total')
+            ->addSelect('SUM(CASE WHEN m.nb_set_gagnant_reception IS NULL OR m.nb_set_gagnant_deplacement IS NULL THEN 1 ELSE 0 END) AS sansScore')
+            ->innerJoin('m.poule', 'po')
+            ->andWhere('po.phase = :phase')
+            ->setParameter('phase', $phase)
+            ->getQuery()
+            ->getSingleResult();
+
+        return ['total' => (int) $ligne['total'], 'sansScore' => (int) $ligne['sansScore']];
     }
 
     public function getMatchsByEquipePhase(int $equipeId, int $pouleId): array

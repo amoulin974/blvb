@@ -1,0 +1,62 @@
+{# Carte d'une saison suivie sur le tableau de bord (App\Service\TableauDeBord::carte, D64) : nom, état, repère, bouton unique.
+   Variables : carte ; reduite (carte d'une autre saison active) ; autreEnPreparation (une autre saison se prépare). #}
+{% set saison = carte.saison %}
+{% set e = carte.etat %}
+{% set libelle = {
+    brouillon: 'Saison en préparation',
+    mise_en_place: 'Saison validée · à mettre en place',
+    prete: 'Saison prête, pas encore affichée sur le site',
+    en_cours: 'Saison affichée sur le site',
+    terminee: 'Saison terminée',
+}[e] %}
+{% set jour = 'd MMMM' %}
+<section class="admin-carte {{ reduite ? 'flex flex-wrap items-center justify-between gap-3' : 'flex flex-col gap-3 border-l-4 border-l-(--color-primary)' }}" aria-labelledby="carte-saison-{{ saison.id }}">
+    <div class="min-w-0">
+        <p class="text-sm font-semibold uppercase tracking-wider text-(--color-base-content)/80">{{ libelle }}</p>
+        <h2 id="carte-saison-{{ saison.id }}" class="{{ reduite ? 'text-lg' : 'text-2xl' }} text-(--color-primary)">{{ saison.nom }}</h2>
+        <div class="text-sm text-(--color-base-content)/80">
+            {% if e == 'brouillon' %}
+                <p>Brouillon · étape {{ carte.etape }} sur {{ carte.etapes }} : {{ carte.etapeLibelle }}</p>
+                {% if not reduite %}
+                    <p>{% if saison.modifieLe %}Modifiée le {{ saison.modifieLe|format_datetime(pattern: jour, locale: 'fr') }} · {% endif %}invisible sur le site</p>
+                    {% if carte.erreurs > 0 %}<p class="font-semibold text-base-content">{{ carte.erreurs }} point{{ carte.erreurs > 1 ? 's' : '' }} à corriger avant de valider</p>{% endif %}
+                {% endif %}
+            {% elseif e in ['mise_en_place', 'prete'] and carte.phase %}
+                {% set m = carte.miseEnPlace %}
+                <p>{{ carte.phase.nom }} : poules {{ m.poules ? 'faites' : 'à faire' }} · journées {{ m.journees ? 'faites' : 'à faire' }} · matchs {{ m.matchs ? 'faits' : 'à faire' }}</p>
+            {% elseif e == 'en_cours' %}
+                {% if carte.phase %}
+                    <p>{{ carte.phase.nom }} en cours{% if carte.phase.datedebut and carte.phase.datefin and not reduite %} · du {{ carte.phase.datedebut|format_datetime(pattern: jour, locale: 'fr') }} au {{ carte.phase.datefin|format_datetime(pattern: jour, locale: 'fr') }}{% endif %}</p>
+                {% endif %}
+                {% if carte.bilan.total > 0 %}<p>Matchs joués : <span class="tabular-nums">{{ carte.bilan.joues }} sur {{ carte.bilan.total }}</span></p>{% endif %}
+                {% if carte.bilan.prochain and not reduite %}<p>Prochain match : {{ carte.bilan.prochain|format_datetime(pattern: 'EEEE d MMMM', locale: 'fr') }}</p>{% endif %}
+            {% elseif e == 'terminee' %}
+                <p><span class="tabular-nums">{{ carte.bilan.joues }} match{{ carte.bilan.joues > 1 ? 's' : '' }} joué{{ carte.bilan.joues > 1 ? 's' : '' }} sur {{ carte.bilan.total }}</span></p>
+            {% endif %}
+        </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+        {% if e == 'brouillon' %}
+            <a class="btn btn-primary{{ reduite ? ' btn-sm' : '' }}" href="{{ path('admin_saison_wizard_etape', {id: saison.id, etape: carte.etape}) }}">Reprendre la création<span class="sr-only"> de {{ saison.nom }}</span></a>
+        {% elseif e == 'mise_en_place' %}
+            <a class="btn btn-primary{{ reduite ? ' btn-sm' : '' }}" href="{{ carte.urlMiseEnPlace }}">Continuer la mise en place<span class="sr-only"> de {{ saison.nom }}</span></a>
+        {% elseif e == 'prete' %}
+            {{ include('admin/saison/_afficher_sur_le_site.html.twig', {classe: 'btn btn-primary' ~ (reduite ? ' btn-sm' : ''), retour: 'tableau_de_bord'}) }}
+        {% elseif e == 'en_cours' %}
+            <a class="btn btn-primary{{ reduite ? ' btn-sm' : '' }}" href="{{ path('admin_saison_show', {id: saison.id}) }}">Suivre la saison<span class="sr-only"> {{ saison.nom }}</span></a>
+        {% elseif e == 'terminee' and not reduite and not autreEnPreparation %}
+            <a class="btn btn-primary" href="{{ path('admin_saison_wizard_nouvelle') }}">Créer une saison</a>
+        {% else %}
+            <a class="btn btn-ghost{{ reduite ? ' btn-sm' : '' }}" href="{{ path('admin_saison_show', {id: saison.id}) }}">Consulter la saison<span class="sr-only"> {{ saison.nom }}</span></a>
+        {% endif %}
+    </div>
+    {# Navigation, séparée de l'action #}
+    {% if not reduite %}
+        {% set lien = 'link link-primary inline-flex min-h-[44px] items-center' %}
+        <div class="flex flex-wrap gap-x-4 gap-y-1 border-t border-(--color-base-300) pt-3 text-sm">
+            {% if e == 'en_cours' %}<a class="{{ lien }}" href="{{ path('admin_scores_index') }}">Scores à saisir</a>{% endif %}
+            {% if e != 'brouillon' %}<a class="{{ lien }}" href="{{ path('admin_reglement_edit', {id: saison.id}) }}">Règlement<span class="sr-only"> de {{ saison.nom }}</span></a>{% endif %}
+            <a class="{{ lien }}" href="{{ path('admin_saison_index') }}">Toutes les saisons</a>
+        </div>
+    {% endif %}
+</section>

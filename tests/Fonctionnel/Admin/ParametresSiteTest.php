@@ -123,11 +123,13 @@ final class ParametresSiteTest extends TestFonctionnel
     {
         $this->connecter('admin');
         $crawler = $this->client->request('GET', '/admin/dashboard');
-        self::assertCount(1, $crawler->filter('main a[href="'.self::URL.'"]'));
+        $ligne = $crawler->filter('[data-a-faire="connexion"]');
+        self::assertStringContainsString('Les essais de connexion ne sont pas limités.', $ligne->text());
+        self::assertSame(self::URL, $ligne->filter('a')->attr('href'));
 
         $this->modifierParametres(fn (ParametresSite $p) => $p->setConnexionLimitee(true));
         $crawler = $this->client->request('GET', '/admin/dashboard');
-        self::assertCount(0, $crawler->filter('main a[href="'.self::URL.'"]'));
+        self::assertCount(0, $crawler->filter('[data-a-faire="connexion"]'));
     }
 
     #[TestDox('PAR-04 : une vérification réussie est enregistrée, reste affichée une heure, et ouvre l\'activation')]

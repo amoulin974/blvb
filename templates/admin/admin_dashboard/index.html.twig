@@ -1,57 +1,102 @@
 {% extends 'base_admin.html.twig' %}
 {% import 'admin/_icones.html.twig' as icone %}
 
+{# Tableau de bord (D64, tableau-de-bord.md) : y a-t-il quelque chose à faire ? où en est la saison ? où aller pour le reste ?
+   Données : App\Service\TableauDeBord::donnees. #}
+{% macro pluriel(n, un, plusieurs) %}{{ n ~ ' ' ~ (n > 1 ? plusieurs : un) }}{% endmacro %}
+
 {% block title %}Tableau de bord{% endblock %}
 
 {% block body %}
     {{ include('admin/_entete.html.twig', {titre: 'Tableau de bord'}) }}
 
-    {% if not parametres_site().connexionLimitee %}
-        {% embed 'admin/_alerte.html.twig' with {type: 'warning', classe: 'mb-6', role: 'note'} %}{% block contenu %}
-            Les essais de connexion ne sont pas limités. <a class="link font-semibold" href="{{ path('admin_parametres_index') }}">Vérifier et activer la limitation</a>
-        {% endblock %}{% endembed %}
-    {% endif %}
+    <div class="grid items-start gap-6 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+        {# A. À faire #}
+        <section class="admin-carte" aria-labelledby="titre-a-faire">
+            <h2 id="titre-a-faire" class="text-lg">À faire{% if aFaire %} <span class="tabular-nums">({{ aFaire|length }})</span>{% endif %}</h2>
+            {% if aFaire is empty %}
+                <p class="mt-2 text-(--color-base-content)/80">Rien à faire pour l'instant.</p>
+            {% else %}
+                <ul class="divide-y divide-(--color-base-300)">
+                    {% for ligne in aFaire|slice(0, lignesVisibles) %}
+                        {{ include('admin/admin_dashboard/_ligne_a_faire.html.twig') }}
+                    {% endfor %}
+                </ul>
+                {% set autres = aFaire|length - lignesVisibles %}
+                {% if autres > 0 %}
+                    <details class="border-t border-base-300 pt-3">
+                        <summary class="cursor-pointer font-semibold text-(--color-primary) min-h-[44px] flex items-center">{{ autres == 1 ? 'Voir l\'autre point' : 'Voir les ' ~ autres ~ ' autres points' }}</summary>
+                        <ul class="divide-y divide-(--color-base-300)">
+                            {% for ligne in aFaire|slice(lignesVisibles) %}
+                                {{ include('admin/admin_dashboard/_ligne_a_faire.html.twig') }}
+                            {% endfor %}
+                        </ul>
+                    </details>
+                {% endif %}
+            {% endif %}
+        </section>
 
-    {% set saison = admin_saison_courante() %}
-    {% if saison %}
-        <section class="admin-carte mb-6 flex flex-wrap items-center justify-between gap-4 border-l-4 border-l-(--color-accent)">
-            <div>
-                <p class="text-sm font-semibold uppercase tracking-wider text-(--color-base-content)/80">{{ saison.favori ? 'Saison affichée sur le site' : 'Saison la plus récente' }}</p>
-                <h2 class="text-2xl text-(--color-primary)">{{ saison.nom }}</h2>
-                <p class="text-sm text-(--color-base-content)/80">{{ saison.phases|length }} phase{{ saison.phases|length > 1 ? 's' : '' }} : c'est depuis la page de la saison que se gèrent les phases, les poules, les journées et les matchs.</p>
-            </div>
-            <div class="flex flex-wrap gap-2">
-                <a class="btn btn-ghost btn-sm" href="{{ path('admin_saison_index') }}">Toutes les saisons</a>
-                <a class="btn btn-primary" href="{{ path('admin_saison_show', {id: saison.id}) }}">Piloter la saison</a>
-            </div>
+        {# B. Saison principale #}
+        {% if principale %}
+            {{ include('admin/admin_dashboard/_carte_saison.html.twig', {carte: principale, reduite: false, autreEnPreparation: secondaires is not empty}) }}
+        {% else %}
+            <section class="admin-carte flex flex-col gap-3 border-l-4 border-l-(--color-primary)" aria-labelledby="carte-aucune-saison">
+                <h2 id="carte-aucune-saison" class="text-2xl text-(--color-primary)">Aucune saison pour le moment</h2>
+                <p class="text-(--color-base-content)/80">Créez la première saison : le site affichera ensuite son calendrier et son classement.</p>
+                <div><a class="btn btn-primary" href="{{ path('admin_saison_wizard_nouvelle') }}">Créer une saison</a></div>
+            </section>
+        {% endif %}
+    </div>
+
+    {# C. Autres saisons actives #}
+    {% for carte in secondaires %}
+        <div class="mt-4">{{ include('admin/admin_dashboard/_carte_saison.html.twig', {carte: carte, reduite: true, autreEnPreparation: true}) }}</div>
+    {% endfor %}
+
+    {# D. Prochaines fermetures de gymnase #}
+    {% if fermetures is not empty %}
+        <section class="admin-carte mt-6" aria-labelledby="titre-fermetures">
+            <h2 id="titre-fermetures" class="text-lg">Fermetures de gymnase</h2>
+            <ul class="divide-y divide-(--color-base-300)">
+                {% for fermeture in fermetures %}
+                    {% set debut = fermeture.dateDebut|format_datetime(pattern: 'd MMMM', locale: 'fr') %}
+                    {% set fin = fermeture.dateFin|format_datetime(pattern: 'd MMMM', locale: 'fr') %}
+                    <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+                        <p class="min-w-0">
+                            <span class="font-semibold">{{ debut == fin ? 'Le ' ~ debut : 'Du ' ~ debut ~ ' au ' ~ fin }}</span>
+                            · {{ fermeture.lieu.nom }}{% if fermeture.motif %} · {{ fermeture.motif }}{% endif %}
+                        </p>
+                        <a class="link link-primary inline-flex min-h-[44px] items-center text-sm" href="{{ path('admin_lieu_fermetures', {id: fermeture.lieu.id}) }}">Voir le gymnase<span class="sr-only"> {{ fermeture.lieu.nom }}</span></a>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if nombreFermetures > fermetures|length %}
+                <p class="pt-2"><a class="link link-primary" href="{{ path('admin_lieu_index') }}">Voir les {{ nombreFermetures }} fermetures dans « Gymnases »</a></p>
+            {% endif %}
         </section>
     {% endif %}
 
-    <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        {% for tuile in [
-            {route: 'admin_equipe_index', titre: 'Équipes', nombre: nombres.equipes, texte: 'Créer, modifier, gérer la composition', icone: 'equipes'},
-            {route: 'admin_joueur_index', titre: 'Joueurs', nombre: nombres.joueurs, texte: 'Fiches joueurs et coordonnées', icone: 'joueur'},
-            {route: 'admin_user_index', titre: 'Utilisateurs', nombre: nombres.utilisateurs, texte: 'Comptes de connexion, import Excel', icone: 'compte'},
-            {route: 'admin_lieu_index', titre: 'Gymnases', nombre: nombres.gymnases, texte: 'Adresses et créneaux', icone: 'gymnase'},
-        ] %}
-            <a href="{{ path(tuile.route) }}" class="admin-carte group flex items-start gap-3 no-underline transition-colors hover:border-(--color-primary)">
-                <span class="rounded-field bg-(--color-primary)/10 p-2 text-(--color-primary)">{{ icone.i(tuile.icone, 'size-6') }}</span>
-                <span class="min-w-0">
-                    <span class="flex items-baseline gap-2">
-                        <span class="font-display text-xl font-semibold group-hover:underline">{{ tuile.titre }}</span>
-                        <span class="text-sm text-(--color-base-content)/80 tabular-nums">{{ tuile.nombre }}</span>
+    {# E. Accès rapides #}
+    {% set t = tuiles %}
+    <section class="mt-6" aria-labelledby="titre-acces">
+        <h2 id="titre-acces" class="mb-3 text-lg">Accès rapides</h2>
+        <div class="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-3">
+            {% for tuile in [
+                {route: 'admin_equipe_index', titre: 'Équipes', icone: 'equipes', texte: t.saison ? _self.pluriel(t.equipes, 'engagée', 'engagées') ~ ' cette saison' : _self.pluriel(t.equipes, 'équipe', 'équipes')},
+                {route: 'admin_joueur_index', titre: 'Joueurs', icone: 'joueur', texte: t.joueurs is not null ? _self.pluriel(t.joueurs, 'joueur', 'joueurs') ~ ' cette saison' : 'Fiches joueurs'},
+                {route: 'admin_club_index', titre: 'Clubs', icone: 'club', texte: _self.pluriel(t.clubs, 'club', 'clubs') ~ (t.clubsSansResponsable ? ' · ' ~ t.clubsSansResponsable ~ ' sans responsable' : '')},
+                {route: 'admin_lieu_index', titre: 'Gymnases', icone: 'gymnase', texte: _self.pluriel(t.gymnases, 'gymnase', 'gymnases') ~ (t.gymnasesFermes ? ' · ' ~ _self.pluriel(t.gymnasesFermes, 'fermé', 'fermés') ~ ' aujourd\'hui' : '')},
+                {route: 'admin_user_index', titre: 'Utilisateurs', icone: 'compte', texte: _self.pluriel(t.utilisateurs, 'compte', 'comptes')},
+                {route: 'admin_parametres_index', titre: 'Paramètres du site', icone: 'reglages', texte: 'Connexion, contact, logo'},
+            ] %}
+                <a href="{{ path(tuile.route) }}" class="admin-carte group flex items-start gap-3 no-underline transition-colors hover:border-(--color-primary)">
+                    <span class="rounded-field bg-(--color-primary)/10 p-2 text-(--color-primary) max-sm:hidden">{{ icone.i(tuile.icone, 'size-6') }}</span>
+                    <span class="min-w-0">
+                        <span class="block font-display text-lg sm:text-xl font-semibold group-hover:underline">{{ tuile.titre }}</span>
+                        <span class="block text-sm text-(--color-base-content)/80">{{ tuile.texte }}</span>
                     </span>
-                    <span class="block text-sm text-(--color-base-content)/80">{{ tuile.texte }}</span>
-                </span>
-            </a>
-        {% endfor %}
-    </div>
-
-    <p class="mt-8 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-(--color-base-content)/80">
-        <span class="inline-flex items-center gap-1">{{ icone.i('outils') }} Outils techniques :</span>
-        <a class="hover:underline" href="{{ path('admin_phase_index') }}">Phases</a>
-        <a class="hover:underline" href="{{ path('admin_poule_index') }}">Poules</a>
-        <a class="hover:underline" href="{{ path('admin_journee_index') }}">Journées</a>
-        <a class="hover:underline" href="{{ path('admin_partie_index') }}">Matchs</a>
-    </p>
+                </a>
+            {% endfor %}
+        </div>
+    </section>
 {% endblock %}

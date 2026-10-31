@@ -753,6 +753,12 @@ aux huit questions de son §3 :
 8. **Rappel des fermetures** : ligne « À faire » « Avant de générer les matchs, demandez aux clubs leurs fermetures de
    gymnase. » pendant la mise en place d'une saison sans matchs. L'aide « Le placement ne tient pas encore compte des
    fermetures » est abandonnée : les lots 2 et 3 des fermetures sont faits.
+
+**Précisions à la réalisation** (relectures ergonome et webdesigner, 31/10/2026) : la ligne « règlement » n'apparaît qu'à
+partir de la validation de la saison (pas pendant la préparation du brouillon) ; quand plusieurs saisons sont suivies, les
+lignes commencent par « Nom de la saison, Phase 1 : » ; lignes urgentes (match dans un gymnase fermé, aucune saison affichée)
+marquées par une icône, du gras et un filet, pas par la couleur seule ; la carte de la saison en cours mène aussi à « Scores à
+saisir », qui sinon ne serait accessible qu'en cas de retard ; « Afficher sur le site » depuis le tableau de bord y ramène.
 *(2026-10-31)*
 
 ---

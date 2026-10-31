@@ -77,7 +77,7 @@
                 {% if saisonCourante %}
                     <li><a href="{{ path('admin_saison_show', {id: saisonCourante.id}) }}" class="{{ lien }} {{ surSaisonCourante ? 'menu-active' }}" {% if surSaisonCourante %}aria-current="page"{% endif %}>
                         {{ icone.i('etoile', 'size-5') }}
-                        <span class="flex flex-col leading-tight"><span>Saison en cours</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
+                        <span class="flex flex-col leading-tight"><span>Saison affichée</span><span class="text-xs opacity-70">{{ saisonCourante.nom }}</span></span>
                     </a></li>
                 {% endif %}
                 {% if saisonCourante %}

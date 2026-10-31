@@ -38,7 +38,8 @@ Le détail coché des lots 0 à 6 (terminés) est dans [`archive/lots-0-6.md`](a
    branche à part depuis `main`).
 4. Port 3307 (MySQL) ouvert sur Internet, constaté le 31/10/2026 : consigné en tête de `deploiement-reglement.md` et dans la page
    pour Francis. Branches `parametres-site` et `maj-paquets` supprimées.
-5. **En cours : tableau de bord** (PO6, `tableau-de-bord.md`).
+5. **Tableau de bord** (D64) : réalisé sur la branche `tableau-de-bord` le 31/10/2026 (TDB-01 à TDB-12, relu par l'ergonome, le
+   webdesigner et la sécurité) ; reste à l'essayer en recette (saisie depuis « Scores à saisir » sur téléphone), puis à fusionner.
 L'application tourne peut-être sur `blvb_recette` : voir `CLAUDE.md`, section Environnement. Un logo d'essai de l'utilisateur y est envoyé.
 
 ## Lot 11 : règlement par saison 🟡 (branche `reglement`, R1 à R5 fusionnés dans `formats-competition` le 22/10/2026 ; R6 en attente ; détail dans `reglement.md`)

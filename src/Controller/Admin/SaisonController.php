@@ -130,7 +130,8 @@ final class SaisonController extends AbstractController
         $cache->delete('saisons_all');
         $this->addFlash('success', sprintf('« %s » est maintenant affichée sur le site.', $choisie->getNom()));
 
-        return $this->redirectToRoute('admin_saison_index');
+        // Bouton du tableau de bord (D64) : retour au tableau de bord
+        return $this->redirectToRoute($request->getPayload()->getString('retour') === 'tableau_de_bord' ? 'app_admin_dashboard' : 'admin_saison_index');
     }
 
 
