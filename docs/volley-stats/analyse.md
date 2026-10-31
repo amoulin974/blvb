@@ -4,6 +4,8 @@ Saisie des compositions et des statistiques des joueurs pendant les matchs du ch
 conçu ni codé.** Cadrage consigné dans `docs/wizard-saison/decisions.md` (D66) ; ce dossier rassemble le reste : état des
 lieux, besoins, contraintes, risques et questions encore ouvertes. Démarré le 31/10/2026, branche `volley-stats`.
 
+Toutes les situations de jeu et leurs conséquences : `situations.md`.
+
 Maquette existante : artefact « Volley Stats » (https://claude.ai/artifact/L8djveZYGiXZWvPAXdqFbP, septembre 2026).
 
 ## 1. État des lieux de la maquette
@@ -142,9 +144,12 @@ Les deux équipes d'un même match peuvent saisir chacune de leur côté : deux 
 - Un pourcentage exige un minimum d'actions (sans quoi 1 service réussi sur 1 donne 100 %) : seuil par critère, réglé par
   l'admin, par exemple 20 services ou 10 réceptions.
 
+- **Page des classements** : plusieurs classements sur la même page : meilleur serveur, meilleur passeur, meilleur attaquant,
+  meilleur réceptionneur ; formules proposées dans `situations.md` §12.
+
 **Ouvertes** :
 1. Périmètre des classements : saison entière, ou aussi par phase et par poule ?
-2. Liste des critères proposés au visiteur, à choisir dans le catalogue du §9.
+2. Formules des classements (`situations.md` §12) et barème des notes du mode complet, à six ou quatre niveaux (§1).
 
 ## 9. Catalogue des statistiques possibles (pour choisir les stats publiques)
 
