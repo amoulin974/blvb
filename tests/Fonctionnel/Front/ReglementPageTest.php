@@ -25,11 +25,17 @@ final class ReglementPageTest extends TestFonctionnel
         $this->enregistrer(ChampionnatDeTest::get('saison')->getId(),
             '<h2>Classement</h2><p>[departage]</p><h2>Rencontres</h2><h3>RÈGLE 1R : Partie interrompue</h3><p>Texte.</p><p>[bareme phase=ZZ]</p>');
 
-        $crawler = $this->client->request('GET', '/reglement');
+        // Dates fixes : le premier du mois s'écrit « 1er », et le test ne dépend pas du jour où il tourne
+        foreach (['2026-03-15' => '15 mars 2026', '2026-03-01' => '1er mars 2026'] as $date => $attendu) {
+            $em = self::getContainer()->get('doctrine')->getManager();
+            $em->getRepository(Reglement::class)->findOneBy(['saison' => ChampionnatDeTest::get('saison')->getId()])->setModifieLe(new \DateTimeImmutable($date));
+            $em->flush();
+            $crawler = $this->client->request('GET', '/reglement');
+            self::assertResponseIsSuccessful();
+            self::assertSelectorTextContains('#article-reglement', 'Mis à jour le '.$attendu);
+        }
 
-        self::assertResponseIsSuccessful();
         self::assertSelectorTextContains('h1', 'Règlement de la saison test');
-        self::assertSelectorTextContains('#article-reglement', 'Mis à jour le '.(new \IntlDateFormatter('fr_FR', 0, 0, null, null, 'd MMMM yyyy'))->format(new \DateTimeImmutable()));
         self::assertCount(1, $crawler->filter('nav[aria-label="Sommaire du règlement"]'));
         self::assertCount(1, $crawler->filter('h2#classement'));
         self::assertCount(1, $crawler->filter('h3#regle-1r'));

@@ -553,7 +553,7 @@ La fenêtre de saisie elle-même (champs 0 à 2, aide du match interrompu, résu
 - **RGL-09** : `[departage]` dans l'ordre de la saison ; `[calendrier]` : journées par semaine (« Journée 1, toutes les poules », « Poules A et B : journée 2 · poules C et D : journée 3 »), semaine sans match, journée des finales (date, heure, gymnase), « Cette semaine ».
 
 **RGL-12 à RGL-15 — Page publique du règlement** ✅ *`Fonctionnel/Front/ReglementPageTest`* (`/reglement`, D57) :
-- **RGL-12** : règlement de la saison affichée : titre avec le nom de la saison, « Mis à jour le … », sommaire, ancres des titres, éléments calculés ; un code inapplicable ne laisse rien voir au visiteur.
+- **RGL-12** : règlement de la saison affichée : titre avec le nom de la saison, « Mis à jour le 15 mars 2026 » et « le 1er mars 2026 » pour le premier du mois (dates fixes), sommaire, ancres des titres, éléments calculés ; un code inapplicable ne laisse rien voir au visiteur.
 - **RGL-13** : un admin voit l'encart d'un code inapplicable ; un texte enregistré sans passer par l'éditeur est nettoyé à l'affichage (ni `<script>`, ni attribut d'événement).
 - **RGL-14** : saison sans règlement : message « Le règlement de cette saison n'est pas encore publié. », sans sommaire ; le règlement d'un brouillon n'est jamais affiché, même demandé par le sélecteur de saison.
 - **RGL-15** : changer de saison depuis une page y revient (champ `retour` du sélecteur, ex. `/reglement`) ; une saison passée est signalée ; une adresse de retour externe ou douteuse (`//…`, `/\…`, schéma, chemin relatif, saut de ligne, `..`) ramène à l'accueil.
