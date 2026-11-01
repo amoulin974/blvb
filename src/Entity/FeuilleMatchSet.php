@@ -61,7 +61,7 @@ class FeuilleMatchSet
     #[ORM\Column(length: 12)]
     private string $etat = self::COMPOSITION;
 
-    /** Choisi au moment de commencer le set, figé ensuite (D68) */
+    /** Choisi au moment de commencer le set (D68) ; ensuite, seulement du score aux touches (D72) */
     #[ORM\Column(length: 8, options: ['default' => self::SAISIE_SCORE])]
     private string $saisie = self::SAISIE_SCORE;
 

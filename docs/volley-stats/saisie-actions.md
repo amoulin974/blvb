@@ -25,7 +25,7 @@ d'abord la file d'attente locale de la spécification (§5) : affichage immédia
 | Faute de service adverse | 1 (« Point pour nous ») |
 | Ace subi sans contact | 1 (« Point pour eux ») |
 | Ace subi sur Léa | 2 |
-| Notre ace ou notre faute de service | 1 |
+| Notre ace ou notre faute de service | 1 (boutons de la carte, D73) |
 | Service adverse → réception → passe → attaque gagnante | 4 |
 | Même échange, attaque défendue puis point adverse | 4 |
 | Échange long, deux attaques | 7 à 8 (« non détaillé » en recours) |
@@ -43,7 +43,7 @@ possession, d'une attaque gagnante.
   un autre joueur vaut « Le jeu continue ».
 - **Le point découle de l'issue** : « Point gagné / perdu » crée l'événement `point` existant, avec une clé `sur`
   (l'action, ou `service`) ; score et rotation inchangés dans `EtatSet`. Les boutons « Point pour nous / Point pour eux »
-  restent : point sans faute de nos joueurs (faute adverse, attaque adverse gagnante).
+  restent : point sans faute de nos joueurs (faute adverse, attaque adverse gagnante) ; ils ne parlent plus du service (D73).
 - **Historique** avec le terme précis : ace, faute de service, attaque gagnante, ace subi.
 - **« Personne »** se déduit (point pour eux sans touche pendant leur service = ace subi) ; **« Équipe »** seulement pour les
   fautes collectives.

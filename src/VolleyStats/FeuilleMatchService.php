@@ -274,18 +274,46 @@ final class FeuilleMatchService
     }
 
     /**
+     * « Noter aussi les touches » (D72) : un set en « score seulement » passe aux touches, à partir du prochain échange ; ses
+     * points déjà notés deviennent des échanges non détaillés (score et rotation inchangés). Sans retour : « Point sans
+     * détail » couvre le cas inverse.
+     */
+    public function noterLesTouches(FeuilleMatchSet $set): void
+    {
+        $this->transaction(function () use ($set): void {
+            $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE);
+            if ($set->getEtat() !== FeuilleMatchSet::EN_COURS) {
+                throw new SaisieInvalide('Ce set n\'est pas en cours.');
+            }
+            if ($set->noteLesTouches()) {
+                return; // déjà fait (envoi rejoué après une coupure, autre téléphone)
+            }
+            if (EtatSet::calculer($set)->finAtteinte) {
+                throw new SaisieInvalide('Ce set est fini : il n\'y a plus de touches à noter.');
+            }
+            foreach ($set->getEvenements() as $evenement) {
+                if ($evenement->getType() === FeuilleMatchEvenement::POINT) {
+                    $evenement->marquerSansDetail();
+                }
+            }
+            $set->setSaisie(FeuilleMatchSet::SAISIE_TOUCHES);
+            $set->getFeuille()->marquerModifiee();
+        });
+    }
+
+    /**
      * Ajoute un événement au journal d'un set en cours. $dernierOrdre : dernier ordre connu du téléphone (null si aucun) ;
      * s'il a changé entre-temps, refus (l'autre téléphone a saisi) et la page se recharge. Un uuid déjà reçu (envoi rejoué
      * après une coupure) est sans effet.
      *
      * @param array<string, mixed> $donnees
      */
-    public function evenement(FeuilleMatchSet $set, string $uuid, string $type, array $donnees, ?int $dernierOrdre, ?User $auteur): void
+    public function evenement(FeuilleMatchSet $set, string $uuid, string $type, array $donnees, ?int $dernierOrdre, ?User $auteur, ?string $saisieConnue = null): void
     {
         if (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $uuid)) {
             throw new SaisieInvalide('Saisie non reconnue : rechargez la page.');
         }
-        $this->transaction(function () use ($set, $uuid, $type, $donnees, $dernierOrdre, $auteur): void {
+        $this->transaction(function () use ($set, $uuid, $type, $donnees, $dernierOrdre, $auteur, $saisieConnue): void {
             $this->em->refresh($set, LockMode::PESSIMISTIC_WRITE); // verrou et journal relu : un autre téléphone a pu saisir
             $existant = $this->em->getRepository(FeuilleMatchEvenement::class)->findOneBy(['uuid' => strtolower($uuid)]);
             if ($existant !== null) {
@@ -304,6 +332,9 @@ final class FeuilleMatchService
                 throw new SaisieInvalide('Ce set compte trop de saisies : rechargez la page.');
             }
             $this->verifierOrdre($set, $dernierOrdre);
+            if ($saisieConnue !== null && $saisieConnue !== $set->getSaisie()) {
+                throw new SaisieConcurrente('Les touches sont maintenant notées dans ce set : la page vient d\'être rechargée.'); // autre téléphone (D72)
+            }
             $donnees = $this->donneesValides($set, $type, $donnees);
             $ordre = ($set->getEvenements()->last() ?: null)?->getOrdre() + 1;
             $evenement = new FeuilleMatchEvenement($set, $ordre, strtolower($uuid), $type, $donnees, $auteur);

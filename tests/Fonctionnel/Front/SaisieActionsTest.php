@@ -11,7 +11,7 @@ use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Clock\Test\ClockSensitiveTrait;
 
 /**
- * VST-14 à VST-18, VST-21 à VST-23 : saisie des actions en mode intermédiaire, validation côté serveur (Volley Stats, D68 ;
+ * VST-14 à VST-18, VST-21 à VST-23, VST-25, VST-26 : saisie des actions en mode intermédiaire, validation côté serveur (Volley Stats, D68 ;
  * specification-actions.md §3 et §3 bis). Page de A1 sur le match de référence, sept joueurs présents (un sur le banc).
  */
 final class SaisieActionsTest extends TestFonctionnel
@@ -209,6 +209,73 @@ final class SaisieActionsTest extends TestFonctionnel
         self::assertResponseStatusCodeSame(400, 'point sur un set terminé');
         $this->evenement('modification', ['cible' => $reception, 'action' => 'defense']);
         self::assertResponseIsSuccessful('correction sur un set terminé');
+    }
+
+    #[TestDox('VST-25 : « Noter aussi les touches » : les points déjà notés deviennent non détaillés, score et rotation inchangés ; les touches se notent ensuite ; un second envoi est sans effet ; un téléphone resté en score reçoit 409')]
+    public function test_noter_aussi_les_touches(): void
+    {
+        $this->commencer('score');
+        $this->evenement('point', ['pour' => 'nous']);
+        $this->evenement('point', ['pour' => 'eux']);
+        $avant = $this->evenement('point', ['pour' => 'nous'])['feuille']['sets'][0]['calcul'];
+
+        $set = $this->envoyer(1, 'noter-touches')['feuille']['sets'][0];
+        self::assertResponseIsSuccessful();
+        self::assertSame('touches', $set['saisie']);
+        self::assertSame($avant, $set['calcul'], 'score, service et rotation inchangés');
+        foreach ($set['historique'] as $h) {
+            self::assertTrue($h['donnees']['sansDetail'], 'point déjà noté : sans détail');
+        }
+
+        $this->envoyer(1, 'evenement', ['uuid' => self::uuid(), 'type' => 'point', 'donnees' => ['pour' => 'nous'], 'dernierOrdre' => $this->ordre, 'saisie' => 'score']);
+        self::assertResponseStatusCodeSame(409, 'téléphone resté en score seulement');
+
+        $defense = $this->action('defense', 2);
+        $this->evenement('point', ['pour' => 'nous', 'sur' => $defense]);
+        self::assertResponseIsSuccessful();
+        $this->envoyer(1, 'noter-touches');
+        self::assertResponseIsSuccessful('envoi rejoué : sans effet');
+
+        for ($p = 3; $p < 24; ++$p) {
+            $this->evenement('point', ['pour' => 'nous', 'sansDetail' => true]);
+        }
+        $this->evenement('point', ['pour' => 'nous', 'sansDetail' => true]);
+        $stats = $this->envoyer(1, 'terminer')['feuille']['stats']['sets'][0];
+        self::assertSame(['echanges' => 26, 'detailles' => 1], ['echanges' => $stats['echanges'], 'detailles' => $stats['detailles']], 'seule la défense notée après le changement est détaillée');
+    }
+
+    #[TestDox('VST-25 : « Noter aussi les touches » refusé une fois le score de fin atteint, sans jeton valide, et à qui ne peut pas modifier la page')]
+    public function test_noter_aussi_les_touches_refus(): void
+    {
+        $this->commencer('score');
+        for ($p = 0; $p < 25; ++$p) {
+            $this->evenement('point', ['pour' => 'nous']);
+        }
+        $this->envoyer(1, 'noter-touches');
+        self::assertResponseStatusCodeSame(400, 'fin du set atteinte');
+
+        $jeton = $this->jeton;
+        $this->jeton = 'faux';
+        $this->envoyer(1, 'noter-touches');
+        self::assertResponseStatusCodeSame(403, 'jeton invalide');
+        $this->jeton = $jeton;
+
+        $this->connecter('cap.b1');
+        $this->envoyer(1, 'noter-touches');
+        self::assertResponseStatusCodeSame(404, 'autre équipe');
+    }
+
+    #[TestDox('VST-26 : à notre service, seul un point « sur le service » est un ace ou une faute ; un point sans touche ne pénalise ni ne crédite le serveur, le service reste compté')]
+    public function test_point_sans_touche_a_notre_service(): void
+    {
+        $this->commencer('touches', 'nous');
+        $this->evenement('point', ['pour' => 'nous', 'sur' => 'service']);
+        $this->evenement('point', ['pour' => 'nous']); // l'adversaire réceptionne puis attaque dehors
+        $equipe = $this->evenement('point', ['pour' => 'eux'])['feuille']['stats']['equipe']; // il marque sans qu'on touche le ballon
+        self::assertSame(['services' => 3, 'aces' => 1, 'fautesService' => 0, 'pointsMarques' => 1], array_intersect_key($equipe, ['services' => 0, 'aces' => 0, 'fautesService' => 0, 'pointsMarques' => 0]));
+        $equipe = $this->evenement('point', ['pour' => 'nous'])['feuille']['stats']['equipe']; // nous reprenons le service
+        $equipe = $this->evenement('point', ['pour' => 'eux', 'sur' => 'service'])['feuille']['stats']['equipe'];
+        self::assertSame(1, $equipe['fautesService'], 'faute de service explicite');
     }
 
     #[TestDox('VST-21 : une fois le set terminé, la page donne les stats du match (joueurs, équipe, taux de détail comparé au seuil)')]

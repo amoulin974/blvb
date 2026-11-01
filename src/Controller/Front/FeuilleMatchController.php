@@ -81,9 +81,9 @@ final class FeuilleMatchController extends AbstractController
 
     /**
      * Écritures d'un set, en JSON (feuille_match_controller.js) : composition, commencer, événement, précédent, suivant,
-     * terminer, rouvrir. Réponse : l'état complet de la page ; 400 saisie refusée, 409 saisie concurrente (recharger).
+     * terminer, rouvrir, noter-touches. Réponse : l'état complet de la page ; 400 saisie refusée, 409 saisie concurrente (recharger).
      */
-    #[Route('/set/{numero}/{action}', name: '_set', requirements: ['numero' => '[1-5]', 'action' => 'composition|commencer|evenement|precedent|suivant|terminer|rouvrir'], methods: ['POST'])]
+    #[Route('/set/{numero}/{action}', name: '_set', requirements: ['numero' => '[1-5]', 'action' => 'composition|commencer|evenement|precedent|suivant|terminer|rouvrir|noter-touches'], methods: ['POST'])]
     public function set(Equipe $equipe, Partie $partie, int $numero, string $action, Request $request): JsonResponse
     {
         $match = $this->match($equipe, $partie, FeuilleMatchVoter::MODIFIER, json: true);
@@ -103,11 +103,13 @@ final class FeuilleMatchController extends AbstractController
                 'composition' => $this->service->composition($feuille, $numero, \is_array($donnees['composition'] ?? null) ? $donnees['composition'] : []),
                 'commencer' => $this->service->commencer($set, ($donnees['aCinq'] ?? false) === true, \is_string($donnees['saisie'] ?? null) ? $donnees['saisie'] : FeuilleMatchSet::SAISIE_SCORE),
                 'evenement' => $this->service->evenement($set, $chaine('uuid'), $chaine('type'), \is_array($donnees['donnees'] ?? null) ? $donnees['donnees'] : [],
-                    \is_int($donnees['dernierOrdre'] ?? null) ? $donnees['dernierOrdre'] : null, $this->getUser() instanceof User ? $this->getUser() : null),
+                    \is_int($donnees['dernierOrdre'] ?? null) ? $donnees['dernierOrdre'] : null, $this->getUser() instanceof User ? $this->getUser() : null,
+                    \is_string($donnees['saisie'] ?? null) ? $donnees['saisie'] : null),
                 'precedent' => $this->service->precedent($set, $chaine('uuid')),
                 'suivant' => $this->service->suivant($set, $chaine('uuid')),
                 'terminer' => $this->service->terminerSet($set),
                 'rouvrir' => $this->service->rouvrirSet($set),
+                'noter-touches' => $this->service->noterLesTouches($set),
             };
             $statut = 200;
         } catch (SaisieConcurrente $e) {

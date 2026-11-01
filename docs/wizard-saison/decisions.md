@@ -82,6 +82,8 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
 - D70. Saisie du score annoncée avant le match et proposée sur la fiche équipe
 - D71. Page « Ce que vous pouvez faire », encart d'accueil une fois par rôle
+- D72. Volley Stats : « Noter aussi les touches » pendant un set commencé en « score seulement »
+- D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -943,6 +945,30 @@ fonctionnalités selon le rôle (le reste n'est pas décidé).
   « Mon profil », et dans le sous-menu « Le championnat » de la barre (seul accès d'un visiteur sur ordinateur).
 - **Pas pour l'instant** : courriel de rentrée, fiche PDF pour les responsables de club ; **Volley Stats n'est pas
   annoncé** (ni page du match ni sets joués ni statistiques) tant qu'il n'a pas été essayé avec quelques joueurs.
+
+## D72. Volley Stats : « Noter aussi les touches » pendant un set commencé en « score seulement »
+
+*Décidé le 01/11/2026* (utilisateur) : le choix de D68 au début du set n'est plus définitif dans ce sens, pour une erreur de
+clic ou un changement d'avis. Pendant un set en « score seulement », un bouton « Noter aussi les touches », avec
+confirmation, passe aux touches à partir du prochain échange. Les points déjà notés restent acquis et deviennent des
+échanges non détaillés (score et rotation inchangés), donc comptent dans le taux de détail. Pas de retour au « score
+seulement » : « Point sans détail » couvre ce cas, échange par échange. Pas d'ajout de touches pour les échanges déjà joués
+(D68). Refusé une fois le score de fin atteint.
+
+## D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
+
+*Décidé le 01/11/2026* (utilisateur, avis de l'ergonome). Précise D68 (« service jamais saisi ») et sa précision sur « Point
+pour nous / eux ».
+- **Défaut corrigé** : à notre service, un point sans touche était toujours compté comme un ace ou une faute de service, alors
+  que l'adversaire peut réceptionner puis attaquer dehors, ou marquer sans que nous touchions le ballon.
+- **Boutons « Ace » et « Faute de service »** dans la carte de la touche, quand nous servons et avant toute touche ; ils
+  disparaissent à la première touche, qui veut dire que le service est passé. Le serveur reste déduit de la rotation.
+- **« Point pour nous / eux »** sans touche à notre service : faute adverse ou point adverse, sans effet sur les aces et les
+  fautes du serveur ; le service reste compté. Quand l'adversaire sert, pas de bouton : sans touche, la déduction reste juste
+  (faute de service adverse, ace subi).
+- **Dépliant fermé « Quelle action choisir ? »**, au choix de « Que notez-vous ? » et sous le set en cours, jamais ouvert seul :
+  une phrase pour Réception, Passe, Attaque, Renvoi, Défense, Block, Ace, Faute de service, textes validés par l'utilisateur.
+  Il remplace ici le lien « Comment ça marche ? » envisagé dans `presentation-par-role.md` §7.
 
 ---
 

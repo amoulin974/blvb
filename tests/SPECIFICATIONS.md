@@ -695,6 +695,8 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
   en « block » pour un joueur arrière ; correction refusée après le gel (404), acceptée pour l'admin ; réponse JSON en
   `private, no-store`.
 - **VST-23** ✅ : aucune touche ni stat sur la fiche équipe publique, le calendrier ni l'agenda ICS.
+- **VST-25** ✅ : « Noter aussi les touches » (D72) : un set en `score` passe à `touches`, ses points déjà notés deviennent non détaillés (`sansDetail`), score, service et rotation inchangés ; les touches se notent ensuite et seules elles comptent dans le taux de détail (1 échange détaillé sur 26) ; un second envoi est sans effet ; un téléphone resté en score reçoit 409, rien n'est enregistré ; refusé une fois le score de fin atteint (400), sans jeton valide (403) et pour une autre équipe (404).
+- **VST-26** ✅ : à notre service, seul un point `sur: service` est un ace ou une faute (boutons « Ace » et « Faute de service », D73) ; un point sans touche ne crédite ni ne pénalise le serveur, et le service reste compté.
 - **VST-24** ✅ *`Integration/Command/PurgerPagesMatchTest`* : `app:volley-stats:purger` supprime les pages du match d'une
   saison une fois la saison suivante terminée, pas avant ; `--simulation` ne supprime rien.
 

@@ -13,7 +13,8 @@ réalisée). Rédigé le 31/10/2026, relu par l'agent `securite` le même jour (
 - **Le point garde son événement** ; il dit en plus sur quoi il porte (`sur`) : l'action qui le termine, le service, ou une
   faute de règlement.
 - **Un échange** = les événements entre deux points (ou une balle à rejouer). Il n'est pas stocké : il se déduit du journal.
-- **Le service n'est jamais saisi** (D68) : il se déduit de la rotation (serveur au poste 1 quand nous servons).
+- **Le serveur n'est jamais saisi** (D68) : il se déduit de la rotation (poste 1 quand nous servons). Seuls l'ace et la faute de
+  service se notent, avec leurs boutons (D73) ; une touche notée veut dire que le service est passé.
 - **Rien n'est public dans cette brique** : stats visibles de l'équipe et du responsable de son club (D68, précision du
   31/10/2026, à écrire dans les conditions d'utilisation) ;
   les classements publics, avec l'accord de chaque joueur (D66), viendront dans la brique suivante.
@@ -23,6 +24,8 @@ réalisée). Rédigé le 31/10/2026, relu par l'agent `securite` le même jour (
 ### Nouvelle colonne `feuille_match_set.saisie`
 
 `score` (le score seulement) ou `touches` (le score et les touches des joueurs), choisi au moment de commencer le set (D68).
+Un set en `score` peut passer à `touches` pendant le set (« Noter aussi les touches », D72) : ses points déjà notés deviennent
+des échanges non détaillés ; pas de retour en arrière, « Point sans détail » couvre le cas inverse.
 Les sets existants valent `score`.
 
 ### Nouveaux types d'événements
@@ -44,7 +47,8 @@ de règlement, refusé à la saisie).
 - **Point portant sur une action** (`sur`) : l'action doit être la dernière de l'échange en cours ; `point gagné` sur
   réception, passe, défense ou renvoi = point marqué par le joueur, pas compté en attaque (D68).
 - **Point portant sur le service** : seulement quand nous servons et qu'aucune action n'a encore été saisie dans l'échange :
-  `pour: nous` = ace, `pour: eux` = faute de service ; le serveur est celui de la rotation.
+  `pour: nous` = ace, `pour: eux` = faute de service ; le serveur est celui de la rotation. À notre service, un point sans
+  touche ni `sur` est une faute ou un point adverse : il ne touche pas aux aces ni aux fautes du serveur (D73).
 - **Fautes de règlement** (menu « Faute de… ») : point `{pour: eux, detail: filet|pied|double|quatre_touches|position|autre}`,
   avec `sur` = l'action du joueur fautif (saisie juste avant, action « faute » non nécessaire) ou sans `sur` pour une faute
   d'équipe (quatre touches, position ou rotation).
@@ -71,7 +75,7 @@ de règlement, refusé à la saisie).
   liste fermée ; `detail` `contree|faute` seulement avec `pour: eux` et un `sur` qui est une attaque ; motifs de faute
   seulement avec `pour: eux` ; aucun `detail` avec `pour: nous` ; `sur: service` refusé si la place au service est libre ;
   sur un set `score`, `sur`, `detail`, `action`, `rejouer`, `modification` refusés ; `saisie` ∈ {score, touches}, donnée à
-  « commencer », figée ensuite ; action refusée une fois le score de fin atteint ; `correction`, `rotation` et remplacement
+  « commencer », puis seulement de `score` à `touches` (D72 ; une saisie d'un téléphone resté en `score` reçoit 409) ; action refusée une fois le score de fin atteint ; `correction`, `rotation` et remplacement
   refusés pendant un échange qui a déjà des touches.
 - **Modifier l'action qui a fait le point** (la retirer, changer son type) : refusé (« Corriger le score »).
 - **Plafond** : 1 500 événements par set, au-delà refus (téléphone qui boucle).
@@ -97,7 +101,7 @@ joueur et par set ou par match :
 | Sets joués | comme aujourd'hui |
 
 **Échange détaillé** : tout échange dont le point n'est pas « sans détail » (D68) ; un point sans touche ni `sansDetail` se
-lit comme un point sans faute de nos joueurs (ace subi, faute de service adverse, ace ou faute de notre serveur selon `sur`). **Taux de
+lit comme un point sans faute de nos joueurs (ace subi ou faute de service adverse quand l'adversaire sert, faute ou point adverse quand nous servons) ; l'ace et la faute de notre serveur viennent de `sur: service`. **Taux de
 détail** d'un set = échanges détaillés ÷ échanges ; un set compte dans les classements publics (brique suivante) s'il est
 en `touches` et au-dessus du seuil réglé par l'admin.
 
@@ -115,9 +119,9 @@ en `touches` et au-dessus du seuil réglé par l'admin.
 ## 6. Interface (voir la maquette)
 
 « Que notez-vous ? » au début du set ; actions prédites ; terrain = pavé des joueurs ; carte de la touche en attente ;
-« Point gagné », « Point perdu » (puis « Contrée / Faute » pour une attaque), « Le jeu continue » implicite ; « Point pour
+« Ace » et « Faute de service » dans la carte, à notre service avant toute touche (D73) ; « Point gagné », « Point perdu » (puis « Contrée / Faute » pour une attaque), « Le jeu continue » implicite ; « Point pour
 nous / Point pour eux » ; « Balle à rejouer » ; « Faute de… » ; historique regroupé par échange ; stats de l'équipe et par
-joueur sous le relevé des sets.
+joueur sous le relevé des sets ; dépliant « Quelle action choisir ? » au début du set et sous le set en cours (D73).
 
 ## 7. Tests à prévoir
 

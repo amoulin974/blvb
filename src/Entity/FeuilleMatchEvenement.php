@@ -53,7 +53,7 @@ class FeuilleMatchEvenement
     private string $type;
 
     /**
-     * point : {pour: nous|eux} ; remplacement : {sort: ?int, entre: int} (identifiants de FeuilleMatchJoueur, sort null
+     * point : {pour: nous|eux} (détail : specification-actions.md §2 ; sansDetail : échange non détaillé) ; remplacement : {sort: ?int, entre: int} (identifiants de FeuilleMatchJoueur, sort null
      * pour une place libre) ; correction : {nous: int, eux: int, service: nous|eux} ; rotation : {}. Pas de motif de remplacement
      * (« blessure » serait une donnée de santé).
      *
@@ -114,6 +114,12 @@ class FeuilleMatchEvenement
     public function getDonnees(): array
     {
         return $this->donnees;
+    }
+
+    /** Point noté en « score seulement » dans un set passé aux touches : échange non détaillé (D72) */
+    public function marquerSansDetail(): void
+    {
+        $this->donnees['sansDetail'] = true;
     }
 
     public function getSaisiPar(): ?User

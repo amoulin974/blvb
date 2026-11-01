@@ -11,6 +11,18 @@ const ORDRE_VISUEL = [4, 3, 2, 5, 6, 1] // filet en haut : avant puis arrière, 
 const DEPARTS = [[0, 0], [0, 8], [8, 0]]
 // Saisie des touches (D68)
 const ACTIONS = [['reception', 'Réception'], ['passe', 'Passe'], ['attaque', 'Attaque'], ['renvoi', 'Renvoi'], ['defense', 'Défense'], ['block', 'Block']]
+// Explications du dépliant « Quelle action choisir ? » (D73)
+const AIDE_ACTIONS = [
+    ['Réception', 'Première touche sur le service adverse.'],
+    ['Passe', 'Touche qui prépare l\'attaque d\'un partenaire.'],
+    ['Attaque', 'Ballon frappé pour marquer.'],
+    ['Renvoi', 'Ballon facile renvoyé en 3e touche, sans chercher à marquer ; il ne compte pas comme une attaque.'],
+    ['Défense', 'Première touche sur un ballon de l\'adversaire en cours d\'échange, ou sur notre attaque contrée qui revient jouable. On repart pour trois touches.'],
+    ['Block', 'Ballon contré au filet par un joueur de devant. Il ne compte pas comme une touche : il en reste trois après.'],
+    ['Ace', 'Le service fait le point, ballon au sol ou impossible à rejouer.'],
+    ['Faute de service', 'Service dehors, dans le filet ou pied sur la ligne.'],
+    ['Point pour nous / eux', 'Échange terminé sans touche de notre côté, ou sans que la dernière touche en soit la cause : faute ou point de l\'adversaire.'],
+]
 const ACTION_NOM = { reception: 'réception', passe: 'passe', attaque: 'attaque', renvoi: 'renvoi', defense: 'défense', block: 'block' }
 const FAUTES_JOUEUR = [['filet', 'Filet'], ['pied', 'Pied sous le filet'], ['double', 'Double touche'], ['tenue', 'Balle tenue'], ['autre', 'Autre faute']]
 const FAUTES_EQUIPE = [['quatre_touches', 'Quatre touches'], ['position', 'Position ou rotation']]
@@ -80,7 +92,10 @@ export default class extends Controller {
         const f = this.element.contains(document.activeElement) ? document.activeElement : null
         const cle = f?.dataset.action ? [...f.attributes].filter((a) => a.name === 'data-action' || a.name.endsWith('-param')).map((a) => `[${a.name}="${CSS.escape(a.value)}"]`).join('') : null
         this.rendreContenu()
-        if (cle) this.contenuTarget.querySelector(cle)?.focus()
+        const cible = cle ? this.contenuTarget.querySelector(cle) : null
+        if (cible) cible.focus()
+        // Le bouton a disparu (« Faute de service », passage aux touches…) : le focus se replie sur le titre du set
+        else if (f) document.getElementById('titre-set-cours')?.focus({ preventScroll: true })
     }
 
     rendreContenu() {
@@ -144,7 +159,7 @@ export default class extends Controller {
                 <div class="mt-2 grid grid-cols-2 gap-2">${radio('service', 'nous', b.premierService === 'nous', 'Nous servons')}${radio('service', 'eux', b.premierService === 'eux', 'Nous recevons')}</div></fieldset>
             <fieldset><legend class="font-semibold">Que notez-vous pendant le set ${b.numero} ?</legend>
                 <div class="mt-2 grid gap-2 sm:grid-cols-2">${radio('saisie', 'score', b.saisie === 'score', 'Le score seulement <span class="block text-sm font-normal">Un point à chaque échange.</span>')}${radio('saisie', 'touches', b.saisie === 'touches', 'Le score et les touches des joueurs <span class="block text-sm font-normal">Après chaque point : qui a touché le ballon, et comment. Un échange peut rester sans détail.</span>')}</div>
-                <p class="mt-2 text-sm">Pour que le set compte dans les classements des joueurs, au moins <strong>${this.feuille.seuil} %</strong> de ses échanges doivent être détaillés.</p></fieldset>
+                <p class="mt-2 text-sm">Pour que le set compte dans les classements des joueurs, au moins <strong>${this.feuille.seuil} %</strong> de ses échanges doivent être détaillés.</p>${this.vueAideActions()}</fieldset>
             <div class="flex flex-col gap-2">
                 <button type="button" class="btn btn-accent btn-block" data-action="feuille-match#commencer" aria-disabled="${manque.length ? 'true' : 'false'}" aria-describedby="reste-a-faire">Commencer le set ${b.numero}</button>
                 <p class="text-sm" id="reste-a-faire">${manque.length ? 'Reste à faire : ' + manque.join(', ') + '.' : 'Prêt : le set commence au score de départ choisi.'}</p>
@@ -174,23 +189,30 @@ export default class extends Controller {
                     <label class="choix-carte choix-ligne"><input type="radio" class="radio radio-primary" name="service" value="nous" required ${c.service === 'nous' ? 'checked' : ''}> <span class="font-medium">Nous servons</span></label>
                     <label class="choix-carte choix-ligne"><input type="radio" class="radio radio-primary" name="service" value="eux" ${c.service === 'eux' ? 'checked' : ''}> <span class="font-medium">Nous recevons</span></label></div></fieldset>
                 <div class="grid grid-cols-2 gap-2"><button type="button" class="btn btn-ghost" data-action="feuille-match#fermerOutil">Annuler</button><button type="submit" class="btn btn-accent">Valider</button></div></form>`
+        } else if (m && this.mode === 'noter-touches' && set.saisie === 'score' && !c.finAtteinte) {
+            const notes = set.historique.filter((h) => !h.annule && h.type === 'point').length
+            const dejaNotes = notes > 1 ? `Les ${notes} points déjà notés restent sans détail. Ils comptent : pour que le set entre dans les classements, au moins ${this.feuille.seuil} % de ses échanges doivent être détaillés.` : `Le point déjà noté reste sans détail. Il compte : pour que le set entre dans les classements, au moins ${this.feuille.seuil} % de ses échanges doivent être détaillés.`
+            outils = `<div class="flex flex-col gap-3"><p class="font-semibold">Noter aussi les touches à partir du prochain échange ?</p>
+                <p class="text-sm">${notes ? dejaNotes : 'Aucun point n\'est encore noté : les touches se notent dès le premier échange.'} Vous ne pourrez plus revenir au score seulement dans ce set, mais « Point sans détail » reste possible à chaque échange.</p>
+                <div class="grid grid-cols-2 gap-2"><button type="button" class="btn btn-ghost" data-action="feuille-match#fermerOutil">Annuler</button><button type="button" class="btn btn-accent" data-action="feuille-match#noterTouches">Noter les touches</button></div></div>`
         } else if (m && this.mode === 'replacer') {
             outils = `<p class="font-semibold">Les joueurs sont-ils à leur place ? Touchez « Tourner d'un poste » autant de fois qu'il faut.</p>
                 <div class="grid gap-2 sm:grid-cols-2"><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#tournerSet">Tourner d'un poste</button><button type="button" class="btn btn-primary" data-action="feuille-match#fermerOutil">C'est bon</button></div>`
         } else if (m) {
             outils = `<div class="grid gap-2 sm:grid-cols-2">
                 <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="remplacement"${set.saisie === 'touches' && this.echange(set).length ? ' aria-disabled="true"' : ''}>Remplacer un joueur</button>
-                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="correction">Corriger le score</button></div>`
+                <button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="correction">Corriger le score</button>
+                ${set.saisie === 'score' && !c.finAtteinte ? '<button type="button" class="btn btn-outline btn-primary sm:col-span-2" data-action="feuille-match#ouvrirOutil" data-feuille-match-mode-param="noter-touches">Noter aussi les touches</button>' : ''}</div>`
         }
         const fin = m && c.finAtteinte
             ? `<div role="status" class="rounded-box border-2 border-(--color-primary) bg-base-200 p-3 flex flex-col gap-2"><p><strong>Fin du set : ${c.score[0]}–${c.score[1]}.</strong> Un point mal noté ? Touchez « Précédent ».</p><button type="button" class="btn btn-accent" data-action="feuille-match#terminer">Terminer le set ${set.numero}</button></div>`
             : ''
         if (set.saisie === 'touches' && m && !['remplacement', 'correction', 'replacer'].includes(this.mode)) {
             return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-2" aria-labelledby="titre-set-cours">
-                ${this.vueTouches(set)}${fin}${outils}${this.vueEchanges(set)}</section>`
+                ${this.vueTouches(set)}${fin}${outils}${this.vueEchanges(set)}${this.vueAideActions()}</section>`
         }
         return `<section class="bg-base-100 border border-base-300 rounded-box p-3 md:p-4 flex flex-col gap-4" aria-labelledby="titre-set-cours">
-            <div class="flex flex-wrap items-baseline justify-between gap-2"><h2 id="titre-set-cours" class="text-xl uppercase tracking-wide">Set ${set.numero} en cours</h2>
+            <div class="flex flex-wrap items-baseline justify-between gap-2"><h2 id="titre-set-cours" tabindex="-1" class="text-xl uppercase tracking-wide">Set ${set.numero} en cours</h2>
             <p class="text-sm">en ${set.pointsFin} points · parti de ${set.scoreDepart[0]}–${set.scoreDepart[1]}</p></div>
             <div><p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Score du set, pour l'équipe seulement</p>
                 <div class="mt-2 grid grid-cols-2 gap-2 text-center">
@@ -273,6 +295,14 @@ export default class extends Controller {
 
     // --- Saisie des touches (D68 ; maquette docs/volley-stats/maquette-saisie-actions.md) ------------------------------
 
+    // Dépliant fermé, jamais ouvert seul ; reste ouvert si on l'a ouvert, malgré les rendus (D73)
+    vueAideActions() {
+        const lignes = AIDE_ACTIONS.map(([nom, texte]) => `<div><dt class="font-semibold">${nom}</dt><dd>${texte}</dd></div>`).join('')
+        return `<details class="depliant border-t border-base-300 pt-2 mt-2" data-action="toggle->feuille-match#basculerAide"${this.aideOuverte ? ' open' : ''}><summary class="cursor-pointer font-semibold min-h-12 flex items-center justify-between">Quelle action choisir ?<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/></svg></summary><dl class="flex flex-col gap-2 text-sm">${lignes}</dl></details>`
+    }
+
+    basculerAide(e) { this.aideOuverte = e.currentTarget.open }
+
     // Touches de l'échange en cours (après le dernier point, la dernière balle à rejouer ou la dernière correction)
     echange(set) {
         let touches = []
@@ -331,7 +361,7 @@ export default class extends Controller {
         const nEnvoi = this.file.length
         const etatEnvoi = this.horsLigne ? `<strong class="texte-attention">Hors ligne · ${nEnvoi} gardée${nEnvoi > 1 ? 's' : ''}</strong>` : (nEnvoi ? `<span class="italic">Envoi… (${nEnvoi})</span>` : '<span class="texte-succes">✓ Enregistré</span>')
         const sansDetail = touches.length || verrou ? ' aria-disabled="true"' : ''
-        return `<div><h2 id="titre-set-cours" class="text-base uppercase tracking-wide">Set ${set.numero} en cours <span class="normal-case tracking-normal font-sans text-sm font-normal">· en ${set.pointsFin} points</span></h2>
+        return `<div><h2 id="titre-set-cours" tabindex="-1" class="text-base uppercase tracking-wide scroll-mt-20">Set ${set.numero} en cours <span class="normal-case tracking-normal font-sans text-sm font-normal">· en ${set.pointsFin} points</span></h2>
                 <p class="mt-1 flex items-baseline justify-center gap-3 font-display"><span class="font-semibold uppercase truncate text-right flex-1 min-w-0" title="${echapper(this.feuille.nous)}">${echapper(this.feuille.nous)}</span><span class="score-set score-set-compact shrink-0"><span class="sr-only">Score : </span>${c.score[0]}<span aria-hidden="true">–</span><span class="sr-only"> à </span>${c.score[1]}</span><span class="font-semibold uppercase truncate flex-1 min-w-0" title="${echapper(this.feuille.eux)}">${echapper(this.feuille.eux)}</span></p>
                 <p class="text-sm flex flex-wrap justify-between gap-x-3"><span>Au service : <strong>${c.service === 'nous' ? echapper(this.nom(c.postes[0])) : 'adversaire'}</strong></span>${etatEnvoi}</p></div>
             <div><p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/80">Prochaine touche${enAttente ? ', si le jeu continue' : ''}</p>
@@ -346,7 +376,7 @@ export default class extends Controller {
                 <button type="button" class="btn btn-outline btn-primary btn-sm min-h-11" data-action="feuille-match#pointSansDetail" data-feuille-match-pour-param="eux" aria-label="Point sans détail pour ${echapper(this.feuille.eux)}"${sansDetail}>Eux</button></div>
             <button type="button" class="btn btn-outline btn-primary btn-block" data-action="feuille-match#rejouer"${touches.length && !verrou ? '' : ' aria-disabled="true"'}>Balle à rejouer</button>
             <div class="grid grid-cols-2 gap-2"><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#precedent" aria-label="Précédent : annuler la dernière saisie" ${set.historique.some((h) => !h.annule) || t.etape !== 'jeu' || t.continue ? '' : 'aria-disabled="true"'}><span aria-hidden="true">←</span> Précédent</button><button type="button" class="btn btn-outline btn-primary" data-action="feuille-match#suivant" aria-label="Suivant : rétablir la saisie" ${set.historique.length && set.historique[set.historique.length - 1].annule ? '' : 'aria-disabled="true"'}>Suivant <span aria-hidden="true">→</span></button></div>
-            <p class="text-sm"><strong>Échange en cours :</strong> ${touches.length ? touches.map((h) => `${echapper(this.nom(h.donnees.joueurs[0]))} ${ACTION_NOM[h.donnees.action]}${h.enAttente ? ' <span class="italic">· envoi…</span>' : ''}`).join(' · ') : 'aucune touche notée.'}</p>`
+            <p class="text-sm"><strong>Échange en cours :</strong> ${touches.length ? (c.service === 'nous' && c.postes[0] !== null ? `${echapper(this.nom(c.postes[0]))} service · ` : '') + touches.map((h) => `${echapper(this.nom(h.donnees.joueurs[0]))} ${ACTION_NOM[h.donnees.action]}${h.enAttente ? ' <span class="italic">· envoi…</span>' : ''}`).join(' · ') : 'aucune touche notée.'}</p>`
     }
 
     vueCarteTouche(set, enAttente, action) {
@@ -377,11 +407,22 @@ export default class extends Controller {
                     <button type="button" class="btn btn-outline btn-sm h-auto min-h-12" data-action="feuille-match#issue" data-feuille-match-valeur-param="continue">Le jeu continue</button></div>`
         }
         const qui = { reception: 'qui réceptionne', defense: 'qui défend', passe: 'qui fait la passe', attaque: 'qui attaque', renvoi: 'qui renvoie', block: 'qui contre' }[action]
-        return `<p class="font-semibold">Touchez le joueur ${qui}.</p><p class="text-sm">Aucune touche de notre côté ? « Point pour nous / eux ». Échange pas suivi ? « Point sans détail ».</p>`
+        // Notre service, avant toute touche : l'ace et la faute se notent ici ; une touche notée veut dire que le service est passé (D73)
+        const c = set.calcul
+        const touches = this.echange(set)
+        if (!touches.length && c.service === 'nous' && c.postes[0] !== null) {
+            const serveur = echapper(this.nom(c.postes[0]))
+            return `<p class="text-sm font-semibold">Service passé ? Touchez le joueur ${qui}.</p>
+                <div class="grid grid-cols-2 gap-1">
+                    <button type="button" class="btn btn-outline btn-primary btn-sm h-auto min-h-12" data-action="feuille-match#pointService" data-feuille-match-pour-param="nous" aria-label="Ace de ${serveur}">Ace</button>
+                    <button type="button" class="btn btn-outline btn-primary btn-sm h-auto min-h-12" data-action="feuille-match#pointService" data-feuille-match-pour-param="eux" aria-label="Faute de service de ${serveur}">Faute de service</button></div>`
+        }
+        const conseil = !touches.length && c.service === 'eux' ? 'Faute de service adverse ? « Point pour nous ». Ballon tombé sans contact ? « Point pour eux ».' : 'Échange terminé ? « Point pour nous / eux ».'
+        return `<p class="font-semibold">Touchez le joueur ${qui}.</p><p class="text-sm">${conseil}</p>`
     }
 
     // Récit d'un échange terminé, au terme précis (ace, attaque gagnante, réception manquée, faute de filet…)
-    recitPoint(h, decisive, serveur, service) {
+    recitPoint(h, decisive, serveur, service, sansTouche) {
         const d = h.donnees ?? {}
         const nous = d.pour === 'nous'
         if (d.sansDetail) return 'sans détail'
@@ -398,7 +439,7 @@ export default class extends Controller {
         if (d.fautif) return `${echapper(this.nom(d.fautif))} ${FAUTE_NOM[d.detail] ?? 'faute'}`
         if (d.detail === 'quatre_touches') return 'faute de l\'équipe : quatre touches'
         if (d.detail === 'position') return 'faute de position'
-        if (service === 'eux') return nous ? 'faute de service adverse' : 'ace subi'
+        if (service === 'eux' && sansTouche) return nous ? 'faute de service adverse' : 'ace subi'
         return nous ? 'faute adverse' : 'point adverse'
     }
 
@@ -422,7 +463,7 @@ export default class extends Controller {
                 const d = h.donnees ?? {}
                 const decisive = touches.find((x) => x.uuid === d.sur)
                 const rejoue = h.type === 'rejouer'
-                const recit = rejoue ? 'Balle à rejouer · touches non comptées' : `<strong>${d.pour === 'nous' ? 'Point pour nous' : 'Point pour eux'}</strong> · ${this.recitPoint(h, decisive, postes[0], service)}`
+                const recit = rejoue ? 'Balle à rejouer · touches non comptées' : `<strong>${d.pour === 'nous' ? 'Point pour nous' : 'Point pour eux'}</strong> · ${this.recitPoint(h, decisive, postes[0], service, !touches.length)}`
                 const boutons = !rejoue && !h.enAttente ? touches.filter((x) => x !== decisive && !x.enAttente).map((x) => `<button type="button" class="btn btn-outline btn-primary btn-xs min-h-11" data-action="feuille-match#corrigerTouche" data-feuille-match-valeur-param="${x.uuid}" aria-expanded="${this.correction?.uuid === x.uuid}">${echapper(this.nom(x.joueur))} · ${ACTION_NOM[x.action]}</button>`).join('') : ''
                 const autres = touches.filter((x) => x !== decisive).map((x) => `${echapper(this.nom(x.joueur))} ${ACTION_NOM[x.action]}`).join(' · ')
                 const panneau = touches.some((x) => x.uuid === this.correction?.uuid) ? this.vueCorrection(touches.find((x) => x.uuid === this.correction.uuid)) : ''
@@ -533,8 +574,9 @@ export default class extends Controller {
         if (t.faute) return this.noterPoint({ pour: 'eux', detail: t.faute, fautif: joueur })
         const action = t.choix ?? this.predire(set)
         Object.assign(t, { choix: null, etape: 'jeu', continue: null })
+        const servicePasse = !touches.length && set.calcul.service === 'nous' && set.calcul.postes[0] !== null
         this.evenement('action', { action, joueurs: [joueur] })
-        this.annoncer(`${this.nom(joueur)}, ${ACTION_NOM[action]}.`)
+        this.annoncer(`${servicePasse ? 'Service passé. ' : ''}${this.nom(joueur)}, ${ACTION_NOM[action]}.`)
     }
 
     issue({ params: { valeur } }) {
@@ -568,15 +610,15 @@ export default class extends Controller {
         this.noterPoint({ pour: 'nous', sur: touches[touches.length - 1].uuid })
     }
 
-    // « Point pour nous / eux » : point sans faute de nos joueurs ; sans touche à notre service, c'est un ace ou une faute
-    // de service de notre serveur (déduit de la rotation)
+    // « Point pour nous / eux » : point sans faute de nos joueurs ; à notre service, ni ace ni faute de service (D73)
     pointSansTouche(e) {
         if (e.currentTarget.getAttribute('aria-disabled') === 'true') return this.refuser('Choisissez d\'abord l\'issue dans la carte.')
-        const set = this.setEnCours()
-        const sansTouche = !this.echange(set).length
-        const donnees = { pour: e.params.pour }
-        if (sansTouche && set.calcul.service === 'nous' && set.calcul.postes[0] !== null) donnees.sur = 'service'
-        this.noterPoint(donnees)
+        this.noterPoint({ pour: e.params.pour })
+    }
+
+    // Ace ou faute de notre serveur : seul cas où le service se note (D73), avant toute touche
+    pointService({ params: { pour } }) {
+        this.noterPoint({ pour, sur: 'service' })
     }
 
     pointSansDetail(e) {
@@ -595,10 +637,10 @@ export default class extends Controller {
         Object.assign(this.saisie, { etape: 'jeu', choix: null, faute: null, continue: null, refus: null })
         const avant = this.setEnCours()
         const decisive = this.echange(avant).find((h) => h.uuid === donnees.sur)
-        const recit = this.recitPoint({ donnees }, decisive ? { action: decisive.donnees.action, joueur: decisive.donnees.joueurs[0] } : null, avant.calcul.postes[0], avant.calcul.service)
+        const recit = this.recitPoint({ donnees }, decisive ? { action: decisive.donnees.action, joueur: decisive.donnees.joueurs[0] } : null, avant.calcul.postes[0], avant.calcul.service, !this.echange(avant).length)
         const envoi = this.evenement('point', donnees)
         const c = this.dernierSet().calcul
-        this.annoncer(`${donnees.pour === 'nous' ? 'Point pour nous' : 'Point pour eux'}, ${recit.replace(/<[^>]+>/g, '')}. ${c.score[0]}–${c.score[1]}.`)
+        this.annoncer(`${donnees.pour === 'nous' ? 'Point pour nous' : 'Point pour eux'}, ${new DOMParser().parseFromString(recit, 'text/html').body.textContent}. ${c.score[0]}–${c.score[1]}.`)
         return envoi
     }
 
@@ -729,12 +771,18 @@ export default class extends Controller {
         this.mode = mode
         this.sortant = undefined
         this.rendre()
+        if (mode === 'noter-touches') {
+            this.contenuTarget.querySelector('[data-action="feuille-match#fermerOutil"]')?.focus()
+            this.annoncer('Noter aussi les touches à partir du prochain échange ? Confirmez ou annulez.')
+        }
     }
 
     fermerOutil() {
+        const retour = this.mode === 'noter-touches'
         this.mode = null
         this.sortant = undefined
         this.rendre()
+        if (retour) this.contenuTarget.querySelector('[data-feuille-match-mode-param="noter-touches"]')?.focus()
     }
 
     async remplacer({ params: { joueur } }) {
@@ -764,6 +812,16 @@ export default class extends Controller {
 
     rouvrir({ params: { numero } }) { return this.envoyer(numero, 'rouvrir', {}) }
 
+    // « Noter aussi les touches » (D72) : part après les points en attente, dans la file ; l'écran passe tout de suite à la
+    // saisie des touches, et remonte sur le set, dont le bouton était sous le terrain
+    noterTouches() {
+        const set = this.setEnCours()
+        this.mode = null
+        this.envoyer(set.numero, 'noter-touches', {})
+        document.getElementById('titre-set-cours')?.scrollIntoView({ block: 'start' })
+        this.annoncer('Les touches se notent à partir du prochain échange.')
+    }
+
     // --- Échanges avec le serveur --------------------------------------------------------------------------------------
 
     // File d'attente des saisies (D68) : chaque saisie s'affiche tout de suite (un point compte aussitôt à l'écran) et part
@@ -772,7 +830,7 @@ export default class extends Controller {
     envoyer(numero, action, donnees, rafraichir = true) {
         return new Promise((resoudre) => {
             this.file.push({ numero, action, donnees, rafraichir, resoudre })
-            if (action === 'evenement' && ['point', 'action', 'rejouer'].includes(donnees.type)) this.projeter()
+            if (action === 'noter-touches' || (action === 'evenement' && ['point', 'action', 'rejouer'].includes(donnees.type))) this.projeter()
             this.traiter()
         })
     }
@@ -782,7 +840,8 @@ export default class extends Controller {
         this.envoiEnCours = true
         const op = this.file[0]
         // L'ordre attendu se lit sur le dernier état reçu du serveur, au moment de l'envoi
-        const donnees = op.action === 'evenement' ? { ...op.donnees, dernierOrdre: this.dernierOrdreServeur(op.numero) } : op.donnees
+        // Le mode connu du téléphone aussi : un autre téléphone a pu passer aux touches (D72), le serveur refuse alors la saisie
+        const donnees = op.action === 'evenement' ? { ...op.donnees, dernierOrdre: this.dernierOrdreServeur(op.numero), saisie: this.serveur.sets.find((s) => s.numero === op.numero)?.saisie } : op.donnees
         try {
             const reponse = await fetch(`${this.urlValue}/set/${op.numero}/${op.action}`, {
                 method: 'POST',
@@ -846,9 +905,12 @@ export default class extends Controller {
     projeter(rendre = true) {
         const etat = structuredClone(this.serveur)
         for (const op of this.file) {
-            if (op.action !== 'evenement') continue
             const set = etat.sets.find((s) => s.numero === op.numero)
-            if (!set) continue
+            if (set && op.action === 'noter-touches') {
+                set.saisie = 'touches'
+                set.historique.filter((h) => h.type === 'point').forEach((h) => { h.donnees = { ...h.donnees, sansDetail: true } })
+            }
+            if (op.action !== 'evenement' || !set) continue
             if (['action', 'rejouer'].includes(op.donnees.type)) {
                 set.historique.push({ uuid: op.donnees.uuid, ordre: null, type: op.donnees.type, texte: op.donnees.type === 'rejouer' ? 'Balle à rejouer (envoi…)' : 'Touche (envoi…)', annule: false, score: null, entre: null, donnees: op.donnees.donnees, enAttente: true })
                 continue

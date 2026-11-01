@@ -125,7 +125,7 @@ qu'un gabarit les emploie : `grid-cols-4`, `col-span-2`, `line-through`.
 Questions de parcours ou de libellés, à poser à l'ergonome :
 1. **Échange sans touche : déduit ou « sans détail » ?** Pendant leur service, « Point pour eux » sans touche est déduit
    en « ace subi », « Point pour nous » en « faute de service adverse » ; pendant le nôtre, en ace ou faute de service du
-   serveur. Mais un échange volontairement non détaillé (D68) donne la même saisie : il serait compté comme détaillé
+   serveur (remplacé depuis par les boutons « Ace » et « Faute de service », D73). Mais un échange volontairement non détaillé (D68) donne la même saisie : il serait compté comme détaillé
    et fausserait aces et seuil. Faut-il un bouton « Point sans détail » (une rangée de plus) ou une règle (par exemple :
    la déduction ne vaut que si le saisisseur n'a sauté aucun échange dans le set) ? La maquette déduit, et montre
    « sans détail » dans l'historique comme cas à prévoir.

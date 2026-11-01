@@ -320,6 +320,7 @@ details.depliant > summary svg { transition: rotate 0.15s; }
 @media (prefers-reduced-motion: reduce) { details.depliant > summary svg { transition: none; } }
 details.depliant[open] > summary svg { rotate: 180deg; }
 details.depliant[open] { width: 100%; }
+details.depliant > summary:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 
 /* Sommaire du règlement : tocbot recopie le texte des titres tel qu'il est écrit (les capitales des h2 ne viennent que du
    CSS) ; hors couche, pour passer devant la classe daisyUI "link" que tocbot ajoute aux liens. */
@@ -431,7 +432,9 @@ button.terrain-case { cursor: pointer; }
 .steps-wizard .step-warning::after { --step-fg: var(--color-base-content); }
 .steps-wizard .step[aria-current="step"]::after { box-shadow: 0 0 0 2px var(--color-base-100), 0 0 0 4px var(--color-primary); }
 /* Bouton refusé tant qu'il reste des erreurs (aria-disabled : il garde le focus et sa description) */
-.btn[aria-disabled="true"] { --btn-bg: var(--color-base-200); --btn-border: var(--color-base-300); --btn-fg: color-mix(in oklab, var(--color-base-content) 70%, transparent); cursor: not-allowed; }
+.btn[aria-disabled="true"] { --btn-bg: var(--color-base-200); --btn-border: var(--color-base-300); --btn-fg: color-mix(in oklab, var(--color-base-content) 70%, transparent); background-color: var(--btn-bg); border-color: var(--btn-border); color: var(--btn-fg); cursor: not-allowed; }
+/* Page du match : le toucher reste possible, le contrôleur dit pourquoi le bouton est refusé */
+[data-controller~="feuille-match"] .btn[aria-disabled="true"] { pointer-events: auto; }
 /* Utilitaires que les composants daisyUI (couche suivante) écraseraient */
 .btn-ajout { border-style: dashed; }
 .badge-ecart { border-color: var(--color-warning); }
