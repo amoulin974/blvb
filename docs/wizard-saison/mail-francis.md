@@ -17,7 +17,7 @@ reçu depuis ; la référence reste `deploiement-reglement.md`.
 - **Crons** : vérifier qu'ils n'existent pas déjà ; simulation du rappel des scores avant le premier envoi (tout l'arriéré partirait) ;
   `cache:pool:prune` à l'activation de la limitation.
 - **Vérifications en ligne** : page des paramètres, logo en `/blvb/uploads/site/…`, fermeture de gymnase, liste des saisons sur téléphone.
-- **Réserves** : mots de passe de la base dans `compose.yaml` et port 3307 publié, `DATABASE_OLD_URL`, phpMyAdmin sur le port 8080,
+- **Réserves** : `DATABASE_OLD_URL`,
   `APP_SECRET` ; pas de mentions légales tant que `conditions-utilisation-v2` n'est pas fusionnée.
 - **À lui demander pour les conditions** : nom de l'éditeur, statut, adresse, directeur de publication, durée de conservation des comptes
   après la dernière saison, durée de conservation des journaux du serveur.

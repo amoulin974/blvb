@@ -40,8 +40,7 @@ match), puis les classements publics (brique suivante, accord des joueurs, D66).
 2. **Consignes pour Francis** : rédigées, page à lui partager : https://claude.ai/artifact/L4ehYBkk4uJt9fTwtXsp6f (`mail-francis.md` n'est plus que l'ancien brouillon).
 3. **Ensuite, au choix de l'utilisateur** : trancher le tableau de bord (PO6, `tableau-de-bord.md`) ; éditeur de la fiche club (D63,
    branche à part depuis `main`).
-4. Port 3307 (MySQL) ouvert sur Internet, constaté le 31/10/2026 : consigné en tête de `deploiement-reglement.md` et dans la page
-   pour Francis. Branches `parametres-site` et `maj-paquets` supprimées.
+4. Port 3307 (MySQL) : ouvert par un autre projet du serveur, réglé par Francis le 01/11/2026. Branches `parametres-site` et `maj-paquets` supprimées.
 5. **Tableau de bord** (D64) : réalisé sur la branche `tableau-de-bord` le 31/10/2026 (TDB-01 à TDB-12, relu par l'ergonome, le
    webdesigner et la sécurité) ; reste à l'essayer en recette (saisie depuis « Scores à saisir » sur téléphone), puis à fusionner.
 L'application tourne peut-être sur `blvb_recette` : voir `CLAUDE.md`, section Environnement. Un logo d'essai de l'utilisateur y est envoyé.
