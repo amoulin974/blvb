@@ -1,238 +1,105 @@
+# BLVB : gestion du championnat de volley
 
-# BLVB - Gestion de championnat
+Site du championnat de volley-ball loisir Basco Landais ([www.blvb.fr](https://www.blvb.fr)) : création des saisons,
+des équipes et des matchs, saisie des scores, classements, calendriers et règlement.
 
-Ce projet est une application web permettant de gérer un championnat sportif depuis la création des équipes et des matchs jusqu’à la diffusion des calendriers et des résultats.
+## Ce que fait le site
 
-Référentiel du projet :  
-https://github.com/amoulin974/blvb
----
+| Qui | Ce qu'il peut faire |
+|---|---|
+| Visiteur | Calendriers, classements, équipes, clubs, règlement ; terrains libres par gymnase ; choisir son équipe ; ajouter ses matchs à son agenda |
+| Joueur | En plus : composition de son équipe et contact du capitaine |
+| Capitaine | En plus : saisir le score, contact du capitaine adverse, gérer la composition, rappel par courriel si un score manque |
+| Responsable de club | En plus : scores de toutes les équipes du club, fiche du club, fermetures de gymnase |
+| Administrateur | Tableau de bord, création de saison (wizard, formats de compétition), règlement, paramètres du site |
 
-## 🚀 Technologies utilisées
+Volley Stats (page du match par équipe : composition de chaque set, score point par point, statistiques) est réalisé et
+n'est pas encore annoncé : il doit d'abord être essayé avec quelques joueurs.
 
-- **Symfony 7.3**
-- **PHP 8.2+**
-- **Composer**
-- **Node.js / npm**
-- **Doctrine ORM**
-- **Base de données** (MySQL conseillé)
-- **Docker**
-- **AssetMapper & Tailwind Bundle**
+## Technologies
 
----
+Symfony 7.4, PHP 8.4 (FrankenPHP), Doctrine, MySQL 8.4, Twig, Stimulus et Turbo, AssetMapper, Tailwind et daisyUI, Docker.
 
-## ✅ Prérequis
+## Démarrer en local
 
-| Outil | Version minimale | Lien |
-|------|------------------|------|
-| Docker | - | https://www.docker.com/ |
-| PHP | 8.2 | https://www.php.net/ |
-| Composer | 2.x | https://getcomposer.org/download/ |
-| Node.js | 18+ | https://nodejs.org |
-| npm | 9+ | https://www.npmjs.com/ |
-| Symfony CLI *(optionnel)* | - | https://symfony.com/download |
-| Serveur SQL (MySQL/MariaDB/PostgreSQL) | - | selon votre choix |
+Seul Docker est nécessaire. Sous Windows, travailler dans WSL : depuis `\\wsl.localhost\…`, git refuse le dépôt
+(« dubious ownership »).
 
-Pour vérifier votre installation :
-
-```bash
-php -v
-composer -V
-node -v
-npm -v
-docker -v
-```
-
----
-
-## 🧑‍💻 Installation en développement
-
-### 1. Cloner le projet
 ```bash
 git clone https://github.com/amoulin974/blvb.git
 cd blvb
+docker compose up -d --build   # installe les dépendances, applique les migrations, compile le CSS
+bin/recette reinitialiser      # base de recette : une copie de la base locale, plus des données de test
+bin/recette utiliser           # l'application utilise cette base (retour : bin/recette dev)
 ```
 
-### 2. Installer les dépendances PHP
-```bash
-composer install
-```
+Le site est sur <https://localhost>. Tous les comptes de test ont le mot de passe `Recette-2026!` ; le compte
+administrateur est `admin@blvb.test`. Les autres comptes (capitaine, joueur, responsable) et les scénarios de données
+sont dans [`tests/recette/README.md`](tests/recette/README.md).
 
+Ces mots de passe, comme ceux de `compose.yaml`, ne servent qu'en local : ne jamais les réutiliser sur un serveur.
 
+## Au quotidien
 
-### 4. Configurer les variables d’environnement
-Copier le fichier .env en .env.local :
+Les commandes se lancent à la racine du projet, conteneurs démarrés.
 
-Sous linux
-```bash
-cp .env .env.local
-```
-Dans cmd sous windows
-```bash
-copy .env .env.local
-```
+| Besoin | Commande |
+|---|---|
+| Lancer les tests | `docker compose exec php composer tests` |
+| Lancer tous les tests, lents compris | `docker compose exec php composer tests:tout` |
+| Contrôler Twig, YAML et les services | `docker compose exec php composer qualite` |
+| Recompiler le CSS après un changement de style | `docker compose exec php php bin/console tailwind:build` |
+| Voir l'état de la base après un changement de branche | `bin/base etat` |
+| Mettre la base dans l'état attendu par la branche | `bin/base aligner` |
 
-Modifier `DATABASE_URL` :
+`bin/base aligner` fait une sauvegarde, annule les migrations absentes de la branche et applique les siennes ;
+`bin/base restaurer` remet la dernière sauvegarde.
 
-Dans le fichier .env.local :
-```env
-DATABASE_URL="mysql://user:password@127.0.0.1:3306/blvb?charset=utf8mb4"
-```
+Les tests utilisent leur propre base, recréée à chaque lancement. Avant le premier lancement, il faut donner les droits
+sur cette base et, en cas d'échec à sa remise à zéro, vérifier sur quelle base tourne l'application : voir
+[`tests/README.md`](tests/README.md).
 
-### 5. Créer la base de données
-```bash
-php bin/console doctrine:database:create
-```
+## Organisation du code
 
-### 6. Lancer les migrations
-```bash
-php bin/console doctrine:migrations:migrate
-```
+| Dossier | Contenu |
+|---|---|
+| `src/Competition/` | Formats de compétition, phases, passages, classement, règles du sport |
+| `src/Reglement/` | Règlement par saison : édition, versions, éléments calculés |
+| `src/VolleyStats/` | Page du match : journal des événements, état du set, statistiques |
+| `src/Service/`, `src/Security/` | Services du site ; droits d'accès (voters) |
+| `src/Controller/Front/`, `src/Controller/Admin/` | Site public, administration |
+| `templates/front/`, `templates/admin/` | Gabarits Twig correspondants |
+| `assets/controllers/` | Contrôleurs Stimulus |
+| `tests/` | Tests unitaires, d'intégration et fonctionnels |
 
-### 7. Créer un compte administrateur
+## Documentation
 
-Avec la console hasher le mot de passe
-```bash
-php bin/console security:hash-password
-```
-Dans la table user 
-```bash
-INSERT INTO `user`(`id`, `email`, `roles`, `password`, `is_verified`, `nom`, `prenom`, `telephone`) VALUES ('1','votreemail','["ROLE_USER","ROLE_ADMIN"]','hash_fourni_par_la_console','1','votrenom','votreprenom','votretel')
-```
+| Document | Sujet |
+|---|---|
+| [`tests/README.md`](tests/README.md) | Lancer les tests, résoudre les blocages |
+| [`tests/SPECIFICATIONS.md`](tests/SPECIFICATIONS.md) | Ce que vérifie chaque test |
+| [`tests/recette/README.md`](tests/recette/README.md) | Base de recette, comptes et scénarios |
+| [`docs/formats-competition.md`](docs/formats-competition.md) | Catalogue des formats de compétition |
+| [`docs/wizard-saison/methode.md`](docs/wizard-saison/methode.md) | Méthode de travail et journal du chantier |
+| [`docs/wizard-saison/decisions.md`](docs/wizard-saison/decisions.md) | Décisions de conception, numérotées |
+| [`docs/wizard-saison/lots.md`](docs/wizard-saison/lots.md) | État du chantier, section « Reprendre ici » |
+| [`docs/volley-stats/`](docs/volley-stats/) | Analyse et spécifications de Volley Stats |
+| [`docs/presentation-par-role.md`](docs/presentation-par-role.md) | Présentation des fonctionnalités selon le rôle |
+| [`CLAUDE.md`](CLAUDE.md) | Consignes permanentes du projet |
 
-### 8. Lancer le serveur de dev
-```bash
-symfony server:start
-```
+## Règles du projet
 
-### 9. Changer de branche : aligner la base locale
+- **Français partout** : code métier, libellés, documentation, messages de commit (`domaine : description en minuscules`).
+- **Tests** : toute modification de test met à jour `tests/SPECIFICATIONS.md` dans le même commit.
+- **Décisions** : aucune décision de conception sans l'avoir consignée dans `docs/wizard-saison/decisions.md`.
+- **Secrets** : ce dépôt est public. Aucun mot de passe de production, aucune donnée personnelle dans le code ou la
+  documentation.
 
-Chaque branche peut apporter ses migrations. Après un changement de branche, `bin/base` (depuis WSL, conteneurs
-démarrés) met la base qu'utilise l'application (`blvb_new`, ou `blvb_recette` après `bin/recette utiliser`) dans
-l'état attendu par la branche :
-```bash
-bin/base etat          # migrations à appliquer, ou venues d'une autre branche
-bin/base aligner       # sauvegarde, annule les migrations absentes de la branche, applique celles de la branche
-bin/base sauvegardes   # liste des sauvegardes (~/.local/share/blvb/sauvegardes-base/)
-bin/base restaurer     # remet la sauvegarde la plus récente (ou celle donnée en argument)
-bin/base rappel        # une fois : après chaque changement de branche, git signale une base non alignée
-```
-Pour annuler une migration venue d'une autre branche, `aligner` reprend son fichier dans l'historique git le temps
-de l'annulation. Usage local uniquement ; en production, les migrations s'appliquent au déploiement.
+## Mise en production
 
-### 10. Lancer les tests
+La branche `prod` est gérée par Francis seul : on s'arrête à `main`. La procédure à lui transmettre est dans
+[`docs/wizard-saison/deploiement-reglement.md`](docs/wizard-saison/deploiement-reglement.md).
 
-```bash
-docker compose exec php composer tests     # tests automatisés (hors tests lents)
-docker compose exec php composer qualite   # Twig, YAML, conteneur de services
-```
-Mode d'emploi complet (première installation, cibler un test, base de recette, CI) : [`tests/README.md`](tests/README.md).
+## Licence
 
-
----
-
-## 🌐 Installation en production
-
-### 1. Cloner le projet
-```bash
-git clone https://github.com/amoulin974/blvb.git
-cd blvb
-```
-
-### 2. Modifier tous les mots de passe par défaut
-Dans le docker compose, modifier dans le service database le nom de la base, le mot de passe root, le nom de l'utilisateur qui sera utilisé par le site et son mot de passe
-```bash
-    environment:
-      MYSQL_DATABASE: blvb_new 
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_USER: symfony
-      MYSQL_PASSWORD: symfonypassword
-```
-
-Dans la partie healthcheak qui sert à vérifier que le service database est bien démarré, il faut indiquer le motdepasse root précédemment créé en ajoutant -p juste avant (sans espace pour éviter l'ouverture d'uneligne de commande exemple avec mot de passe rootpassword : -prootpassword)
-```bash
-    healthcheck:
-        test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-prootpassword" ]
-```
-
-Dans le service php il faut répercuter les modification faite sur le service database
-```bash
-      DATABASE_URL: mysql://NouveauUser:NouveauPassword@database:3306/NouveauNomBase?serverVersion=8.4.7&charset=utf8mb4
-```   
-
-### 3. Configurer les variables d’environnement
-Copier le fichier .env en .env.local :
-
-Sous linux
-```bash
-cp .env .env.local
-```
-Dans cmd sous windows
-```bash
-copy .env .env.local
-```
-
-Configurer `.env.local` :
-
-```env.local
-APP_ENV=prod
-APP_DEBUG=0
-DEFAULT_URI=https://monsite.com avec votre vrai nom de domaine :)
-```
-Dans un terminal générer une clé
-```bash
-php -r 'echo bin2hex(random_bytes(16));'
-```
-
-Copier le code généré dans le fichier .env.local
-```env.local
-APP_KEY=la clé générée
-```
-
-Modifier la connexion à la bd utilisé par symfony en utilisant le usersymfony son mot de passe, le nom de la base de donnée que vous avez créé dans le point 2
-```env.local
-DATABASE_URL="mysql://NouveauUser:NouveauPassword@database:3306/NouveauNomBase?serverVersion=8.4.7&charset=utf8mb4"
-```
-
-### 4. Démarrer les conteneurs
-```bash
-docker compose up -d --build
-```
-
-Vérifier si les conteneurs ont bien démarré
-```bash
-docker compose ps
-```
-
-### 5. Installer les dépendances depuis les conteneurs
-```bash
-docker compose exec php composer install
-docker compose exec php php bin/console importmap:install
-docker compose exec php php bin/console asset-map:compile
-docker compose exec php php bin/console tailwind:build --minify
-```
-
-
-
-### 6. Gérer les données
-Créer la base de données
-```bash
-docker compose exec php php bin/console doctrine:database:create
-```
-Migrations :
-```bash
-docker compose exec php php bin/console doctrine:migrations:migrate --no-interaction --env=prod
-```
-
-Import des données :
-Si vous avez des données en dev vous pouvez vous connecter au phpmyadmin à l'adresse https:monsite.com:8080
-
-
-### 7. Nettoyage cache :
-```bash
-php bin/console cache:clear --env=prod
-```
-
----
-
-## 🤝 Contribution
-Les contributions sont les bienvenues !
+Propriétaire (`composer.json`) : aucune réutilisation sans autorisation.
