@@ -16,7 +16,7 @@ const AIDE_ACTIONS = [
     ['Réception', 'Première touche sur le service adverse.'],
     ['Passe', 'Touche qui prépare l\'attaque d\'un partenaire.'],
     ['Attaque', 'Ballon frappé pour marquer.'],
-    ['Renvoi', 'Ballon facile renvoyé en 3e touche, sans chercher à marquer ; il ne compte pas comme une attaque.'],
+    ['Renvoi', 'Ballon renvoyé sans être frappé, à n\'importe quelle touche. Un renvoi bien placé peut chercher à marquer ; il ne compte pas comme une attaque.'],
     ['Défense', 'Première touche sur un ballon de l\'adversaire en cours d\'échange, ou sur notre attaque contrée qui revient jouable. On repart pour trois touches.'],
     ['Block', 'Ballon contré au filet par un joueur de devant. Il ne compte pas comme une touche : il en reste trois après.'],
     ['Ace', 'Le service fait le point, ballon au sol ou impossible à rejouer.'],

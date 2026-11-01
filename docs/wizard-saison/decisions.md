@@ -873,7 +873,8 @@ implicite**, **service jamais saisi** (déduit de la rotation), **saisie après 
 - **Seuil d'échanges détaillés** pour qu'un set compte dans les classements publics : **réglable par l'admin**, dans une
   nouvelle partie « Volley Stats » du menu de l'admin, avec une section sur le tableau de bord (contenu à concevoir).
 - **Le block ne compte pas comme une touche** : trois touches après un block.
-- **Ballon facile renvoyé en 3ᵉ touche** : action **« Renvoi »** à part (ne compte pas comme une attaque).
+- **Ballon renvoyé sans être frappé** : action **« Renvoi »** à part (ne compte pas comme une attaque). *Précisé le 01/11/2026* : à
+  n'importe quelle touche, et un renvoi bien placé peut chercher à marquer (avant : « ballon facile en 3ᵉ touche »).
 - **Attaque contrée** : si le ballon contré revient dans notre camp et reste jouable, **le jeu continue et un nouveau cycle de
   trois touches commence** (couverture ou défense, passe, attaque) ; un contre adverse gagnant est un point perdu
   « contrée », distinct de la faute d'attaque (dehors, filet).
