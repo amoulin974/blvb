@@ -407,7 +407,7 @@ Fichier `.xlsx` généré par le test (PhpSpreadsheet), jamais un fichier réel.
 **GYM-03** ✅ — Créneau non prioritaire alors qu'un autre jour l'est → alerte priorité.
 **GYM-04** ✅ — Date pendant des vacances scolaires (indisponibilité) avec match → alerte vacances ; sans match → simple mention.
 **GYM-05 (fonctionnel)** ✅ — La page `/calendrierlieu` affiche aussi les dates de créneau **libres** de la phase, et le filtre « Seulement les dates à problème » s'appuie sur `data-alerte`.
-**GYM-06 (fonctionnel)** ✅ — Pendant une fermeture du gymnase (D60), une date libre affiche « Gymnase fermé » et son motif, échappé, et aucun terrain libre, sans être retenue par le filtre, même sur un créneau non prioritaire ou avec le motif « 0 » ; un match sans score est signalé « à déplacer » et retenu par le filtre, pas un match joué ; le motif disparaît une fois la date passée ; un motif effacé (FGY-17) laisse « Gymnase fermé » ; la fermeture d'un autre gymnase et les jours voisins ne changent rien.
+**GYM-06 (fonctionnel)** ✅ — Pendant une fermeture du gymnase (D60), une date libre affiche « Gymnase fermé » et son motif, échappé, et aucun terrain libre, sans être retenue par le filtre, même sur un créneau non prioritaire ou avec le motif « 0 » ; un match sans score est signalé « à déplacer » et retenu par le filtre, pas un match joué ; le motif disparaît une fois la date passée (fermeture placée au moins 5 jours avant le lancement, quel que soit le jour de la semaine : le test échouait le lundi et le mardi) ; un motif effacé (FGY-17) laisse « Gymnase fermé » ; la fermeture d'un autre gymnase et les jours voisins ne changent rien.
 
 ### 4.12 « Mon équipe » et fonctions Twig — `Fonctionnel/Front/MonEquipeTest`, `Integration/Twig/SaisonCouranteTest` (P2)
 

@@ -98,14 +98,15 @@ final class CalendrierGymnaseTest extends TestFonctionnel
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => 'Toiture', 'dateDebut' => $this->lundi->modify('+7 days'), 'dateFin' => $this->lundi->modify('+9 days')]);
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => '0', 'dateDebut' => $this->lundi->modify('+16 days'), 'dateFin' => $this->lundi->modify('+16 days')]);
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => '<script>alert(1)</script>', 'dateDebut' => $this->lundi->modify('+23 days'), 'dateFin' => $this->lundi->modify('+23 days')]);
-        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => 'Motif ancien', 'dateDebut' => $this->lundi->modify('-5 days'), 'dateFin' => $this->lundi->modify('-5 days')]);
+        // Mercredi d'au moins 5 jours avant aujourd'hui, quel que soit le jour du lancement (lundi de référence : 1 à 7 jours après)
+        FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => 'Motif ancien', 'dateDebut' => $this->lundi->modify('-12 days'), 'dateFin' => $this->lundi->modify('-12 days')]);
         FermetureGymnaseFactory::createOne(['lieu' => $lieu, 'motif' => null, 'dateDebut' => $this->lundi->modify('+30 days'), 'dateFin' => $this->lundi->modify('+30 days')]);
         FermetureGymnaseFactory::createOne(['motif' => 'Autre gymnase', 'dateDebut' => $this->lundi, 'dateFin' => $this->lundi->modify('+60 days')]);
         $this->match(9, 'A1', 'A3', $lieu);
         $this->match(2, 'A2', 'A4', $lieu);
         PartieFactory::createOne(['journee' => ChampionnatDeTest::get('match.reference')->getJournee(), 'poule' => ChampionnatDeTest::get('poule.A'),
             'idEquipeRecoit' => ChampionnatDeTest::get('equipe.A1'), 'idEquipeDeplace' => ChampionnatDeTest::get('equipe.A2'),
-            'lieu' => $lieu, 'date' => $this->jour(-5), 'nb_set_gagnant_reception' => 3, 'nb_set_gagnant_deplacement' => 0]);
+            'lieu' => $lieu, 'date' => $this->jour(-12), 'nb_set_gagnant_reception' => 3, 'nb_set_gagnant_deplacement' => 0]);
 
         $page = $this->client->request('GET', '/calendrierlieu');
         self::assertResponseIsSuccessful();
@@ -122,7 +123,7 @@ final class CalendrierGymnaseTest extends TestFonctionnel
         self::assertStringNotContainsString('terrain', $fermee);
         self::assertSame('0', $alerte, 'même sur un créneau non prioritaire');
 
-        [$matchJoue, $alerte] = $this->ligne($page, -5);
+        [$matchJoue, $alerte] = $this->ligne($page, -12);
         self::assertStringContainsString('Gymnase fermé', $matchJoue);
         self::assertStringNotContainsString('déplacer', $matchJoue);
         self::assertStringNotContainsString('Motif ancien', $this->client->getResponse()->getContent());
