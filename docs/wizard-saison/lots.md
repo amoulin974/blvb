@@ -30,7 +30,15 @@ matchs individuels), qui changent le modèle lui-même (D13).
 Le détail coché des lots 0 à 6 (terminés) est dans [`archive/lots-0-6.md`](archive/lots-0-6.md).
 
 
-## Reprendre ici (31/10/2026)
+## Reprendre ici (11/11/2026)
+**Espace club** (tournois internes, première version : les mêlées) : analyse et maquette en cours sur la branche
+`espace-club`, rien de réalisé ; reprendre par `docs/espace-club/README.md` (sur cette branche), décisions D74 à D77.
+**Depuis le 31/10, dans `main`** : « Mon équipe » pour tout joueur et « Mon profil » sur téléphone (D69), saisie du score
+sur la fiche équipe (D70), page « Ce que vous pouvez faire » (D71, une migration), Volley Stats : « Noter aussi les
+touches » (D72), ace et faute de service, explications des actions (D73) ; liens soulignés et cartes de match ; recette avec
+une page du match notée ; README réécrit. Page de Francis à jour (18 migrations). Rien en production.
+
+### Reprise précédente (31/10/2026)
 `main` contient les fermetures de gymnase et les paramètres du site ; rien n'est en production (`prod` sur 3bafba4). Dans l'ordre :
 **Volley Stats** (D66 à D68) fusionné dans `main` le 31/10/2026 : page du match, composition des sets, saisie des touches en
 mode intermédiaire, stats du match, seuil dans l'admin, commande `app:volley-stats:purger` ; dossier `docs/volley-stats/`.
