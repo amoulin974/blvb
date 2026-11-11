@@ -61,17 +61,17 @@
     {# Carte compacte : équipe qui reçoit en haut, équipe qui se déplace en dessous,
        score à droite ; date, heure et lieu sur une seule ligne. #}
     <div class="card bg-base-100 card-xs border border-base-300 block lg:hidden liste-equipe-mobile mt-2" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-        <div class="card-body px-3 py-1 gap-1">
+        <div class="card-body px-3 py-2 gap-3">
             <div class="flex items-center gap-3">
-                <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" class="lien lien-bloc font-medium"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
-                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" class="lien lien-bloc font-medium"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
+                <div class="flex-1 min-w-0 paire-equipes font-display text-lg leading-snug tracking-wide">
+                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" class="lien font-medium"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
+                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" class="lien font-medium"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
                 </div>
                 <div class="shrink-0 text-right font-display text-2xl font-extrabold text-(--color-primary) tabular-nums">
                     {{ include('front/fragments/_score_partie.html.twig') }}
                 </div>
             </div>
-            <p class="text-sm">
+            <p class="text-sm infos-match">
                 {{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }} ·
                 {{ include('front/fragments/_lieu_lien.html.twig', {nom: partie.lieu ? partie.lieu.nom : null, adresse: partie.lieu ? partie.lieu.adresse : null}) }}{% if partie.aDeplacerPourLePublic %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
             </p>

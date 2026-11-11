@@ -188,17 +188,17 @@
                         <div class="lg:hidden flex flex-col gap-2">
                             {% for match in matchsByPoule[poule.id] %}
                                 <div class="card card-xs bg-base-100 border border-base-300">
-                                    <div class="card-body px-3 py-2 gap-1">
+                                    <div class="card-body px-3 py-2 gap-3">
                                         <div class="flex items-center gap-3">
-                                            <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{% if match.equipe_recoit_id == equipe.id %}{{ match.equipe_recoit }}{% else %}<a class="lien lien-bloc" href="{{ path('front_equipe_detail', {id: match.equipe_recoit_id}) }}">{{ match.equipe_recoit }}</a>{% endif %}</div>
-                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{% if match.equipe_deplace_id == equipe.id %}{{ match.equipe_deplace }}{% else %}<a class="lien lien-bloc" href="{{ path('front_equipe_detail', {id: match.equipe_deplace_id}) }}">{{ match.equipe_deplace }}</a>{% endif %}</div>
+                                            <div class="flex-1 min-w-0 paire-equipes font-display text-lg leading-snug tracking-wide">
+                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{% if match.equipe_recoit_id == equipe.id %}{{ match.equipe_recoit }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_recoit_id}) }}">{{ match.equipe_recoit }}</a>{% endif %}</div>
+                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{% if match.equipe_deplace_id == equipe.id %}{{ match.equipe_deplace }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_deplace_id}) }}">{{ match.equipe_deplace }}</a>{% endif %}</div>
                                             </div>
                                             <div class="shrink-0">
                                                 {{ include('front/fragments/_equipe_case_score.html.twig', {alignement: 'end'}) }}
                                             </div>
                                         </div>
-                                        <p class="text-sm">
+                                        <p class="text-sm infos-match">
                                             {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
                                             {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
                                         </p>

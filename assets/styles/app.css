@@ -417,6 +417,14 @@ button.terrain-case { cursor: pointer; }
 .lien-discret:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
 /* Lien sur sa propre ligne dans une carte mobile (nom d'équipe) : cible de 44 px */
 .lien-bloc { display: flex; align-items: center; min-height: 2.75rem; overflow-wrap: anywhere; }
+/* Deux équipes d'un match empilées (cartes mobiles) : noms serrés, groupés à côté du score ; la zone de toucher de chaque
+   nom déborde de 8 px vers l'extérieur (le premier vers le haut, le second vers le bas), jamais entre les deux noms */
+.paire-equipes .lien { position: relative; display: block; overflow-wrap: anywhere; }
+.paire-equipes .lien::after { content: ""; position: absolute; inset-inline: 0; }
+.paire-equipes > .lien:first-child::after, .paire-equipes > :first-child > .lien::after { top: -0.5rem; bottom: 0; }
+.paire-equipes > .lien:last-child::after, .paire-equipes > :last-child > .lien::after { top: 0; bottom: -0.5rem; }
+/* Ligne date · heure · gymnase sous les équipes : le gymnase ne déborde que de 4 px, pour ne pas recouvrir le nom du dessus */
+.infos-match .lien-texte { padding-block: 0.25rem; }
 /* Lien dans une phrase : zone tactile d'environ 44 px sans agrandir la ligne ; contour de focus resserré sur le texte */
 .lien-texte { padding-block: 0.75rem; }
 .lien-texte:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -0.5rem; border-radius: 2px; }
