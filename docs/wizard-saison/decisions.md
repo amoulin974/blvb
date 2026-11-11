@@ -84,6 +84,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D71. Page « Ce que vous pouvez faire », encart d'accueil une fois par rôle
 - D72. Volley Stats : « Noter aussi les touches » pendant un set commencé en « score seulement »
 - D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
+- D74. Espace club, tournois internes : premiers choix (durée en périodes, inscriptions, mixité, droits, visibilité)
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -970,6 +971,26 @@ pour nous / eux ».
 - **Dépliant fermé « Quelle action choisir ? »**, au choix de « Que notez-vous ? » et sous le set en cours, jamais ouvert seul :
   une phrase pour Réception, Passe, Attaque, Renvoi, Défense, Block, Ace, Faute de service, textes validés par l'utilisateur.
   Il remplace ici le lien « Comment ça marche ? » envisagé dans `presentation-par-role.md` §7.
+
+## D74. Espace club, tournois internes : premiers choix (durée en périodes, inscriptions, mixité, droits, visibilité)
+
+*Décidé le 11/11/2026* (utilisateur), en réponse aux questions de `docs/espace-club/formules-tournoi.md` §6. Branche
+`espace-club` ; rien n'est réalisé.
+- **Durée** : un tournoi se déroule sur **un nombre de périodes paramétrable** (par exemple deux soirées, ou un après-midi),
+  chacune avec sa date, ses heures, son lieu et ses terrains.
+- **Inscriptions** : **les deux modes** : des équipes déjà formées, et des joueurs inscrits seuls (équipes composées ou tirées
+  au sort).
+- **Joueurs extérieurs au club** : prévus, **pas dans la première version**.
+- **Mixité** : un **nombre minimum de joueuses par équipe**, réglé pour chaque tournoi (pas de règle fixe ; la catégorie de jeu
+  arrive avec les tournois, D65).
+- **Licenciés FFVB** (règle 4J du championnat) : **non gérés** dans les tournois.
+- **Saisie des résultats** : le **responsable du club** pour l'instant ; plus tard, des membres du club choisis pour chaque
+  tournoi.
+- **Visibilité** des résultats et classements : **les membres du club et les participants** (pas public).
+- **Inscription payante** : **non** pour l'instant.
+- **Reste à définir** : qui sont « les membres du club » (aujourd'hui, un joueur n'est rattaché à un club que par une équipe du
+  championnat ; un rattachement direct au club serait à créer) ; les formules de la première version ; le reste de l'espace
+  club.
 
 ---
 
