@@ -86,6 +86,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
 - D74. Espace club, tournois internes : premiers choix (durée en périodes, inscriptions, mixité, droits, visibilité)
 - D75. Membres d'un club par saison ; première version de l'espace club : les mêlées seulement
+- D76. Mêlée : matchs non mixtes possibles, terrains pris du gymnase, réglages fixés ou calculés au choix
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1003,6 +1004,20 @@ pour nous / eux ».
   équipes sans club.
 - **Première version de l'espace club** : les **mêlées** (inscriptions individuelles, équipes tirées au sort à chaque tour en
   respectant le minimum de joueuses, classement individuel) ; **rien d'autre** dans l'espace club pour l'instant.
+
+## D76. Mêlée : matchs non mixtes possibles, terrains pris du gymnase, réglages fixés ou calculés au choix
+
+*Décidé le 11/11/2026* (utilisateur, après la maquette fil de fer de l'ergonome, `docs/espace-club/parcours-melee.md`).
+- **Matchs non mixtes** : une mêlée peut être mixte (minimum de joueuses par équipe) ou non mixte (H5 de l'ergonome
+  levée).
+- **Terrains** : le nombre de terrains disponibles se saisit pour chaque date, **pré-rempli avec la capacité du créneau du
+  gymnase** (`Creneau::capacite`, déjà utilisée pour les terrains libres du calendrier par gymnase), modifiable.
+- **Réglages fixés ou calculés** : le responsable part souvent des inscrits et de la durée de son créneau, puis cherche des
+  durées de match et de pause qui respectent ses critères (équilibrer au maximum le temps de jeu entre les joueurs, brasser au
+  maximum pour que les mêmes ne jouent pas trop ensemble). On ne sait pas à l'avance ce qu'il voudra fixer et ce qu'il
+  voudra laisser calculer : **le parcours doit permettre de fixer n'importe quel réglage lié et de faire calculer les
+  autres**, avec les critères comme objectifs. Modèle de calcul à établir par l'expert en compétition, parcours par
+  l'ergonome (la maquette fil de fer est à revoir).
 
 ---
 
