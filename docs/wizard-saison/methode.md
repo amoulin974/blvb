@@ -206,6 +206,14 @@ Checklist de déploiement complétée par l'agent `deploiement`. Mise à jour de
 
 Paquets mis à jour et fusionnés dans `main` après vérification. Reste le mail à Francis (`mail-francis.md`).
 
+### 2026-11-01 au 11/11 : présentation par rôle, saisie du score, Volley Stats, liens, espace club
+- `main` : D69 à D73 réalisés et fusionnés (Mon équipe pour tout joueur, Mon profil sur téléphone, saisie du score sur la fiche
+  équipe, page « Ce que vous pouvez faire » avec une migration, Volley Stats : noter aussi les touches, ace et faute de service,
+  explications des actions) ; menu latéral ; liens soulignés, épingle des gymnases, cartes de match ; recette avec une page du
+  match notée ; README réécrit ; test RGL-12 à date fixe. Page de Francis à jour ; port 3307 réglé par Francis.
+- Branche `espace-club` : recherche sur les formules de tournoi, paramètres et modèle de calcul d'une mêlée (agent
+  organisation-competition), parcours v1 et v2 (ergonome), maquette fil de fer ; D74 à D77. Reprise : `docs/espace-club/README.md`.
+
 ## 5. Reprendre le travail sur un autre ordinateur
 
 1. **Récupérer le code** : `git fetch && git checkout main && git pull`. Les lots 1 à 6 et le lot 11 (règlement, R1 à R5)
