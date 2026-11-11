@@ -85,6 +85,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D72. Volley Stats : « Noter aussi les touches » pendant un set commencé en « score seulement »
 - D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
 - D74. Espace club, tournois internes : premiers choix (durée en périodes, inscriptions, mixité, droits, visibilité)
+- D75. Membres d'un club par saison ; première version de l'espace club : les mêlées seulement
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -988,9 +989,20 @@ pour nous / eux ».
   tournoi.
 - **Visibilité** des résultats et classements : **les membres du club et les participants** (pas public).
 - **Inscription payante** : **non** pour l'instant.
-- **Reste à définir** : qui sont « les membres du club » (aujourd'hui, un joueur n'est rattaché à un club que par une équipe du
-  championnat ; un rattachement direct au club serait à créer) ; les formules de la première version ; le reste de l'espace
-  club.
+- **Reste à définir** : tranché par D75 (membres du club, première version).
+
+## D75. Membres d'un club par saison ; première version de l'espace club : les mêlées seulement
+
+*Décidé le 11/11/2026* (utilisateur). Branche `espace-club` ; rien n'est réalisé.
+- **Lien joueur / club / saison**, nouveau, indépendant des équipes ; **un joueur peut être membre de plusieurs clubs** la même
+  saison. Ce sont « les membres du club » de D74 (visibilité des tournois, inscriptions).
+- **Reprise** : une fois ce lien créé, chaque joueur d'une composition d'équipe (`MembreEquipe`) devient membre du club de son
+  équipe pour la saison de cette composition (équipes sans club : rien).
+- **Piste, pas décidée** : dans la composition d'une équipe, ne proposer que les membres du club de l'équipe. Un joueur
+  membre de deux clubs apparaît alors dans les deux listes, ce qui reste cohérent ; à trancher plus tard, avec le cas des
+  équipes sans club.
+- **Première version de l'espace club** : les **mêlées** (inscriptions individuelles, équipes tirées au sort à chaque tour en
+  respectant le minimum de joueuses, classement individuel) ; **rien d'autre** dans l'espace club pour l'instant.
 
 ---
 
