@@ -87,6 +87,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D74. Espace club, tournois internes : premiers choix (durée en périodes, inscriptions, mixité, droits, visibilité)
 - D75. Membres d'un club par saison ; première version de l'espace club : les mêlées seulement
 - D76. Mêlée : matchs non mixtes possibles, terrains pris du gymnase, réglages fixés ou calculés au choix
+- D77. Mêlée : deux tableaux le même soir, joueuses d'un côté, joueurs de l'autre, dès la première version
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1018,6 +1019,20 @@ pour nous / eux ».
   voudra laisser calculer : **le parcours doit permettre de fixer n'importe quel réglage lié et de faire calculer les
   autres**, avec les critères comme objectifs. Modèle de calcul à établir par l'expert en compétition, parcours par
   l'ergonome (la maquette fil de fer est à revoir).
+
+## D77. Mêlée : deux tableaux le même soir, joueuses d'un côté, joueurs de l'autre, dès la première version
+
+*Décidé le 11/11/2026* (utilisateur ; lève l'hypothèse H19 de `docs/espace-club/parcours-melee-v2.md`).
+- Une mêlée peut se jouer en **deux tableaux** : des matchs de joueuses et des matchs de joueurs, la même soirée, au même
+  gymnase.
+- Modèle de calcul de l'expert (`calcul-melee.md` §5.1) : **les terrains sont partagés** entre les deux tableaux (terrains
+  des joueuses + terrains des joueurs ≤ terrains disponibles), avec les **mêmes tours** (même durée de match, même
+  changement d'équipe : un seul rendez-vous) ; chaque tableau a son tirage et son classement. Le site propose la répartition
+  des terrains qui rapproche le plus le temps de jeu des joueuses et des joueurs ; elle reste modifiable. Chaque tableau doit
+  pouvoir faire au moins un match.
+- **Conséquence pour D65** : jouer dans le tableau des joueuses montre sa catégorie de jeu aux autres participants et aux
+  membres du club (équipes et classement par tableau). C'est inhérent à la formule ; à faire figurer dans l'aide de
+  l'inscription et dans les conditions d'utilisation.
 
 ---
 

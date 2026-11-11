@@ -26,7 +26,7 @@ J'ai lu :
 - **H16 (question 3)** : « Remplaçants » par défaut. Le choix est visible à l'étape 3, parce qu'il change les cartes.
 - **H17 (question 4)** : au pointage, le site propose et n'applique jamais de lui-même.
 - **H18 (question 5)** : l'écart entre joueuses et joueurs est affiché au responsable seul, avec une option en un geste. Rien n'est automatique.
-- **H19 (question 6)** : pas de deux tableaux le même soir en v1. Il reste 4 modes : Mixte, Ouverte à tous, Féminine, Masculine.
+- **H19 (question 6), levée par D77 : deux tableaux le même soir dès la v1.** Hypothèse d'origine : pas de deux tableaux le même soir en v1. Il reste 4 modes : Mixte, Ouverte à tous, Féminine, Masculine.
 - **H20 (question 7)** : aucune hauteur de filet pré-remplie avant vérification. Le champ reste vide (« À indiquer, facultatif »).
 - **H21** : « Aux points seulement » est retiré. Avec ce mode, on ne peut calculer ni la durée d'un match ni l'heure de fin. « Au temps ou à 25 points, au premier atteint » passe en réglages avancés.
 - **H22** : la durée d'un match et le battement sont communs à toutes les dates. Le nombre de tours et les terrains utilisés se règlent date par date.
