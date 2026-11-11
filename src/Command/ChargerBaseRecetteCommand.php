@@ -15,7 +15,6 @@ use App\Entity\Partie;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Saison;
-use App\Entity\User;
 use App\Enum\PhaseType;
 use App\Service\ClassementService;
 use App\Service\ClubImageService;
@@ -24,6 +23,12 @@ use App\Reglement\EditionReglement;
 use App\Service\JourneeService;
 use App\Service\PartieService;
 use App\Service\PhaseService;
+use App\Entity\FeuilleMatchEvenement;
+use App\Entity\FeuilleMatchSet;
+use App\Entity\User;
+use App\VolleyStats\EtatSet;
+use App\VolleyStats\FeuilleMatchService;
+use App\VolleyStats\MatchEquipe;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -179,6 +184,7 @@ class ChargerBaseRecetteCommand extends Command
         private readonly PhaseService $phaseService,
         private readonly Formats $formats,
         private readonly EditionReglement $editionReglement,
+        private readonly FeuilleMatchService $feuilleMatchService,
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
     ) {
@@ -294,6 +300,7 @@ class ChargerBaseRecetteCommand extends Command
             }
             $archive->getPhases()[0]->setClose(1);
             $this->em->flush();
+            $this->creerPageDuMatch($saison);
         }
 
         if ($scenario === 'barrages') {
@@ -710,6 +717,101 @@ class ChargerBaseRecetteCommand extends Command
                 break;
             }
         }
+    }
+
+    /**
+     * Volley Stats : page du match d'Arrats sur son dernier match joué, deux sets notés avec les touches et terminés, pour voir
+     * « Statistiques du match » (aces, fautes, réceptions, passes décisives, attaques, blocks à deux, renvoi, faute de filet,
+     * quelques échanges sans détail). Tout passe par FeuilleMatchService, donc par les mêmes contrôles que le téléphone.
+     */
+    private function creerPageDuMatch(Saison $saison): void
+    {
+        $arrats = null;
+        $partie = null;
+        foreach ($saison->getPhases()[0]->getPoules() as $poule) {
+            foreach ($poule->getParties() as $p) {
+                foreach ([$p->getIdEquipeRecoit(), $p->getIdEquipeDeplace()] as $e) {
+                    if ($e?->getNomSansClub() === self::EQUIPES['A1'][0] && $p->getNbSetGagnantReception() !== null && ($partie === null || $p->getDate() > $partie->getDate())) {
+                        [$arrats, $partie] = [$e, $p];
+                    }
+                }
+            }
+        }
+        if ($partie === null) {
+            return;
+        }
+        $auteur = $this->em->getRepository(User::class)->findOneBy(['email' => 'cap.a1@blvb.test']);
+        $feuille = $this->feuilleMatchService->preparer(new MatchEquipe($arrats, $partie));
+        $ids = array_map(fn ($j) => $j->getId(), $feuille->getJoueurs()->toArray());
+        if (\count($ids) < 7) {
+            return;
+        }
+        // Échanges joués selon qui sert, en boucle : de quoi remplir chaque colonne du tableau (indices = postes 1 à 6 - 1)
+        $adverses = [
+            [['reception', 4], ['passe', 2], ['attaque', 3], 'gagne'],
+            [['reception', 5], ['passe', 2], ['attaque', 1], 'gagne'],
+            [['reception', 4], 'perdu'],
+            ['ace-subi'],
+            [['reception', 0], ['passe', 2], ['attaque', 3], 'contree'],
+            [['reception', 5], ['passe', 2], ['attaque', 3], ['defense', 4], ['passe', 2], ['attaque', 1], 'gagne'],
+            ['sans-detail-nous'],
+            [['reception', 4], ['passe', 2], ['renvoi', 3], 'gagne'],
+        ];
+        $notres = [
+            ['ace'],
+            [['defense', 5], ['passe', 2], ['attaque', 3], 'gagne'],
+            [['block', 2], 'block-deux'],
+            ['faute-service'],
+            [['defense', 4], 'perdu'],
+            [['defense', 0], ['passe', 2], ['attaque', 1], 'faute'],
+            ['filet'],
+            [['defense', 5], ['passe', 2], ['attaque', 3], 'gagne'],
+            [['block', 3], 'gagne'],
+            ['sans-detail-eux'],
+        ];
+        foreach ([1 => ['eux', \array_slice($ids, 0, 6)], 2 => ['nous', \array_slice($ids, 1, 6)]] as $numero => [$service, $postes]) {
+            $set = $this->feuilleMatchService->composition($feuille, $numero, ['postes' => $postes, 'premierService' => $service, 'scoreDepart' => [0, 0]]);
+            $this->feuilleMatchService->commencer($set, false, FeuilleMatchSet::SAISIE_TOUCHES);
+            $tours = [FeuilleMatchSet::EUX => $numero, FeuilleMatchSet::NOUS => $numero];
+            while (!($etat = EtatSet::calculer($set))->finAtteinte) {
+                $liste = $etat->service === FeuilleMatchSet::NOUS ? $notres : $adverses;
+                $echange = $liste[$tours[$etat->service]++ % \count($liste)];
+                $issue = array_pop($echange);
+                $derniere = null;
+                foreach ($echange as [$action, $poste]) {
+                    $derniere = $this->evenementRecette($set, FeuilleMatchEvenement::ACTION, ['action' => $action, 'joueurs' => [$etat->postes[$poste]]], $auteur);
+                }
+                $this->evenementRecette($set, FeuilleMatchEvenement::POINT, match ($issue) {
+                    'gagne' => ['pour' => 'nous', 'sur' => $derniere],
+                    'perdu' => ['pour' => 'eux', 'sur' => $derniere],
+                    'contree', 'faute' => ['pour' => 'eux', 'sur' => $derniere, 'detail' => $issue],
+                    'block-deux' => ['pour' => 'nous', 'sur' => $derniere, 'avec' => $etat->postes[3]],
+                    'ace' => ['pour' => 'nous', 'sur' => 'service'],
+                    'faute-service' => ['pour' => 'eux', 'sur' => 'service'],
+                    'ace-subi' => ['pour' => 'eux'],
+                    'filet' => ['pour' => 'eux', 'detail' => 'filet', 'fautif' => $etat->postes[1]],
+                    'sans-detail-nous' => ['pour' => 'nous', 'sansDetail' => true],
+                    'sans-detail-eux' => ['pour' => 'eux', 'sansDetail' => true],
+                }, $auteur);
+            }
+            $this->feuilleMatchService->terminerSet($set);
+        }
+        $score = array_map(fn ($s) => implode('–', EtatSet::calculer($s)->score), $feuille->getSets()->toArray());
+        $this->cas[] = ['Volley Stats : page du match avec « Statistiques du match » (2 sets notés avec les touches, '.implode(', ', $score).')',
+            sprintf('cap.a1 : fiche de %s, « Page du match » sur le match du %s (/equipe/%d/match/%d)', $arrats->getNom(), $partie->getDate()->format('d/m'), $arrats->getId(), $partie->getId())];
+    }
+
+    /** @param array<string, mixed> $donnees @return string uuid de l'événement */
+    private function evenementRecette(FeuilleMatchSet $set, string $type, array $donnees, ?User $auteur): string
+    {
+        $o = random_bytes(16);
+        $o[6] = \chr(\ord($o[6]) & 0x0f | 0x40);
+        $o[8] = \chr(\ord($o[8]) & 0x3f | 0x80);
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($o), 4));
+        $dernier = ($set->getEvenements()->last() ?: null)?->getOrdre();
+        $this->feuilleMatchService->evenement($set, $uuid, $type, $donnees, $dernier, $auteur);
+
+        return $uuid;
     }
 
     private function saisirScoresArchive(Saison $archive): void

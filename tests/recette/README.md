@@ -101,6 +101,7 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 | Droits rattachés à une saison (`resp.ancien`) | sélecteur de saison (2025-2026 test : crayons sur les matchs de Adour ; 2026-2027 test : aucun), fiche du club CBT refusée |
 | Liste des clubs, club sans équipe, club sans responsable, équipes sans club | « Les clubs », « Les équipes », « Qui sommes-nous ? » |
 | Gestion des clubs par l'admin (équipes, gymnases, responsables, suppression) | `/admin/club/` |
+| Volley Stats : **page du match déjà notée** (dernier match joué d'Arrats, 2 sets avec les touches et terminés, environ 90 % d'échanges détaillés : aces, fautes de service, attaques contrées, blocks à deux, renvois, faute de filet, échanges sans détail) | `cap.a1` (ou `resp.arr`) : fiche d'Arrats, « Page du match » du match indiqué dans le récapitulatif, tableau « Statistiques du match » sous « Relevé des sets » |
 
 ### Fichier d'import Excel
 
