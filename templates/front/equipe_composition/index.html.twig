@@ -17,7 +17,7 @@
         {{ include('front/equipe_composition/_composition.html.twig') }}
 
         <div class="mt-6 text-center">
-            <a class="link link-hover link-primary" href="{{ path('front_equipe_detail', {'id': equipe.id}) }}">← Revenir à la page de l'équipe</a>
+            <a class="lien text-sm inline-flex min-h-11 items-center" href="{{ path('front_equipe_detail', {'id': equipe.id}) }}">← Revenir à la page de l'équipe</a>
         </div>
     </div>
 {% endblock %}

@@ -406,6 +406,17 @@ button.terrain-case { cursor: pointer; }
 .terrain-compact .terrain-case { min-height: 3rem; padding-block: .25rem; }
 .terrain-compact .terrain-nom { font-size: .9375rem; }
 .score-set { font-family: var(--font-display); font-weight: 800; font-size: 2.75rem; line-height: 1; font-variant-numeric: tabular-nums; color: var(--color-primary); }
+/* Lien du site (texte, équipes, gymnases) : soulignement discret toujours visible, car le marine seul ne se distingue
+   pas du texte (1,26:1) ; trait à 55 % ≈ 3,6:1 sur blanc ; appuyé au survol ; focus clavier visible */
+.lien { color: var(--color-primary); text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; text-decoration-color: color-mix(in oklab, var(--color-primary) 55%, transparent); }
+.lien:hover { text-decoration-thickness: 2px; text-decoration-color: currentColor; }
+.lien:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
+/* Lien secondaire en gris (abréviation du club après un nom d'équipe) : même soulignement, même focus */
+.lien-discret { color: color-mix(in oklab, var(--color-base-content) 80%, transparent); text-decoration-line: underline; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+.lien-discret:hover { text-decoration-thickness: 2px; }
+.lien-discret:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 2px; }
+/* Lien sur sa propre ligne dans une carte mobile (nom d'équipe) : cible de 44 px */
+.lien-bloc { display: flex; align-items: center; min-height: 2.75rem; overflow-wrap: anywhere; }
 /* Lien dans une phrase : zone tactile d'environ 44 px sans agrandir la ligne ; contour de focus resserré sur le texte */
 .lien-texte { padding-block: 0.75rem; }
 .lien-texte:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -0.5rem; border-radius: 2px; }

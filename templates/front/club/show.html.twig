@@ -9,7 +9,7 @@
 
         {# En-tête : nom long, abréviation, lien ; bouton de modification pour les responsables et l'admin #}
         <div>
-            <a class="link link-hover text-sm" href="{{ path('front_club_index') }}">← Tous les clubs</a>
+            <a class="lien lien-texte text-sm" href="{{ path('front_club_index') }}">← Tous les clubs</a>
             <div class="mt-2 flex flex-wrap items-center justify-between gap-3">
                 <div class="flex items-center gap-4">
                     {{ include('front/club/_logo.html.twig', {club: club, taille: 'size-20 md:size-24'}) }}
@@ -24,7 +24,7 @@
             </div>
             <p class="mt-1"><span class="badge badge-outline" title="Abréviation, affichée après le nom des équipes">{{ club.nomCourt|upper }}</span></p>
             {% if club.url %}
-                <p class="mt-2"><a class="link link-primary break-all" href="{{ club.url }}" target="_blank" rel="noopener noreferrer">{{ club.url }}</a></p>
+                <p class="mt-2"><a class="lien break-all" href="{{ club.url }}" target="_blank" rel="noopener noreferrer">{{ club.url }}</a></p>
             {% endif %}
         </div>
 
@@ -43,7 +43,7 @@
                 <ul class="mt-2 space-y-2">
                     {% for ligne in equipesEngagees %}
                         <li class="flex flex-wrap items-baseline justify-between gap-x-3">
-                            <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: ligne.equipe.id}) }}">{{ ligne.equipe.nom }}</a>
+                            <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: ligne.equipe.id}) }}">{{ ligne.equipe.nom }}</a>
                             <span class="text-sm text-(--color-base-content)/80">{{ ligne.poules|join(' · ') }}</span>
                         </li>
                     {% else %}

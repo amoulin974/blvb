@@ -37,14 +37,14 @@
             <tr id="tr-partie-{{partie.id}}" class="hover:bg-(--color-base-200)" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
                 <td class="whitespace-nowrap text-(--color-base-content)/80">{{ partie.date|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ partie.date|format_time('short', locale='fr') }}</td>
                 <td class="text-right">
-                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
+                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id})}}" class="lien break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeRecoit.nom }}</a>
                     {% if contactAdverse and contactAdverse.adversaire.id == partie.idEquipeRecoit.id %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
                 </td>
                 <td class="text-center font-display text-xl font-extrabold text-(--color-primary) tabular-nums whitespace-nowrap">
                     {{ include('front/fragments/_score_partie.html.twig') }}
                 </td>
                 <td>
-                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
+                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id})}}" class="lien break-words font-display font-medium text-[17px] tracking-wide">{{ partie.idEquipeDeplace.nom }}</a>
                     {% if contactAdverse and contactAdverse.adversaire.id == partie.idEquipeDeplace.id %}{{ include('front/fragments/_contact_capitaine.html.twig', {contact: contactAdverse.contact}) }}{% endif %}
                 </td>
                 <td class="text-right">{{ include('front/fragments/_lieu_lien.html.twig', {nom: partie.lieu ? partie.lieu.nom : null, adresse: partie.lieu ? partie.lieu.adresse : null}) }}{% if partie.aDeplacerPourLePublic %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}</td>
@@ -61,11 +61,11 @@
     {# Carte compacte : équipe qui reçoit en haut, équipe qui se déplace en dessous,
        score à droite ; date, heure et lieu sur une seule ligne. #}
     <div class="card bg-base-100 card-xs border border-base-300 block lg:hidden liste-equipe-mobile mt-2" id="card-partie-{{partie.id}}" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
-        <div class="card-body px-3 py-2 gap-1">
+        <div class="card-body px-3 py-1 gap-1">
             <div class="flex items-center gap-3">
                 <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-medium block py-0.5 break-words"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
-                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline font-medium block py-0.5 break-words"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
+                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeRecoit.id })}}" class="lien lien-bloc font-medium"><span class="sr-only">Reçoit : </span>{{ partie.idEquipeRecoit.nom }}</a>
+                    <a href="{{path('front_equipe_detail', {'id': partie.idEquipeDeplace.id })}}" class="lien lien-bloc font-medium"><span class="sr-only">Se déplace : </span>{{ partie.idEquipeDeplace.nom }}</a>
                 </div>
                 <div class="shrink-0 text-right font-display text-2xl font-extrabold text-(--color-primary) tabular-nums">
                     {{ include('front/fragments/_score_partie.html.twig') }}

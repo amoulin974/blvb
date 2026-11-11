@@ -29,7 +29,7 @@
                 </div>
             </div>
             {% if equipe.club %}
-                <p class="mt-2 flex items-center gap-2">{{ include('front/club/_logo.html.twig', {club: equipe.club, taille: 'size-8'}) }} Club : <a class="link link-hover link-primary font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
+                <p class="mt-2 flex items-center gap-2">{{ include('front/club/_logo.html.twig', {club: equipe.club, taille: 'size-8'}) }} Club : <a class="lien lien-texte font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
             {% endif %}
             <p class="mt-1">
                 Reçoit à
@@ -99,13 +99,13 @@
                     {% set domicile = prochain.equipe_recoit_id == equipe.id %}
                     <p class="mt-1 font-display text-2xl font-bold text-(--color-primary)">{{ prochain.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ prochain.date_match|format_time('short', locale='fr') }}</p>
                     {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
-                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
+                    <p class="text-sm">contre <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
                         {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}{% if prochain.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}</p>
                     {% if parties[prochain.match_id] is defined and score_saisissable(parties[prochain.match_id], droitsSaisie) %}
                         <p class="text-sm mt-1 text-(--color-base-content)/80">Saisie du score après le match</p>
                     {% endif %}
-                    <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
+                    <p class="text-sm mt-1"><a href="#" class="lien lien-texte" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
                     {% if pagesMatch %}<a class="btn btn-outline btn-primary btn-sm min-h-11 mt-2" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: prochain.match_id}) }}">Préparer le match</a>{% endif %}
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
                     {% if canViewCapitaine %}
@@ -121,7 +121,7 @@
                     {% set passe = true %}{% set joue = false %}{% set autorise = true %}
                     <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Score à saisir</p>
                     {% set advSaisirId = aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace_id : aSaisir.equipe_recoit_id %}
-                    <p class="mt-1 text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advSaisirId}) }}">{{ aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace : aSaisir.equipe_recoit }}</a>
+                    <p class="mt-1 text-sm">contre <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: advSaisirId}) }}">{{ aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace : aSaisir.equipe_recoit }}</a>
                         · {{ aSaisir.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
                     <div class="mt-2">{{ include('front/fragments/_score_boutons.html.twig') }}</div>
                 {% else %}
@@ -129,7 +129,7 @@
                 {% if dernier %}
                     <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
                     {% set advDernierId = dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace_id : dernier.equipe_recoit_id %}
-                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
+                    <p class="text-sm">contre <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
                 {% else %}
                     <p class="mt-1">Aucun match joué</p>
@@ -169,14 +169,14 @@
                                 {% for match in matchsByPoule[poule.id] %}
                                     <tr class="hover:bg-(--color-base-200)">
                                         <td class="whitespace-nowrap text-(--color-base-content)/80">{{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }}</td>
-                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
+                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{% if match.equipe_recoit_id == equipe.id %}{{ match.equipe_recoit }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_recoit_id}) }}">{{ match.equipe_recoit }}</a>{% endif %}</td>
                                         <td class="text-center">
                                             {{ include('front/fragments/_equipe_case_score.html.twig') }}
                                         </td>
-                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
+                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{% if match.equipe_deplace_id == equipe.id %}{{ match.equipe_deplace }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_deplace_id}) }}">{{ match.equipe_deplace }}</a>{% endif %}</td>
                                         <td class="text-right">
                                             {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
-                                            {% if pagesMatch %}<a class="link link-primary block text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
+                                            {% if pagesMatch %}<a class="lien block text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -191,8 +191,8 @@
                                     <div class="card-body px-3 py-2 gap-1">
                                         <div class="flex items-center gap-3">
                                             <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
-                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
+                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{% if match.equipe_recoit_id == equipe.id %}{{ match.equipe_recoit }}{% else %}<a class="lien lien-bloc" href="{{ path('front_equipe_detail', {id: match.equipe_recoit_id}) }}">{{ match.equipe_recoit }}</a>{% endif %}</div>
+                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{% if match.equipe_deplace_id == equipe.id %}{{ match.equipe_deplace }}{% else %}<a class="lien lien-bloc" href="{{ path('front_equipe_detail', {id: match.equipe_deplace_id}) }}">{{ match.equipe_deplace }}</a>{% endif %}</div>
                                             </div>
                                             <div class="shrink-0">
                                                 {{ include('front/fragments/_equipe_case_score.html.twig', {alignement: 'end'}) }}
@@ -202,7 +202,7 @@
                                             {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
                                             {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
                                         </p>
-                                        {% if pagesMatch %}<a class="link link-primary inline-flex min-h-11 items-center text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
+                                        {% if pagesMatch %}<a class="lien inline-flex min-h-11 items-center text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -267,8 +267,8 @@
                             <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
                                 {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
-                                {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ membre.joueur.telephone }}</a>{% endif %}
-                                {% if membre.joueur.email %}<a class="link link-hover link-primary wrap-anywhere" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
+                                {% if membre.joueur.telephone %}<a class="lien" href="tel:{{ membre.joueur.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ membre.joueur.telephone }}</a>{% endif %}
+                                {% if membre.joueur.email %}<a class="lien wrap-anywhere" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
                             </li>
                         {% endfor %}
                     </ul>

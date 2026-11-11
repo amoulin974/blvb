@@ -51,7 +51,7 @@
     <section aria-labelledby="titre-matchs-accueil" data-controller="score-modal">
         <div class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 mb-3">
             <h2 id="titre-matchs-accueil" class="text-2xl uppercase tracking-wide">Les matchs{% if phase %} — {{ phase.nom }}{% endif %}</h2>
-            <a href="{{ path('front_calendrier') }}" class="link link-hover link-primary">Tout le calendrier →</a>
+            <a href="{{ path('front_calendrier') }}" class="lien lien-texte">Tout le calendrier →</a>
         </div>
         {% if phase and phase.poules|length > 0 %}
             {% set aujourdhui = 'now'|date('Y-m-d') %}

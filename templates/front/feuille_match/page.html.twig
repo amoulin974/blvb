@@ -8,7 +8,7 @@
 {% block body %}
     <div class="page-match container mx-auto max-w-3xl md:px-4 flex flex-col gap-4">
         <div>
-            <a href="{{ path('front_equipe_detail', {id: match.equipe.id}) }}" class="link link-hover link-primary inline-flex items-center min-h-12 font-semibold">← {{ match.equipe.nom }}</a>
+            <a href="{{ path('front_equipe_detail', {id: match.equipe.id}) }}" class="lien inline-flex items-center min-h-12 font-semibold">← {{ match.equipe.nom }}</a>
             <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Page du match</p>
             <h1 class="text-3xl uppercase tracking-wide leading-tight">Contre {{ adversaire.nom }}</h1>
             {% if partie.date %}

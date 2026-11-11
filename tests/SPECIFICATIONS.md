@@ -708,6 +708,11 @@ L'éditeur lui-même (TipTap : barre d'outils, insertion des codes, fenêtres, c
 **PRE-04** ✅ — Fermer l'encart : visiteur renvoyé à la connexion, jeton faux → 403 et encart toujours là ; formulaire de la page → retour à l'accueil, encart fermé.
 **PRE-05** ✅ — Lien « Ce que vous pouvez faire » dans le menu du compte, le menu latéral et « Mon profil » ; pour le visiteur, dans le sous-menu « Le championnat » de la barre et le menu latéral.
 
+### 4.24 Liens lisibles sur téléphone — `Fonctionnel/Front/LiensTest` (P2)
+
+**LIE-01** ✅ — Calendrier : noms d'équipes et gymnases en classe `lien` (soulignement toujours visible, pas seulement au survol), sans infobulle « Voir la fiche de l'équipe » ; le lien du gymnase porte une épingle (`aria-hidden`) et « (carte, nouvel onglet) » pour les lecteurs d'écran ; plus aucun `link-hover` dans la page.
+**LIE-02** ✅ — Fiche équipe : dans son calendrier, l'adversaire est un lien vers sa fiche, l'équipe affichée ne l'est pas.
+
 ## 5. Analyse statique et qualité du code
 
 | Outil | Réglage de départ | Cible | Pourquoi |

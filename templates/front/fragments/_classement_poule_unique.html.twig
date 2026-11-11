@@ -50,7 +50,7 @@
                         {% if descente %}<span class="text-sm text-(--color-warning)" title="Zone de descente" aria-hidden="true">▼</span><span class="sr-only">(zone de descente)</span>{% endif %}
                     </td>
                     <td>
-                        <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display text-[17px] tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
+                        <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" class="lien break-words font-display text-[17px] tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
                         {{ include('front/fragments/_classement_detail_matchs.html.twig') }}
                     </td>
                     <td class="text-center font-display text-xl font-bold tabular-nums">{{ classement.points }}</td>
@@ -82,7 +82,7 @@
                             {% if descente %}<div class="text-xs text-(--color-warning)" aria-hidden="true">▼</div><span class="sr-only">(zone de descente)</span>{% endif %}
                         </div>
                         <div class="flex-1 min-w-0">
-                            <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline block py-0.5 break-words font-display text-lg tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
+                            <a href="{{ path('front_equipe_detail', {'id': classement.equipe.id}) }}" class="lien lien-bloc font-display text-lg tracking-wide {{ courante ? 'font-extrabold' : 'font-medium' }}">{{ classement.equipe.nom }}</a>
                             <p class="text-sm">{{ joues }} joué{{ joues > 1 ? 's' : '' }} · {{ victoires }} V · {{ joues - victoires }} D · sets {{ classement.setGagnes }}–{{ classement.setPerdus }}</p>
                         </div>
                         <div class="shrink-0 text-right">
