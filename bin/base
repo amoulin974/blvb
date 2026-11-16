@@ -1,0 +1,199 @@
+#!/usr/bin/env bash
+# Base locale alignée sur la branche git en cours (migrations Doctrine).
+#
+#   bin/base etat                 branche, base utilisée par l'application, migrations à appliquer ou venues d'une autre branche
+#   bin/base aligner              sauvegarde, annule les migrations absentes de la branche, applique celles de la branche
+#   bin/base sauvegarder          copie de la base dans ~/.local/share/blvb/sauvegardes-base/
+#   bin/base sauvegardes          liste des sauvegardes
+#   bin/base restaurer [fichier]  remet une sauvegarde (la plus récente par défaut), après une sauvegarde de sécurité
+#   bin/base rappel               installe un rappel git : après un changement de branche, signale une base non alignée
+#   bin/base verifier             code retour 0 si la base est alignée, 1 sinon (sans affichage ; utilisé par le rappel)
+#
+# Agit sur la base qu'utilise le conteneur php (blvb_new, ou blvb_recette après `bin/recette utiliser`) ;
+# BASE_CIBLE=<nom> bin/base … agit sur une autre base du même serveur (ex. une copie pour essayer).
+# Pour la base de développement locale uniquement ; jamais en production.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+DOSSIER="${XDG_DATA_HOME:-$HOME/.local/share}/blvb/sauvegardes-base"
+MYSQL_ROOT=(-uroot -prootpassword)
+
+url() {
+    local u
+    u=$(docker compose exec -T php printenv DATABASE_URL < /dev/null)
+    if [ -n "${BASE_CIBLE:-}" ]; then
+        echo "$u" | sed -E "s#/([^/?]+)(\?|$)#/${BASE_CIBLE}\2#"
+    else
+        echo "$u"
+    fi
+}
+
+console() { docker compose exec -T -e DATABASE_URL="$(url)" php php bin/console "$@" < /dev/null; }
+mysql_base() { docker compose exec -T database mysql "${MYSQL_ROOT[@]}" "$@" 2> >(grep -v "Using a password" >&2); }
+
+base() { url | sed -E 's#^.*/([^/?]+)(\?.*)?$#\1#'; }
+
+branche() { git rev-parse --abbrev-ref HEAD; }
+
+# Versions exécutées dans la base (DoctrineMigrations\VersionAAAAMMJJhhmmss), une par ligne
+executees() {
+    mysql_base -N -B -r -e "SELECT version FROM doctrine_migration_versions ORDER BY version" "$(base)" < /dev/null 2>/dev/null || true
+}
+
+# Versions présentes dans la branche (fichiers migrations/Version*.php)
+disponibles() {
+    for f in migrations/Version*.php; do
+        [ -e "$f" ] && echo "DoctrineMigrations\\$(basename "$f" .php)"
+    done | sort
+}
+
+a_appliquer() { comm -13 <(executees | sort) <(disponibles); }
+etrangeres() { comm -23 <(executees | sort) <(disponibles); }
+
+# Branches qui contiennent le fichier d'une migration (pour l'affichage)
+branches_de() {
+    local fichier="migrations/${1##*\\}.php" commit
+    commit=$(git rev-list -1 --all -- "$fichier" 2>/dev/null || true)
+    [ -n "$commit" ] && git branch -a --contains "$commit" --format='%(refname:short)' | paste -sd ' ' - || echo "introuvable dans git"
+}
+
+etat() {
+    local b
+    b=$(base)
+    echo "Branche : $(branche)"
+    echo "Base    : $b"
+    local nouvelles autres
+    nouvelles=$(a_appliquer)
+    autres=$(etrangeres)
+    if [ -z "$nouvelles" ] && [ -z "$autres" ]; then
+        echo "La base est alignée sur la branche."
+        return 0
+    fi
+    if [ -n "$autres" ]; then
+        echo
+        echo "Migrations exécutées dans la base mais absentes de la branche (seront annulées par « bin/base aligner ») :"
+        while read -r v; do echo "  - ${v##*\\}   (branches : $(branches_de "$v"))"; done <<< "$autres"
+    fi
+    if [ -n "$nouvelles" ]; then
+        echo
+        echo "Migrations de la branche à appliquer :"
+        while read -r v; do echo "  - ${v##*\\}"; done <<< "$nouvelles"
+    fi
+    echo
+    echo "Pour aligner la base : bin/base aligner"
+    return 1
+}
+
+sauvegarder() {
+    local b fichier
+    b=$(base)
+    mkdir -p "$DOSSIER"
+    fichier="$DOSSIER/${b}_$(branche | tr '/' '-')_$(date +%Y%m%d-%H%M%S).sql"
+    docker compose exec -T database sh -c "mysqldump -uroot -prootpassword --single-transaction --routines --triggers ${b}" < /dev/null 2> >(grep -v "Using a password" >&2) > "$fichier"
+    echo "Sauvegarde : $fichier"
+}
+
+annuler() {
+    local v="$1" classe fichier commit
+    classe=${v##*\\}
+    fichier="migrations/$classe.php"
+    # Le fichier vient d'une autre branche : on le reprend dans l'historique git le temps de l'annulation
+    for commit in $(git rev-list --all -- "$fichier"); do
+        if git show "$commit:$fichier" > "$fichier" 2>/dev/null; then
+            break
+        fi
+        rm -f "$fichier"
+    done
+    if [ ! -s "$fichier" ]; then
+        rm -f "$fichier"
+        echo "Impossible d'annuler $classe : fichier introuvable dans git. Remettez une sauvegarde (bin/base restaurer)." >&2
+        exit 1
+    fi
+    trap 'rm -f "$fichier"' EXIT
+    echo "→ Annulation de $classe"
+    console doctrine:migrations:execute "$v" --down --no-interaction
+    rm -f "$fichier"
+    trap - EXIT
+}
+
+aligner() {
+    if [ -z "$(a_appliquer)" ] && [ -z "$(etrangeres)" ]; then
+        etat
+        return 0
+    fi
+    sauvegarder
+    local v
+    # Les plus récentes d'abord
+    for v in $(etrangeres | sort -r); do
+        annuler "$v"
+    done
+    if [ -n "$(a_appliquer)" ]; then
+        echo "→ Application des migrations de la branche"
+        console doctrine:migrations:migrate --no-interaction --allow-no-migration
+    fi
+    # La liste des saisons est mise en cache par l'application
+    console cache:clear > /dev/null 2>&1 || true
+    echo
+    etat
+}
+
+sauvegardes() {
+    ls -1t "$DOSSIER"/*.sql 2>/dev/null || echo "Aucune sauvegarde dans $DOSSIER."
+}
+
+restaurer() {
+    local fichier="${1:-}" b
+    b=$(base)
+    if [ -z "$fichier" ]; then
+        fichier=$(ls -1t "$DOSSIER"/*.sql 2>/dev/null | head -1 || true)
+    fi
+    if [ -z "$fichier" ] || [ ! -f "$fichier" ]; then
+        echo "Sauvegarde introuvable : ${fichier:-aucune dans $DOSSIER}" >&2
+        exit 1
+    fi
+    echo "La base $b va être remplacée par $fichier."
+    read -r -p "Confirmer ? (oui/non) " reponse
+    [ "$reponse" = "oui" ] || { echo "Rien n'a été modifié."; exit 1; }
+    sauvegarder
+    mysql_base "$b" < "$fichier"
+    console cache:clear > /dev/null 2>&1 || true
+    echo "Base $b restaurée depuis $fichier."
+    echo
+    etat || true
+}
+
+rappel() {
+    local hook
+    hook="$(git rev-parse --git-path hooks)/post-checkout"
+    if [ -e "$hook" ] && ! grep -q "bin/base" "$hook"; then
+        echo "Un hook post-checkout existe déjà ($hook) : ajoutez-y la ligne « bin/base etat > /dev/null || echo 'Base non alignée : bin/base etat' »." >&2
+        exit 1
+    fi
+    cat > "$hook" <<'HOOK'
+#!/usr/bin/env bash
+# Rappel installé par bin/base : signale, après un changement de branche, une base locale non alignée.
+[ "${3:-0}" = "1" ] || exit 0
+cd "$(git rev-parse --show-toplevel)"
+[ -x bin/base ] || exit 0
+if docker compose ps --status running php 2>/dev/null | grep -q php; then
+    bin/base verifier || echo "⚠ Base locale non alignée sur la branche : bin/base etat (puis bin/base aligner)"
+fi
+exit 0
+HOOK
+    chmod +x "$hook"
+    echo "Rappel installé : $hook"
+}
+
+case "${1:-}" in
+    etat) etat || true ;;
+    aligner) aligner ;;
+    sauvegarder) sauvegarder ;;
+    sauvegardes) sauvegardes ;;
+    restaurer) shift; restaurer "${1:-}" ;;
+    rappel) rappel ;;
+    verifier) [ -z "$(a_appliquer)" ] && [ -z "$(etrangeres)" ] ;;
+    *)
+        sed -n '2,14p' "$0" | sed 's/^# \{0,1\}//'
+        exit 1
+        ;;
+esac

@@ -2,6 +2,7 @@
 
 namespace App\Tests\Unitaire\Service;
 
+use App\Competition\Sport\Sports;
 use App\Entity\Equipe;
 use App\Entity\Partie;
 use App\Entity\Saison;
@@ -27,6 +28,7 @@ final class ClassementServicePointsTest extends TestCase
         $this->service = new ClassementService(
             $this->createStub(ClassementRepository::class),
             $this->createStub(EntityManagerInterface::class),
+            new Sports(),
         );
         $this->saison = (new Saison())
             ->setPointsVictoireForte(5)

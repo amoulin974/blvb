@@ -33,7 +33,12 @@
                             {% endfor %}
                         </ul>
                     </td>
-                    <td class="text-right"><a class="btn btn-ghost btn-sm" href="{{ path('admin_lieu_edit', {id: lieu.id}) }}" aria-label="Modifier {{ lieu.nom }}">{{ icone.i('crayon') }} Modifier</a></td>
+                    <td class="text-right">
+                        <div class="flex flex-wrap justify-end gap-1">
+                            <a class="btn btn-ghost btn-sm" href="{{ path('admin_lieu_fermetures', {id: lieu.id}) }}" aria-label="Fermetures de {{ lieu.nom }}">Fermetures</a>
+                            <a class="btn btn-ghost btn-sm" href="{{ path('admin_lieu_edit', {id: lieu.id}) }}" aria-label="Modifier {{ lieu.nom }}">{{ icone.i('crayon') }} Modifier</a>
+                        </div>
+                    </td>
                 </tr>
             {% else %}
                 <tr><td colspan="4">Aucun gymnase.</td></tr>

@@ -29,7 +29,7 @@
                 </div>
             </div>
             {% if equipe.club %}
-                <p class="mt-2 flex items-center gap-2">{{ include('front/club/_logo.html.twig', {club: equipe.club, taille: 'size-8'}) }} Club : <a class="link link-hover link-primary font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
+                <p class="mt-2 flex items-center gap-2">{{ include('front/club/_logo.html.twig', {club: equipe.club, taille: 'size-8'}) }} Club : <a class="lien lien-texte font-semibold" href="{{ path('front_club_show', {id: equipe.club.id}) }}">{{ equipe.club.nom }}</a></p>
             {% endif %}
             <p class="mt-1">
                 Reçoit à
@@ -67,12 +67,16 @@
             {% endif %}
         </div>
 
+        {# Saisie du score (_equipe_case_score.html.twig) : la fenêtre recharge la page après enregistrement, puis confirme #}
+        <div class="flex flex-col gap-6" data-controller="score-modal" data-score-modal-recharger-value="true">
         {# Synthèse : classement dans la phase en cours, prochain match, dernier résultat #}
         {% set tousMatchs = [] %}
         {% for liste in matchsByPoule %}{% set tousMatchs = tousMatchs|merge(liste) %}{% endfor %}
         {% set maintenant = date() %}
         {% set prochain = tousMatchs|filter(m => m.date_match >= maintenant and m.score_reception_match is null)|sort((a, b) => a.date_match <=> b.date_match)|first %}
         {% set dernier = tousMatchs|filter(m => m.score_reception_match is not null and m.score_deplacement_match is not null)|sort((a, b) => b.date_match <=> a.date_match)|first %}
+        {# Pour qui peut saisir : le match passé sans score le plus récent prend la place du dernier résultat #}
+        {% set aSaisir = tousMatchs|filter(m => m.date_match < maintenant and m.score_reception_match is null and parties[m.match_id] is defined and score_saisissable(parties[m.match_id], droitsSaisie))|sort((a, b) => b.date_match <=> a.date_match)|first %}
         {% set classementActuel = null %}
         {% for poule in (phaseouverte ? phaseouverte.poules : []) %}
             {% for c in poule.classements %}{% if c.equipe.id == equipe.id %}{% set classementActuel = {poule: poule, ligne: c} %}{% endif %}{% endfor %}
@@ -95,10 +99,14 @@
                     {% set domicile = prochain.equipe_recoit_id == equipe.id %}
                     <p class="mt-1 font-display text-2xl font-bold text-(--color-primary)">{{ prochain.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ prochain.date_match|format_time('short', locale='fr') }}</p>
                     {% set advId = domicile ? prochain.equipe_deplace_id : prochain.equipe_recoit_id %}
-                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
+                    <p class="text-sm">contre <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: advId}) }}">{{ domicile ? prochain.equipe_deplace : prochain.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ domicile ? 'À domicile' : 'À l\'extérieur' }} ·
-                        {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}</p>
-                    <p class="text-sm mt-1"><a href="#" class="link link-hover link-primary" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
+                        {{ include('front/fragments/_lieu_lien.html.twig', {nom: prochain.lieu_nom, adresse: prochain.lieu_adresse}) }}{% if prochain.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}</p>
+                    {% if parties[prochain.match_id] is defined and score_saisissable(parties[prochain.match_id], droitsSaisie) %}
+                        <p class="text-sm mt-1 text-(--color-base-content)/80">Saisie du score après le match</p>
+                    {% endif %}
+                    <p class="text-sm mt-1"><a href="#" class="lien lien-texte" data-action="abonnement-agenda#ouvrir">Ajouter les matchs à mon agenda</a></p>
+                    {% if pagesMatch %}<a class="btn btn-outline btn-primary btn-sm min-h-11 mt-2" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: prochain.match_id}) }}">Préparer le match</a>{% endif %}
                     {# Coordonnées du capitaine adverse : seulement pour les capitaines de la poule et les administrateurs #}
                     {% if canViewCapitaine %}
                         {{ include('front/fragments/_contact_capitaine.html.twig', {contact: capitainesAdverses[advId] ?? null}) }}
@@ -108,14 +116,24 @@
                 {% endif %}
             </div>
             <div class="bg-base-100 border border-base-300 rounded-box p-4">
+                {% if aSaisir %}
+                    {% set partie = parties[aSaisir.match_id] %}
+                    {% set passe = true %}{% set joue = false %}{% set autorise = true %}
+                    <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Score à saisir</p>
+                    {% set advSaisirId = aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace_id : aSaisir.equipe_recoit_id %}
+                    <p class="mt-1 text-sm">contre <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: advSaisirId}) }}">{{ aSaisir.equipe_recoit_id == equipe.id ? aSaisir.equipe_deplace : aSaisir.equipe_recoit }}</a>
+                        · {{ aSaisir.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
+                    <div class="mt-2">{{ include('front/fragments/_score_boutons.html.twig') }}</div>
+                {% else %}
                 <p class="text-xs font-semibold uppercase tracking-wider text-(--color-base-content)/70">Dernier résultat</p>
                 {% if dernier %}
                     <p class="mt-1">{{ include('front/fragments/_equipe_score.html.twig', {match: dernier}) }}</p>
                     {% set advDernierId = dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace_id : dernier.equipe_recoit_id %}
-                    <p class="text-sm">contre <a class="link link-hover link-primary font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
+                    <p class="text-sm">contre <a class="lien lien-texte font-semibold" href="{{ path('front_equipe_detail', {id: advDernierId}) }}">{{ dernier.equipe_recoit_id == equipe.id ? dernier.equipe_deplace : dernier.equipe_recoit }}</a></p>
                     <p class="text-sm">{{ dernier.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }}</p>
                 {% else %}
                     <p class="mt-1">Aucun match joué</p>
+                {% endif %}
                 {% endif %}
             </div>
         </div>
@@ -129,7 +147,7 @@
                         <h3 class="mt-6 mb-3 text-xl uppercase tracking-wide text-(--color-primary)">{{ phase.nom }} · {{ poule.nom }}</h3>
 
                         {# Le masquage mobile est porté par ce div : la classe daisyUI "table" impose display: table. #}
-                        <div class="hidden md:block">
+                        <div class="hidden lg:block">
                             <table class="table w-full table-fixed">
                                 <colgroup>
                                     <col class="w-[16%]">
@@ -151,13 +169,14 @@
                                 {% for match in matchsByPoule[poule.id] %}
                                     <tr class="hover:bg-(--color-base-200)">
                                         <td class="whitespace-nowrap text-(--color-base-content)/80">{{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }}</td>
-                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_recoit }}</td>
+                                        <td class="text-right font-display text-[17px] tracking-wide {{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{% if match.equipe_recoit_id == equipe.id %}{{ match.equipe_recoit }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_recoit_id}) }}">{{ match.equipe_recoit }}</a>{% endif %}</td>
                                         <td class="text-center">
-                                            {{ include('front/fragments/_equipe_score.html.twig') }}
+                                            {{ include('front/fragments/_equipe_case_score.html.twig') }}
                                         </td>
-                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{{ match.equipe_deplace }}</td>
-                                        <td class="text-right whitespace-nowrap">
-                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
+                                        <td class="font-display text-[17px] tracking-wide {{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}">{% if match.equipe_deplace_id == equipe.id %}{{ match.equipe_deplace }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_deplace_id}) }}">{{ match.equipe_deplace }}</a>{% endif %}</td>
+                                        <td class="text-right">
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
+                                            {% if pagesMatch %}<a class="lien block text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
                                         </td>
                                     </tr>
                                 {% endfor %}
@@ -166,23 +185,24 @@
                         </div>
 
                         {# Mobile : cartes compactes comme dans le calendrier général #}
-                        <div class="md:hidden flex flex-col gap-2">
+                        <div class="lg:hidden flex flex-col gap-2">
                             {% for match in matchsByPoule[poule.id] %}
                                 <div class="card card-xs bg-base-100 border border-base-300">
-                                    <div class="card-body px-3 py-2 gap-1">
+                                    <div class="card-body px-3 py-2 gap-3">
                                         <div class="flex items-center gap-3">
-                                            <div class="flex-1 min-w-0 font-display text-lg leading-snug tracking-wide">
-                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{{ match.equipe_recoit }}</div>
-                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{{ match.equipe_deplace }}</div>
+                                            <div class="flex-1 min-w-0 paire-equipes font-display text-lg leading-snug tracking-wide">
+                                                <div class="{{ match.equipe_recoit_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Reçoit : </span>{% if match.equipe_recoit_id == equipe.id %}{{ match.equipe_recoit }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_recoit_id}) }}">{{ match.equipe_recoit }}</a>{% endif %}</div>
+                                                <div class="{{ match.equipe_deplace_id == equipe.id ? 'font-extrabold text-(--color-primary)' : 'font-medium' }}"><span class="sr-only">Se déplace : </span>{% if match.equipe_deplace_id == equipe.id %}{{ match.equipe_deplace }}{% else %}<a class="lien" href="{{ path('front_equipe_detail', {id: match.equipe_deplace_id}) }}">{{ match.equipe_deplace }}</a>{% endif %}</div>
                                             </div>
-                                            <div class="shrink-0 text-right">
-                                                {{ include('front/fragments/_equipe_score.html.twig') }}
+                                            <div class="shrink-0">
+                                                {{ include('front/fragments/_equipe_case_score.html.twig', {alignement: 'end'}) }}
                                             </div>
                                         </div>
-                                        <p class="text-sm">
+                                        <p class="text-sm infos-match">
                                             {{ match.date_match|format_datetime(pattern='EEE dd/MM', locale='fr') }} · {{ match.date_match|format_time('short', locale='fr') }} ·
-                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}
+                                            {{ include('front/fragments/_lieu_lien.html.twig', {nom: match.lieu_nom, adresse: match.lieu_adresse}) }}{% if match.gymnase_ferme %}{{ include('front/fragments/_gymnase_ferme.html.twig') }}{% endif %}
                                         </p>
+                                        {% if pagesMatch %}<a class="lien inline-flex min-h-11 items-center text-sm" href="{{ path('front_feuille_match', {equipe: equipe.id, partie: match.match_id}) }}">Page du match<span class="sr-only"> contre {{ match.equipe_recoit_id == equipe.id ? match.equipe_deplace : match.equipe_recoit }}</span></a>{% endif %}
                                     </div>
                                 </div>
                             {% endfor %}
@@ -192,6 +212,13 @@
                 {% endfor %}
             {% endfor %}
         </section>
+        {% if parties %}
+            {{ include('front/fragments/_score_modal.html.twig') }}
+            <div class="toast toast-end toast-bottom z-[100] pointer-events-none">
+                <div role="status" aria-live="polite" class="alert bg-primary text-primary-content border-0 shadow-lg max-w-sm whitespace-normal empty:hidden" data-score-modal-target="confirmation"></div>
+            </div>
+        {% endif %}
+        </div>
 
         {# Classement #}
         <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6">
@@ -206,6 +233,22 @@
             {% endfor %}
         </section>
 
+        {# Sets joués d'après les pages du match (Volley Stats, D67) : équipe et responsable de son club seulement #}
+        {% if pagesMatch and setsJoues is not empty %}
+            <section class="bg-base-100 border border-base-300 rounded-box p-4 md:p-6" aria-labelledby="titre-sets-joues">
+                <h2 id="titre-sets-joues" class="uppercase tracking-wide">Sets joués</h2>
+                <p class="text-sm text-(--color-base-content)/80">D'après les pages du match, visibles de l'équipe seulement.</p>
+                <table class="table mt-1 max-w-md">
+                    <thead><tr><th scope="col">Joueur</th><th scope="col" class="text-right">Sets</th></tr></thead>
+                    <tbody>
+                        {% for ligne in setsJoues %}
+                            <tr><th scope="row" class="font-normal">{{ ligne.nom }}</th><td class="text-right tabular-nums">{{ ligne.sets }}</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+        {% endif %}
+
         {# Composition complète avec coordonnées : réservée aux membres de l'équipe et aux administrateurs.
            Les autres capitaines de la poule ne voient que le capitaine (bloc en haut de page). #}
         {% if peutVoirMembres %}
@@ -219,13 +262,13 @@
                 {% if membres is empty %}
                     <p class="mt-2">Composition non renseignée pour cette saison.</p>
                 {% else %}
-                    <ul class="mt-2 divide-y divide-base-300">
+                    <ul class="mt-2 divide-y divide-(--color-base-300)">
                         {% for membre in membres %}
                             <li class="py-2 flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span class="font-medium">{{ membre.joueur.prenom }} {{ membre.joueur.nom }}</span>
                                 {% if membre.capitaine %}<span class="badge badge-primary badge-sm">Capitaine</span>{% endif %}
-                                {% if membre.joueur.telephone %}<a class="link link-hover link-primary" href="tel:{{ membre.joueur.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ membre.joueur.telephone }}</a>{% endif %}
-                                {% if membre.joueur.email %}<a class="link link-hover link-primary wrap-anywhere" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
+                                {% if membre.joueur.telephone %}<a class="lien" href="tel:{{ membre.joueur.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ membre.joueur.telephone }}</a>{% endif %}
+                                {% if membre.joueur.email %}<a class="lien wrap-anywhere" href="mailto:{{ membre.joueur.email }}">{{ membre.joueur.email }}</a>{% endif %}
                             </li>
                         {% endfor %}
                     </ul>

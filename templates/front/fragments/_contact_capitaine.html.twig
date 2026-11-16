@@ -4,8 +4,8 @@
 <p class="text-sm mt-1 font-sans normal-case tracking-normal font-normal text-base-content">
     {% if contact %}
         Capitaine : <span class="font-semibold">{{ contact.prenom }} {{ contact.nom }}</span>
-        {% if contact.telephone %}· <a class="link link-hover link-primary whitespace-nowrap" href="tel:{{ contact.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ contact.telephone }}</a>{% endif %}
-        {% if contact.email %}· <a class="link link-hover link-primary wrap-anywhere" href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% endif %}
+        {% if contact.telephone %}· <a class="lien whitespace-nowrap" href="tel:{{ contact.telephone|replace({' ': '', '.': '', '-': ''}) }}">{{ contact.telephone }}</a>{% endif %}
+        {% if contact.email %}· <a class="lien wrap-anywhere" href="mailto:{{ contact.email }}">{{ contact.email }}</a>{% endif %}
         {% if not contact.telephone and not contact.email %}· coordonnées non renseignées{% endif %}
     {% else %}
         Capitaine non désigné pour le moment

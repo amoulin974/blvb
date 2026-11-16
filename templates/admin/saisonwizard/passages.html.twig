@@ -1,0 +1,202 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block titre_etape %}Passages d'une phase à l'autre{% endblock %}
+
+{# Liste de choix d'une poule de la phase suivante (mode simple). #}
+{% macro choix_poule(nom, poules, choisie, libelle) %}
+    <select name="{{ nom }}" class="select select-bordered w-auto min-w-36" aria-label="{{ libelle }}">
+        {% for p in poules %}<option value="{{ p.id }}" {% if choisie and choisie.id == p.id %}selected{% endif %}>{{ p.nom }}</option>{% endfor %}
+    </select>
+{% endmacro %}
+{% macro choix_nombre(nom, valeur, libelle) %}
+    <select name="{{ nom }}" class="select select-bordered champ-court" aria-label="{{ libelle }}">
+        {% for n in 0..max(4, valeur) %}<option value="{{ n }}" {% if n == valeur %}selected{% endif %}>{{ n }}</option>{% endfor %}
+    </select>
+{% endmacro %}
+{% macro choix_niveau(nom, valeur, max, libelle) %}
+    <select name="{{ nom }}" class="select select-bordered w-auto" aria-label="{{ libelle }}">
+        {% for n in 1..max(max, valeur|default(1)) %}<option value="{{ n }}" {% if n == valeur %}selected{% endif %}>Niveau {{ n }} la saison prochaine</option>{% endfor %}
+    </select>
+{% endmacro %}
+
+{% block contenu %}
+    {% import _self as m %}
+    <form id="wizard-form" method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('wizard' ~ saison.id) }}">
+        {% if figes|default([]) is not empty %}
+            {# Mode ajout d'une saison lancée (D51) : passages déjà appliqués, ou vers une phase déjà commencée #}
+            {% embed 'admin/_alerte.html.twig' with {type: 'info', classe: 'mb-4', figes: figes} %}{% block contenu %}
+                {{ figes|length > 1 ? 'Les passages des phases' : 'Les passages de la phase' }} {{ figes|map(p => '« ' ~ p.nom ~ ' »')|join(', ', ' et ') }} ne se modifient plus : ils sont déjà appliqués, ou la phase suivante a commencé.
+            {% endblock %}{% endembed %}
+        {% endif %}
+
+        {% for t in transitions %}
+            {% set poulesSuivante = t.suivante.poules|sort((a, b) => a.niveau <=> b.niveau) %}
+            {% set niveauMax = max(poulesSuivante|map(p => p.niveau)|merge([1])) %}
+            <section class="mb-8 flex flex-col gap-3" aria-labelledby="transition-{{ t.phase.id }}">
+                <h3 id="transition-{{ t.phase.id }}" class="border-b-2 border-(--color-primary) pb-1">{{ t.phase.nom }} → {{ t.suivante.nom }}</h3>
+
+                <ul class="flex flex-wrap gap-2" aria-label="Équipes reçues par chaque poule, {{ t.suivante.nom }}">
+                    {% for e in t.effectifs %}
+                        {% set ecart = e.prevues is not null and e.recues is not null and e.recues != e.prevues %}
+                        <li class="badge badge-outline h-auto py-1 {{ ecart ? 'badge-ecart' : '' }}">
+                            {{ e.poule.nom }} :
+                            {% if e.recues is null %}effectif inconnu{% else %}{{ e.recues }} reçue{{ e.recues > 1 ? 's' : '' }}{% endif %}{% if e.prevues is not null %} sur {{ e.prevues }} prévue{{ e.prevues > 1 ? 's' : '' }}{% endif %}
+                            {% if ecart %}{{ icone.i('alerte', 'size-3.5 text-warning') }}<span class="sr-only">(écart)</span>{% elseif e.prevues is not null and e.recues is not null %}{{ icone.i('coche', 'size-3.5') }}{% endif %}
+                        </li>
+                    {% endfor %}
+                </ul>
+
+                {% if t.versBarrage %}
+                    <p class="text-sm text-(--color-base-content)/80">Pour chaque rang, choisissez le match de barrage que l'équipe joue, ou la poule de la phase d'après si elle ne joue pas de barrage. Les matchs sont ceux de « {{ t.suivante.nom }} » : le vainqueur et le perdant de chacun se règlent plus bas, dans la partie « {{ t.suivante.nom }} → … ».</p>
+                {% elseif t.barrage %}
+                    <p class="text-sm text-(--color-base-content)/80">Chaque match de barrage a un vainqueur et un perdant : indiquez la poule où chacun joue ensuite.</p>
+                {% endif %}
+
+                {% if t.problemes is not empty %}
+                    {% embed 'admin/_alerte.html.twig' with {type: 'warning'} %}{% block contenu %}
+                        <strong class="font-semibold">À vérifier : {{ t.phase.nom }}</strong>
+                        <ul class="mt-1 list-disc pl-5 space-y-1">{% for p in t.problemes %}<li>{{ p }}</li>{% endfor %}</ul>
+                    {% endblock %}{% endembed %}
+                {% endif %}
+
+                {% for ps in t.poules %}
+                    {% set poule = ps.poule %}
+                    {% set nom = 'p[' ~ poule.id ~ ']' %}
+                    {% set s = ps.simple %}
+                    <div id="poule-{{ poule.id }}" class="rounded-box border border-base-300 p-3 flex flex-col gap-3 scroll-mt-20">
+                        <input type="hidden" name="{{ nom }}[mode]" value="{{ ps.mode }}">
+                        <div class="flex flex-wrap items-baseline gap-2">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ poule.nom }}</strong>
+                            <span class="text-sm text-(--color-base-content)/80">({{ t.phase.nom }}{% if ps.taille %} · {{ ps.taille }} équipes{% endif %})</span>
+                        </div>
+
+                        {% if ps.mode == 'barrage' %}
+                            {# Un match de barrage : où vont le vainqueur et le perdant (D32, D42) #}
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                {% for issue, libelle in {vainqueur: 'Le vainqueur joue ensuite dans', perdant: 'Le perdant joue ensuite dans'} %}
+                                    <label class="flex flex-col gap-1">
+                                        <span class="font-semibold">{{ libelle }}</span>
+                                        <select name="{{ nom }}[{{ issue }}]" class="select select-bordered w-full min-h-11" aria-label="{{ libelle }}, {{ poule.nom }}">
+                                            <option value="">Choisir où il va</option>
+                                            {% for groupe, options in t.destinations %}
+                                                {% if groupe != 'Saison suivante' %}
+                                                    <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == ps[issue] %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
+                                                {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        {% elseif ps.mode == 'simple' and not t.versFinale %}
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2">
+                                {% if not loop.first or s.montee > 0 %}
+                                    <span class="inline-flex flex-wrap items-center gap-2">Montées : {{ m.choix_nombre(nom ~ '[montee]', s.montee, poule.nom ~ ', nombre de montées') }} → {{ m.choix_poule(nom ~ '[versMontee]', poulesSuivante, s.versMontee ?? poulesSuivante|first, poule.nom ~ ', poule où montent les premiers') }}</span>
+                                {% else %}<input type="hidden" name="{{ nom }}[montee]" value="0">{% endif %}
+                                {% if not loop.last or s.descente > 0 %}
+                                    <span class="inline-flex flex-wrap items-center gap-2">· Descentes : {{ m.choix_nombre(nom ~ '[descente]', s.descente, poule.nom ~ ', nombre de descentes') }} → {{ m.choix_poule(nom ~ '[versDescente]', poulesSuivante, s.versDescente ?? poulesSuivante|last, poule.nom ~ ', poule où descendent les derniers') }}</span>
+                                {% else %}<input type="hidden" name="{{ nom }}[descente]" value="0">{% endif %}
+                                <span class="inline-flex flex-wrap items-center gap-2">· Autres équipes → {{ m.choix_poule(nom ~ '[versAutres]', poulesSuivante, s.versAutres, poule.nom ~ ', poule des autres équipes') }}</span>
+                            </div>
+                        {% elseif ps.mode == 'simple' %}
+                            <div class="flex flex-wrap items-center gap-2">Tout le classement, dans l'ordre → {{ m.choix_poule(nom ~ '[versAutres]', poulesSuivante, s.versAutres, poule.nom ~ ', tableau') }}</div>
+                            {# Masquée quand des barrages de fin de saison suivent : poules de la saison suivante remplies à la main (D50, D53) #}
+                            {% if not t.finDeSaison %}
+                            <label class="flex min-h-11 items-center gap-2"><input type="checkbox" class="checkbox" name="{{ nom }}[saisonSuivante]" value="1" {% if s.saisonSuivante %}checked{% endif %}> Montées et descentes pour la saison suivante</label>
+                            <div class="flex flex-wrap items-center gap-x-3 gap-y-2 pl-7">
+                                {% set niveau = poule.niveau|default(1) %}
+                                <span class="inline-flex flex-wrap items-center gap-2">Montées : {{ m.choix_nombre(nom ~ '[montee]', s.montee, poule.nom ~ ', montées pour la saison suivante') }} → {{ m.choix_niveau(nom ~ '[niveauMontee]', s.niveauMontee ?? max(1, niveau - 1), niveauMax, poule.nom ~ ', niveau des montées') }}</span>
+                                <span class="inline-flex flex-wrap items-center gap-2">· Descentes : {{ m.choix_nombre(nom ~ '[descente]', s.descente, poule.nom ~ ', descentes pour la saison suivante') }} → {{ m.choix_niveau(nom ~ '[niveauDescente]', s.niveauDescente ?? min(niveauMax, niveau + 1), niveauMax, poule.nom ~ ', niveau des descentes') }}</span>
+                                <span class="inline-flex flex-wrap items-center gap-2">· Autres équipes → {{ m.choix_niveau(nom ~ '[niveauAutres]', s.niveauAutres ?? niveau, niveauMax, poule.nom ~ ', niveau des autres équipes') }}</span>
+                            </div>
+                            {% endif %}
+                        {% else %}
+                            <p class="text-sm text-(--color-base-content)/80">Mode détaillé : une ligne par règle, appliquées dans l'ordre (une équipe déjà placée ne l'est pas une seconde fois).</p>
+                            <ol class="flex flex-col gap-2">
+                                {% for k, l in ps.lignes %}
+                                    <li class="flex flex-wrap items-center gap-2">
+                                        <strong>Règle {{ k + 1 }} :</strong> Du
+                                        <select name="{{ nom }}[r][{{ k }}][du]" class="select select-bordered w-auto" aria-label="{{ poule.nom }}, règle {{ k + 1 }}, du rang">
+                                            {% for r in ps.rangs %}<option value="{{ r.valeur }}" {% if r.valeur == l.du %}selected{% endif %}>{{ r.libelle }}</option>{% endfor %}
+                                        </select>
+                                        au
+                                        <select name="{{ nom }}[r][{{ k }}][au]" class="select select-bordered w-auto" aria-label="{{ poule.nom }}, règle {{ k + 1 }}, au rang">
+                                            {% for r in ps.rangs %}<option value="{{ r.valeur }}" {% if r.valeur == l.au %}selected{% endif %}>{{ r.libelle }}</option>{% endfor %}
+                                        </select>
+                                        →
+                                        <select name="{{ nom }}[r][{{ k }}][dest]" class="select select-bordered w-auto" aria-label="{{ poule.nom }}, règle {{ k + 1 }}, destination">
+                                            {% for groupe, options in t.destinations %}
+                                                <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == l.dest %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
+                                            {% endfor %}
+                                        </select>
+                                        {{ include('admin/saisonwizard/_deplacer.html.twig', {haut: 'monter-regle-' ~ poule.id ~ '-' ~ k, bas: 'descendre-regle-' ~ poule.id ~ '-' ~ k, cible: 'la règle ' ~ (k + 1) ~ ' de ' ~ poule.nom, premier: loop.first, dernier: loop.last}) }}
+                                        <button type="submit" name="action" value="supprimer-regle-{{ poule.id }}-{{ k }}" class="btn btn-ghost btn-error btn-square min-h-11 min-w-11" aria-label="Supprimer la règle {{ k + 1 }} de {{ poule.nom }}">{{ icone.i('poubelle') }}</button>
+                                    </li>
+                                {% endfor %}
+                            </ol>
+                            <div><button type="submit" name="action" value="ajouter-regle-{{ poule.id }}" class="btn btn-ghost">{{ icone.i('plus') }} Ajouter une règle</button></div>
+                        {% endif %}
+
+                        <div>
+                            {% if ps.mode == 'barrage' or t.versBarrage %}
+                                {# pas de mode simple : les rangs vont vers un match de barrage ou directement en phase suivante #}
+                            {% elseif ps.mode == 'simple' %}
+                                <button type="submit" name="action" value="detail-{{ poule.id }}" class="btn btn-ghost btn-sm">Personnaliser les règles de {{ poule.nom }}</button>
+                            {% else %}
+                                <button type="submit" name="action" value="simple-{{ poule.id }}" class="btn btn-ghost btn-sm" {% if s is null %}data-turbo-confirm="Revenir au mode simple pour {{ poule.nom }} ? Ses règles détaillées seront remplacées par les règles par défaut."{% endif %}>Revenir au mode simple pour {{ poule.nom }}</button>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+
+                {% if not t.barrage and not t.versBarrage %}
+                    <div><button type="submit" name="action" value="retablir-{{ t.phase.id }}" class="btn btn-ghost" data-turbo-confirm="Remplacer les passages de {{ t.phase.nom }} par les règles par défaut ?">{{ icone.i('restaurer') }} Rétablir les règles par défaut</button></div>
+                {% endif %}
+            </section>
+        {% else %}
+            <p>Il n'y a qu'une phase : pas de passage à définir.</p>
+        {% endfor %}
+
+        {# Barrages de fin de saison (D53) : qui joue chaque match, choisi parmi les rangs des poules de la source #}
+        {% for f in barragesFin|default([]) %}
+            <section class="mb-8 flex flex-col gap-3" aria-labelledby="fin-{{ f.barrage.id }}">
+                <h3 id="fin-{{ f.barrage.id }}" class="border-b-2 border-(--color-primary) pb-1">{{ f.source.nom }} → {{ f.barrage.nom }}</h3>
+                <p class="text-sm text-(--color-base-content)/80">Choisissez les deux équipes de chaque match. Ces barrages ne changent pas la phase finale ; leurs résultats servent à composer à la main les poules de la saison prochaine.</p>
+                {% if f.propose %}
+                    {% embed 'admin/_alerte.html.twig' with {type: 'info'} %}{% block contenu %}
+                        Proposition selon le schéma du bureau : l'avant-dernier d'une poule contre le 2e de la poule du dessous. Vérifiez-la : elle sera enregistrée avec le reste de l'étape.
+                    {% endblock %}{% endembed %}
+                {% elseif f.problemes is not empty %}
+                    {% embed 'admin/_alerte.html.twig' with {type: 'warning', f: f} %}{% block contenu %}
+                        <strong class="font-semibold">À vérifier : {{ f.barrage.nom }}</strong>
+                        <ul class="mt-1 list-disc pl-5 space-y-1">{% for p in f.problemes %}<li>{{ p }}</li>{% endfor %}</ul>
+                    {% endblock %}{% endembed %}
+                {% endif %}
+                {# Une carte par match, empilées : côte à côte, les listes seraient tronquées sur grand écran #}
+                <div class="flex flex-col gap-3">
+                    {% for mt in f.matchs %}
+                        <div id="fin-poule-{{ mt.poule.id }}" class="rounded-box border border-base-300 p-3 flex flex-col gap-3 scroll-mt-20">
+                            <strong class="font-display text-lg uppercase tracking-wide text-(--color-primary)">{{ mt.poule.nom }}</strong>
+                            <div class="grid gap-3 sm:grid-cols-2">
+                                {% for k, libelle in ['Première équipe', 'Seconde équipe'] %}
+                                    <label class="flex flex-col gap-1">
+                                        <span class="font-semibold">{{ libelle }}</span>
+                                        <select name="fin[{{ f.barrage.id }}][{{ mt.poule.id }}][{{ k }}]" class="select select-bordered w-full min-h-11" aria-label="{{ libelle }}, {{ mt.poule.nom }}">
+                                            <option value="">Choisir une équipe</option>
+                                            {% for groupe, options in f.choix %}
+                                                <optgroup label="{{ groupe }}">{% for o in options %}<option value="{{ o.valeur }}" {% if o.valeur == (mt.valeurs[k] ?? '') %}selected{% endif %}>{{ o.libelle }}</option>{% endfor %}</optgroup>
+                                            {% endfor %}
+                                        </select>
+                                    </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </section>
+        {% endfor %}
+
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape}) }}
+    </form>
+{% endblock %}

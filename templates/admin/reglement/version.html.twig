@@ -1,0 +1,42 @@
+{% extends 'base_admin.html.twig' %}
+{# Version précédente du règlement, en lecture seule (D56, D59), avec les éléments calculés d'aujourd'hui. #}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block title %}Version du règlement · {{ saison.nom }}{% endblock %}
+
+{% block body %}
+    {% set date = version.enregistreLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') ~ ' à ' ~ version.enregistreLe|date('G \\h i') %}
+    {% set auteur = version.auteur ? (version.auteur.prenom ? version.auteur.prenom|first ~ '. ' : '') ~ version.auteur.nom : 'compte supprimé' %}
+    {% include 'admin/_entete.html.twig' with {
+        titre: 'Version du ' ~ date,
+        sous_titre: saison.nom,
+        retour: {url: path('admin_reglement_historique', {id: saison.id}), label: 'Historique du règlement'},
+    } %}
+
+    {% embed 'admin/_alerte.html.twig' with {type: 'info', role: 'note', classe: 'mb-4'} %}
+        {% block contenu %}
+            <p>Version du {{ date }} par {{ auteur }}. Les éléments calculés suivent les paramètres actuels de la saison.</p>
+        {% endblock %}
+    {% endembed %}
+
+    <div class="mb-4">
+        {% include 'admin/_confirmation.html.twig' with {
+            action: path('admin_reglement_restaurer', {id: saison.id, version: version.id}),
+            token: csrf_token('restaurer' ~ version.id),
+            titre: 'Restaurer la version du ' ~ date ~ ' (' ~ auteur ~ ') ?',
+            consequences: [
+                'La version choisie remplace le texte actuel' ~ (saison.brouillon ? '.' : ' et est publiée aussitôt.'),
+                'Le texte actuel reste dans l\'historique.',
+                'Les éléments calculés suivent les paramètres actuels de la saison.',
+            ],
+            bouton: saison.brouillon ? 'Restaurer' : 'Restaurer et publier',
+            ton: 'warning',
+            irreversible: false,
+            declencheur: 'Restaurer cette version',
+            declencheur_classe: 'btn btn-primary btn-sm',
+            declencheur_icone: 'restaurer',
+        } %}
+    </div>
+
+    <article class="admin-carte reglement-article">{{ contenu|raw }}</article>
+{% endblock %}

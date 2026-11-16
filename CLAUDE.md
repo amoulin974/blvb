@@ -1,0 +1,46 @@
+# BLVB : consignes pour Claude Code
+
+Site de gestion du championnat de volley BLVB (Symfony 7.4, PHP 8.4, Doctrine, Twig, Tailwind/daisyUI, MySQL 8.4,
+Docker). Tout est en français : code métier, libellés, messages de commit (`domaine : description en minuscules`).
+
+## Chantier en cours : formats de compétition et wizard de création de saison
+
+Branches `formats-competition` et `formats-competition-lotN`. Lots 1 à 6 et lot 11 (règlement par saison, R1 à R5)
+fusionnés dans `main` le 22/10/2026 ; R6 (schémas dessinés) en attente sur la branche `reglement`. Mise en production :
+`docs/wizard-saison/deploiement-reglement.md` (Francis).
+**Avant de reprendre ce chantier**, lire dans l'ordre :
+1. `docs/wizard-saison/methode.md` (objectif, méthode, dernière entrée du journal, reprise sur un autre poste) ;
+2. `docs/wizard-saison/decisions.md` : le sommaire en tête, puis les seules décisions du sujet traité (aucune décision
+   de conception rediscutée sans raison nouvelle) ;
+3. `docs/wizard-saison/lots.md` (**section « Reprendre ici »**, état des lots, lot en cours), et `reglement.md` pour le règlement.
+L'historique (journal complet, détail des lots 0 à 6, maquettes, état des lieux initial) est dans
+`docs/wizard-saison/archive/` : à ne lire qu'au besoin.
+
+Le catalogue des formats est dans `docs/formats-competition.md`. La version de référence du journal est celle de la
+branche du lot en cours ; la copie sur `main` peut être en retard. Règlement par saison : `docs/wizard-saison/reglement.md`.
+
+Espace club (tournois internes, mêlées, D74 à D77) : analyse sur la branche `espace-club`, reprise par `docs/espace-club/README.md`.
+
+Fermetures de gymnase (D60) et paramètres du site (D62) fusionnés dans `main` le 31/10/2026, pas encore en production. À faire : éditeur de la fiche club (D63), tableau de bord (`tableau-de-bord.md`) : sections dédiées de `lots.md`.
+
+## Règles permanentes
+
+- **Tests** : toute modification de test (ajout, suppression, renommage, changement de ce qui est vérifié) met à jour
+  `tests/SPECIFICATIONS.md` (et `tests/recette/README.md` si la recette change) dans le même commit.
+- **Interfaces** : dès qu'un écran, formulaire, gabarit Twig ou libellé affiché est réalisé ou modifié, passer les agents
+  `ergonome` et `webdesigner` avant le commit ; `securite` pour les formulaires, API et droits.
+  Les fiches sont dans `.claude/agents/` (si l'agent n'est pas chargé, lancer un agent général qui lit la fiche).
+- **Branche `prod`** : ne jamais fusionner ni pousser dedans, Francis seul s'en charge. On s'arrête à `main` ;
+  l'agent `deploiement` rend la checklist à lui transmettre.
+- **Migrations** du chantier : appliquées en production au déploiement seulement.
+- **Pas de décision de conception** sans l'avoir consignée dans `decisions.md`.
+
+## Environnement
+
+- Le dépôt est dans WSL (`~/projects/blvb`). Depuis Windows, git refuse le chemin `\\wsl.localhost\…`
+  (« dubious ownership ») : lancer git dans WSL (`wsl.exe -d Ubuntu -- bash -c 'cd ~/projects/blvb && git …'`).
+- Tests et qualité, dans Docker : `docker compose exec php composer tests` et `composer qualite`. Si l'application tourne sur
+  `blvb_recette` (`bin/recette dev` pour revenir), les tests échouent à la remise à zéro de la base : soit revenir, soit leur passer
+  `-e DATABASE_URL=…/blvb_new…`, sans changer la base que l'utilisateur consulte.
+- Après un changement de branche : `bin/base etat` puis `bin/base aligner`.
+- CSS : `tailwind:build` après chaque changement de style ; ne pas lancer `asset-map:compile` en local.

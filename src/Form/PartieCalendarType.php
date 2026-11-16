@@ -34,14 +34,14 @@ class PartieCalendarType extends AbstractType
             $placeholderRecoit = 'Choisir une équipe...';
             if (!$partie->getIdEquipeRecoit() && $partie->getParentMatch1()) {
                 $parent = $partie->getParentMatch1();
-                $placeholderRecoit = 'Vainqueur ' . ($parent->getNom() ?: 'Match #' . $parent->getId());
+                $placeholderRecoit = ($partie->isParentPerdants() ? 'Perdant ' : 'Vainqueur ') . ($parent->getNom() ?: 'Match #' . $parent->getId());
             }
 
             // Calcul du texte pour le placeholder (Equipe déplace)
             $placeholderDeplace = 'Choisir une équipe...';
             if (!$partie->getIdEquipeDeplace() && $partie->getParentMatch2()) {
                 $parent = $partie->getParentMatch2();
-                $placeholderDeplace = 'Vainqueur ' . ($parent->getNom() ?: 'Match #' . $parent->getId());
+                $placeholderDeplace = ($partie->isParentPerdants() ? 'Perdant ' : 'Vainqueur ') . ($parent->getNom() ?: 'Match #' . $parent->getId());
             }
             $form->add('id_equipe_recoit', EntityType::class, [
                 'class' => Equipe::class,

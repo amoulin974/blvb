@@ -53,6 +53,13 @@ class Lieu
     #[ORM\OneToMany(targetEntity: Creneau::class, mappedBy: 'lieu', cascade: ['persist', 'remove'], orphanRemoval: true)]
     private Collection $creneaux;
 
+    /**
+     * @var Collection<int, FermetureGymnase>
+     */
+    #[ORM\OneToMany(targetEntity: FermetureGymnase::class, mappedBy: 'lieu')]
+    #[ORM\OrderBy(['dateDebut' => 'ASC'])]
+    private Collection $fermetures;
+
 
 
 
@@ -62,7 +69,29 @@ class Lieu
         $this->equipes = new ArrayCollection();
         $this->parties = new ArrayCollection();
         $this->creneaux = new ArrayCollection();
+        $this->fermetures = new ArrayCollection();
 
+    }
+
+    /**
+     * @return Collection<int, FermetureGymnase>
+     */
+    public function getFermetures(): Collection
+    {
+        return $this->fermetures;
+    }
+
+    /** La fermeture (D60) qui couvre ce jour, ou null si le gymnase est ouvert */
+    public function fermeLe(\DateTimeInterface $date): ?FermetureGymnase
+    {
+        foreach ($this->fermetures as $fermeture) {
+            $jour = $date->format('Y-m-d');
+            if ($jour >= $fermeture->getDateDebut()->format('Y-m-d') && $jour <= $fermeture->getDateFin()->format('Y-m-d')) {
+                return $fermeture;
+            }
+        }
+
+        return null;
     }
 
     public function getId(): ?int

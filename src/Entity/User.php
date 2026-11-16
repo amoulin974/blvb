@@ -47,6 +47,10 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(length: 255, nullable: true)]
     private ?string $telephone = null;
 
+    /** @var list<string>|null rôles pour lesquels « Ce que vous pouvez faire » a été vue ou son encart fermé (D71) */
+    #[ORM\Column(nullable: true)]
+    private ?array $presentationVue = null;
+
     /** @var Collection<int, ResponsableClub> désignations comme responsable de club, par saison */
     #[ORM\OneToMany(targetEntity: ResponsableClub::class, mappedBy: 'user')]
     private Collection $responsabilitesClub;
@@ -187,6 +191,24 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     public function setTelephone(?string $telephone): static
     {
         $this->telephone = $telephone;
+
+        return $this;
+    }
+
+    /**
+     * L'encart « Ce que vous pouvez faire » est-il à montrer ? Oui tant qu'un des rôles du compte n'a pas été présenté (D71).
+     *
+     * @param list<string> $roles rôles actuels (PresentationRoles)
+     */
+    public function presentationAVoir(array $roles): bool
+    {
+        return array_diff($roles, $this->presentationVue ?? []) !== [];
+    }
+
+    /** @param list<string> $roles */
+    public function marquerPresentationVue(array $roles): static
+    {
+        $this->presentationVue = array_values(array_unique([...($this->presentationVue ?? []), ...$roles]));
 
         return $this;
     }

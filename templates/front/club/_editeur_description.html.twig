@@ -1,0 +1,63 @@
+{# Description du club (D63) : éditeur à barre réduite (editeur_texte_controller.js) branché sur le champ du formulaire.
+   Sans JavaScript, la zone d'édition reste masquée et le champ s'affiche comme une zone de texte. Variable : champ. #}
+{% import 'admin/_icones.html.twig' as icone %}
+{% set id_aide = champ.vars.id ~ '_aide' %}
+{% macro outil(commande, libelle, titre, contenu, classe = '', bascule = true) %}
+    <button type="button" class="btn btn-ghost btn-sm btn-square max-sm:size-11 {{ classe }}" data-commande="{{ commande }}" data-action="editeur-texte#commande"{% if bascule %} aria-pressed="false"{% endif %} tabindex="-1" aria-label="{{ libelle }}" title="{{ titre }}">{{ contenu|raw }}</button>
+{% endmacro %}
+<div class="form-control w-full" data-controller="editeur-texte">
+    {{ form_label(champ, null, {'label_attr': {'class': 'label font-semibold', 'id': champ.vars.id ~ '_libelle'}}) }}
+    {{ form_widget(champ, {'attr': {'class': 'textarea textarea-bordered w-full', 'aria-describedby': id_aide, 'data-editeur-texte-target': 'champ'}}) }}
+    <div class="editeur-texte rounded-field border border-base-300 bg-base-100" data-editeur-texte-target="zone" hidden>
+        <div role="toolbar" aria-label="Mise en forme de la description" aria-controls="{{ champ.vars.id }}_editeur"
+             class="flex flex-wrap items-center gap-1 max-sm:gap-0.5 border-b border-base-300 p-1"
+             data-editeur-texte-target="barre" data-action="keydown->editeur-texte#flecheBarre mousedown->editeur-texte#garderFocus">
+            {# Groupes de boutons : sur téléphone, la barre passe à la ligne entre deux groupes, jamais au milieu #}
+            {% set groupe = 'flex items-center gap-1 max-sm:gap-0.5' %}
+            {% set separateur %}<span role="separator" aria-orientation="vertical" class="mx-1 h-6 w-px bg-base-300 max-sm:hidden"></span>{% endset %}
+            <span class="{{ groupe }}">
+                <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="titre" data-action="editeur-texte#commande" aria-pressed="false" title="Titre">Titre</button>
+                <button type="button" class="btn btn-ghost btn-sm max-sm:min-h-11" data-commande="sous-titre" data-action="editeur-texte#commande" aria-pressed="false" tabindex="-1" title="Sous-titre">Sous-titre</button>
+            </span>
+            {{ separateur }}
+            <span class="{{ groupe }}">
+                {{ _self.outil('gras', 'Gras', 'Gras (Ctrl+B)', 'G', 'font-bold') }}
+                {{ _self.outil('italique', 'Italique', 'Italique (Ctrl+I)', 'I', 'italic') }}
+            </span>
+            {{ separateur }}
+            <span class="{{ groupe }}">
+                {{ _self.outil('puces', 'Liste à puces', 'Liste à puces', icone.i('liste')) }}
+                {{ _self.outil('numeros', 'Liste numérotée', 'Liste numérotée', icone.i('liste-numerotee')) }}
+                {{ _self.outil('lien', 'Lien', 'Lien vers un site ou une adresse e-mail (Ctrl+K)', icone.i('lien')) }}
+            </span>
+            {{ separateur }}
+            <span class="{{ groupe }}">
+                {{ _self.outil('annuler', 'Annuler la dernière modification', 'Annuler (Ctrl+Z)', icone.i('annuler'), '', false) }}
+                {{ _self.outil('retablir', 'Rétablir la modification', 'Rétablir (Ctrl+Maj+Z)', icone.i('retablir'), '', false) }}
+            </span>
+        </div>
+        <div id="{{ champ.vars.id }}_editeur" class="texte-riche px-3 py-2" data-turbo="false" data-editeur-texte-target="editeur"></div>
+    </div>
+    {% if champ.vars.help %}<p id="{{ id_aide }}" class="mt-1 text-sm text-(--color-base-content)/70">{{ champ.vars.help }}</p>{% endif %}
+    {{ form_errors(champ) }}
+
+    <dialog class="modal" data-editeur-texte-target="dialogueLien" aria-labelledby="{{ champ.vars.id }}_titre_lien">
+        {# Sans <form> : la fenêtre est dans le formulaire de la fiche, et les formulaires ne s'imbriquent pas #}
+        <div class="modal-box flex flex-col gap-3">
+            <h2 id="{{ champ.vars.id }}_titre_lien" class="text-lg" data-editeur-texte-target="titreLien">Ajouter un lien</h2>
+            <label class="flex flex-col gap-1">
+                <span>Adresse</span>
+                <input type="text" class="input w-full" inputmode="url" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"
+                       data-editeur-texte-target="adresse" data-action="keydown.enter->editeur-texte#validerLien" aria-describedby="{{ champ.vars.id }}_aide_lien {{ champ.vars.id }}_erreur_lien">
+            </label>
+            <p id="{{ champ.vars.id }}_aide_lien" class="text-sm text-(--color-base-content)/80">Adresse d'un site (www.monclub.fr) ou adresse e-mail (contact@monclub.fr).</p>
+            <p id="{{ champ.vars.id }}_erreur_lien" role="alert" class="form-erreur empty:hidden" data-editeur-texte-target="erreurLien"></p>
+            <div class="modal-action">
+                <button type="button" class="btn btn-ghost btn-danger-discret mr-auto hidden" data-editeur-texte-target="retirerLien" data-action="editeur-texte#retirerLien">Retirer le lien</button>
+                <button type="button" class="btn btn-ghost" data-action="editeur-texte#fermerDialogue">Annuler</button>
+                <button type="button" class="btn btn-primary" data-action="editeur-texte#validerLien">Valider</button>
+            </div>
+        </div>
+        <div class="modal-backdrop" data-action="click->editeur-texte#fermerDialogue"></div>
+    </dialog>
+</div>

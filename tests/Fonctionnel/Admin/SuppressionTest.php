@@ -155,9 +155,24 @@ final class SuppressionTest extends TestFonctionnel
         self::assertNull($this->em()->find(Saison::class, $id));
     }
 
-    #[TestDox('SUP-08/09 Poule, phase et match : supprimés avec leur contenu, retour sur la page de la saison (poule ouverte pour un match)')]
+    /** Phase 1 de la story sans score ni classement : pas encore jouée (D54), ses suppressions en masse sont permises. */
+    private function phaseNonJouee(): void
+    {
+        $em = $this->em();
+        foreach ($em->getRepository(Partie::class)->findAll() as $partie) {
+            $partie->setNbSetGagnantReception(null)->setNbSetGagnantDeplacement(null);
+        }
+        foreach ($em->getRepository(\App\Entity\Classement::class)->findAll() as $classement) {
+            $em->remove($classement);
+        }
+        $em->flush();
+        $em->clear();
+    }
+
+    #[TestDox('SUP-08/09 Poule, phase et match : supprimés avec leur contenu, retour sur la page de la saison (poule ouverte pour un match) ; phase pas encore jouée')]
     public function test_poule_phase_match(): void
     {
+        $this->phaseNonJouee();
         $saison = ChampionnatDeTest::get('saison')->getId();
         $page = "/admin/saison/$saison";
 
@@ -181,9 +196,10 @@ final class SuppressionTest extends TestFonctionnel
         self::assertNull($em->find(Partie::class, ChampionnatDeTest::get('match.reference')->getId()));
     }
 
-    #[TestDox('SUP-10 Suppressions en masse : seules les données visées disparaissent')]
+    #[TestDox('SUP-10 Suppressions en masse : seules les données visées disparaissent ; phase pas encore jouée')]
     public function test_suppressions_en_masse(): void
     {
+        $this->phaseNonJouee();
         $saison = ChampionnatDeTest::get('saison')->getId();
         $pouleA = ChampionnatDeTest::get('poule.A')->getId();
         $journee = ChampionnatDeTest::get('match.reference')->getJournee()->getId();
@@ -210,5 +226,56 @@ final class SuppressionTest extends TestFonctionnel
         self::assertSame(0, $compter(Journee::class, 'poule.A'));
         self::assertSame($matchsB, $compter(Partie::class, 'poule.B'), 'poule B intacte');
         self::assertSame($journeesB, $compter(Journee::class, 'poule.B'));
+    }
+
+    #[TestDox('SUP-12 Phase jouée (scores saisis) : ni menu « Supprimer » dans les poules (texte d\'explication à la place) ni « Supprimer la phase » ; matchs, journées, poule, matchs d\'une journée et phase refusés côté serveur, rien n\'est supprimé ; un match isolé se supprime encore')]
+    public function test_phase_jouee(): void
+    {
+        $saison = ChampionnatDeTest::get('saison')->getId();
+        $pouleA = ChampionnatDeTest::get('poule.A')->getId();
+        $journee = ChampionnatDeTest::get('match.reference')->getJournee()->getId();
+        $phase = ChampionnatDeTest::get('poule.A')->getPhase()->getId();
+        $compter = fn (string $classe) => $this->em()->getRepository($classe)->count(['poule' => $pouleA]);
+        $matchs = $compter(Partie::class);
+        $journees = $compter(Journee::class);
+
+        // Jetons relevés pendant que la phase n'est pas jouée (menu affiché), puis un score est saisi
+        $this->phaseNonJouee();
+        $crawler = $this->client->request('GET', "/admin/saison/$saison?openPoule=$pouleA");
+        self::assertCount(1, $crawler->filter("details[data-controller=\"menu-deroulant\"] [data-confirmation-action-param=\"/admin/poule/$pouleA\"]"), 'menu Supprimer avant le premier score');
+        $jeton = fn (string $action) => $crawler->filter("[data-confirmation-action-param=\"$action\"]")->attr('data-confirmation-token-param');
+        $jetons = [
+            "/admin/partie/$pouleA/deleteall" => $jeton("/admin/partie/$pouleA/deleteall"),
+            "/admin/journee/$pouleA/deleteall" => $jeton("/admin/journee/$pouleA/deleteall"),
+            "/admin/partie/$pouleA/deleteallbyjournee/$journee" => $jeton("/admin/partie/$pouleA/deleteallbyjournee/$journee"),
+            "/admin/poule/$pouleA" => $jeton("/admin/poule/$pouleA"),
+            "/admin/phase/$phase" => $jeton("/admin/phase/$phase"),
+        ];
+        $em = $this->em();
+        $em->find(Partie::class, ChampionnatDeTest::get('match.A3-A4')->getId())->setNbSetGagnantReception(3)->setNbSetGagnantDeplacement(1);
+        $em->flush();
+
+        $crawler = $this->client->request('GET', "/admin/saison/$saison?openPoule=$pouleA");
+        self::assertCount(0, $crawler->filter('details[data-controller="menu-deroulant"]'), 'pas de menu Supprimer');
+        self::assertCount(0, $crawler->filter("[data-confirmation-action-param=\"/admin/partie/$pouleA/deleteallbyjournee/$journee\"]"));
+        self::assertCount(0, $crawler->filter("[data-confirmation-action-param=\"/admin/phase/$phase\"]"), 'pas de « Supprimer la phase »');
+        self::assertSelectorTextContains("#poule_$pouleA", 'Suppression impossible : des matchs ont été joués.');
+
+        foreach ($jetons as $action => $valeur) {
+            $this->client->request('POST', $action, ['_token' => $valeur]);
+        }
+        $this->client->followRedirect();
+        self::assertSelectorTextContains('body', 'Impossible de supprimer la poule Poule A : des matchs de Phase 1 ont déjà été joués. Rien n\'a été modifié.');
+        self::assertSelectorTextContains('body', 'Impossible de supprimer la phase Phase 1 : des matchs de Phase 1 ont déjà été joués.');
+
+        self::assertNotNull($this->em()->find(\App\Entity\Phase::class, $phase));
+        self::assertNotNull($this->em()->find(Poule::class, $pouleA));
+        self::assertSame($matchs, $compter(Partie::class));
+        self::assertSame($journees, $compter(Journee::class));
+
+        // Un match isolé (correction d'erreur) reste supprimable
+        $match = ChampionnatDeTest::get('match.A3-A4')->getId();
+        $this->supprimer("/admin/saison/$saison", "/admin/partie/$match/delete");
+        self::assertNull($this->em()->find(Partie::class, $match));
     }
 }

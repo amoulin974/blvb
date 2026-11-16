@@ -1,7 +1,9 @@
 {# Score d'un match sur la fiche équipe, avec un badge Victoire / Défaite (lettre + couleur, pas la couleur seule).
-   match.resultat vaut "1" (victoire), "0" (défaite) ou "" (non joué / égalité). #}
+   match.resultat vaut "1" (victoire), "0" (défaite) ou "" (non joué / égalité).
+   annonce (optionnel) : la personne pourra saisir le score de ce match à venir (_equipe_case_score.html.twig). #}
 {% if match.score_reception_match is null and match.score_deplacement_match is null %}
-    <span class="font-display text-xl font-extrabold opacity-50" title="À venir" aria-hidden="true">–</span><span class="sr-only">À venir</span>
+    {% set etat = match.date_match < date() ? 'Score non saisi' : (annonce|default(false) ? 'Score à saisir après le match' : 'À venir') %}
+    <span class="font-display text-xl font-extrabold opacity-50" title="{{ etat }}" aria-hidden="true">–</span><span class="sr-only">{{ etat }}</span>
 {% else %}
     <span class="inline-flex items-center gap-2">
         <span class="font-display text-xl font-extrabold text-(--color-primary) tabular-nums">{{ match.score_reception_match|sets }}–{{ match.score_deplacement_match|sets }}</span>{% if match.score_reception_match == -1 or match.score_deplacement_match == -1 %}<span class="sr-only"> (forfait)</span>{% endif %}

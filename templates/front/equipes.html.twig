@@ -50,7 +50,7 @@
                                         {% for classement in equipe.classements %}{% if classement.poule == poule %}{% set position = classement.position %}{% endif %}{% endfor %}
                                         <tr class="hover:bg-(--color-base-200)" data-equipe="{{ equipe.id }}" data-tri-nom="{{ equipe.nomSansClub|lower }}" data-tri-classement="{{ position }}">
                                             <td>
-                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="link link-hover link-primary focus-visible:underline break-words font-display font-medium text-[17px] tracking-wide">{{ equipe.nomSimple }}</a>
+                                                <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="lien break-words font-display font-medium text-[17px] tracking-wide">{{ equipe.nomSimple }}</a>
                                                 {{ include('front/fragments/_sigle_club.html.twig') }}
                                             </td>
                                             <td>
@@ -88,7 +88,7 @@
                                             <div class="flex items-center gap-3">
                                                 {# Nom de l'équipe et abréviation du club (lien vers la fiche du club) #}
                                                 <span class="flex-1 min-w-0 flex flex-wrap items-baseline gap-x-2">
-                                                    <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" title="Voir la fiche de l'équipe" class="min-w-0 link link-hover link-primary focus-visible:underline font-display font-medium text-lg tracking-wide py-0.5 break-words">{{ equipe.nomSimple }}</a>
+                                                    <a href="{{path('front_equipe_detail', {'id': equipe.id})}}" class="min-w-0 lien lien-bloc font-display font-medium text-lg tracking-wide">{{ equipe.nomSimple }}</a>
                                                     {{ include('front/fragments/_sigle_club.html.twig') }}
                                                 </span>
                                                 {% if position is not null %}

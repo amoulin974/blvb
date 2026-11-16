@@ -2,6 +2,7 @@
 
 namespace App\Controller\Admin;
 
+use App\Competition\ModeAjout;
 use App\Entity\Journee;
 use App\Entity\Poule;
 use App\Form\JourneeType;
@@ -102,10 +103,13 @@ final class JourneeController extends AbstractController
 
     //Supprime toutes les journées d'une poule
     #[Route('/{id}/deleteall', name: 'deleteall', methods: ['POST'])]
-    public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager): Response
+    public function deleteAll(Request $request, Poule $poule, EntityManagerInterface $entityManager, ModeAjout $modeAjout): Response
     {
         if (!($this->isCsrfTokenValid('deleteall'.$poule->getId(), $request->getPayload()->getString('_token')))) {
             $this->addFlash('error', 'La page a expiré : rechargez-la puis recommencez. Rien n\'a été modifié.');
+        } elseif ($modeAjout->jouee($poule->getPhase())) {
+            // Phase jouée : journées, matchs et scores ne se suppriment plus en masse (D54)
+            $this->addFlash('error', ModeAjout::refusSuppression(sprintf('les journées de %s',$poule->getNom()), $poule->getPhase()));
         } else {
             foreach ($poule->getJournees() as $journee) {
                 $entityManager->remove($journee);

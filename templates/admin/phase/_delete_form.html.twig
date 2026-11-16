@@ -1,7 +1,9 @@
-{# Suppression d'une phase. Variables facultatives : declencheur_classe (bouton), sinon zone de suppression. #}
+{# Suppression d'une phase. Variables facultatives : declencheur_classe (bouton), sinon zone de suppression.
+   Phase jouée (phase.jouee, D54) : la fenêtre explique le blocage, sans bouton de confirmation. #}
 {% set nbMatchs = 0 %}{% for poule in phase.poules %}{% set nbMatchs = nbMatchs + poule.parties|length %}{% endfor %}
 {% set confirmation = {
     titre: 'Supprimer la phase ' ~ phase.nom ~ ' ?',
+    blocage: phase.jouee ? (phase.close ? 'La phase est clôturée' : 'Des matchs de la phase ont déjà été joués') ~ ' : elle ne peut plus être supprimée.' : '',
     action: path('admin_phase_delete', {id: phase.id}),
     token: csrf_token('delete' ~ phase.id),
     consequences: [phase.poules|length ~ ' poule(s) avec leurs journées, ' ~ nbMatchs ~ ' match(s) et leurs scores seront supprimés.', 'Les équipes sont conservées.'],

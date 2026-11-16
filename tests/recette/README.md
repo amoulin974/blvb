@@ -17,6 +17,12 @@ Scénarios (`bin/recette reinitialiser --scenario=…`) :
 - `en-cours` (défaut) : phase 1 en cours, matchs passés saisis, matchs à venir ;
 - `phase1-terminee` : tous les matchs de la phase 1 saisis, phase non clôturée (tester la **clôture** et les montées/descentes) ;
 - `vierge` : structure, équipes et journées sans aucun match (tester la **génération / l'optimisation** des matchs).
+- `barrages` : comme `en-cours`, plus une **« Saison 2026-2027 barrages test »** au modèle « BLVB avec barrages »,
+  qui devient la saison affichée : Phase 1 (4 poules de 8) jouée et clôturée, barrages joués et clôturés (Phase 2 recomposée
+  à 8 équipes par poule), Phase 2 en cours (matchs passés saisis), Phase finale (journée des finales un vendredi, gymnase
+  Test Anglet) et Barrages de fin de saison à venir, deux semaines sans match, et un **règlement de démonstration** (texte
+  court et les quatre éléments calculés) : tester la page `/reglement`, les barrages et la mise en place des phases
+  suivantes. Ses 32 équipes (Aldudes … Came) n'ont ni joueurs ni club.
 
 Les dates sont **relatives à aujourd'hui** : la saison démarre 2 semaines avant la semaine en cours, il y a donc toujours
 une journée en cours, des journées passées et des journées à venir. Relancer `reinitialiser` rafraîchit les dates.
@@ -95,6 +101,7 @@ Mot de passe commun : **`Recette-2026!`**. Tous les e-mails se terminent par `@b
 | Droits rattachés à une saison (`resp.ancien`) | sélecteur de saison (2025-2026 test : crayons sur les matchs de Adour ; 2026-2027 test : aucun), fiche du club CBT refusée |
 | Liste des clubs, club sans équipe, club sans responsable, équipes sans club | « Les clubs », « Les équipes », « Qui sommes-nous ? » |
 | Gestion des clubs par l'admin (équipes, gymnases, responsables, suppression) | `/admin/club/` |
+| Volley Stats : **page du match déjà notée** (dernier match joué d'Arrats, 2 sets avec les touches et terminés, environ 90 % d'échanges détaillés : aces, fautes de service, attaques contrées, blocks à deux, renvois, faute de filet, échanges sans détail) | `cap.a1` (ou `resp.arr`) : fiche d'Arrats, « Page du match » du match indiqué dans le récapitulatif, tableau « Statistiques du match » sous « Relevé des sets » |
 
 ### Fichier d'import Excel
 
@@ -117,3 +124,5 @@ Totaux attendus : **4 comptes créés, 1 fiche créée, 2 fiches reliées, 1 ave
 - `bin/recette reinitialiser` **écrase** `blvb_recette` ; la base de développement n'est jamais modifiée.
 - Après `utiliser` ou `dev`, le cache de l'application est vidé (la liste des saisons y est mise en cache).
 - Les tests automatisés (PHPUnit, dossier `tests/`) utilisent leur propre base (`blvb_new_test`), indépendante de celle-ci.
+  Tant que l'application est sur la recette, revenir par `bin/recette dev` avant de les lancer, ou voir
+  [`../README.md`](../README.md), §4.

@@ -1,0 +1,43 @@
+{% extends 'base_admin.html.twig' %}
+
+{# Scores à saisir (D64.3) : matchs passés sans score des saisons suivies, du plus ancien au plus récent. Saisie dans la
+   fenêtre du calendrier (front/fragments/_score_modal.html.twig, score-modal-controller.js), une ligne par match pour
+   rester lisible sur téléphone. #}
+{% block title %}Scores à saisir{% endblock %}
+
+{% block javascripts %}
+    {{ parent() }}
+    <meta name="csrf-token" content="{{ csrf_token('score_update') }}">
+{% endblock %}
+
+{% block body %}
+    {{ include('admin/_entete.html.twig', {
+        titre: 'Scores à saisir',
+        sous_titre: 'Matchs déjà joués dont le score n\'est pas saisi, du plus ancien au plus récent.',
+        retour: {url: path('app_admin_dashboard'), label: 'Tableau de bord'},
+    }) }}
+
+    <div data-controller="score-modal">
+        {% if matchs is empty %}
+            <p class="admin-carte">Tous les scores sont saisis.</p>
+        {% else %}
+            <ul class="divide-y divide-(--color-base-300) rounded-box border border-(--color-base-300) bg-base-100">
+                {% for partie in matchs %}
+                    {% set enRetard = partie.date <= seuil %}
+                    <li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3" data-partie="{{ partie.id }}">
+                        <div class="min-w-0 flex-1 basis-64">
+                            <p>
+                                <span class="font-semibold">{{ partie.date|format_datetime(pattern: 'EEE d MMM', locale: 'fr') }}</span>
+                                {% if enRetard %}<span class="badge badge-outline badge-sm badge-ecart ml-1" title="Joué il y a plus de {{ seuilJours }} jours">En retard</span>{% endif %}
+                            </p>
+                            <p class="font-display text-lg font-semibold tracking-wide">{{ partie.idEquipeRecoit.nom }} – {{ partie.idEquipeDeplace.nom }}</p>
+                            <p class="text-sm text-(--color-base-content)/80">{{ partie.poule.phase.saison.nom }} · {{ partie.poule.phase.nom }} · {{ partie.poule.nom }}{% if partie.lieu %} · {{ partie.lieu.nom }}{% endif %}</p>
+                        </div>
+                        {{ include('front/fragments/_score_partie.html.twig') }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {{ include('front/fragments/_score_modal.html.twig') }}
+    </div>
+{% endblock %}

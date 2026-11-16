@@ -1,0 +1,10 @@
+{# Code court inapplicable (App\Reglement\RenduReglement, D55) : encart montré aux seuls admins, à la place de l'élément ;
+   rien pour le public. Variables : code, raison, saison. #}
+{% embed 'admin/_alerte.html.twig' with {type: 'warning', role: 'note', classe: 'reglement-inapplicable print:hidden my-4'} %}
+    {% block contenu %}
+        <p class="font-semibold">Élément calculé non affiché au public</p>
+        <p><code>{{ code }}</code> : {{ raison }}</p>
+        <p class="text-sm">Cet encart n'est visible que des administrateurs.</p>
+        <a class="btn btn-ghost btn-sm mt-1" href="{{ path('admin_reglement_edit', {id: saison.id, code: code}) }}">Modifier le règlement</a>
+    {% endblock %}
+{% endembed %}

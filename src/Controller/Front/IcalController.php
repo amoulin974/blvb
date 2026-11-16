@@ -29,6 +29,10 @@ final class IcalController extends AbstractController
     #[Route('/calendar/saison/{saison}/equipe/{equipe}.ics', name: 'calendar_ics_equipe', requirements: ['saison' => '\d+', 'equipe' => '\d+'], methods: ['GET'])]
     public function icsEquipeSaison(Saison $saison, Equipe $equipe, Request $request): Response
     {
+        if ($saison->isBrouillon()) {
+            throw $this->createNotFoundException();
+        }
+
         return $this->reponse(
             $this->calendarGenerator->generateIcalForEquipeSaison($equipe, $saison),
             $request,
@@ -40,6 +44,10 @@ final class IcalController extends AbstractController
     #[Route('/calendar/{poule}/{equipe}.ics', name: 'calendar_ics', methods: ['GET'])]
     public function ics(Poule $poule, Equipe $equipe, Request $request): Response
     {
+        if ($poule->getPhase()?->getSaison()?->isBrouillon()) {
+            throw $this->createNotFoundException();
+        }
+
         return $this->reponse(
             $this->calendarGenerator->generateIcalForEquipe($poule, $equipe),
             $request,

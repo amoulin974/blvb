@@ -1,0 +1,30 @@
+{# Une ligne « À faire » du tableau de bord (App\Service\TableauDeBord::aFaire, D64) : une phrase et un bouton.
+   Ligne urgente (gymnase fermé, aucune saison affichée) : icône, gras et filet gauche, la couleur ne vient qu'en plus.
+   Matchs dans un gymnase fermé : le bouton déplie la liste (chevron qui pivote), chaque match mène au calendrier de sa poule. #}
+{% import 'admin/_icones.html.twig' as icone %}
+{% set urgent = ligne.urgent|default(false) %}
+<li class="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3{{ urgent ? ' border-l-4 border-l-(--color-warning) pl-3' : '' }}" data-a-faire="{{ ligne.code }}">
+    <p class="min-w-0 flex-1 basis-64{{ urgent ? ' flex items-start gap-2 font-semibold' : '' }}">
+        {%- if urgent %}{{ icone.i('alerte', 'size-5 shrink-0 mt-0.5 texte-attention') }}<span class="sr-only">Urgent : </span>{% endif -%}
+        <span>{{ ligne.texte }}</span>
+    </p>
+    {% if ligne.matchs is defined %}
+        <details class="depliant w-full sm:w-auto sm:ml-auto sm:text-right">
+            <summary class="btn btn-primary btn-sm">{{ ligne.bouton }}<span class="sr-only"> {{ ligne.objet }}</span>{{ icone.i('fleche-bas') }}</summary>
+            <ul class="mt-2 space-y-2 text-left">
+                {% for partie in ligne.matchs %}
+                    <li class="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 rounded-field bg-base-200 px-3 py-2">
+                        <span class="min-w-0">
+                            <span class="font-semibold">{{ partie.date|format_datetime(pattern: 'EEE d MMM', locale: 'fr') }}</span>
+                            · {{ partie.lieu.nom }} · {{ partie.nomReception }} – {{ partie.nomDeplacement }}
+                            <span class="block text-sm text-(--color-base-content)/80">{{ partie.poule.phase.saison.nom }} · {{ partie.poule.phase.nom }} · {{ partie.poule.nom }}</span>
+                        </span>
+                        <a class="btn btn-primary btn-sm" href="{{ path('admin_saison_show', {id: partie.poule.phase.saison.id, openPoule: partie.poule.id}) }}">Déplacer<span class="sr-only"> le match {{ partie.nomReception }} – {{ partie.nomDeplacement }}</span></a>
+                    </li>
+                {% endfor %}
+            </ul>
+        </details>
+    {% else %}
+        <a class="btn btn-primary btn-sm" href="{{ ligne.url }}">{{ ligne.bouton }}{% if ligne.objet %}<span class="sr-only"> {{ ligne.objet }}</span>{% endif %}</a>
+    {% endif %}
+</li>

@@ -2,9 +2,12 @@
 
 namespace App\Tests\Integration\Service;
 
+use App\Competition\Classement\CritereDepartage;
 use App\Entity\Classement;
 use App\Entity\Equipe;
+use App\Entity\Phase;
 use App\Entity\Poule;
+use App\Entity\Saison;
 use App\Factory\EquipeFactory;
 use App\Factory\JourneeFactory;
 use App\Factory\PartieFactory;
@@ -157,6 +160,66 @@ final class ClassementServiceTest extends TestIntegration
 
         $this->match('Alpha', 'Zeta', 2, 2, '-2 days');
         self::assertSame(['Alpha', 'Zeta'], array_keys($this->classement()), 'interrompu à 2-2');
+    }
+
+    /** Départage de la saison de test. */
+    private function departage(CritereDepartage ...$criteres): void
+    {
+        $em = self::service('doctrine')->getManager();
+        $em->find(Saison::class, ChampionnatDeTest::get('saison')->getId())->setDepartage($criteres);
+        $em->flush();
+    }
+
+    #[TestDox('CLA-12 Quotient de sets : à égalité de points et de différence de sets, 3/1 passe devant 4/2')]
+    public function test_quotient_de_sets(): void
+    {
+        $this->poule('Zed', 'Abe', 'Cid', 'Dan');
+        $this->match('Zed', 'Cid', 3, 1);  // Zed : 5 points, 3-1 (différence +2, quotient 3)
+        $this->match('Abe', 'Dan', 3, 1);  // Abe : 5 points…
+        $this->match('Abe', 'Cid', 1, 1);  // … et 1-1 interrompu (0 point) : 4-2 (différence +2, quotient 2)
+
+        self::assertSame(['Abe', 'Zed'], array_slice(array_keys($this->classement()), 0, 2), 'départage par défaut : égalité, ordre alphabétique');
+
+        $this->departage(CritereDepartage::POINTS, CritereDepartage::QUOTIENT_SETS);
+        self::assertSame(['Zed', 'Abe'], array_slice(array_keys($this->classement()), 0, 2), 'quotient de sets');
+
+        $this->departage(CritereDepartage::POINTS, CritereDepartage::DIFFERENCE_SETS, CritereDepartage::QUOTIENT_SETS);
+        self::assertSame(['Zed', 'Abe'], array_slice(array_keys($this->classement()), 0, 2), 'différence égale, puis quotient');
+    }
+
+    #[TestDox('CLA-13 Mini-classement : trois équipes à égalité de points départagées par leurs seuls matchs entre elles')]
+    public function test_mini_classement(): void
+    {
+        // Gamma, Alpha et Beta finissent à 7 points ; entre elles : Gamma 7 pts (+2), Alpha 6 pts (-1), Beta 5 pts (-1)
+        $this->poule('Gamma', 'Alpha', 'Beta', 'Delta');
+        $this->match('Gamma', 'Alpha', 3, 0);  // Gamma 5, Alpha 1
+        $this->match('Alpha', 'Beta', 3, 1);   // Alpha 5, Beta 1
+        $this->match('Beta', 'Gamma', 3, 2);   // Beta 4, Gamma 2
+        $this->match('Gamma', 'Delta', 1, 1);  // Gamma 0 (interrompu)
+        $this->match('Delta', 'Alpha', 3, 0);  // Alpha 1
+        $this->match('Delta', 'Beta', 3, 2);   // Beta 2
+
+        $defaut = $this->classement();
+        self::assertSame([7, 7, 7], [$defaut['Gamma'][1], $defaut['Alpha'][1], $defaut['Beta'][1]], 'égalité de points');
+        self::assertSame(['Delta', 'Gamma', 'Beta', 'Alpha'], array_keys($defaut), 'départage par défaut : différence de sets sur toute la poule (+2, -2, -4)');
+
+        $this->departage(CritereDepartage::POINTS, CritereDepartage::MINI_CLASSEMENT);
+        self::assertSame(['Delta', 'Gamma', 'Alpha', 'Beta'], array_keys($this->classement()), 'mini-classement : points entre elles (7, 6, 5)');
+    }
+
+    #[TestDox('CLA-14 Barème propre à la phase : les valeurs surchargées remplacent celles de la saison, les autres restent')]
+    public function test_bareme_de_la_phase(): void
+    {
+        $this->poule('Alpha', 'Beta');
+        $this->match('Alpha', 'Beta', 3, 0);
+
+        $em = self::service('doctrine')->getManager();
+        $em->find(Phase::class, ChampionnatDeTest::get('phase.1')->getId())->setBareme(['victoire_forte' => 10]);
+        $em->flush();
+
+        $c = $this->classement();
+        self::assertSame(10, $c['Alpha'][1], 'victoire forte de la phase');
+        self::assertSame(1, $c['Beta'][1], 'défaite faible de la saison');
     }
 
     #[TestDox('CLA-10/11 Positions 1 à n sans trou ; recalcul idempotent ; une équipe ajoutée apparaît avec 0 point')]

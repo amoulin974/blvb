@@ -2,6 +2,8 @@
 
 namespace App\Command;
 
+use App\Competition\Format\Formats;
+use App\Competition\Modele\ModeleBlvbAvecBarrages;
 use App\Entity\Club;
 use App\Entity\Creneau;
 use App\Entity\Equipe;
@@ -13,13 +15,20 @@ use App\Entity\Partie;
 use App\Entity\Phase;
 use App\Entity\Poule;
 use App\Entity\Saison;
-use App\Entity\User;
 use App\Enum\PhaseType;
-use App\EventListener\SaisonListener;
 use App\Service\ClassementService;
 use App\Service\ClubImageService;
+use App\Service\DescriptionClub;
+use App\Reglement\EditionReglement;
 use App\Service\JourneeService;
 use App\Service\PartieService;
+use App\Service\PhaseService;
+use App\Entity\FeuilleMatchEvenement;
+use App\Entity\FeuilleMatchSet;
+use App\Entity\User;
+use App\VolleyStats\EtatSet;
+use App\VolleyStats\FeuilleMatchService;
+use App\VolleyStats\MatchEquipe;
 use Doctrine\ORM\EntityManagerInterface;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -54,6 +63,20 @@ class ChargerBaseRecetteCommand extends Command
     public const MOT_DE_PASSE = 'Recette-2026!';
     private const SAISON = 'Saison 2026-2027 test';
     private const ARCHIVE = 'Saison 2025-2026 test';
+    /** Scénario « barrages » : saison au modèle « BLVB avec barrages » (D44, D50), saison affichée */
+    private const SAISON_BARRAGES = 'Saison 2026-2027 barrages test';
+    /** Équipes de la saison avec barrages, 8 par poule de la phase 1 (A à D) */
+    private const EQUIPES_BARRAGES = [
+        'A' => ['Aldudes', 'Arcangues', 'Ascain', 'Bardos', 'Bassussarry', 'Biriatou', 'Boucau', 'Briscous'],
+        'B' => ['Cambo', 'Ciboure', 'Espelette', 'Guéthary', 'Halsou', 'Hasparren', 'Hendaye', 'Itxassou'],
+        'C' => ['Jatxou', 'Larressore', 'Lahonce', 'Mouguerre', 'Saint-Pée', 'Sare', 'Souraïde', 'Urcuit'],
+        'D' => ['Urrugne', 'Ustaritz', 'Villefranque', 'Ainhoa', 'Ahetze', 'Arbonne', 'Bidache', 'Came'],
+    ];
+    /** Règlement de démonstration de la saison avec barrages : texte court et les quatre éléments calculés (D55) */
+    private const REGLEMENT_BARRAGES = '<h2>Règlement général</h2><p>Le championnat se joue en deux phases de poules séparées par des barrages, puis une phase finale. Des barrages de fin de saison décident des poules de la saison suivante.</p><p>[schema_phases]</p>'
+        .'<h2>Calendrier</h2><p>[calendrier]</p>'
+        .'<h2>Décompte des points et des sets</h2><h3>RÈGLE 1D : Décompte des points</h3><p>[bareme]</p><h3>RÈGLE 2D : Classement</h3><p>[departage]</p>'
+        .'<h2>Règlement sur les rencontres</h2><h3>RÈGLE 1R : Partie interrompue</h3><p>Si une partie est interrompue (coupure de courant, fermeture du gymnase, blessure obligeant à finir à quatre), elle n\'est pas rejouée : le score au moment de l\'arrêt est saisi, et les points sont ceux du barème.</p>';
     private const DOMAINE = 'blvb.test';
 
     /** nom => [adresse, créneaux [jour (1 = lundi), heure, capacité, priorité]] */
@@ -158,6 +181,10 @@ class ChargerBaseRecetteCommand extends Command
         private readonly ClassementService $classementService,
         private readonly CacheInterface $cache,
         private readonly ClubImageService $clubImages,
+        private readonly PhaseService $phaseService,
+        private readonly Formats $formats,
+        private readonly EditionReglement $editionReglement,
+        private readonly FeuilleMatchService $feuilleMatchService,
         #[Autowire('%kernel.project_dir%')]
         private readonly string $projectDir,
     ) {
@@ -171,7 +198,9 @@ class ChargerBaseRecetteCommand extends Command
             ->addOption('scenario', null, InputOption::VALUE_REQUIRED,
                 "en-cours (défaut) : phase 1 en cours, matchs passés saisis, à venir ; "
                 .'phase1-terminee : tous les matchs de la phase 1 saisis, phase non clôturée (pour tester la clôture) ; '
-                .'vierge : structure, équipes et journées, aucun match (pour tester la génération)', 'en-cours')
+                .'vierge : structure, équipes et journées, aucun match (pour tester la génération) ; '
+                .'barrages : en-cours, plus une saison au modèle « BLVB avec barrages » (phase 1 et barrages joués, phase 2 en cours, '
+                .'phase finale et barrages de fin de saison à venir, règlement de démonstration), saison affichée', 'en-cours')
             ->addOption('fichier-import', null, InputOption::VALUE_REQUIRED,
                 "Chemin du fichier Excel d'exemple pour l'import des utilisateurs", 'var/recette/import_utilisateurs.xlsx');
     }
@@ -180,7 +209,7 @@ class ChargerBaseRecetteCommand extends Command
     {
         $io = new SymfonyStyle($input, $output);
         $scenario = (string) $input->getOption('scenario');
-        if (!in_array($scenario, ['en-cours', 'phase1-terminee', 'vierge'], true)) {
+        if (!in_array($scenario, ['en-cours', 'phase1-terminee', 'vierge', 'barrages'], true)) {
             $io->error('Scénario inconnu : '.$scenario);
 
             return Command::INVALID;
@@ -192,7 +221,7 @@ class ChargerBaseRecetteCommand extends Command
 
             return Command::FAILURE;
         }
-        if ($this->em->getRepository(Saison::class)->findOneBy(['nom' => self::SAISON])) {
+        if ($this->em->getRepository(Saison::class)->findOneBy(['nom' => self::SAISON]) || $this->em->getRepository(Saison::class)->findOneBy(['nom' => self::SAISON_BARRAGES])) {
             $io->error('La saison de test existe déjà dans cette base : relancez bin/recette reinitialiser.');
 
             return Command::FAILURE;
@@ -218,7 +247,6 @@ class ChargerBaseRecetteCommand extends Command
         // et des journées à venir dans les poules de 5 à 8 équipes (la poule D de 4 équipes est presque terminée)
         $debut = $maintenant->modify('monday this week')->modify('-2 weeks')->setTime(0, 0);
 
-        SaisonListener::$enabled = false; // les phases et poules sont créées ici, pas par l'écouteur
         $io->title(sprintf('Chargement de « %s » dans %s (scénario : %s)', self::SAISON, $base, $scenario));
 
         $io->section('Structure : gymnases, saisons, phases, poules, équipes');
@@ -261,7 +289,7 @@ class ChargerBaseRecetteCommand extends Command
             $io->section('Scénarios particuliers, scores et classements');
             $saison = $this->em->getRepository(Saison::class)->findOneBy(['nom' => self::SAISON]);
             $archive = $this->em->getRepository(Saison::class)->findOneBy(['nom' => self::ARCHIVE]);
-            $this->preparerCasParticuliers($saison, $maintenant, $scenario);
+            $this->preparerCasParticuliers($saison, $maintenant, $scenario === 'barrages' ? 'en-cours' : $scenario);
             $this->em->flush();
             $this->saisirScoresArchive($archive);
             $this->em->flush();
@@ -272,6 +300,12 @@ class ChargerBaseRecetteCommand extends Command
             }
             $archive->getPhases()[0]->setClose(1);
             $this->em->flush();
+            $this->creerPageDuMatch($saison);
+        }
+
+        if ($scenario === 'barrages') {
+            $io->section('Saison avec barrages (modèle « BLVB avec barrages »)');
+            $this->creerSaisonBarrages($maintenant);
         }
 
         $fichier = $this->ecrireFichierImport((string) $input->getOption('fichier-import'));
@@ -332,7 +366,7 @@ class ChargerBaseRecetteCommand extends Command
         $phases = [
             ['Phase 1', PhaseType::CHAMPIONNAT, $debut, $p1Fin],
             ['Phase 2', PhaseType::CHAMPIONNAT, $p2Debut, $p2Fin],
-            ['Phase Finale', PhaseType::FINALE, $p2Fin->modify('+1 day'), $fin],
+            ['Phase finale', PhaseType::FINALE, $p2Fin->modify('+1 day'), $fin],
         ];
         foreach ($phases as $ordre => [$nom, $type, $du, $au]) {
             $phase = (new Phase())->setNom($nom)->setType($type)->setOrdre($ordre)->setClose(0)->setDatedebut($du)->setDatefin($au);
@@ -542,7 +576,7 @@ class ChargerBaseRecetteCommand extends Command
     private function creerClubs(array $equipes, array $lieux, Saison $saison, Saison $archive): void
     {
         foreach (self::CLUBS as $nomCourt => $def) {
-            $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription($def['description'])->setUrl($def['url']);
+            $club = (new Club())->setNomCourt($nomCourt)->setNom($def['nom'])->setDescription(DescriptionClub::depuisTexte($def['description']))->setUrl($def['url']);
             foreach ($def['gymnases'] as $gymnase) {
                 $club->addLieu($lieux[$gymnase]);
             }
@@ -685,6 +719,101 @@ class ChargerBaseRecetteCommand extends Command
         }
     }
 
+    /**
+     * Volley Stats : page du match d'Arrats sur son dernier match joué, deux sets notés avec les touches et terminés, pour voir
+     * « Statistiques du match » (aces, fautes, réceptions, passes décisives, attaques, blocks à deux, renvoi, faute de filet,
+     * quelques échanges sans détail). Tout passe par FeuilleMatchService, donc par les mêmes contrôles que le téléphone.
+     */
+    private function creerPageDuMatch(Saison $saison): void
+    {
+        $arrats = null;
+        $partie = null;
+        foreach ($saison->getPhases()[0]->getPoules() as $poule) {
+            foreach ($poule->getParties() as $p) {
+                foreach ([$p->getIdEquipeRecoit(), $p->getIdEquipeDeplace()] as $e) {
+                    if ($e?->getNomSansClub() === self::EQUIPES['A1'][0] && $p->getNbSetGagnantReception() !== null && ($partie === null || $p->getDate() > $partie->getDate())) {
+                        [$arrats, $partie] = [$e, $p];
+                    }
+                }
+            }
+        }
+        if ($partie === null) {
+            return;
+        }
+        $auteur = $this->em->getRepository(User::class)->findOneBy(['email' => 'cap.a1@blvb.test']);
+        $feuille = $this->feuilleMatchService->preparer(new MatchEquipe($arrats, $partie));
+        $ids = array_map(fn ($j) => $j->getId(), $feuille->getJoueurs()->toArray());
+        if (\count($ids) < 7) {
+            return;
+        }
+        // Échanges joués selon qui sert, en boucle : de quoi remplir chaque colonne du tableau (indices = postes 1 à 6 - 1)
+        $adverses = [
+            [['reception', 4], ['passe', 2], ['attaque', 3], 'gagne'],
+            [['reception', 5], ['passe', 2], ['attaque', 1], 'gagne'],
+            [['reception', 4], 'perdu'],
+            ['ace-subi'],
+            [['reception', 0], ['passe', 2], ['attaque', 3], 'contree'],
+            [['reception', 5], ['passe', 2], ['attaque', 3], ['defense', 4], ['passe', 2], ['attaque', 1], 'gagne'],
+            ['sans-detail-nous'],
+            [['reception', 4], ['passe', 2], ['renvoi', 3], 'gagne'],
+        ];
+        $notres = [
+            ['ace'],
+            [['defense', 5], ['passe', 2], ['attaque', 3], 'gagne'],
+            [['block', 2], 'block-deux'],
+            ['faute-service'],
+            [['defense', 4], 'perdu'],
+            [['defense', 0], ['passe', 2], ['attaque', 1], 'faute'],
+            ['filet'],
+            [['defense', 5], ['passe', 2], ['attaque', 3], 'gagne'],
+            [['block', 3], 'gagne'],
+            ['sans-detail-eux'],
+        ];
+        foreach ([1 => ['eux', \array_slice($ids, 0, 6)], 2 => ['nous', \array_slice($ids, 1, 6)]] as $numero => [$service, $postes]) {
+            $set = $this->feuilleMatchService->composition($feuille, $numero, ['postes' => $postes, 'premierService' => $service, 'scoreDepart' => [0, 0]]);
+            $this->feuilleMatchService->commencer($set, false, FeuilleMatchSet::SAISIE_TOUCHES);
+            $tours = [FeuilleMatchSet::EUX => $numero, FeuilleMatchSet::NOUS => $numero];
+            while (!($etat = EtatSet::calculer($set))->finAtteinte) {
+                $liste = $etat->service === FeuilleMatchSet::NOUS ? $notres : $adverses;
+                $echange = $liste[$tours[$etat->service]++ % \count($liste)];
+                $issue = array_pop($echange);
+                $derniere = null;
+                foreach ($echange as [$action, $poste]) {
+                    $derniere = $this->evenementRecette($set, FeuilleMatchEvenement::ACTION, ['action' => $action, 'joueurs' => [$etat->postes[$poste]]], $auteur);
+                }
+                $this->evenementRecette($set, FeuilleMatchEvenement::POINT, match ($issue) {
+                    'gagne' => ['pour' => 'nous', 'sur' => $derniere],
+                    'perdu' => ['pour' => 'eux', 'sur' => $derniere],
+                    'contree', 'faute' => ['pour' => 'eux', 'sur' => $derniere, 'detail' => $issue],
+                    'block-deux' => ['pour' => 'nous', 'sur' => $derniere, 'avec' => $etat->postes[3]],
+                    'ace' => ['pour' => 'nous', 'sur' => 'service'],
+                    'faute-service' => ['pour' => 'eux', 'sur' => 'service'],
+                    'ace-subi' => ['pour' => 'eux'],
+                    'filet' => ['pour' => 'eux', 'detail' => 'filet', 'fautif' => $etat->postes[1]],
+                    'sans-detail-nous' => ['pour' => 'nous', 'sansDetail' => true],
+                    'sans-detail-eux' => ['pour' => 'eux', 'sansDetail' => true],
+                }, $auteur);
+            }
+            $this->feuilleMatchService->terminerSet($set);
+        }
+        $score = array_map(fn ($s) => implode('–', EtatSet::calculer($s)->score), $feuille->getSets()->toArray());
+        $this->cas[] = ['Volley Stats : page du match avec « Statistiques du match » (2 sets notés avec les touches, '.implode(', ', $score).')',
+            sprintf('cap.a1 : fiche de %s, « Page du match » sur le match du %s (/equipe/%d/match/%d)', $arrats->getNom(), $partie->getDate()->format('d/m'), $arrats->getId(), $partie->getId())];
+    }
+
+    /** @param array<string, mixed> $donnees @return string uuid de l'événement */
+    private function evenementRecette(FeuilleMatchSet $set, string $type, array $donnees, ?User $auteur): string
+    {
+        $o = random_bytes(16);
+        $o[6] = \chr(\ord($o[6]) & 0x0f | 0x40);
+        $o[8] = \chr(\ord($o[8]) & 0x3f | 0x80);
+        $uuid = vsprintf('%s%s-%s-%s-%s-%s%s%s', str_split(bin2hex($o), 4));
+        $dernier = ($set->getEvenements()->last() ?: null)?->getOrdre();
+        $this->feuilleMatchService->evenement($set, $uuid, $type, $donnees, $dernier, $auteur);
+
+        return $uuid;
+    }
+
     private function saisirScoresArchive(Saison $archive): void
     {
         foreach ($archive->getPhases()[0]->getPoules() as $poule) {
@@ -693,6 +822,128 @@ class ChargerBaseRecetteCommand extends Command
                 $partie->setNbSetGagnantReception($a)->setNbSetGagnantDeplacement($b);
             }
         }
+    }
+
+    // ---------------------------------------------------------------------------------------------------------
+    // Scénario « barrages »
+    // ---------------------------------------------------------------------------------------------------------
+
+    /**
+     * Saison au modèle « BLVB avec barrages » (Phase 1, Barrages, Phase 2, Phase finale, Barrages de fin de saison), dates
+     * relatives à aujourd'hui : phase 1 jouée et clôturée, barrages joués et clôturés (phase 2 recomposée à 8 équipes par
+     * poule), phase 2 en cours (matchs passés saisis), phase finale avec journée des finales et barrages de fin de saison
+     * à venir ; deux semaines sans match ; règlement de démonstration. Devient la saison affichée.
+     */
+    private function creerSaisonBarrages(\DateTimeImmutable $maintenant): void
+    {
+        $lundi = $maintenant->modify('monday this week')->setTime(0, 0);
+        $semaine = fn (int $n) => $lundi->modify(sprintf('%+d weeks', $n));
+        $this->em->getConnection()->executeStatement('UPDATE saison SET favori = 0');
+        $saison = (new Saison())->setNom(self::SAISON_BARRAGES)->setFavori(1)->setDateDebut($semaine(-20))->setDateFin($semaine(14)->modify('-1 day'));
+        (new ModeleBlvbAvecBarrages())->appliquer($saison);
+
+        // Dates du modèle (année fixe) remplacées par des dates relatives : phase 2 en cours aujourd'hui
+        $dates = ['P1' => [-20, -6], 'BAR' => [-6, -5], 'P2' => [-5, 9], 'F' => [9, 14], 'BAR2' => [9, 14]];
+        $lieux = $this->em->getRepository(Lieu::class)->findBy(['nom' => array_keys(array_filter(self::LIEUX, fn ($l) => $l[1] !== []))]);
+        foreach ($saison->getPhases() as $phase) {
+            [$du, $au] = $dates[$phase->getCode()];
+            $phase->setDatedebut($semaine($du))->setDatefin($semaine($au)->modify('-1 day'));
+            if ($phase->getCode() === 'F') {
+                $phase->setOptions(['journee_finales' => ['tours' => Phase::TOURS_FINALES, 'lieu' => $lieux[0]->getId(),
+                    'date' => $semaine(13)->modify('+4 days')->format('Y-m-d'), 'heure' => '19:00', 'terrains' => 2]]);
+            }
+        }
+        foreach ([['Vacances de test (phase 1)', -14], ['Vacances de test (phase 2)', 3]] as [$nom, $n]) {
+            $saison->addIndisponibilite((new Indisponibilite())->setNom($nom)->setDateDebut($semaine($n))->setDateFin($semaine($n + 1)->modify('-1 day')));
+        }
+        $this->em->persist($saison);
+        foreach ($saison->getPhases() as $phase) {
+            $this->em->persist($phase);
+            foreach ($phase->getPoules() as $poule) {
+                $this->em->persist($poule);
+            }
+        }
+
+        // Équipes : 8 par poule de la phase 1, chacune dans un gymnase avec créneaux
+        $i = 0;
+        $phase1 = array_values(array_filter($saison->getPhases()->toArray(), fn (Phase $p) => $p->getCode() === 'P1'))[0];
+        foreach ($phase1->getPoules() as $poule) {
+            foreach (self::EQUIPES_BARRAGES[$poule->getCode()] as $nom) {
+                $equipe = (new Equipe())->setNom($nom)->setLieu($lieux[$i++ % \count($lieux)]);
+                $this->em->persist($equipe);
+                $poule->addEquipe($equipe);
+            }
+        }
+        $this->em->flush();
+        $saisonId = $saison->getId();
+        $this->em->clear();
+
+        // Phase 1 : journées, matchs (optimiseur), tous les scores, clôture vers les barrages et la phase 2
+        $phase1 = $this->phaseBarrages($saisonId, 'P1');
+        foreach ($phase1->getPoules() as $poule) {
+            $this->journeeService->creerJournees($poule);
+        }
+        $this->em->flush();
+        $this->partieService->creerCalendrierOptimise($phase1);
+        $this->em->flush();
+        $this->em->clear();
+        $this->saisirScores($this->phaseBarrages($saisonId, 'P1'), null);
+        $this->phaseService->cloturerEtBasculer($this->phaseBarrages($saisonId, 'P1'));
+        $this->em->clear();
+
+        // Barrages : un match par barrage, joués, clôture vers la phase 2 (8 équipes par poule)
+        foreach ($this->phaseBarrages($saisonId, 'BAR')->getPoules() as $poule) {
+            $this->journeeService->creerJournees($poule);
+        }
+        $this->em->flush();
+        $this->em->clear();
+        foreach ($this->phaseBarrages($saisonId, 'BAR')->getPoules() as $poule) {
+            $this->formats->pourPhase($poule->getPhase())->genererMatchs($poule);
+        }
+        $this->em->clear();
+        $this->saisirScores($this->phaseBarrages($saisonId, 'BAR'), null);
+        $this->phaseService->cloturerEtBasculer($this->phaseBarrages($saisonId, 'BAR'));
+        $this->em->clear();
+
+        // Phase 2 en cours : journées, matchs, scores des matchs passés
+        $phase2 = $this->phaseBarrages($saisonId, 'P2');
+        foreach ($phase2->getPoules() as $poule) {
+            $this->journeeService->creerJournees($poule);
+        }
+        $this->em->flush();
+        $this->partieService->creerCalendrierOptimise($phase2);
+        $this->em->flush();
+        $this->em->clear();
+        $this->saisirScores($this->phaseBarrages($saisonId, 'P2'), $maintenant);
+
+        $this->editionReglement->enregistrer($this->em->find(Saison::class, $saisonId), self::REGLEMENT_BARRAGES, null);
+        $this->cas[] = [sprintf('Saison avec barrages « %s » (saison affichée)', self::SAISON_BARRAGES),
+            sprintf('phase 1 et barrages clôturés, phase 2 en cours, phase finale (journée des finales le %s) et barrages de fin de saison à venir, règlement de démonstration (/reglement)',
+                $semaine(13)->modify('+4 days')->format('d/m/Y'))];
+    }
+
+    private function phaseBarrages(int $saison, string $code): Phase
+    {
+        return $this->em->getRepository(Phase::class)->findOneBy(['saison' => $saison, 'code' => $code]);
+    }
+
+    /** Scores des matchs de la phase (avant $avant s'il est donné), puis classements des poules */
+    private function saisirScores(Phase $phase, ?\DateTimeImmutable $avant): void
+    {
+        foreach ($phase->getPoules() as $poule) {
+            foreach ($poule->getParties() as $partie) {
+                if ($avant === null || ($partie->getDate() !== null && $partie->getDate() < $avant->modify('-2 hours'))) {
+                    [$a, $b] = self::SCORES[($partie->getId() * 5) % \count(self::SCORES)];
+                    $partie->setNbSetGagnantReception($a)->setNbSetGagnantDeplacement($b);
+                }
+            }
+        }
+        $this->em->flush();
+        foreach ($phase->getPoules() as $poule) {
+            $this->classementService->mettreAJourClassementPoule($poule);
+        }
+        $this->em->flush();
+        $this->em->clear();
     }
 
     // ---------------------------------------------------------------------------------------------------------

@@ -1,0 +1,33 @@
+{# [calendrier] (App\Reglement\Bloc\BlocCalendrier, D58) : tableau « semaine / programme », un groupe de lignes par phase ;
+   semaines sans match et journée des finales signalées par un mot (le fond n'est qu'un renfort). #}
+{% import 'admin/_icones.html.twig' as icone %}
+<section class="reglement-bloc" data-bloc="calendrier" aria-label="Calendrier de la saison">
+    <table class="table table-sm reglement-table reglement-calendrier">
+        <caption class="sr-only">Calendrier de la saison, par semaine</caption>
+        <thead>
+            <tr><th scope="col">Semaine du</th><th scope="col">Programme</th></tr>
+        </thead>
+        {% for phase in phases %}
+            <tbody>
+                <tr class="reglement-calendrier-phase">
+                    <th colspan="2" scope="rowgroup">{{ phase.nom }}{% if phase.infos %}<span class="reglement-calendrier-periode"> · {{ phase.infos }}</span>{% endif %}</th>
+                </tr>
+                {% for ligne in phase.lignes %}
+                    <tr class="reglement-calendrier-{{ ligne.type }}"{% if ligne.cetteSemaine %} aria-current="date"{% endif %}>
+                        {% if ligne.type == 'vide' %}
+                            <td colspan="2" class="reglement-bloc-infos">{{ ligne.programme }}</td>
+                        {% else %}
+                            <th scope="row" class="font-normal tabular-nums whitespace-nowrap">{{ ligne.date }}</th>
+                            <td>
+                                {% if ligne.cetteSemaine %}<strong class="reglement-cette-semaine">Cette semaine</strong> {% endif %}
+                                {% if ligne.type == 'fermeture' %}<span aria-hidden="true">{{ icone.i('calendrier', 'size-4 inline align-text-bottom') }}</span> {% endif %}
+                                {% if ligne.type == 'finales' %}<strong>{{ ligne.programme }}</strong>{% else %}{{ ligne.programme }}{% endif %}
+                                {% if ligne.detail %}<span class="reglement-bloc-infos block">{{ ligne.detail }}</span>{% endif %}
+                            </td>
+                        {% endif %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        {% endfor %}
+    </table>
+</section>

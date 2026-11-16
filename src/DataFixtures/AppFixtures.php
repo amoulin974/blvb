@@ -26,7 +26,7 @@ class AppFixtures extends Fixture
         // 1 : Phase 1 en cours (Matchs de P1 joués, classement calculé, NON clôturée)
         // 2 : Phase 2 débutée (P1 clôturée, équipes basculées en P2, aucun match en P2)
         // 3 : Phase 2 en cours (P1 clôturée, matchs de P2 joués, NON clôturée)
-        // 4 : Saison complète (P1 et P2 clôturées, Phase Finale jouée)
+        // 4 : Saison complète (P1 et P2 clôturées, Phase finale jouée)
         // =========================================================================
         $scenario = 3;
 
@@ -67,7 +67,7 @@ class AppFixtures extends Fixture
                 break;
 
             case 4:
-                // Simule P1 (clôturée), P2 (clôturée) et finit par la Phase Finale (index 2)
+                // Simule P1 (clôturée), P2 (clôturée) et finit par la Phase finale (index 2)
                 $this->simulationMatchsStory->simulerJusquA($saison, 2);
                 break;
 

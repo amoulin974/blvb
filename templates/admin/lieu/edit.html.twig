@@ -3,7 +3,7 @@
 {% block title %}Modifier le gymnase {{ lieu.nom }}{% endblock %}
 
 {% block body %}
-    {{ include('admin/_entete.html.twig', {titre: 'Modifier le gymnase ' ~ lieu.nom, retour: {url: path('admin_lieu_index'), label: 'Gymnases'}}) }}
+    {{ include('admin/_entete.html.twig', {titre: 'Modifier le gymnase ' ~ lieu.nom, retour: {url: path('admin_lieu_index'), label: 'Gymnases'}, actions: [{url: path('admin_lieu_fermetures', {id: lieu.id}), label: 'Fermetures'}]}) }}
     <div class="admin-carte max-w-3xl">
         {{ include('admin/lieu/_form.html.twig', {'button_label': 'Enregistrer'}) }}
     </div>

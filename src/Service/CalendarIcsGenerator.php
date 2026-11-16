@@ -99,11 +99,12 @@ class CalendarIcsGenerator
                         ? sprintf('Résultat : forfait de %s', ScoreExtension::forfaitDe($partie)->getNom())
                         : sprintf('Résultat : %d–%d', $partie->getNbSetGagnantReception(), $partie->getNbSetGagnantDeplacement()))
                     : null,
+                $partie->aDeplacerPourLePublic() ? 'Gymnase fermé ce jour-là : match à déplacer.' : null,
                 "Les horaires peuvent changer. Informations à jour : $urlFiche",
             ]);
 
             $event = (new Event(new UniqueIdentifier(sprintf('match-%d@blvb', $partie->getId()))))
-                ->setSummary(sprintf('%s vs %s', $partie->getIdEquipeRecoit()?->getNom(), $partie->getIdEquipeDeplace()?->getNom()))
+                ->setSummary(($partie->aDeplacerPourLePublic() ? 'Gymnase fermé : ' : '').sprintf('%s vs %s', $partie->getIdEquipeRecoit()?->getNom(), $partie->getIdEquipeDeplace()?->getNom()))
                 ->setDescription(implode("\n", $description))
                 ->setUrl(new Uri($urlFiche))
                 ->setOccurrence(new TimeSpan(new DateTime($debut, true), new DateTime($fin, true)));

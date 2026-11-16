@@ -9,5 +9,5 @@
         Ce mail contiendra un lien qui vous permettra de réinitialiser votre mot de passe. 
         Attention, ce lien expire dans {{ resetToken.expirationMessageKey|trans(resetToken.expirationMessageData, 'ResetPasswordBundle') }}.
     </p>
-    <p>Vous ne l'avez pas reçu ? Vérifiez vos courriers indésirables, sinon <a class="link link-hover link-primary" href="{{ path('app_forgot_password_request') }}">faites une nouvelle demande</a>.</p>
+    <p>Vous ne l'avez pas reçu ? Vérifiez vos courriers indésirables, sinon <a class="lien" href="{{ path('app_forgot_password_request') }}">faites une nouvelle demande</a>.</p>
 {% endblock %}

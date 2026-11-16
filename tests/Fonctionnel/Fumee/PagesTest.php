@@ -28,6 +28,8 @@ final class PagesTest extends TestFonctionnel
             'equipe' => ChampionnatDeTest::get('equipe.A1')->getId(),
             'saison' => ChampionnatDeTest::get('saison')->getId(),
             'poule' => ChampionnatDeTest::get('poule.A')->getId(),
+            // Page du match d'une équipe (Volley Stats) : le match de référence de A1
+            'partie' => ChampionnatDeTest::get('match.reference')->getId(),
         ];
         $pages = [];
         foreach ($routeur->getRouteCollection()->all() as $nom => $route) {
@@ -42,7 +44,7 @@ final class PagesTest extends TestFonctionnel
             foreach ($route->compile()->getPathVariables() as $variable) {
                 $parametres[$variable] = $valeurs[$variable] ?? 1;
             }
-            if ($nom === 'front_club_show' || $nom === 'front_club_edit') {
+            if (\in_array($nom, ['front_club_show', 'front_club_edit', 'front_club_fermetures'], true)) {
                 $parametres['id'] = ChampionnatDeTest::get('club')->getId();
             }
             $pages[$nom] = $routeur->generate($nom, $parametres);
@@ -59,8 +61,8 @@ final class PagesTest extends TestFonctionnel
         foreach ($pages as $nom => $url) {
             $this->client->request('GET', $url);
             $statut = $this->client->getResponse()->getStatusCode();
-            // 403 attendu : modifier la fiche d'un club ou la composition d'une équipe dont on n'est pas responsable / capitaine
-            $refusAttendu = $statut === 403 && \in_array($nom, ['front_club_edit', 'front_equipe_composition_index'], true);
+            // 403 attendu : modifier la fiche ou les fermetures d'un club, ou la composition d'une équipe, dont on n'est pas responsable / capitaine
+            $refusAttendu = $statut === 403 && \in_array($nom, ['front_club_edit', 'front_club_fermetures', 'front_equipe_composition_index'], true);
             if ($statut >= 400 && !$refusAttendu) {
                 $echecs[] = sprintf('%s (%s) → %d', $nom, $url, $statut);
             }

@@ -3,6 +3,8 @@
 namespace App\Form\Front;
 
 use App\Entity\Club;
+use App\Service\DescriptionClub;
+use Symfony\Component\Form\CallbackTransformer;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
@@ -20,6 +22,10 @@ use Symfony\Component\Validator\Constraints\Image;
  */
 class ClubFicheType extends AbstractType
 {
+    public function __construct(private DescriptionClub $description)
+    {
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
         $builder
@@ -28,10 +34,11 @@ class ClubFicheType extends AbstractType
                 'label' => 'Abréviation',
                 'help' => 'En majuscules, entre parenthèses après le nom des équipes du club, ex. Eroak (AOVB). 20 caractères au plus.',
             ])
+            // Éditeur à barre réduite (D63, editeur_texte_controller.js) sur ce champ ; HTML nettoyé à l'envoi
             ->add('description', TextareaType::class, [
                 'label' => 'Description',
                 'required' => false,
-                'help' => 'Facultatif. Présentation du club : histoire, entraînements, contact…',
+                'help' => 'Facultatif. Présentation du club : histoire, entraînements, contact… Si vous collez un texte, les images, tableaux et couleurs ne sont pas conservés.',
                 'attr' => ['rows' => 6],
             ])
             ->add('url', UrlType::class, [
@@ -60,6 +67,10 @@ class ClubFicheType extends AbstractType
                 'required' => false,
             ])
         ;
+        $builder->get('description')->addModelTransformer(new CallbackTransformer(
+            static fn (?string $html) => $html,
+            fn (?string $html) => $this->description->nettoyer($html),
+        ));
     }
 
     public function configureOptions(OptionsResolver $resolver): void

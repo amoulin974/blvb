@@ -1,0 +1,146 @@
+{% extends 'admin/saisonwizard/layout.html.twig' %}
+{% import 'admin/_icones.html.twig' as icone %}
+
+{% block titre_etape %}Vérification{% endblock %}
+
+{% macro pluriel(n, singulier, pluriel) %}{{ n }} {{ n > 1 ? pluriel : singulier }}{% endmacro %}
+{% macro effectif(k) %}{% import 'admin/_icones.html.twig' as icone %}{% if k.prevues %} · {% if k.recues is not null and k.recues != k.prevues %}<span class="whitespace-nowrap"><span class="font-semibold">{{ k.recues }} équipe{{ k.recues > 1 ? 's' : '' }} pour {{ k.prevues }} prévue{{ k.prevues > 1 ? 's' : '' }}</span> <span class="inline-flex align-middle text-warning" aria-hidden="true">{{ icone.i('alerte', 'size-3.5') }}</span><span class="sr-only"> (écart à vérifier)</span></span>{% else %}{{ k.prevues }} équipe{{ k.prevues > 1 ? 's' : '' }}{% endif %}{% endif %}{% endmacro %}
+
+{% block contenu %}
+    {% import _self as m %}
+    {% set erreurs = verification.erreurs %}
+    {% set avertissements = verification.avertissements %}
+    <form id="wizard-form" method="post">
+        <input type="hidden" name="_token" value="{{ csrf_token('wizard' ~ saison.id) }}">
+
+        {% if not saison.brouillon %}
+            <p class="mb-4 text-(--color-base-content)/80">Vos modifications sont enregistrées à chaque étape.</p>
+        {% endif %}
+
+        {% if erreurs is empty %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'success', classe: 'mb-4'} %}{% block contenu %}<strong class="font-semibold">{{ saison.brouillon ? 'La saison est prête à être validée.' : 'La saison ne contient aucune erreur.' }}</strong>{% endblock %}{% endembed %}
+        {% else %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'error', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">{{ erreurs|length }} point{{ erreurs|length > 1 ? 's' : '' }} à corriger</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for e in erreurs %}<li>{{ e.texte }} <button type="submit" name="aller" value="{{ e.etape }}" class="link link-primary inline-flex min-h-11 items-center">Corriger <span class="sr-only">(étape {{ e.etape }})</span></button></li>{% endfor %}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+        {% if avertissements is not empty %}
+            {% embed 'admin/_alerte.html.twig' with {type: 'warning', classe: 'mb-4'} %}{% block contenu %}
+                <strong class="font-semibold">Avertissements (n'empêchent pas de valider)</strong>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for a in avertissements %}<li>{{ a.texte }} <button type="submit" name="aller" value="{{ a.etape }}" class="link link-primary inline-flex min-h-11 items-center">Vérifier <span class="sr-only">(étape {{ a.etape }})</span></button></li>{% endfor %}
+                </ul>
+            {% endblock %}{% endembed %}
+        {% endif %}
+
+        <section class="mb-6" aria-labelledby="schema">
+            <h3 id="schema" class="mb-2">Schéma de la saison</h3>
+            {# Téléphone : une carte par phase, de haut en bas (D29.17) ; grand écran : tableau niveaux × phases #}
+            <ol class="lg:hidden flex flex-col gap-2">
+                {% for ci, c in schema.colonnes %}
+                    <li class="rounded-box border border-base-300 p-3">
+                        <h4 class="font-display uppercase tracking-wide text-(--color-primary)">{{ c }}</h4>
+                        <ul class="mt-1 text-sm">
+                            {% for niveau, cases in schema.lignes %}{% set k = cases[ci] %}{% if k %}
+                                <li>Niveau {{ niveau }} : {{ k.nom }}{{ m.effectif(k) }}{% if k.montee > 0 %} · {{ m.pluriel(k.montee, 'montée', 'montées') }}{% endif %}{% if k.descente > 0 %} · {{ m.pluriel(k.descente, 'descente', 'descentes') }}{% endif %}</li>
+                            {% endif %}{% endfor %}
+                        </ul>
+                    </li>
+                    {% if not loop.last %}<li aria-hidden="true" class="flex justify-center">{{ icone.i('fleche-bas') }}</li>{% endif %}
+                {% endfor %}
+            </ol>
+            <div class="max-lg:hidden">
+                <table class="table table-admin">
+                    <caption class="text-left text-sm text-(--color-base-content)/80 pb-2">Lignes : niveaux · colonnes : phases. Flèche vers le haut : montées, vers le bas : descentes vers la phase suivante.</caption>
+                    <thead><tr><th>Niveau</th>{% for c in schema.colonnes %}<th>{{ c }}</th>{% endfor %}</tr></thead>
+                    <tbody>
+                    {% for niveau, cases in schema.lignes %}
+                        <tr>
+                            <th scope="row">{{ niveau }}</th>
+                            {% for c in cases %}
+                                <td>
+                                    {% if c %}
+                                        {{ c.nom }}{{ m.effectif(c) }}
+                                        {% if c.montee > 0 %} · <span class="inline-flex items-center">{{ icone.i('fleche-haut', 'size-3.5') }}{{ c.montee }}</span><span class="sr-only"> montée{{ c.montee > 1 ? 's' : '' }}</span>{% endif %}
+                                        {% if c.descente > 0 %} · <span class="inline-flex items-center">{{ icone.i('fleche-bas', 'size-3.5') }}{{ c.descente }}</span><span class="sr-only"> descente{{ c.descente > 1 ? 's' : '' }}</span>{% endif %}
+                                    {% else %}—{% endif %}
+                                </td>
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <section class="mb-6" aria-labelledby="passages-clair">
+            <h3 id="passages-clair" class="mb-2">Passages en clair</h3>
+            {% if phases|filter(p => p.type.name == 'FINALE')|length > 0 %}
+                <p class="text-sm text-(--color-base-content)/80">Une phase finale ne transmet pas d'équipes : ses résultats ne changent pas les poules des autres phases.</p>
+            {% endif %}
+            {% for t in transitions %}
+                <h4 class="mt-3 font-semibold">{{ t.phase.nom }} → {{ t.suivante.nom }}</h4>
+                <ul class="mt-1 list-disc pl-5 space-y-1">
+                    {% for r in t.regles %}<li>{{ r.enClair }}</li>{% else %}<li>Aucun passage.</li>{% endfor %}
+                </ul>
+            {% endfor %}
+            <details class="mt-3">
+                <summary class="cursor-pointer min-h-11 font-semibold">Afficher les codes techniques</summary>
+                <ul class="mt-1 list-disc pl-5 font-mono text-sm">
+                    {% for t in transitions %}{% for r in t.regles %}<li>{{ r }}</li>{% endfor %}{% endfor %}
+                </ul>
+            </details>
+        </section>
+
+        <section aria-labelledby="recapitulatif">
+            <h3 id="recapitulatif" class="mb-2">Récapitulatif</h3>
+            <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                {% if saison.departLibelle %}
+                    <div class="rounded-box border border-base-300 p-3">
+                        <h4>Point de départ</h4>
+                        <p class="text-sm text-(--color-base-content)/80">{{ saison.departLibelle }}</p>
+                        {% if saison.brouillon %}<p class="mt-1 text-sm text-(--color-base-content)/80">Les phases, poules et passages ci-dessus sont repris de ce point de départ. Vous les modifiez avec « Modifier les phases » et « Modifier les passages ».</p>{% endif %}
+                    </div>
+                {% endif %}
+                <div class="rounded-box border border-base-300 p-3">
+                    <h4>Saison</h4>
+                    <p class="text-sm text-(--color-base-content)/80">{{ saison.nom }} · {{ saison.dateDebut|date('d/m/Y') }} → {{ saison.dateFin|date('d/m/Y') }} · {{ sport }} · {{ m.pluriel(saison.indisponibilites|length, 'période de fermeture', 'périodes de fermeture') }}</p>
+                    <button type="submit" name="aller" value="2" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier la saison</button>
+                </div>
+                <div class="rounded-box border border-base-300 p-3">
+                    <h4>Phases</h4>
+                    <ul class="text-sm text-(--color-base-content)/80">{% for p in phases %}<li>{{ p.nom }} : {{ libelles[p.type.name][0] }}, {{ p.type.name == 'FINALE' ? m.pluriel(p.poules|length, 'tableau', 'tableaux') : (p.type.name == 'BARRAGE' ? m.pluriel(p.poules|length, 'match', 'matchs') : m.pluriel(p.poules|length, 'poule', 'poules')) }}</li>{% endfor %}</ul>
+                    <button type="submit" name="aller" value="3" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier les phases</button>
+                </div>
+                <div class="rounded-box border border-base-300 p-3">
+                    <h4>Passages</h4>
+                    <ul class="text-sm text-(--color-base-content)/80">{% for t in transitions %}<li>{{ t.phase.nom }} → {{ t.suivante.nom }} : {{ m.pluriel(t.regles|length, 'règle', 'règles') }}</li>{% endfor %}</ul>
+                    <button type="submit" name="aller" value="4" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier les passages</button>
+                </div>
+                <div class="rounded-box border border-base-300 p-3">
+                    <h4>Classement</h4>
+                    <p class="text-sm text-(--color-base-content)/80">
+                        Victoire 3-0 ou 3-1 : {{ saison.pointsVictoireForte }} pts · 3-2 : {{ saison.pointsVictoireFaible }} · défaite 2-3 : {{ saison.pointsDefaiteForte }} · autre défaite : {{ saison.pointsDefaiteFaible }} · forfait : {{ saison.pointsForfait }}
+                        {% for p in phases|filter(p => p.bareme is not null) %} · {{ p.nom }} : barème propre{% endfor %}
+                        · Départage : {{ saison.departage|map(c => c.libelle)|join(', ') }}
+                    </p>
+                    <button type="submit" name="aller" value="5" class="btn btn-ghost btn-sm">{{ icone.i('crayon') }} Modifier le classement</button>
+                </div>
+                {% set reglement = reglement_saison(saison) %}
+                <div class="rounded-box border border-base-300 p-3">
+                    <h4>Règlement</h4>
+                    <p class="text-sm text-(--color-base-content)/80">{{ reglement and reglement.modifieLe ? 'Rédigé, mis à jour le ' ~ reglement.modifieLe|format_datetime(pattern: 'd MMMM yyyy', locale: 'fr') : 'Pas encore rédigé' }}</p>
+                    {# Lien, pas un envoi : on quitte le wizard, l'étape de vérification n'a pas de champ à perdre #}
+                    <a href="{{ path('admin_reglement_edit', {id: saison.id}) }}" class="btn btn-ghost btn-sm">{{ icone.i('document') }} {{ reglement ? 'Modifier le règlement' : 'Rédiger le règlement' }}</a>
+                </div>
+            </div>
+            {% if saison.brouillon %}<p class="mt-4">Après validation : composition des poules{% if phases is not empty %} de « {{ (phases|first).nom }} »{% endif %}, puis journées et matchs.</p>{% endif %}
+        </section>
+
+        {% set refus = erreurs is empty ? null : 'Corrigez ' ~ (erreurs|length > 1 ? 'les ' ~ erreurs|length ~ ' points' : 'le point') ~ ' ci-dessus pour ' ~ (saison.brouillon ? 'valider.' : 'terminer.') %}
+        {{ include('admin/saisonwizard/_navigation.html.twig', {etape: etape, principal: {valeur: 'valider', libelle: saison.brouillon ? 'Valider la saison' : 'Terminer', classe: 'btn-accent', refus: refus}}) }}
+    </form>
+{% endblock %}

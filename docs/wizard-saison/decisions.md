@@ -1,0 +1,1019 @@
+# Wizard de création de saison : décisions de conception
+
+Chaque décision indique ce qui est retenu et pourquoi. Les questions qui restent à poser sont
+listées à la fin, dans « Points ouverts ».
+Une décision prise n'est rediscutée que si un élément nouveau apparaît ; on la modifie alors ici
+en gardant la trace de l'ancienne.
+
+---
+
+## Sommaire
+
+Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (recherche « ## D42. » par exemple).
+
+- D1. Rôle de l'outil
+- D2. Méthode de travail
+- D3. Une saison = une copie de son format
+- D4. Règles de passage écrites avec la notation des places
+- D5. Vérification avant validation
+- D6. Fin de `config/app/saison.yaml` et de la création automatique
+- D7. Ordre des formats : BLVB d'abord
+- D8. Stockage mixte
+- D9. Migration des saisons existantes
+- D10. Point de départ : copie ou modèle
+- D11. Le wizard couvre toute la création
+- D12. Pas de places provisoires dans les calendriers
+- D13. Choix du sport, volley-ball d'abord
+- D14. Règlement généré
+- D15. Une branche par lot
+- D16. Égalité à 3 équipes ou plus : deux critères distincts
+- D17. Critères de départage proposés
+- D18. Équipe exempte : aucun point, sans option
+- D19. Pas d'écran avant le wizard
+- D20. Codes des phases et des poules : automatiques, modifiables
+- D21. Règles des saisons existantes : le schéma 2025 (F1)
+- D22. Montées et descentes pour la saison suivante : enregistrées au lot 3, appliquées au lot 4
+- D23. Points conservés : le champ existe, seule la remise à zéro est appliquée
+- D24. Vérification en échec : avertir et continuer
+- D25. Zones ▲ ▼ du classement : colonnes conservées jusqu'au wizard
+- D26. Phase sans règles enregistrées : règles par défaut
+- D27. Champ `format` de la phase : reporté au lot 4
+- D28. Message de clôture : relu par l'ergonome et le webdesigner
+- D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
+- D30. Effectif d'une poule différent du nombre prévu : avertissement
+- D31. Code d'une phase de barrages : BAR, BAR2…
+- D32. Barrages à l'écran : une carte par match
+- D33. Champ `format` de la phase : reporté au lot 6 (modifie D27)
+- D34. Modifier une saison créée : jusqu'à son lancement, enregistrement à chaque étape (précise D29)
+- D35. Mise en place : écrans dédiés dans le wizard
+- D36. Composition des poules : pré-remplie, ajustable
+- D37. Enchaînement des phases : retour au wizard
+- D38. Étape Poules : version relue du wireframe retenue
+- D39. Étape Journées : version relue du wireframe retenue
+- D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
+- D41. Optimisation des matchs : priorités fixes, replacement des matchs à venir, poule par poule
+- D42. Lot 6 : le type de la phase est son format ; barrage = une poule de deux équipes par match (modifie D33)
+- D43. Barrage de montée et descente : réception par la poule supérieure
+- D44. Modèle « BLVB avec barrages » : 1 montée directe, 1 barrage, 1 descente directe
+- D45. Journée des finales (C3) : derniers tours au choix, dans un gymnase et à une date
+- D46. Journée des finales : planning calculé
+- D47. Championnat aller-retour (A2) : retour en miroir
+- D48. Format de match par phase : 3 ou 2 sets gagnants, barème adapté
+- D49. Durée d'un match : réglable pour la journée des finales, proposée selon le format
+- D50. Barrages de fin de phase 2 : sans effet sur la phase finale, ils décident de la saison suivante
+- D51. Saison lancée : le wizard rouvre en mode ajout (modifie D29, D34)
+- D52. Page « Modifier la poule » : retouches seulement, la composition reste dans la mise en place
+- D53. Barrages de fin de saison : une section dédiée à l'étape Passages (précise D50)
+- D54. Page « Piloter une saison » : suppressions d'une poule dans un menu « Supprimer », refusées une fois la phase jouée
+- D55. Règlement par saison : texte libre édité par les admins, blocs générés insérés par marqueurs (précise D14)
+- D56. Règlement : reprise d'une saison à l'autre, publication et historique
+- D57. Règlement : page publique, accès et liens
+- D58. Règlement : rendu des éléments calculés
+- D59. Règlement : page d'édition des admins (R4)
+- D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
+- D61. Essais de connexion limités, avec une attente qui double à chaque échec
+- D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
+- D63. Fiche du club : éditeur TipTap à barre réduite
+- D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
+- D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
+- D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
+- D67. Volley Stats : on commence par la page match et la composition de chaque set
+- D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
+- D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
+- D70. Saisie du score annoncée avant le match et proposée sur la fiche équipe
+- D71. Page « Ce que vous pouvez faire », encart d'accueil une fois par rôle
+- D72. Volley Stats : « Noter aussi les touches » pendant un set commencé en « score seulement »
+- D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
+- Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
+
+## D1. Rôle de l'outil
+**Décision** : le wizard sert à **créer** une saison. Il doit savoir proposer tous les formats du
+catalogue ; l'administrateur choisit au moment de la création. Les « points à trancher » de la
+partie F2 de `formats-competition.md` ne sont donc pas des décisions à prendre ici : ce sont des
+**options** que le wizard doit offrir (nombre de montées directes, qui reçoit un barrage, etc.).
+**Pourquoi** : le règlement change chaque année ; l'outil ne doit pas figer un choix du bureau.
+*(2026-10-13)*
+
+## D2. Méthode de travail
+**Décision** : pas de Spec Kit ; sa démarche est reprise en version légère dans
+`docs/wizard-saison/` (décisions, plan, lots, méthode).
+**Pourquoi** : `formats-competition.md` sert déjà de spécification ; Spec Kit imposerait sa
+structure, ses modèles en anglais et ses noms de branches, différents des conventions du projet.
+*(2026-10-13)*
+
+## D3. Une saison = une copie de son format
+**Décision** : chaque saison porte ses propres paramètres. Créer une saison à partir d'une autre
+**copie** ses paramètres ; modifier une saison ne change jamais les saisons passées.
+**Pourquoi** : les saisons archivées doivent rester consultables avec *leurs* règles
+(`formats-competition.md`, partie G).
+*(2026-10-13)*
+
+## D4. Règles de passage écrites avec la notation des places
+**Décision** : les règles de passage entre phases utilisent la notation de la partie G :
+`PHASE.POULE#rang`, rang négatif compté depuis la fin, plage `#1..-3`,
+`PHASE.MATCH.vainqueur` / `.perdant`, et une notation à définir pour les « meilleurs Xe ».
+Dans le wizard, l'administrateur ne tape pas cette notation : il la construit avec des listes ;
+la notation est la forme enregistrée et affichée en résumé.
+**Pourquoi** : une seule représentation, testable unitairement, lisible dans le règlement.
+*(2026-10-13)*
+
+## D5. Vérification avant validation
+**Décision** : une saison ne peut être validée que si la vérification passe : chaque équipe a
+exactement une destination à chaque passage, les tailles de poules attendues sont respectées,
+chaque référence (phase, poule, match) existe.
+**Pourquoi** : c'est ce contrôle qui aurait détecté l'erreur 1 de la partie F4.
+*(2026-10-13)*
+
+## D6. Fin de `config/app/saison.yaml` et de la création automatique
+**Décision** : la création automatique des phases à l'enregistrement d'une saison
+(`SaisonListener` → `CompetitionCreator`) est remplacée par le wizard. Le format BLVB actuel devient
+un **modèle** proposé au départ du wizard.
+**Pourquoi** : le YAML est global et figé, il contredit D3.
+*(2026-10-13)*
+
+## D7. Ordre des formats : BLVB d'abord
+**Décision** : d'abord les formats utiles au BLVB (A1, A2, A3, B1, B2, C1, C3, C4), puis le reste du
+catalogue, lot par lot. Le modèle de données est conçu **dès le départ** pour tous les formats.
+**Pourquoi** : livrer tôt ce qui sert, sans devoir refaire le modèle ensuite.
+*(2026-10-13)*
+
+## D8. Stockage mixte
+**Décision** : entités Doctrine pour ce qui est relié aux équipes et aux matchs (phases, poules,
+règles de passage) ; colonne JSON pour les options propres à chaque format.
+**Pourquoi** : intégrité en base là où elle compte, sans migration à chaque nouvelle option.
+*(2026-10-13)*
+
+## D9. Migration des saisons existantes
+**Décision** : les saisons en base sont migrées vers le nouveau modèle, avec des paramètres qui
+reproduisent exactement le comportement actuel (2 montées, 2 descentes, départage actuel). Un seul
+chemin de code ensuite.
+**Pourquoi** : éviter deux logiques parallèles à maintenir.
+*(2026-10-13)*
+
+## D10. Point de départ : copie ou modèle
+**Décision** : le wizard démarre soit par la **copie d'une saison existante**, soit par un
+**modèle**. Les modèles sont **fournis par l'application** et fixes ; la saison créée à partir d'un
+modèle ou d'une copie se modifie librement. Pas de saison vierge, pas d'édition des modèles par
+l'administrateur.
+*(2026-10-13)*
+
+## D11. Le wizard couvre toute la création
+**Décision** : architecture (phases, formats, passages, classement), puis composition des poules,
+journées et génération des matchs, comme dans l'ébauche à 4 étapes.
+*(2026-10-13)*
+
+## D12. Pas de places provisoires dans les calendriers
+**Décision** : le calendrier d'une phase se génère quand ses équipes sont connues. Les tableaux
+d'élimination gardent leur arbre (`Partie.parent_match1/2`).
+**Pourquoi** : l'optimisation des gymnases, cœur de l'outil, reste exacte.
+*(2026-10-13)*
+
+## D13. Choix du sport, volley-ball d'abord
+**Décision** : la saison choisit son **sport**, qui détermine la saisie du score, les résultats
+possibles (match nul ou non), les catégories du barème et les statistiques de départage. Le
+volley-ball est fait en premier ; les autres sports (à buts, à points, de raquette) suivent.
+Dès le socle, ces règles passent par une abstraction **« règle du sport »**, dont le volley est la
+première implémentation.
+**Pourquoi** :
+- *Intérêt* : le BLVB joue au volley, on livre vite ce qui sert ; la logique actuelle
+  (`RegleScore`, règle 1R) sert de référence de non-régression ; les formats de compétition sont
+  presque indépendants du sport.
+- *Risque* : le volley est partout (`Partie.nb_set_gagnant_*`, `Classement.setGagnes/setPerdus`,
+  barème victoire forte/faible, forfait codé `-1`, saisie, API, affichages « 3–2 », départage).
+  Ajouter un sport après coup sans abstraction obligerait à reprendre toutes ces couches. Le match
+  nul casse l'hypothèse « un vainqueur par match » (tableaux, règles `.vainqueur`).
+- *Parade* : l'abstraction posée tôt, à coût faible ; les formats à élimination exigent un
+  départage sans nul (prolongation, tirs au but…) déclaré par le sport.
+- *Hors périmètre initial* : les **rencontres par équipes** des sports de raquette (une rencontre
+  = plusieurs matchs individuels) changent le modèle lui-même ; elles feront l'objet d'une étude à
+  part.
+*(2026-10-13)*
+
+## D14. Règlement généré
+**Décision** : le règlement en ligne (schéma des phases, barème, départage) est généré à partir des
+paramètres, en dernier lot.
+*(2026-10-13)*
+
+## D15. Une branche par lot
+**Décision** : `formats-competition-lotN`, créée depuis `formats-competition` et fusionnée dedans à
+la fin du lot (comme `tests-lot1` à `tests-lot4`). `formats-competition` est fusionnée dans `main`
+quand un ensemble cohérent est prêt.
+*(2026-10-13)*
+
+## D16. Égalité à 3 équipes ou plus : deux critères distincts
+**Décision** : le critère « confrontation directe » reste tel quel (dernier match joué entre les deux
+équipes, comparaison deux à deux). Un nouveau critère **« mini-classement »** est proposé : points,
+puis différence de sets, calculés sur les seuls matchs joués entre les équipes à égalité.
+L'administrateur choisit l'un ou l'autre dans la liste de départage.
+**Pourquoi** : les saisons existantes gardent exactement leur classement (D9) ; le mini-classement
+règle le cas où la comparaison deux à deux tourne en rond (A bat B, B bat C, C bat A).
+*(2026-10-13, lot 2)*
+
+## D17. Critères de départage proposés
+**Décision** : points, différence de sets, **quotient de sets** (nouveau, règle FFVB),
+confrontation directe, mini-classement (D16), ordre alphabétique. Pas de nombre de victoires, de
+forfaits ni de tirage au sort pour l'instant. Départage par défaut, celui d'aujourd'hui : points,
+différence de sets, confrontation directe, ordre alphabétique. L'ordre alphabétique est toujours
+appliqué en dernier, pour un classement identique d'un calcul à l'autre.
+*(2026-10-13, lot 2)*
+
+## D18. Équipe exempte : aucun point, sans option
+**Décision** : comportement actuel conservé, non paramétrable.
+*(2026-10-13, lot 2)*
+
+## D19. Pas d'écran avant le wizard
+**Décision** : le lot 2 fait le modèle (barème et départage de la saison, barème surchargeable par
+phase) et les calculs, sans écran. Les saisons existantes gardent leurs valeurs ; la saisie se fera
+dans le wizard (lot 4). Pas d'interface, donc pas de relecture ergonome / webdesigner pour ce lot.
+*(2026-10-13, lot 2)*
+
+## D20. Codes des phases et des poules : automatiques, modifiables
+**Décision** : phases `P1`, `P2`… dans l'ordre, `F` pour une phase finale ; poules : la lettre tirée
+du nom (« Poule A » → `A`), sinon `A`, `B`, `C`… dans l'ordre des niveaux. Calculés par la migration
+et à la création ; modifiables plus tard dans le wizard. Uniques dans la saison (phase) et dans la
+phase (poule).
+*(2026-10-13, lot 3)*
+
+## D21. Règles des saisons existantes : le schéma 2025 (F1)
+**Décision** : la migration génère, pour les saisons existantes, les règles du schéma 2025 :
+- entre deux phases de championnat : montées et descentes de la poule (`nb_montee_defaut`,
+  `nb_descente_defaut`) vers le niveau voisin, les autres équipes au même niveau ; si le niveau
+  voisin n'existe pas, l'équipe reste à son niveau ;
+- vers une phase finale : chaque poule vers le tableau de son niveau, dans l'ordre du classement ;
+  les montées et descentes de la poule sont enregistrées **pour la saison suivante** (D22).
+**Conséquence assumée** : la clôture de la phase 2 ne fait plus changer les équipes de tableau
+(c'était le cas avec le calcul niveau ± 1) ; le comportement de la saison en cours change sur ce point.
+*(2026-10-13, lot 3)*
+
+## D22. Montées et descentes pour la saison suivante : enregistrées au lot 3, appliquées au lot 4
+**Décision** : une règle peut avoir pour destination un niveau de la **saison suivante**. Le lot 3
+les enregistre et les vérifie ; le wizard les appliquera en créant la saison suivante par copie
+(lot 4), pour pré-remplir ses poules.
+*(2026-10-13, lot 3)*
+
+## D23. Points conservés : le champ existe, seule la remise à zéro est appliquée
+**Décision** : chaque règle porte « points conservés » ; seule la remise à zéro (comportement actuel)
+est appliquée au lot 3. Les autres options (tout, moitié, contre les qualifiés) viendront avec les
+play-offs (lot 8).
+*(2026-10-13, lot 3)*
+
+## D24. Vérification en échec : avertir et continuer
+**Décision** : si la vérification des règles échoue à la clôture (équipe sans destination ou avec
+deux, poule ou rang inexistant…), la clôture se fait quand même et un avertissement liste les
+problèmes. Règle d'application, pour un résultat prévisible : les règles s'appliquent dans l'ordre ;
+une équipe déjà placée ne l'est pas une seconde fois ; une règle impossible à résoudre est ignorée ;
+les équipes restées sans destination sont nommées dans l'avertissement.
+*(2026-10-13, lot 3)*
+
+## D25. Zones ▲ ▼ du classement : colonnes conservées jusqu'au wizard
+**Décision** : `nb_montee_defaut` et `nb_descente_defaut` restent en base pour l'affichage des zones
+de montée et de descente sur la page publique du classement ; le gabarit ne change pas au lot 3.
+Les zones seront déduites des règles avec le wizard.
+*(2026-10-13, lot 3)*
+
+## D26. Phase sans règles enregistrées : règles par défaut
+**Décision** : une phase créée sans règles (à la main dans l'admin, ou par les tests) reçoit, à la
+clôture, les règles par défaut de D21, calculées à la volée. Les saisons créées par l'application
+enregistrent leurs règles.
+**Pourquoi** : aucune clôture ne doit perdre d'équipe parce qu'une règle manque.
+*(2026-10-13, lot 3)*
+
+## D27. Champ `format` de la phase : reporté au lot 4
+**Décision** : `PhaseType` (championnat, finale) reste le type de la phase au lot 3 ; son
+remplacement par un champ `format` se fera avec le wizard, car il touche le formulaire de phase de
+l'admin.
+*(2026-10-13, lot 3)*
+
+## D28. Message de clôture : relu par l'ergonome et le webdesigner
+**Décision** : sans problème, « Phase clôturée : les équipes ont été réparties dans la phase
+suivante. » ; avec des avertissements, une seule alerte orange : un titre (« Phase clôturée, mais
+certaines équipes n'ont peut-être pas été réparties comme prévu. Vérifiez les poules de la phase
+suivante. »), une ligne par problème (liste à puces, les équipes sans poule en premier), puis un
+conseil (corriger avec « Modifier la poule », régénérer les matchs, signaler au « responsable du
+site »). Les règles sont écrites en clair, la notation entre crochets pour le responsable du site
+(« 1er et 2e de la Poule A (Phase 1) vers la Poule A (Phase 2) [P1.A#1..2] »).
+**Reporté** (choix de l'utilisateur) : contraste insuffisant de toutes les alertes de l'admin et
+icône des messages de succès (modification à part) ; avertissements affichés avant de cliquer sur
+« Clôturer » (avec le wizard).
+*(2026-10-13, lot 3)*
+
+## D29. Écrans du wizard : proposition de l'ergonome et du webdesigner retenue
+**Décision** : `archive/ecrans.md` devient le cahier des charges des écrans ; ses 19 questions sont tranchées
+comme recommandé (13/10/2026) :
+1. brouillon créé dès l'étape 1, enregistré à chaque changement d'étape ;
+2. à la copie, dates et périodes de fermeture décalées d'un an, bandeau « à vérifier » ;
+3. copie d'une saison non terminée permise, avec avertissement, poules non pré-remplies ;
+4. « nombre d'équipes prévu » ajouté aux poules (facultatif, pré-rempli à la copie) ;
+5. passages en mode simple par défaut (montées, descentes, « les autres »), mode détaillé en option ;
+6. notation des places au récapitulatif seulement, masquée par défaut ;
+7. codes des phases et poules dans des « Options avancées » repliées de l'étape 3 ;
+8. « Modifier la saison » ouvre le wizard (étapes 2 à 5) tant qu'aucun match n'est joué, ensuite
+   seulement nom, dates et périodes de fermeture ;
+9. formats pas encore disponibles masqués ;
+10. sport en texte fixe « Volley-ball » tant qu'il n'y en a qu'un ;
+11. à la création, les erreurs de vérification bloquent la validation, les avertissements non
+    (différent de la clôture, D24) ;
+12. brouillon invisible sur le site, ne peut pas être la saison affichée, supprimable ;
+13. nom proposé « Saison AAAA-AAAA+1 » ;
+14. stepper en deux groupes : « Organisation » (1-6) puis « Mise en place » (lot 5) ;
+15. réordonner par boutons Monter / Descendre seulement ;
+16. « points conservés » caché jusqu'au lot 8 ;
+17. schéma : matrice par niveaux sur ordinateur, flux vertical sur téléphone ;
+18. « Valider la saison » visible même avec des erreurs, désactivé avec la raison écrite ;
+19. libellés « Passages » (étape 4) et « Périodes de fermeture » (terme déjà en usage), modifiables à
+    la relecture.
+*(2026-10-13, lot 4)*
+
+## D30. Effectif d'une poule différent du nombre prévu : avertissement
+**Décision** : à la création d'une saison, une poule qui reçoit plus ou moins d'équipes que son
+« nombre d'équipes prévu » produit un avertissement, qui n'empêche pas de valider.
+**Pourquoi** : des poules de 8 et 9 équipes sont courantes au BLVB ; le nombre prévu est indicatif.
+*(2026-10-13, relecture du wireframe)*
+
+## D31. Code d'une phase de barrages : BAR, BAR2…
+**Décision** : complète D20 : une phase de barrages reçoit le code `BAR` (puis `BAR2`, `BAR3`…), comme
+`P1` pour un championnat et `F` pour une phase finale ; notation `BAR.AB.vainqueur`.
+*(2026-10-13, relecture du wireframe)*
+
+## D32. Barrages à l'écran : une carte par match
+**Décision** (ergonome, relecture du wireframe) : à l'étape « Passages », chaque match de barrage est
+saisi sur une seule carte : qui joue (« avant-dernier de la Poule A contre le 2e de la Poule B ») et où
+vont le vainqueur et le perdant. En base, ce sont toujours des règles de passage (vers la phase de
+barrages, puis depuis elle). Pour chaque poule, une ligne par rang rend visibles les équipes qui jouent
+un barrage ; le nombre de montées directes reste un choix. Format réalisé au lot 6.
+*(2026-10-13, relecture du wireframe)*
+
+## D33. Champ `format` de la phase : reporté au lot 6 (modifie D27)
+**Décision** : le wizard du lot 4 ne propose que deux types de phase (championnat, tableau à
+élimination), qui correspondent exactement à `PhaseType` ; `PhaseType` est donc conservé. Son
+remplacement par un champ `format` se fera au lot 6, avec l'arrivée des barrages (D31, D32).
+**Pourquoi** : un seul refactoring, au moment où un troisième format en a réellement besoin.
+*(2026-10-13, lot 4)*
+
+## D34. Modifier une saison créée : jusqu'à son lancement, enregistrement à chaque étape (précise D29)
+**Décision** (relectures ergonome et sécurité du lot 4) :
+- le wizard reste ouvert sur une saison créée tant qu'elle n'est pas **lancée** : aucun match
+  programmé (même sans score), aucune phase clôturée, aucun classement enregistré. Ensuite, seuls le
+  nom, les dates et les périodes de fermeture se modifient ;
+- chaque étape enregistre en la quittant, comme pour un brouillon ; un bandeau le rappelle.
+  « Enregistrer et quitter » renvoie à la vérification tant que la saison contient une erreur ; le
+  bouton final s'appelle « Terminer » ;
+- un brouillon, dans la liste des saisons, ne propose que « Reprendre » et « Supprimer » (D29.12).
+**Pourquoi** : supprimer une poule d'une saison dont le calendrier est généré emportait les matchs
+programmés, les abonnements `.ics` et, après une clôture, provoquait une erreur 500 ; une saison
+visible sur le site ne doit pas rester incohérente.
+*(2026-10-13, lot 4)*
+
+## D35. Mise en place : écrans dédiés dans le wizard
+**Décision** : les étapes Poules, Journées et Matchs (groupe « Mise en place », D29.14) sont de
+nouveaux écrans du wizard, qui réutilisent les services existants (`JourneeService`, `PartieService`,
+optimiseur) avec un parcours guidé et un bilan par étape. Les écrans d'administration actuels
+(poule, journée, partie) restent disponibles pour les retouches.
+**Pourquoi** : un parcours continu avec vérification globale, plutôt qu'un renvoi vers des pages éclatées.
+*(2026-10-14, lot 5)*
+
+## D36. Composition des poules : pré-remplie, ajustable
+**Décision** : pour une saison copiée d'une saison terminée, les équipes de la phase 1 sont placées
+d'après les montées et descentes enregistrées pour la saison suivante (D22) ; l'administrateur ajuste
+(équipes nouvelles, retraits). L'écart entre effectif réel et « nombre d'équipes prévu » reste un
+avertissement (D30).
+*(2026-10-14, lot 5)*
+
+## D37. Enchaînement des phases : retour au wizard
+**Décision** : après la clôture d'une phase, le wizard rouvre Poules → Journées → Matchs pour la phase
+suivante. Les avertissements des règles de passage s'affichent **avant** de cliquer sur « Clôturer »
+(point reporté de D28).
+*(2026-10-14, lot 5)*
+
+## D38. Étape Poules : version relue du wireframe retenue
+**Décision** : `archive/ecrans-mise-en-place.md`, §7, remplace les parties contradictoires du §3 : « Déplacer »
+déplie une liste et un bouton « Valider » (ergonome), tableau de synthèse des effectifs au-delà de
+4 poules (webdesigner), « Retirer de la poule », pas d'action « Ne participe plus », équipes de la
+saison copiée proposées d'abord.
+**Pourquoi** : relecture de l'ergonome et du webdesigner ; les deux divergences ont été tranchées par
+l'utilisateur.
+*(2026-10-14, lot 5)*
+
+## D39. Étape Journées : version relue du wireframe retenue
+**Décision** : `archive/ecrans-mise-en-place.md`, §14, complète les §8 à §13. Libellés « Générer les journées »,
+« Régénérer les journées » (confirmation chiffrée, `btn-ghost`) et « Ajuster dans le calendrier » ; dates
+« 14/09 → 20/09 » ; calendrier existant renvoyé tel quel, lien conservé sur téléphone avec une aide ;
+aucune génération à l'ouverture de l'écran.
+**Pourquoi** : relecture de l'ergonome et du webdesigner ; les divergences ont été tranchées par
+l'utilisateur.
+*(2026-10-14, lot 5)*
+
+## D40. Étape Matchs : version relue retenue ; la clôture ne crée plus journées ni matchs
+**Décision** : `archive/ecrans-mise-en-place.md`, §21, complète les §15 à §20 (attente du calcul annoncée sans
+traitement en arrière-plan, rapport recalculé à l'affichage, génération par poule limitée aux poules sans
+match, équipe sans gymnase en avertissement). La clôture d'une phase applique les règles de passage puis
+renvoie à l'étape Poules de la phase suivante ; elle **ne crée plus** les journées ni les matchs (D37).
+**Pourquoi** : la création automatique se faisait sans que personne ne relise la répartition des équipes ;
+choix de l'utilisateur après relecture de l'ergonome.
+*(2026-10-14, lot 5)*
+
+## D41. Optimisation des matchs : priorités fixes, replacement des matchs à venir, poule par poule
+**Décision** (après avis de l'ergonome) :
+- **Pas de pondération** des critères : les priorités restent fixes (aucun gymnase surchargé, puis alternance
+  domicile / extérieur, puis moins de déplacements de suite) et sont **expliquées à l'écran**, dans la fenêtre de
+  génération.
+- **« Replacer les matchs à venir »**, pour la phase entière comme pour une poule, dès que des matchs sont joués.
+  Les matchs avec un score saisi sont conservés tels quels (adversaires, journée, domicile ou extérieur, gymnase,
+  date) et comptent dans l'occupation des gymnases ; les autres sont supprimés puis recréés dans leur journée, sans
+  jamais rejouer une rencontre. L'administrateur doit **cocher** « Je confirme qu'aucun match déjà joué n'attend
+  la saisie de son score » (contrôle côté serveur) ; le nombre de matchs sans score à date passée est signalé.
+- **Régénération d'une poule** non réservée aux phases sans match joué : elle reste possible pour une poule qui
+  n'a aucun match joué, même quand d'autres poules de la phase en ont. Une poule ou une phase avec des matchs joués
+  ne se régénère plus en entier (scores et classement perdus) : on y replace les matchs à venir. Le message de
+  régénération d'une poule dit que le résultat d'ensemble sera au mieux égal à un calcul de toute la phase.
+- **Équipe qui se retire, forfait général** : sujets traités à part (règle de forfait), pas dans l'optimisation.
+**Pourquoi** : les besoins réels apparaissent après le début de la saison (gymnase indisponible, erreur de
+composition, report) et ne doivent pas détruire les scores ; une pondération n'a pas de sens concret pour le bureau
+et permettrait des calendriers injouables.
+*(2026-10-14, lot 5)*
+
+## D42. Lot 6 : le type de la phase est son format ; barrage = une poule de deux équipes par match (modifie D33)
+**Décision** : le champ `Phase.type` (`PhaseType`) **est** le format de la phase. Plutôt que de le renommer en
+`format` (une soixantaine d'usages, aucun gain fonctionnel), on lui ajoute la valeur `BARRAGE` (3e format, ce qui
+déclenchait le refactoring de D33) et une colonne `options` (JSON, D8) pour les options propres au format
+(`reception`, `aller_retour`, `petite_finale`…). Une phase de barrages comporte **une poule de deux équipes par
+match** (codes `AB`, `BC`…) : le match, la journée et le score réutilisent `Poule`, `Journee` et `Partie` ;
+le vainqueur et le perdant sont résolus par `.vainqueur` / `.perdant` (D4, D31) et alimentent les règles de
+passage vers la phase suivante.
+**Pourquoi** : un seul chemin de code pour les matchs, les droits de saisie du score et le calendrier ; pas de
+nouvelle entité de rencontre.
+*(2026-10-15, lot 6)*
+
+## D43. Barrage de montée et descente : réception par la poule supérieure
+**Décision** : match sec en 3 sets gagnants, reçu par l'équipe de la poule supérieure (option `reception` :
+`niveau_superieur` par défaut, `mieux_classe`, `neutre`). Pas de prolongation (pas de nul au volley).
+*(2026-10-15, lot 6)*
+
+## D44. Modèle « BLVB avec barrages » : 1 montée directe, 1 barrage, 1 descente directe
+**Décision** : dans chaque poule, le 1er monte directement, le dernier descend directement, et l'avant-dernier de la
+poule N joue contre le 2e de la poule N+1 (proposition du bureau, F2) ; le vainqueur joue dans la poule supérieure à
+la phase suivante. Le calendrier de la phase suivante se génère après les barrages (D12). Le nombre de montées
+directes reste une option du wizard (D1).
+*(2026-10-15, lot 6)*
+
+## D45. Journée des finales (C3) : derniers tours au choix, dans un gymnase et à une date
+**Décision** : option de la phase à élimination. Sans elle, comportement actuel (un tour par semaine, chez l'équipe qui
+reçoit). Avec elle, l'administrateur choisit **par phase** les tours regroupés : les finales seules (avec les petites
+finales), ou les demi-finales et les finales. Ces tours de **tous les tableaux** de la phase se jouent le même jour, dans
+un même gymnase choisi ; les tours précédents restent un par semaine, avant cette date.
+**Pourquoi** : la finale du vendredi soir avec la remise des prix (F1) ; certains règlements regroupent aussi les
+demi-finales (final four). Choix de l'utilisateur, 16/10/2026.
+*(2026-10-16, lot 6)*
+
+## D46. Journée des finales : planning calculé
+**Décision** : paramètres gymnase, date, heure de début, nombre de terrains, durée d'un match. Les matchs s'enchaînent par
+créneaux (autant de matchs par créneau que de terrains) : demi-finales d'abord s'il y en a, puis petites finales et finales,
+chaque fois du niveau le plus bas au niveau 1 ; la finale du niveau 1 se joue en dernier, avant la remise des prix. Les heures
+restent modifiables ensuite dans le calendrier.
+*(2026-10-16, lot 6)*
+
+## D47. Championnat aller-retour (A2) : retour en miroir
+**Décision** : option de la phase de championnat. Le retour reprend les journées de l'aller dans le même ordre, domicile et
+extérieur inversés, dans la seconde moitié de la phase (`2(n-1)` journées, `2n` avec un nombre impair d'équipes).
+L'optimiseur place l'aller (gymnases, alternance) ; le retour en découle. Pas de retour décalé pour l'instant.
+**Pourquoi** : lecture simple pour les clubs, équilibre domicile / extérieur parfait. Choix de l'utilisateur.
+*(2026-10-16, lot 6)*
+
+## D48. Format de match par phase : 3 ou 2 sets gagnants, barème adapté
+**Décision** : option de toute phase, 3 sets gagnants par défaut. En 2 sets gagnants : scores 2-0 et 2-1 ; 2-0 = victoire
+forte, 2-1 = victoire faible, 1-2 = défaite forte, 0-2 = défaite faible ; forfait 2 contre -1 ; match interrompu (règle
+1R) : 1-1 et 1-0, 0 point chacun. Le barème de la saison (ou de la phase) s'applique aux catégories forte / faible comme
+en 3 sets. La validation du score et la fenêtre de saisie suivent le format de la phase du match.
+*(2026-10-16, lot 6)*
+
+## D49. Durée d'un match : réglable pour la journée des finales, proposée selon le format
+**Décision** : la durée d'un match ne se règle que pour la journée des finales (champ « Durée d'un match (minutes) »,
+entre 30 et 240). Valeur proposée quand rien n'est enregistré : 120 minutes en 3 sets gagnants, 75 minutes en 2 sets
+gagnants (`Phase::dureeMatchParDefaut`). Les autres usages (agenda `.ics`, affichage du calendrier d'administration)
+gardent leur durée actuelle ; un réglage par phase ou par saison reste possible plus tard.
+**Pourquoi** : un match en 2 sets est plus court ; la proposition évite de saisir une durée à chaque fois. Choix de
+l'utilisateur, 19/10/2026 (périmètre : journée des finales seulement). Remplace l'ancien défaut de 90 minutes.
+*(2026-10-19, lot 6)*
+
+## D50. Barrages de fin de phase 2 : sans effet sur la phase finale, ils décident de la saison suivante
+**Décision** (point 6 de F2, utilisateur, 19/10/2026) : dans le modèle BLVB, la phase 2 se termine aussi par des barrages
+entre poules voisines (avant-dernier de la poule N contre 2e de la poule N+1, comme en fin de phase 1, D44). Ces
+barrages **n'influencent pas la phase finale** : les tableaux finaux sont alimentés par le classement de la phase 2,
+comme aujourd'hui. Ils **déterminent seulement le niveau de la saison suivante** : le vainqueur est placé dans la poule
+supérieure, le perdant dans la poule inférieure ; les autres équipes suivent les montées et descentes directes de la
+phase 2 (1er monte, dernier descend). Les barrages se jouent en même temps que la phase finale.
+**Précisions** (utilisateur, 19/10/2026) : les barrages de fin de saison sont placés **après** la phase finale ; **aucun
+lien n'est codé entre saisons** : leurs résultats servent à remplir à la main les poules de la saison suivante. Le modèle
+n'enregistre donc aucune règle « saison suivante » pour la phase 2.
+**Conséquences** (lot 6g) : une équipe peut avoir une destination dans chaque phase d'arrivée (tableau final et barrage),
+jamais deux dans la même ; une phase finale sans règle est « terminale » : elle se clôture sans répartir d'équipes et
+n'apparaît plus dans les passages, même si une autre phase la suit.
+*(2026-10-19, lot 6)*
+
+## D51. Saison lancée : le wizard rouvre en mode ajout (modifie D29, D34)
+**Décision** (utilisateur, 19/10/2026) : une saison lancée (un match, une phase clôturée ou un classement) se modifie
+encore dans le wizard, en **mode ajout**, pour lui ajouter des phases, en particulier les barrages qui n'existaient pas
+quand la saison de production a été créée (barrages entre phase 1 et phase 2, barrages de fin de saison, D44, D50).
+- **Phases commencées, figées** : une phase est commencée si elle est clôturée, a un match, un classement non nul ou des
+  équipes dans ses poules. Elle et toutes celles qui la précèdent sont affichées en lecture seule : ni nom, ni dates, ni
+  type, ni poules, ni ordre ne changent, et aucune phase ne se place avant elles.
+- **Phases suivantes, libres** : les phases placées après la dernière phase commencée se modifient, se déplacent et se
+  suppriment comme dans un brouillon ; une nouvelle phase s'ajoute à la fin puis se remonte parmi elles.
+- **Passages** : ceux d'une phase clôturée sont déjà appliqués et ne s'affichent plus ; ceux d'une phase en cours se
+  modifient (pour envoyer ses équipes dans un barrage ajouté).
+- **Étapes** : seules Phases, Passages et Vérification sont proposées ; la saison (nom, dates, fermetures) se modifie
+  par la page « Modifier la saison », le classement (barème, départage) ne change plus en cours de saison.
+**Pourquoi** : ajouter des barrages à la saison en cours sans jamais toucher aux matchs, scores et classements déjà là.
+Préféré à un bouton dédié « Ajouter des barrages » (plus souple : tout format de phase peut s'ajouter).
+*(2026-10-19, lot 6)*
+
+## D52. Page « Modifier la poule » : retouches seulement, la composition reste dans la mise en place
+**Décision** (utilisateur, 19/10/2026, sur proposition de l'ergonome et du webdesigner) : la page d'administration
+« Modifier la poule » ne sert plus qu'aux retouches.
+- **Champs** : nom et niveau ; la phase et la saison ne se changent plus et figurent dans le sous-titre de la page
+  (déplacer une poule casse ses journées, matchs et passages : on la supprime puis on la recrée dans le wizard) ; les
+  journées sortent du formulaire (écran « Calendrier des journées »).
+- **Équipes** : liste en lecture seule, avec un lien vers l'étape « Poules » de la mise en place tant que la composition de
+  la phase n'est pas verrouillée (D36, D38).
+- **Phase commencée** (ModeAjout::commencee, D51) : seul le nom se modifie, le niveau est verrouillé côté serveur, la
+  suppression n'est plus proposée sur cette page. **Phase clôturée** : page en lecture seule.
+- Après enregistrement : retour à la page de la saison, sur la poule.
+*(2026-10-19, hors lots)*
+
+## D53. Barrages de fin de saison : une section dédiée à l'étape Passages (précise D50)
+**Décision** (utilisateur, 19/10/2026, sur avis de l'ergonome) :
+- **Identification par la position** : une phase de barrages dont la phase précédente est une phase finale est une phase
+  de barrages de fin de saison ; ses équipes viennent de la dernière phase de championnat placée avant elle (la
+  « source »). Aucun réglage supplémentaire.
+- **Section dédiée** à l'étape Passages, juste après « source → phase finale », titrée « {source} → {barrages} » : une
+  carte par match, deux listes « Première équipe » et « Seconde équipe » (rang et poule de la source en un seul choix),
+  pré-remplie selon le schéma du bureau (avant-dernier de la poule N contre 2e de la poule N+1), enregistrée seulement à
+  la validation de l'étape. Contrôles : deux équipes par match, deux équipes différentes, une équipe dans un seul barrage.
+- **Une seule source de saisie** : les règles vers ces barrages ne s'affichent ni ne se modifient dans « source → phase
+  finale » ; chaque section n'enregistre que ses propres règles.
+- **Saison suivante** : quand une phase de barrages de fin de saison existe, la case « Montées et descentes pour la saison
+  suivante » de la section « source → phase finale » est masquée (poules de la saison suivante remplies à la main, D50).
+- Mode ajout (D51) : la section se modifie tant que la source n'est pas clôturée.
+**Pourquoi** : l'écran Passages ne montrait que des transitions vers la phase suivante ; ces barrages n'avaient aucun
+endroit visible, et leurs règles faisaient basculer les poules de la phase 2 en mode détaillé.
+*(2026-10-19, lot 6)*
+
+## D54. Page « Piloter une saison » : suppressions d'une poule dans un menu « Supprimer », refusées une fois la phase jouée
+**Décision** (utilisateur, 19/10/2026, avis de l'ergonome et du webdesigner) :
+- Dans la barre de chaque poule, « Supprimer les matchs », « Supprimer les journées » (« … et les matchs » s'il y en a) et
+  « Supprimer la poule » sont regroupés dans un menu « Supprimer » (poubelle et chevron, rouge discret), toujours présent
+  même avec une seule entrée ; séparateur avant « Supprimer la poule » ; chaque entrée garde la fenêtre de confirmation.
+- **Phase jouée** (clôturée, au moins un score saisi ou un classement non nul) : le menu n'est plus affiché et le serveur
+  refuse ces suppressions (matchs, journées, poule, matchs d'une journée, et la phase elle-même), avec un message
+  « Impossible de supprimer … : des matchs de Phase 1 ont déjà été joués » (ou « Phase 1 est clôturée »). À la place du
+  menu, la barre de la poule l'explique (« Suppression impossible : des matchs ont été joués. ») ; « Supprimer la
+  phase » disparaît de la page de la saison et la page « Modifier la phase » montre le blocage. La suppression d'un match
+  isolé reste possible pour corriger une erreur.
+- Relectures (ergonome, webdesigner) : boutons de suppression discrets en rouge foncé (`.btn-danger-discret`, AA au
+  survol), icônes retirées des entrées du menu, chevron qui pivote à l'ouverture. Une phase dont les matchs sont générés mais pas joués reste modifiable
+  (régénérer les matchs).
+**Pourquoi** : trois boutons rouges voisins aux libellés proches invitaient au clic accidentel ; aucune garde côté serveur
+n'empêchait d'effacer des matchs joués. Règle plus souple que « commencée » (D51, D52) : avant le premier score,
+supprimer et régénérer reste l'usage normal.
+*(2026-10-19, hors lots ; avance sur PO1)*
+
+## D55. Règlement par saison : texte libre édité par les admins, blocs générés insérés par marqueurs (précise D14)
+**Décision** (utilisateur, 20/10/2026) : chaque saison a son règlement, rédigé par les admins dans un **éditeur
+visuel** (titres, gras, listes, liens, images ; HTML nettoyé côté serveur). Les éléments calculés à partir des
+paramètres de la saison sont des **blocs** que l'admin place où il veut dans le texte, choisis dans une liste ; ils
+sont recalculés à chaque affichage. Blocs : schéma des phases (remplace les images `schema-2025*.jpg`), barème et
+format des matchs, départage, calendrier (remplace `calendrier-2025.jpg`). Travail sur la branche `reglement`, créée
+depuis `formats-competition-lot6` (elle tient lieu de lot 11).
+**Pourquoi** : le texte (règles de jeu, arbitrage, joueurs) change peu et reste l'affaire du bureau ; les parties qui
+dépendent des paramètres ne peuvent plus être en décalage avec ce que fait l'application.
+**Précision** (utilisateur, 20/10/2026) : le marqueur est un **code court** écrit dans le texte (ex. `[bareme]`,
+`[bareme phase=P2]`) ; la page d'édition montre la liste des éléments calculés, chacun avec son code court et son
+rendu pour la saison.
+**Précisions** (utilisateur, 20/10/2026) :
+- **Code inapplicable** (code inconnu, phase absente de la saison, élément sans objet) : rien n'est affiché au public ;
+  un admin connecté voit à sa place un encart d'avertissement qui en donne la raison ; la page d'édition les liste en tête.
+- **Éléments graphiques** : rendus en HTML et CSS par des gabarits Twig (aucune image générée), relus par le webdesigner
+  et l'ergonome.
+- **Tableaux des phases finales** : compris dans `[schema_phases]` ; le paramètre `phase` limite le schéma à une phase
+  (`[schema_phases phase=FIN]` : les tableaux finaux seuls).
+- **Panneau de la page d'édition** : pour chaque élément, la liste de ses paramètres (nom, rôle, valeurs possibles dans
+  la saison, valeur par défaut).
+*(2026-10-20, règlement)*
+
+## D56. Règlement : reprise d'une saison à l'autre, publication et historique
+**Décision** (utilisateur, 20/10/2026) :
+- **Reprise** : une saison créée par copie (D3, D10) reprend le texte du règlement de la saison copiée ; les blocs
+  suivent les paramètres de la nouvelle saison.
+- **Publication** : enregistrer publie aussitôt ; la page affiche la date de dernière mise à jour ; chaque
+  enregistrement garde la version précédente, consultable et restaurable par un admin.
+- **Archives** : les blocs d'une saison terminée restent recalculés (ses paramètres ne changent plus, D51) ; rien
+  n'est figé.
+*(2026-10-20, règlement)*
+
+## D57. Règlement : page publique, accès et liens
+**Décision** (utilisateur, 20/10/2026) :
+- `/reglement` affiche le règlement de la saison affichée sur le site (sélecteur de saison du site) ; les règlements
+  des saisons passées restent consultables ; celui d'un brouillon ne l'est jamais.
+- Édition par les admins seulement, sur une **page dédiée par saison** (lien depuis la page de la saison et le
+  récapitulatif du wizard), modifiable à tout moment, même saison lancée.
+- **Ancres automatiques** sur les titres, tirées du code de la règle (« RÈGLE 1R » → `#regle-1r`, utilisé par la
+  fenêtre de saisie du score) ; sommaire généré comme aujourd'hui.
+- **Images** envoyées depuis l'éditeur (JPG, PNG, WebP, taille limitée), stockées sur le serveur.
+- **Reprise de l'existant** : le règlement actuel (gabarit `front/reglement.html.twig` et ses images) est importé dans
+  la saison en cours ; le gabarit en dur disparaît ensuite.
+*(2026-10-20, règlement)*
+
+## D58. Règlement : rendu des éléments calculés
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `archive/reglement-maquettes.md`) :
+- **Schéma des phases** : chaque poule liste ses sorties dans l'ordre du classement, en une seule liste, chacune avec sa
+  phase d'arrivée ; un barrage dit son adversaire et son enjeu (précision de l'utilisateur, 20/10/2026) : « Du 1er au 6e
+  restent en poule A dans la phase 2 », « Le 7e joue le barrage A / B contre le 2e de la poule B pour savoir s'il reste en
+  poule A », « Le 8e descend en poule B dans la phase 2 » ; en mots publics
+  (ni « antépénultième », ni code, ni « niveau 1 ») ; barrages par leur composition ; tableaux finaux en tours et matchs
+  numérotés, places en clair, **sans noms d'équipes** (le règlement décrit le format).
+- **Enchaînement des phases** (demande de l'utilisateur, 20/10/2026) : en tête de `[schema_phases]` pour toute la saison,
+  un schéma des étapes (une case par phase, flèches ; phases qui commencent le même jour dans la même étape, « En même
+  temps : »), et sous chaque flèche qui passe à l'étape suivante, résumé à partir des règles de passage (mouvements communs
+  à plusieurs poules ; le détail reste dans les cartes ; condition de l'ergonome).
+- **Barème** : un tableau par format de match, trois colonnes « Résultat », « Points du gagnant », « Points du perdant »
+  (choix de l'utilisateur, 20/10/2026 ; une ligne par résultat : 3-0 ou 3-1, 3-2, forfait) ; ligne
+  « Match interrompu (règle 1R) », points fixés par le règlement (`Volley::pointsInterrompus`, selon le format de match),
+  avec lien vers la règle ; le texte de la règle 1R n'écrit plus les points en dur. Phase à élimination : une phrase, pas de tableau.
+- **Départage** : liste numérotée, aides du wizard.
+- **Calendrier** : tableau « semaine / programme » par phase, fermetures, journée des finales, « Cette semaine » ; les tours
+  d'une phase à élimination s'affichent « à jouer avant le … » (date limite du tour), sauf la journée des finales.
+- **Jours fériés** : texte libre (une semaine entière sans match se saisit comme fermeture).
+*(2026-10-20, règlement)*
+
+## D59. Règlement : page d'édition des admins (R4)
+**Décision** (utilisateur, 20/10/2026, sur maquettes du webdesigner relues par l'ergonome, `archive/reglement-maquettes-r4.md`) :
+- **Brouillon** : le règlement d'une saison en brouillon se rédige dès le wizard ; aperçu seulement (jamais public, D57) ;
+  statut « Brouillon : visible par le public quand la saison sera lancée », bouton « Enregistrer ». Saison visible :
+  « Enregistrer et publier ».
+- **Voir la page publique** : pour un admin, `/reglement?saison=<id>` ouvre la saison modifiée (saison visible
+  seulement).
+- **Deux admins en même temps** : à l'enregistrement, si une autre version a été publiée depuis l'ouverture de la page,
+  avertir (« A. Moulin a publié une autre version à 14 h 40 ») et laisser choisir « Publier la mienne quand même »
+  (l'autre reste dans l'historique) ou « Annuler ».
+- **Conservation** : toutes les versions sont gardées ; les images envoyées restent sur le serveur (nettoyage plus tard,
+  sans jamais supprimer une image citée dans l'historique) ; description d'image obligatoire, ou case « Image décorative ».
+*(2026-10-20, règlement)*
+
+---
+
+## D60. Fermetures de gymnase : entité à part, saisie par les responsables, refus si un match est programmé
+**Décision** :
+- Une fermeture de gymnase est une entité propre, `FermetureGymnase` (gymnase, motif, premier et dernier jour), et non
+  une `Indisponibilite` avec un gymnase : celle-ci fait sauter la journée à tous les clubs, et chaque usage aurait dû
+  filtrer. Elle n'est liée à aucune saison : ses dates suffisent.
+- **Qui saisit** : les responsables du club, pour les gymnases rattachés au club (même partagés), et les admins. L'auteur est
+  enregistré, visible des admins seulement, depuis que le motif est public (décision de l'utilisateur, 30/10/2026) ; l'aide du
+  formulaire le dit ; il est effacé avec le compte.
+  Accès par « Mon club » (menu du compte, une entrée par club), puis « Fermetures de gymnase » sur la fiche.
+- **Conservation** (décision de l'utilisateur, 30/10/2026) : quand un admin affiche une autre saison sur le site, le motif et
+  l'auteur des fermetures terminées sont définitivement effacés, ce que la fenêtre de confirmation annonce. Les dates restent,
+  pour que le calendrier des saisons passées affiche toujours « Gymnase fermé ». Pas de cron ; une fermeture en cours ou à venir
+  n'est pas touchée. Une demande d'effacement en cours de saison sur une fermeture terminée se traite en base.
+- **Match sans score programmé pendant la période** : le responsable est refusé, les matchs lui sont cités, et il écrit
+  aux admins (e-mail prérempli, adresses de connexion des admins). L'admin, lui, enregistre et voit les matchs
+  concernés : le replacement a besoin de la fermeture pour éviter le gymnase.
+- **Quand** : à tout moment, sans date limite. Le moment utile est avant la génération des matchs : c'est aux admins de
+  le demander. Bornes : la période ne doit pas être terminée, 2 ans au plus, fin à moins de 5 ans (faute de frappe sur l'année).
+- **Placement automatique** (lot 2, générations et replacement) : un gymnase fermé passe avant tout autre critère, surcharge
+  comprise. Dans l'ordre : recevoir chez l'adversaire ou échanger des journées (recherche locale, championnats) ; sinon le
+  créneau suivant du même gymnase, la même semaine, seule exception à « le créneau prioritaire uniquement » ; sinon le match
+  reste placé et il est signalé, avec un lien vers le match, sur la mise en place de la phase, tant qu'il n'a pas de score. Jamais d'autre gymnase ni
+  d'autre semaine sans décision d'un admin. Un match joué ne bouge pas. Le gymnase et la date choisis pour une journée des
+  finales restent ceux de l'admin : ils sont seulement signalés.
+- **Placement manuel** (lot 3 ; formulaires, fenêtre et glisser-déposer du calendrier admin) : mettre un match sans score dans un
+  gymnase fermé est refusé, y compris pour un admin, avec le motif et le conseil de changer de date ou de retirer la fermeture
+  (elle peut être levée, le refus reste donc simple à contourner en connaissance de cause). Seul un changement de gymnase ou de
+  jour est contrôlé : un match déjà dans le gymnase fermé reste modifiable. Le gymnase et la date d'une journée des finales ne
+  sont pas refusés, seulement signalés.
+- **Signalement** : un match sans score dans un gymnase fermé porte « Gymnase fermé : match à déplacer » sur le calendrier, la
+  fiche de l'équipe et l'agenda ; il est en rouge dans le calendrier admin. Sans le motif, qui reste au calendrier par gymnase.
+  Un match passé sans score n'est signalé qu'aux admins : il ne manque sans doute que son score.
+- **Calendrier des gymnases** (public) : une date de fermeture n'apparaît jamais comme un terrain libre ; elle est marquée
+  « Gymnase fermé » avec son motif (le premier, si des fermetures se chevauchent), et un match sans score y est signalé « à
+  déplacer » (demande de l'utilisateur, 30/10/2026). Le motif étant un texte libre devenu public : l'aide du formulaire
+  l'annonce et écarte noms et coordonnées, et il n'est plus affiché une fois la date passée (relecture sécurité).
+**Pourquoi** : demande de l'utilisateur ; relectures ergonome, webdesigner et sécurité.
+*(2026-10-30)*
+
+## D61. Essais de connexion limités, avec une attente qui double à chaque échec
+**Décision** : à partir du 3e échec pour une même adresse saisie et une même IP, il faut attendre 30 secondes, puis le
+double à chaque nouvel échec, 24 heures au plus. Un second compteur par IP seule s'applique à partir de 20 échecs. Pendant
+l'attente, le mot de passe n'est pas vérifié et l'essai ne compte pas. Une connexion réussie efface le compteur du compte,
+pas celui de l'IP. Changer son mot de passe par le lien reçu par e-mail lève l'attente du compte, depuis toute IP. Une
+IPv6 compte pour son /64. Les échecs sont oubliés 24 heures après la fin de l'attente. Abonné `LimiteurConnexion`, sans la
+dépendance `symfony/rate-limiter`, dont la limite intégrée à la connexion est fixe et non exponentielle.
+**Pourquoi** : demande de l'utilisateur, après la relecture sécurité de D60 (les responsables voient les adresses de
+connexion des admins, et aucune limite n'existait). Le compteur porte sur l'adresse **et** l'IP pour qu'un attaquant ne
+puisse pas bloquer le compte d'un admin depuis chez lui.
+**Condition en production** : l'IP vue par le site doit être fiable (`SYMFONY_TRUSTED_PROXIES`, essai décrit dans
+`deploiement-reglement.md`), sinon la limite se contourne ou bloque tout le monde.
+**Limites acceptées** : des essais simultanés peuvent passer pendant le calcul du mot de passe ; une variante de l'adresse
+reconnue par la collation de la base (`á` pour `a`) échappe au compteur du compte, mais pas à celui de l'IP (gain d'environ
+2) ; des attaquants répartis sur de nombreuses IP ne sont pas freinés ; le temps de réponse révèle si un compte existe
+(antérieur à cette décision) ; un `cache:clear` remet les compteurs à zéro.
+*(2026-10-30)*
+
+## D62. Paramètres du site : une page d'administration, connexion limitée activée seulement après vérification
+**Décision** (utilisateur, 30/10/2026) :
+- **Page « Paramètres du site »** (admins), une seule ligne en base (`ParametresSite`) : un `cache:clear` ne perd rien.
+- **Connexion limitée (D61)** : facultative, la mise en place relève de Francis (décision de l'utilisateur, 31/10/2026) ; désactivée
+  au déploiement, tant que la vérification n'a pas réussi ; **activation refusée** si
+  elle échoue ; désactivation toujours possible. La vérification se fait depuis la page, par le navigateur de l'admin : IP vue
+  publique et pas celle d'un proxy non déclaré, en-tête `X-Forwarded-For` forgé ignoré, proxys de confiance sans danger (ni
+  tout Internet, ni `REMOTE_ADDR`) ; valable une heure. L'admin confirme par une case ce que le site ne peut pas contrôler
+  (site joignable seulement par le proxy : à demander à l'hébergeur). Une IP partagée ne se voit qu'une fois la limite active :
+  la page décrit l'essai à faire après l'activation, avec une adresse inventée. Le tableau de bord signale une limite
+  désactivée. **Secours** : commande `app:connexion-limitee:desactiver`, si un admin est bloqué.
+- **Adresse de contact** : pied de page, page des conditions d'utilisation, et messages de refus d'une fermeture de gymnase
+  (à la place des adresses de connexion des admins, qui restent le repli tant qu'elle n'est pas renseignée ; précise D60).
+  Distincte de l'expéditeur des e-mails (`MAILER_FROM`).
+- **Logo** : PNG ou WebP, SVG refusé (il peut contenir du script) ; en-tête du site et de l'admin seulement ; retour possible
+  au logo d'origine.
+*(2026-10-30)*
+
+## D63. Fiche du club : éditeur TipTap à barre réduite
+**Décision** (utilisateur, 30/10/2026) : titres, gras, italique, listes, liens ; ni onglet HTML, ni tableaux, ni codes courts,
+ni images dans le texte pour commencer (les responsables de club ne sont pas admins) ; textes existants convertis une fois en
+HTML ; pas d'historique ni de contrôle de conflit au début (le dernier enregistrement l'emporte).
+
+**Précisions à la réalisation** (31/10/2026, relectures ergonome, webdesigner et sécurité) : titres en h3 (« Titre ») et h4
+(« Sous-titre »), la section « Présentation » de la fiche étant un h2 ; liens vers un site ou une adresse e-mail seulement
+(http, https, mailto), reconnus aussi quand on les tape, et enregistrés avec `rel="noopener noreferrer nofollow ugc"` ;
+HTML nettoyé à l'envoi et de nouveau à l'affichage (sanitizer `app.club`), le texte des balises de mise en forme non gardées
+restant ; description limitée à 20 000 caractères, refusée avec un message au-delà (jamais coupée) ; sans JavaScript, le
+champ reste une zone de texte et un texte brut y garde ses paragraphes ; l'aide du champ prévient qu'un texte collé perd ses
+images, tableaux et couleurs.
+*(2026-10-30, précisé le 2026-10-31)*
+
+## D64. Tableau de bord de l'admin : « À faire », puis la saison, puis les accès rapides (tranche PO6)
+**Décision** (utilisateur, 31/10/2026) : la proposition de l'ergonome (`tableau-de-bord.md`, §2) est retenue, avec ces réponses
+aux huit questions de son §3 :
+1. **Saison terminée** : date de fin dépassée, ou dernière phase dont tous les matchs ont un score. Aucun état en base, pas de
+   bouton « Clôturer » ajouté sur la dernière phase.
+2. **Saison principale** : quand la saison affichée est finie et qu'une autre se prépare, la saison en préparation prend la
+   grande carte ; la saison finie passe en carte réduite.
+3. **Saisie des scores** : une page « Scores à saisir » dédiée, qui liste les matchs sans score et réutilise la fenêtre de
+   saisie existante (`_score_modal`) ; « Voir les matchs » y mène. *Pourquoi* : les admins saisissent souvent sur téléphone,
+   où le calendrier d'une poule est malcommode (choix de l'utilisateur, contre l'avis de commencer par le calendrier).
+4. **Seuil des scores manquants** : 2 jours, comme le rappel automatique.
+5. **Clubs sans responsable, équipes sans capitaine** : toujours une ligne « À faire » tant qu'il en manque (choix de
+   l'utilisateur, contre l'avis de ne la montrer que pendant la mise en place). La ligne ne porte que sur la saison affichée,
+   puisque les responsables ne se désignent que pour elle (§5.2 de `tableau-de-bord.md`).
+6. **Bouton de la saison en cours** : « Suivre la saison », vers la page de la saison ; « Créer une saison » reste proposé
+   tant que PO1.4 n'est pas tranché.
+7. **Menu** : « Saison en cours » devient « Saison affichée ».
+8. **Rappel des fermetures** : ligne « À faire » « Avant de générer les matchs, demandez aux clubs leurs fermetures de
+   gymnase. » pendant la mise en place d'une saison sans matchs. L'aide « Le placement ne tient pas encore compte des
+   fermetures » est abandonnée : les lots 2 et 3 des fermetures sont faits.
+
+**Précisions à la réalisation** (relectures ergonome et webdesigner, 31/10/2026) : la ligne « règlement » n'apparaît qu'à
+partir de la validation de la saison (pas pendant la préparation du brouillon) ; quand plusieurs saisons sont suivies, les
+lignes commencent par « Nom de la saison, Phase 1 : » ; lignes urgentes (match dans un gymnase fermé, aucune saison affichée)
+marquées par une icône, du gras et un filet, pas par la couleur seule ; la carte de la saison en cours mène aussi à « Scores à
+saisir », qui sinon ne serait accessible qu'en cas de retard ; « Afficher sur le site » depuis le tableau de bord y ramène.
+*(2026-10-31)*
+
+
+## D65. Catégorie de jeu du joueur (féminine / masculine) : ajoutée avec les tournois internes aux clubs, pas avant
+**Décision** (utilisateur, 31/10/2026) : à terme, des tournois organisés à l'intérieur d'un club, mixtes ou non ; la
+composition des équipes et le nombre de matchs dépendent de la répartition entre joueuses et joueurs. La fiche du joueur
+recevra pour cela une **catégorie de jeu**, féminine ou masculine :
+- **ajoutée avec les tournois seulement** : rien n'est collecté tant que l'usage n'existe pas (minimisation, RGPD art. 5 ;
+  CJUE, Mousse, C-394/23, janvier 2025) ;
+- **libellé « Catégorie de jeu »**, pas « sexe » ni « genre » : c'est la catégorie sportive dont on a besoin, sans toucher à
+  l'identité de genre ;
+- **facultative dans la fiche**, obligatoire seulement à l'inscription à un tournoi ou quand le responsable compose les équipes ;
+- **visible** de l'admin, du responsable du club et du joueur lui-même ; jamais affichée publiquement ;
+- **conditions d'utilisation** complétées à ce moment-là : finalité (composer les équipes des tournois), base légale (le service
+  rendu au joueur), conservation identique à celle de la fiche joueur ;
+- saisie par lot possible par l'import Excel des joueurs.
+
+*Pourquoi* : ce n'est pas une donnée sensible (art. 9), et la finalité est réelle et sportive (la FFVB l'enregistre aussi sur
+les licences) ; la collecter avant les tournois, ou pour tous les joueurs, ne serait pas justifié.
+*(2026-10-31)*
+
+
+## D66. Volley Stats : cadrage de la saisie des compositions et des statistiques pendant les matchs
+**Décision** (utilisateur, 31/10/2026), avant toute conception ; analyse complète dans `docs/volley-stats/analyse.md` :
+- **Saisie** par un remplaçant sur le banc ou un accompagnant, sur téléphone ; **matchs du championnat seulement** ;
+  participation **volontaire** des équipes.
+- **Deux modes** au choix de l'équipe, rapide et complet ; les classements publics ne reposent que sur leur socle commun.
+- **Usages** : progresser en équipe, choisir les compositions, suivi individuel, classements individuels sur le site.
+- **Visibilité** : statistiques publiques avec l'**accord de chaque joueur** (case dans son profil, décochable) ; sans
+  accord, visibles de son équipe seulement ; **compositions et rotations visibles de l'équipe seulement**.
+- **Score officiel jamais alimenté** par cette saisie.
+- **Corrections** par le saisisseur et le capitaine pendant 7 jours, puis par l'admin seulement.
+- **Règles 1J et 4J** non contrôlées dans la première version ; le modèle de données le prévoit (catégorie de jeu de D65,
+  licence FFVB) : si ce contrôle est retenu plus tard, D65 sera avancée.
+- Réseau présent dans les gymnases d'après l'utilisateur : pas de mode hors ligne complet.
+- *Précisé le 31/10/2026* : saisie par un membre de l'équipe avec son compte (un accompagnant utilise le compte d'un joueur) ;
+  un seul saisisseur, ni libéro ni temps morts dans la première version ; pas de numéro de maillot, joueur désigné par son
+  prénom et les premières lettres de son nom ; conservation tant que le joueur participe à une saison, plus une saison ;
+  stats publiques choisies plus tard sur le catalogue de `analyse.md` §9.
+- *Modifié le 31/10/2026* (raison nouvelle : l'utilisateur veut aussi des critères du mode complet, ex. meilleur passeur) :
+  classements publics **par critère au choix**, en nombre ou en pourcentage d'actions réussies ; un critère du seul mode
+  complet ne classe que les équipes en saisie complète (remplace « socle commun seulement ») ; pourcentage soumis à un
+  minimum d'actions réglé par l'admin. Joueur sans accord : **anonyme** dans les classements. Comparaison des rotations,
+  export CSV et stats sur la fiche de l'équipe dans la première version.
+- *Modifié le 31/10/2026* : **trois modes emboîtés** au lieu de deux : **rapide** (une saisie par échange : qui termine,
+  comment), **intermédiaire** (chaque touche de l'équipe, trois issues seulement : le jeu continue, point gagné, point
+  perdu ; **aucune notion de qualité**), **complet** (chaque touche avec sa note de qualité). Un critère de classement ne
+  classe que les équipes dont le mode le produit. **Seul le mode intermédiaire est développé en premier** ; rapide et complet
+  viendront ensuite, le modèle de données les prévoit.
+- *Précisé le 31/10/2026* : classements **par phase et par poule** ; formules de `situations.md` §12 validées ; en mode
+  intermédiaire, le meilleur réceptionneur est classé sur le **pourcentage de réceptions sans faute**.
+
+*Pourquoi* : publication de données de performance individuelles, donc consentement explicite (RGPD) ; saisie bénévole et
+volontaire, donc classements limités à ce qui est comparable ; la composition est une information tactique.
+*(2026-10-31)*
+
+
+## D67. Volley Stats : on commence par la page match et la composition de chaque set
+**Décision** (utilisateur, 31/10/2026) : premier développement de Volley Stats = une **page match** propre à une équipe pour
+un match du championnat, où l'on indique les joueurs au début de chaque set. Parcours proposé par l'ergonome
+(`docs/volley-stats/page-match.md`), avec ces réponses :
+- **Accès et modification** : tous les membres de l'équipe, le responsable du club et les admins ; l'équipe adverse n'y
+  a pas accès (« page introuvable »).
+- **Premier service** saisi à chaque set (tiré par les joueurs : balle de service, chifoumi).
+- **Set commencé à 5** : rotation normale, la place libre tourne avec les autres.
+- **2 sets gagnants** : 3ᵉ set en 15 points.
+- **Joueurs de l'équipe seulement** : pas de renfort ajouté au gymnase.
+- **Score de chaque set** noté sur la page match, **pour l'équipe seulement** : la page ne sert à rien d'autre sur le site
+  (ni score officiel, ni classement, ni affichage public).
+- **Pas de lien de saisie temporaire** pour l'accompagnant pour l'instant (il utilise le compte d'un joueur).
+- *Précisé le 31/10/2026 (maquette du webdesigner)* : score du set **point par point**, **corrigeable** quand des points
+  n'ont pas été notés (correction du score, puis « Qui sert maintenant ? » et place des joueurs à confirmer) ; pas de
+  « Servira en premier » sur le poste 2 ; **fin de set proposée automatiquement** quand le score de fin est atteint ;
+  « Qui est là ? » : **toute l'équipe** en cases à cocher ; **historique des actions du set avec « Précédent » et
+  « Suivant »** (annuler, rétablir) au lieu du message d'annulation de 10 s ; « Sets joués » repris sur la fiche équipe
+  (visible de l'équipe seulement) ; libellés « Page du match », « Reste à faire », « Sur le banc », « Sets joués » validés.
+- *Précisé le 31/10/2026* : **« Tourner d'un poste » peut être touché plusieurs fois** jusqu'à la bonne position ; gel d'une
+  page jamais terminée **30 jours après le match** ; joueur retiré de l'équipe affiché « Joueur retiré » sur les pages
+  passées. **On enregistre l'ordre de rotation officiel au moment du service**, jamais les places prises pendant l'échange :
+  les changements de place après le service (passeur qui joue au centre, attaquant à l'aile) sont libres au volley, ne
+  modifient pas la rotation et ne se saisissent pas ; les actions seront attribuées au joueur par son nom, pas par une case
+  du terrain. Rôle des joueurs (passeur, attaquant, central) pour lire les stats par rotation : plus tard.
+- Vocabulaire : « Composition du set N » et « Joueurs présents », pour ne pas confondre avec la composition de l'équipe sur
+  la saison.
+*Pourquoi* : la composition conditionne rotation, serveur et sets joués ; écran court, essayable sur un vrai match, utile
+sans les stats.
+*(2026-10-31)*
+
+
+## D68. Volley Stats : saisie des actions en mode intermédiaire (action prédite, saisie après le point)
+**Décision** (utilisateur, 31/10/2026) : la saisie des actions suit le parcours de l'ergonome (`docs/volley-stats/
+saisie-actions.md`) et ses cinq conditions : **action prédite** (on ne touche que le joueur), **« le jeu continue »
+implicite**, **service jamais saisi** (déduit de la rotation), **saisie après le point**, **échange non détaillé possible**
+(seulement le point). Réponses aux questions :
+- **Seuil d'échanges détaillés** pour qu'un set compte dans les classements publics : **réglable par l'admin**, dans une
+  nouvelle partie « Volley Stats » du menu de l'admin, avec une section sur le tableau de bord (contenu à concevoir).
+- **Le block ne compte pas comme une touche** : trois touches après un block.
+- **Ballon renvoyé sans être frappé** : action **« Renvoi »** à part (ne compte pas comme une attaque). *Précisé le 01/11/2026* : à
+  n'importe quelle touche, et un renvoi bien placé peut chercher à marquer (avant : « ballon facile en 3ᵉ touche »).
+- **Attaque contrée** : si le ballon contré revient dans notre camp et reste jouable, **le jeu continue et un nouveau cycle de
+  trois touches commence** (couverture ou défense, passe, attaque) ; un contre adverse gagnant est un point perdu
+  « contrée », distinct de la faute d'attaque (dehors, filet).
+- **Block gagnant à deux** : **chacun des bloqueurs** est crédité (deux joueurs touchés).
+- **Choix « le score seulement » / « le score et les touches des joueurs »** : à chaque set, au moment de le commencer.
+- **Corrections** d'une action d'un échange terminé (changer le joueur ou l'action, retirer une touche) : pendant le set et
+  pendant les 7 jours de correction ; pas d'ajout de touche oubliée dans un ancien échange en première version ; l'issue d'un
+  ancien échange ne se change pas (« Corriger le score »).
+- **Point gagné sur une réception, une passe ou une défense** : compté comme point marqué par le joueur, pas dans les
+  classements d'attaque. Les touches d'une **balle à rejouer** ne comptent pas.
+- **Préalable technique** : file d'attente des saisies sur le téléphone (affichage immédiat, envois l'un après l'autre),
+  sans quoi des touches rapides seraient perdues.
+- *Précisé le 31/10/2026* (modifie D66 sur ce point) : **le responsable du club voit les statistiques individuelles des
+  joueurs de ses équipes, comme l'équipe elle-même**, sans accord du joueur (usage interne au club, jamais public) ; à écrire
+  dans les conditions d'utilisation. La publication sur le site reste soumise à l'accord de chaque joueur (D66).
+- *Précisé le 31/10/2026 (maquette du webdesigner)* : **bouton « Point sans détail »** pour un échange qu'on ne détaille
+  pas ; « Point pour nous / Point pour eux » sans touche reste un point sans faute de nos joueurs (ace subi, faute de service
+  adverse…), compté détaillé. **Deuxième bloqueur demandé seulement pour un block gagnant.**
+- *Réalisé le 31/10/2026, relectures intégrées* : correction des anciennes touches à l'écran (historique : changer le joueur,
+  l'action, retirer) ; suppression des pages du match par `app:volley-stats:purger` (saison N supprimée une fois N+1
+  terminée, à planifier par Francis). **Reste avant tout usage réel** : le paragraphe des conditions d'utilisation (stats
+  individuelles, destinataires, durée) avec la fusion de `conditions-utilisation-v2`. **Point ouvert** : sur un téléphone de
+  640 px, « Point pour nous / eux » demande encore un petit défilement (bandeau du site collé en haut) ; à essayer sur un
+  vrai match.
+*(2026-10-31)*
+
+## D69. « Mon équipe » choisie automatiquement pour tout joueur ; « Mon profil » dans le menu sur téléphone
+
+*Décidé le 01/11/2026*, d'après l'avis de l'ergonome (`docs/presentation-par-role.md`), premier pas de la présentation des
+fonctionnalités selon le rôle (le reste n'est pas décidé).
+- **« Mon équipe » par défaut** : l'équipe dont le compte connecté fait partie pour la saison affichée, capitaine ou simple
+  joueur (avant : capitaines seulement). Rien ne l'interdit dans le modèle (la composition est unique par équipe, saison et
+  joueur), mais aucun joueur n'est dans deux équipes la même saison dans les données réelles (2025-2026, 2026-2027) ; si
+  cela arrive, l'équipe dont il est capitaine passe en premier, puis l'ordre des noms. Un choix fait par le visiteur reste
+  prioritaire, comme avant.
+- **Menu latéral (téléphone)** : lien « Mon profil » pour tout compte connecté, après « Mon club » ; libellé « Mon profil »
+  (et non « Mon Profil ») dans le menu du compte.
+
+## D70. Saisie du score annoncée avant le match et proposée sur la fiche équipe
+
+*Décidé le 01/11/2026* (avis de l'ergonome, `docs/presentation-par-role.md`).
+- **Pas de bouton « Saisir » grisé** avant le match (on ne sait pas pourquoi il ne répond pas, il se lit mal, il ajoute du
+  bruit pour les autres). À la place, pour les seules personnes qui pourront saisir le score (même règle que
+  `SaisieScoreService::peutSaisir`) : « Saisie après le match » sous le tiret, sur l'accueil et le calendrier ; rien ne
+  change pour les visiteurs et les joueurs. Le bouton « Saisir » apparaît toujours à l'heure du match (saisie au gymnase).
+- **Fiche équipe** : la même saisie dans le calendrier de l'équipe (annonce sous le tiret, bouton « Saisir » à la place du
+  tiret, crayon sous le score) ; « Prochain match » rappelle « Saisie du score après le match » ; un match passé sans score
+  prend la place du « Dernier résultat » (carte « Score à saisir » avec le bouton), pour ces personnes seulement. La page
+  est rechargée après enregistrement (victoire/défaite, prochain match, classement en dépendent), revient à la même
+  hauteur, rend le focus au bouton du match et affiche « Score enregistré. ».
+- **Une seule copie de la règle côté gabarits** : fonction Twig `score_saisissable` (`SaisieScoreExtension`).
+- **Libellés** : « score » plutôt que « résultat » dans les libellés des boutons pour les lecteurs d'écran ; zone tactile
+  de « Saisir » et du crayon portée à 44 px (crayon : sur mobile seulement, la colonne du score est trop étroite sur
+  ordinateur).
+
+## D71. Page « Ce que vous pouvez faire », encart d'accueil une fois par rôle
+
+*Décidé le 01/11/2026*, d'après l'avis de l'ergonome (`docs/presentation-par-role.md` §6, §7).
+- **Page `/ce-que-vous-pouvez-faire`**, ouverte à tous : une section par rôle du compte, de la plus large à la plus
+  précise, sans répétition (« Sans compte, tout le monde peut : », puis « Avec votre compte de joueur, vous pouvez
+  aussi : », capitaine, responsable de club, administrateur), 5 lignes au plus, un lien par ligne quand l'action se fait
+  ailleurs. Rôles calculés d'après les droits réels de la saison affichée (composition, capitaine, responsable désigné,
+  ROLE_ADMIN), jamais écrits à la main.
+- **Encart en haut de l'accueil**, pour un compte connecté, tant qu'il n'a pas vu la page ou fermé l'encart pour chacun
+  de ses rôles : retenu **par compte, en base** (`user.presentation_vue`, rôles déjà présentés), pour ne pas revenir sur
+  un autre appareil ; il revient seulement quand le compte gagne un rôle (nouveau capitaine…). Pas de page ouverte
+  d'office à la connexion, pas de bouton d'aide flottant, pas de visite guidée.
+- **La retrouver** : lien « Ce que vous pouvez faire » dans le menu du compte (ordinateur et menu latéral), sur
+  « Mon profil », et dans le sous-menu « Le championnat » de la barre (seul accès d'un visiteur sur ordinateur).
+- **Pas pour l'instant** : courriel de rentrée, fiche PDF pour les responsables de club ; **Volley Stats n'est pas
+  annoncé** (ni page du match ni sets joués ni statistiques) tant qu'il n'a pas été essayé avec quelques joueurs.
+
+## D72. Volley Stats : « Noter aussi les touches » pendant un set commencé en « score seulement »
+
+*Décidé le 01/11/2026* (utilisateur) : le choix de D68 au début du set n'est plus définitif dans ce sens, pour une erreur de
+clic ou un changement d'avis. Pendant un set en « score seulement », un bouton « Noter aussi les touches », avec
+confirmation, passe aux touches à partir du prochain échange. Les points déjà notés restent acquis et deviennent des
+échanges non détaillés (score et rotation inchangés), donc comptent dans le taux de détail. Pas de retour au « score
+seulement » : « Point sans détail » couvre ce cas, échange par échange. Pas d'ajout de touches pour les échanges déjà joués
+(D68). Refusé une fois le score de fin atteint.
+
+## D73. Volley Stats : ace et faute de service notés par des boutons ; dépliant « Quelle action choisir ? »
+
+*Décidé le 01/11/2026* (utilisateur, avis de l'ergonome). Précise D68 (« service jamais saisi ») et sa précision sur « Point
+pour nous / eux ».
+- **Défaut corrigé** : à notre service, un point sans touche était toujours compté comme un ace ou une faute de service, alors
+  que l'adversaire peut réceptionner puis attaquer dehors, ou marquer sans que nous touchions le ballon.
+- **Boutons « Ace » et « Faute de service »** dans la carte de la touche, quand nous servons et avant toute touche ; ils
+  disparaissent à la première touche, qui veut dire que le service est passé. Le serveur reste déduit de la rotation.
+- **« Point pour nous / eux »** sans touche à notre service : faute adverse ou point adverse, sans effet sur les aces et les
+  fautes du serveur ; le service reste compté. Quand l'adversaire sert, pas de bouton : sans touche, la déduction reste juste
+  (faute de service adverse, ace subi).
+- **Dépliant fermé « Quelle action choisir ? »**, au choix de « Que notez-vous ? » et sous le set en cours, jamais ouvert seul :
+  une phrase pour Réception, Passe, Attaque, Renvoi, Défense, Block, Ace, Faute de service, textes validés par l'utilisateur.
+  Il remplace ici le lien « Comment ça marche ? » envisagé dans `presentation-par-role.md` §7.
+
+---
+
+## Points ouverts
+
+### PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026)
+**Situation** : depuis la liste des saisons, le nom d'une saison et le bouton « Piloter » mènent à la même page
+(`admin/saison/show`), qui reprend en doublon des actions du wizard (composer les poules, créer les journées,
+générer les matchs, optimiser, modifier la poule, calendrier des journées) et en propose de dangereuses qui
+contournent ses garde-fous (modifier ou supprimer une phase, supprimer les poules, journées ou matchs en masse,
+générer sans relecture, optimiser sans la case de confirmation de D41). Pour un brouillon, le nom est un lien vers
+cette page alors que la ligne ne propose que « Reprendre » et « Supprimer » (D34).
+
+**Avis de l'ergonome** (« oui avec conditions » : une page de suivi par saison est pertinente, pas un second outil de
+construction concurrent du wizard) :
+- *Brouillon* : nom non cliquable ; seuls « Reprendre » et « Supprimer » ; la page show redirige vers le wizard (garde
+  serveur).
+- *Validée, sans matchs* : le clic ouvre l'écran « Mise en place » à l'étape à faire ; la page show reste en lecture ;
+  « Modifier » mène au wizard (étapes 2 à 6).
+- *En cours* : clic = page de suivi (scores, changement de date ou de gymnase d'un match, « Clôturer la phase »,
+  « Replacer les matchs à venir ») ; suppressions en masse masquées ; « Modifier la phase » et « Modifier la poule »
+  deviennent des liens vers l'étape du wizard ; suppression d'un match isolé conservée, avec confirmation.
+- *Terminée* : page en lecture seule, seul « Modifier » (nom, dates) reste, et « Créer la saison suivante à partir de
+  celle-ci » (D22, D36) s'ajoute.
+- *Liste* : colonne « État » (« Brouillon · étape 3 sur 6 », « Validée · à mettre en place », « En cours · Phase 2 »,
+  « Terminée ») ; un seul bouton principal (« Reprendre la création », « Continuer la mise en place », « Suivre la
+  saison », « Consulter ») ; le nom mène à la même cible ; « Piloter » disparaît.
+- *Libellés de la page* : « Composer les poules » → « Mise en place des poules » ; « Modifier la saison » → « Nom et
+  dates » ; accords « 1 match » / « 2 matchs » dans les confirmations.
+
+**Décisions à prendre par l'utilisateur** (aucune n'est actée) :
+1. Masquer ou supprimer les suppressions en masse (phase, poule, journées, matchs) dès que la saison est lancée ?
+   (recommandé : oui, cohérent avec D34 et D41)
+2. « Modifier la phase » et « Modifier la poule » : liens vers les étapes du wizard (recommandé) ou conservés « pour
+   les retouches » (D35) ?
+3. Le clic sur une saison en cours ouvre-t-il la page de suivi (recommandé) ou le wizard ?
+4. Ajouter « Créer la saison suivante » sur une saison terminée ?
+5. Saisie des scores : où les capitaines saisissent-ils aujourd'hui (l'ergonome n'a pas trouvé le point d'entrée sur
+   la page show) et faut-il un raccourci « Saisir un score » ? **À vérifier dans le code avant de décider.**
+
+### PO2. Équipe qui se retire, forfait général
+Traités à part de l'optimisation (D41) : règle de forfait (score réglementaire), à cadrer avec le bureau.
+
+### PO3. Questions de détail des lots suivants
+Notation des « meilleurs Xe », options exactes de chaque format, écrans du wizard : elles apparaîtront lot par lot.
+
+### PO6. Tableau de bord de l'admin : tranché par D64 *(2026-10-31)*

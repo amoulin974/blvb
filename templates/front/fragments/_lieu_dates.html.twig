@@ -19,10 +19,10 @@
         <tbody>
         {% for date, parties in dates %}
             {% set analyse = lieu.analysesByDate[phase.id][date] %}
-            {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite or analyse.alerte_vacances %}
-            <tr data-alerte="{{ alerte ? 1 : 0 }}" class="align-top {{ alerte ? 'bg-(--color-error)/5' : '' }}">
-                <td class="font-display text-[17px] font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</td>
-                <td>
+            {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite or analyse.alerte_vacances or analyse.alerte_fermeture %}
+            <tr data-alerte="{{ alerte ? 1 : 0 }}" class="{{ alerte ? 'bg-(--color-error)/5' : '' }}">
+                <td class="align-top font-display text-[17px] font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</td>
+                <td class="align-top">
                     <ul class="flex flex-col gap-1 text-base">
                         {% for partie in parties %}
                             <li class="rounded px-1 -mx-1" data-recoit="{{ partie.idEquipeRecoit.id }}" data-deplace="{{ partie.idEquipeDeplace.id }}">
@@ -36,7 +36,7 @@
                         {% endfor %}
                     </ul>
                 </td>
-                <td>{{ include('front/fragments/_lieu_statut.html.twig', {nbMatchs: parties|length}) }}</td>
+                <td class="align-top">{{ include('front/fragments/_lieu_statut.html.twig', {nbMatchs: parties|length}) }}</td>
             </tr>
         {% endfor %}
         </tbody>
@@ -47,7 +47,7 @@
 <div class="md:hidden flex flex-col gap-2">
     {% for date, parties in dates %}
         {% set analyse = lieu.analysesByDate[phase.id][date] %}
-        {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite or analyse.alerte_vacances %}
+        {% set alerte = analyse.alerte_horscrenau or analyse.alerte_capacite or analyse.alerte_priorite or analyse.alerte_vacances or analyse.alerte_fermeture %}
         <div data-alerte="{{ alerte ? 1 : 0 }}" class="card card-xs border border-base-300 {{ alerte ? 'bg-(--color-error)/5' : 'bg-base-100' }}">
             <div class="card-body px-3 py-2 gap-2">
                 <h4 class="font-display text-lg font-semibold tracking-wide">{{ date|format_date('full', locale='fr')|capitalize }}</h4>

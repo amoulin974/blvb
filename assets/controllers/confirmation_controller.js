@@ -10,24 +10,50 @@ import { Controller } from '@hotwired/stimulus';
  *   data-confirmation-consequences-param  tableau JSON de phrases (ce qui sera perdu)
  *   data-confirmation-blocage-param  si non vide : action impossible, explication affichée, pas de bouton de confirmation
  *   data-confirmation-bouton-param   libellé du bouton de confirmation
- *   data-confirmation-ton-param      'error' ou 'warning'
+ *   data-confirmation-ton-param      'error' (défaut), 'warning' ou 'primary' (action sans perte)
  *   data-confirmation-irreversible-param  booléen
  *   data-confirmation-champs-param   objet JSON de champs cachés supplémentaires
+ *   data-confirmation-attente-param  texte du bouton pendant l'envoi (calcul long), facultatif
  * Les textes sont posés avec textContent : aucun HTML n'est interprété.
  */
 export default class extends Controller {
     static targets = ['dialogue', 'titre', 'iconeAlerte', 'iconeBlocage', 'consequences', 'blocage', 'definitive',
-        'formulaire', 'token', 'champs', 'bouton', 'annuler'];
+        'formulaire', 'token', 'champs', 'bouton', 'annuler', 'statut'];
+
+    // Envoi du formulaire : si le déclencheur annonce une attente (calcul long), la fenêtre se verrouille (bouton,
+    // « Annuler » et Échap) pour éviter un double envoi, et dit l'attente dans une zone role="status" présente dès
+    // l'ouverture (annoncée par les lecteurs d'écran).
+    envoyer() {
+        if (!this.attente) {
+            return;
+        }
+        this.envoiEnCours = true;
+        this.boutonTarget.disabled = true;
+        this.boutonTarget.replaceChildren(
+            Object.assign(document.createElement('span'), { className: 'loading loading-spinner loading-sm' }),
+            document.createTextNode(' ' + this.attente),
+        );
+        this.annulerTarget.disabled = true;
+        this.statutTarget.textContent = this.attente + '. Ne fermez pas la page.';
+        this.statutTarget.classList.remove('hidden');
+    }
+
+    // Échap ne ferme pas la fenêtre pendant un envoi
+    echap(event) {
+        if (this.envoiEnCours) {
+            event.preventDefault();
+        }
+    }
 
     ouvrir(event) {
         const p = event.params;
         const bloque = Boolean(p.blocage);
-        const ton = p.ton === 'warning' ? 'warning' : 'error';
+        const ton = ['warning', 'primary'].includes(p.ton) ? p.ton : 'error';
 
         this.titreTarget.textContent = p.titre || 'Confirmer ?';
         this.iconeAlerteTarget.classList.toggle('hidden', bloque);
         this.iconeBlocageTarget.classList.toggle('hidden', !bloque);
-        this.iconeAlerteTarget.parentElement.className = `mt-0.5 ${ton === 'warning' ? 'text-warning' : 'text-error'}`;
+        this.iconeAlerteTarget.parentElement.className = `mt-0.5 text-${ton === 'primary' ? 'primary' : ton}`;
 
         this.consequencesTarget.replaceChildren(...(bloque ? [] : (Array.isArray(p.consequences) ? p.consequences : []))
             .map((texte) => Object.assign(document.createElement('li'), { textContent: texte })));
@@ -43,7 +69,13 @@ export default class extends Controller {
         this.champsTarget.replaceChildren(...Object.entries(p.champs && typeof p.champs === 'object' ? p.champs : {})
             .map(([nom, valeur]) => Object.assign(document.createElement('input'), { type: 'hidden', name: nom, value: valeur })));
         this.boutonTarget.textContent = p.bouton || 'Supprimer définitivement';
-        this.boutonTarget.className = `btn ${ton === 'warning' ? 'btn-warning' : 'btn-error'}`;
+        this.boutonTarget.className = `btn ${{ warning: 'btn-warning', primary: 'btn-primary', error: 'btn-error' }[ton]}`;
+        this.attente = p.attente || '';
+        this.boutonTarget.disabled = false;
+        this.annulerTarget.disabled = false;
+        this.envoiEnCours = false;
+        this.statutTarget.textContent = '';
+        this.statutTarget.classList.add('hidden');
         this.annulerTarget.textContent = bloque ? 'Fermer' : 'Annuler';
 
         this.dialogueTarget.showModal();

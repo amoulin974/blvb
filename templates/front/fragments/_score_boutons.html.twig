@@ -1,0 +1,32 @@
+{# Boutons de saisie du score d'un match (score-modal-controller.js, fenêtre _score_modal.html.twig) : « Saisir » une fois
+   l'heure du match passée, crayon « Modifier » une fois le score saisi. Variables : partie, autorise (droit de saisir, même
+   règle que App\Service\SaisieScoreService::peutSaisir), passe, joue. Les boutons transmettent à la fenêtre le score actuel
+   (data-score-reception / -deplacement, -1 = forfait) et le barème de la saison (data-bareme) pour le résumé des points. #}
+{% if autorise and (passe or joue) %}
+    {% set saison = partie.poule.phase.saison %}
+    {% set donnees %}
+        data-action="click->score-modal#openModal"
+        data-partie-id="{{ partie.id }}"
+        data-url-score="{{ path('front_api_score_update', {id: partie.id}) }}"
+        data-match-passe="{{ passe ? 1 : 0 }}"
+        data-equipe-recoit="{{ partie.idEquipeRecoit.nom }}"
+        data-equipe-deplace="{{ partie.idEquipeDeplace.nom }}"
+        data-score-reception="{{ partie.getNbSetGagnantReception }}"
+        data-score-deplacement="{{ partie.getNbSetGagnantDeplacement }}"
+        data-sets-gagnants="{{ partie.poule.phase.setsGagnants }}"
+        data-bareme="{{ {victoireForte: saison.pointsVictoireForte, victoireFaible: saison.pointsVictoireFaible, defaiteForte: saison.pointsDefaiteForte, defaiteFaible: saison.pointsDefaiteFaible, forfait: saison.pointsForfait}|json_encode }}"
+    {% endset %}
+    <a href="#"
+       class="btn btn-accent btn-sm min-h-11 font-sans{{ joue ? ' hidden' : '' }}"
+       data-score-action="saisir"
+       aria-label="Saisir le score {{ partie.idEquipeRecoit.nom }} contre {{ partie.idEquipeDeplace.nom }}"
+       {{ donnees }}>Saisir</a>
+    <a href="#"
+       class="btn btn-ghost btn-sm btn-square min-h-11 min-w-11 lg:min-h-8 lg:min-w-8 font-sans text-(--color-base-content)/70{{ joue ? '' : ' hidden' }}"
+       data-score-action="modifier"
+       title="Modifier le score"
+       aria-label="Modifier le score {{ partie.idEquipeRecoit.nom }} contre {{ partie.idEquipeDeplace.nom }}"
+       {{ donnees }}>
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="size-4" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Zm0 0L19.5 7.125"/></svg>
+    </a>
+{% endif %}
