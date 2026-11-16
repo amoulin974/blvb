@@ -91,6 +91,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D78. Mêlée : réglages par défaut et réponses aux questions de l'expert et de l'ergonome
 - D79. Mêlée : programme égal proposé, classement par catégorie ou deux tableaux ajoutables après les inscriptions
 - D80. Mêlée : 10 min sur la carte conseillée seulement, inscrits prévenus, terrains qui changent de tableau d'un tour à l'autre
+- D81. Mêlée : réponses aux questions du complément au modèle de calcul
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1086,6 +1087,14 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
   répartition fixe crée un écart, annonce le nombre de changements de hauteur de filet, et laisse le choix entre
   **répartition fixe**, **tours groupés** (un seul changement de filet, attente longue) et **tours répartis** (attentes
   courtes, plus de changements de filet).
+
+## D81. Mêlée : réponses aux questions du complément au modèle de calcul
+
+*Décidé le 16/11/2026* (utilisateur), questions de `docs/espace-club/calcul-melee-complement.md`.
+1. **Programme égal quand deux existent** (30 joueurs) : le bouton propose le plus proche de 10 min (10 tours de 8 min),
+   l'autre (5 tours de 20 min) en variante.
+2. **Équipes de 3 acceptées en 4 contre 4** (comme 5 joueurs pour 6 en 6 contre 6).
+3 à 8 : en attente de réponse.
 
 ---
 
