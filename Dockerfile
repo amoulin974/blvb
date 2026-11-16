@@ -83,43 +83,15 @@ COPY --link composer.* symfony.* ./
 RUN set -eux; \
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
 
-# --------------------------------------------------------------------------------------
-# TEST 0 : dira immédiatement si Composer considère le package comme installé.
-# --------------------------------------------------------------------------------------
-RUN echo "====================== TEST 0 =========================" 
-RUN composer show symfony/html-sanitizer || true	
-
 # Copier le reste de l'app : Cette commande recopie tout le projet par-dessus ce qui a été installé précédemment.
 # il copie donc aussi le dossier vendor
-RUN echo "====================== TEST 1 (md5sum) =========================" 
-RUN md5sum composer.json composer.lock
-
 COPY --link --exclude=frankenphp/ . ./
 
-RUN echo "====================== TEST 2 =========================" 
-RUN test -f vendor/symfony/html-sanitizer/HtmlSanitizer.php && echo OK
-RUN echo "====================== TEST 3 =========================" 
-RUN diff composer.lock vendor/composer/installed.json || true
-RUN echo "====================== TEST 4 (md5sum) =========================" 
-RUN md5sum composer.json composer.lock
-
-RUN echo "====================== TEST SANITIZER 5 =========================" && \
-	ls -la vendor/symfony | grep sanitizer || true
-RUN echo "====================== TEST SANITIZER 6 =========================" && \
-	php -r "require 'vendor/autoload.php'; var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));"
-RUN echo "====================== TEST SANITIZER 7 =========================" 	
-RUN find vendor/symfony/html-sanitizer -name "*.php" | head -20
-RUN grep -R "namespace Symfony\\\\Component\\\\HtmlSanitizer" vendor/symfony/html-sanitizer/src | head -20
-		
 # Final build steps Symfony (execution des scripts)
-# test : composer show symfony/html-sanitizer; \
-# test : php bin/console debug:container html_sanitizer || true; \
 RUN set -eux; \
     mkdir -p var/cache var/log var/share; \
     composer dump-autoload --classmap-authoritative --no-dev; \
 	chmod +x bin/console; \
-	composer show symfony/html-sanitizer; \
-    php bin/console debug:container html_sanitizer || true; \
 	php bin/console cache:clear --env=prod; \
 	php bin/console tailwind:build --minify; \
 	php bin/console asset-map:compile; \
