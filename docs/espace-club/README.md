@@ -1,6 +1,6 @@
 # Espace club : où en est-on (16/11/2026)
 
-Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D80
+Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D81
 dans `docs/wizard-saison/decisions.md`.
 
 ## Ce qui est décidé
@@ -31,9 +31,6 @@ Maquette fil de fer (9 écrans + étape Programme) : https://claude.ai/artifact/
 
 ## Reprendre ici
 
-0. **Questions à trancher** en fin de `calcul-melee-complement.md` (programme égal à 30 joueurs, équipes de 3 en 4 contre 4,
-   4 contre 4 mis en avant de 16 à 19 joueurs, seuil des terrains variables, variante mise en avant, joueurs en trop par
-   tableau, réserve après un retard, réglage du filet en 5 min, 2,35 m).
 1. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
    (mêlée réservée, deux tableaux), et reporter D78 dans l'étape Programme (10 min par défaut, repos par défaut, message au
    changement du battement, filet, classement par catégorie) ; relectures ergonome et webdesigner.

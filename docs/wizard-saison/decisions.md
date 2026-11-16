@@ -1101,7 +1101,8 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
    terrain de tableau rapproche le nombre de matchs).
 5. **Tours groupés** : bloc placé **en fin de soirée** (le tableau qui n'a plus de terrain finit plus tôt).
 6. **Joueurs en trop en deux tableaux** : **un réglage par tableau** (repos ou remplaçants).
-7. Réserve après un retard : en attente (question à réexpliquer).
+7. **Après un retard** : en raccourcissant les tours restants, le site garde **5 min de réserve** avant l'heure de fin ; le
+   responsable peut **changer l'heure de fin** (fermeture du gymnase) depuis l'alerte, et le programme est recalculé.
 8. **Réglage du filet** : tient dans les 5 min du changement d'équipe (confirmé par l'utilisateur pour ses gymnases).
 
 ---
