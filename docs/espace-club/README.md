@@ -26,14 +26,13 @@ dans `docs/wizard-saison/decisions.md`.
 5. `parcours-melee-v3.md` : ce qui change après D77 et D78 (bloc « Qui joue à chaque tour », jour J et inscription en deux
    tableaux, classement par catégorie, filet) ; hypothèses H25 à H33 et incohérences avec le modèle de calcul (§5).
 
-Maquette fil de fer (9 écrans + étape Programme) : https://claude.ai/artifact/4ZibXrhAGdyYNdkAQPe47h (privée ; version 14,
-à jour de D77 pour la création ; jour J et inscription encore en v1).
+Maquette fil de fer (10 écrans) : https://claude.ai/artifact/4ZibXrhAGdyYNdkAQPe47h (privée ; version 3 du parcours au
+16/11/2026 pour les étapes 2 et 3, le jour J et l'inscription ; étapes 1, 4 et 5 encore en version 2).
 
 ## Reprendre ici
 
-1. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
-   (mêlée réservée, deux tableaux), et reporter D78 dans l'étape Programme (10 min par défaut, repos par défaut, message au
-   changement du battement, filet, classement par catégorie) ; relectures ergonome et webdesigner.
+1. **Maquette** : reporter la version 3 dans les étapes 4 et 5 (maximum par tableau, règles affichées, filet) ; faire relire
+   l'ensemble par l'ergonome et le webdesigner.
 2. **Spécification** puis développement par étapes, en commençant par les membres du club (D75, reprise depuis
    `MembreEquipe`), puis la catégorie de jeu (D65), puis la mêlée.
 3. À prévoir : texte d'aide et conditions d'utilisation pour la catégorie de jeu rendue visible par les deux tableaux (D77) et
