@@ -176,3 +176,31 @@ N+1 terminée) : commande de purge à étendre. Pas d'invités sans compte dans 
 - 2,35 m : choix du championnat, libellé « hauteur mixte ».
 - Passage en deux tableaux d'une mêlée « ouverte à tous » après des inscriptions : le message aux inscrits leur demande de
   choisir leur tableau ; le responsable peut le faire à leur place. Un inscrit sans tableau n'est pas tiré.
+
+## 11. Relecture sécurité du 16/11/2026 (`relecture-securite-melee.md`)
+
+**Intégré, sans décision à prendre** (règles techniques, à suivre au développement) :
+- **Ordre des contrôles** (I6) : non connecté → connexion (401 en JSON) avant toute lecture en base, avec une règle
+  `access_control` sur le préfixe des routes (variante `/blvb/` comprise) ; puis mêlée cherchée dans le club de l'adresse et
+  voter, refus en 404 identique à un identifiant inexistant ; ensuite seulement jeton CSRF, puis validation. Brouillon en 404
+  pour tout autre que le responsable et l'admin. La fiche publique du club ne porte ni bloc ni compteur de mêlées.
+- **Écritures du jour J** (I7) : chaque écriture porte un `uuid` et la version connue ; 409 avec l'état courant si elle a
+  changé ; rejouer un `uuid` est sans effet ; tirage unique par date et numéro, sous verrou ; inscription et liste d'attente
+  sous verrou de la date ; jeton `X-CSRF-TOKEN` sur chaque POST ; aucun GET n'écrit (le tirage à l'avance ne se déclenche pas à
+  l'affichage) ; `graine`, `tableau`, `rang_attente`, `etat`, auteurs et dates calculés par le serveur ; le joueur d'une
+  inscription personnelle vient de la session ; tout `joueur_id` reçu est un membre du club pour la saison, sinon 400 neutre.
+- **Courriels** (M1) : jamais la catégorie, le tableau, le niveau ni la liste des inscrits ; adresse vérifiée du compte ;
+  désinscription par bouton POST après connexion, jamais par un lien GET.
+- **Textes libres et bornes** (M2, M3) : longueur maximale du mot d'accueil et des règles particulières (1 000 caractères),
+  pas de HTML, titre sans saut de ligne ; bornes sur tous les réglages numériques, 6 dates au plus par mêlée, nombre de
+  répartitions essayées par le tirage fixé (5 000).
+- **Niveau** (M4) : `niveau_ajuste`, l'explication du tirage et la graine restent côté responsable ; routes JSON du
+  responsable distinctes de celles des membres ; test : la réponse à un membre ne contient ni niveau ni catégorie.
+- **Effectifs par catégorie** (M5) : réservés au responsable hors mêlée réservée, deux tableaux ou classement par catégorie.
+- **Calendrier public** (M6) : une mêlée ne réduit pas les terrains libres du calendrier par gymnase et n'entre pas dans
+  l'optimisation.
+- **Suppression d'un compte ou d'une fiche** (I8) : auteurs à vide, places « Joueur retiré ».
+- **Tests à prévoir** (M8) : droits (autre club, saison précédente, deux clubs, brouillon, visiteur), références d'une autre
+  mêlée, rejeu d'un `uuid`, 409, POST sans jeton, isolement (`Partie`, `Classement`, ICS, API, en-têtes), purge.
+
+**À décider par l'utilisateur** (constats I1 à I5, I8 et avis sur les fiches sans compte) : voir la reprise du `README.md`.

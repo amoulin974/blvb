@@ -34,7 +34,13 @@ Maquette fil de fer (10 écrans) : https://claude.ai/artifact/4ZibXrhAGdyYNdkAQP
 
 ## Reprendre ici
 
-1. **Maquette** (10 écrans en version 3) : intégrer la relecture de l'ergonome, puis celle du webdesigner.
-2. **Spécification** (`specification-melee.md`) : relecture `securite`, questions ouvertes du §10, puis développement dans
-   l'ordre du §9, en commençant par les membres du club.
-3. À prévoir : conditions d'utilisation pour la catégorie de jeu rendue visible (D77, D78).
+1. **Décisions à prendre après la relecture sécurité** (`relecture-securite-melee.md`) : retrait automatique des membres
+   venus d'une équipe (I1) ; catégorie de jeu vue et saisie par le responsable, courriel à un membre ajouté à la main (I2) ;
+   courriel au joueur inscrit par le responsable dans une mêlée qui montre la catégorie (I3) ; délai avant d'afficher un
+   classement par catégorie ou des tableaux ajoutés après coup (I4) ; saison fixée à la création, gel 7 jours après la fin
+   (I5) ; purge étendue aux membres et aux fiches sans compte (I8) ; fiche d'un adhérent sans compte, déconseillée par la
+   relecture alors que D82 l'accepte.
+2. **Maquette** (10 écrans en version 3, corrigée après la relecture de l'ergonome) : relecture du webdesigner ; états encore
+   à dessiner (écart joueuses / joueurs, pointage irréalisable, 16 à 19 présents).
+3. **Développement** dans l'ordre du §9 de `specification-melee.md`, en commençant par les membres du club.
+4. À prévoir : conditions d'utilisation pour la catégorie de jeu rendue visible (D77, D78).
