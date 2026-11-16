@@ -79,11 +79,6 @@ COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 # Install dependencies (cache Docker optimisé)
 COPY --link composer.* symfony.* ./
 
-# ----------terst
-RUN pwd
-RUN ls -l
-RUN grep '"name": "symfony/html-sanitizer"' composer.lock || true
-
 # en prod
 # Installer dépendances SANS scripts
 RUN set -eux; \
