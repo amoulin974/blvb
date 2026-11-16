@@ -83,19 +83,27 @@ COPY --link composer.* symfony.* ./
 # Installer dépendances SANS scripts
 RUN set -eux; \
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
+
 # TEST : dira immédiatement si Composer considère le package comme installé.
+RUN echo "===== TEST 0 apres composer install =====" 
 RUN composer show symfony/html-sanitizer || true	
+
 # Copier le reste de l'app
 COPY --link --exclude=frankenphp/ . ./
 
 # TEST 1
 RUN echo "===== TEST SANITIZER 1 =====" && \
     ls -la vendor/symfony | grep sanitizer || true
-
 # TEST 2
 RUN echo "===== TEST SANITIZER 2 =====" && \
     php -r "require 'vendor/autoload.php'; var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));"
-	
+RUN echo "===== TEST 3 =====" 	
+RUN find vendor/symfony/html-sanitizer -name "*.php" | head -20
+RUN grep -R "namespace Symfony\\\\Component\\\\HtmlSanitizer" vendor/symfony/html-sanitizer/src | head -20
+RUN echo "===== TEST 4 =====" 
+RUN composer show symfony/html-sanitizer
+RUN php bin/console debug:container html_sanitizer || true
+		
 # Final build steps Symfony (execution des scripts)
 RUN set -eux; \
     mkdir -p var/cache var/log var/share; \
