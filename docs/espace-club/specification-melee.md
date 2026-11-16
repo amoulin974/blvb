@@ -222,3 +222,7 @@ N+1 terminée) : commande de purge à étendre. Pas d'invités sans compte dans 
   après la mêlée.
 - Gel des scores et du pointage 7 jours après la fin de la mêlée, puis admin seul (proposition de la relecture, retenue sauf
   avis contraire).
+- **D84** : équipes sans club signalées au tableau de bord de l'admin (« À faire »), à rattacher ; tant qu'une équipe n'a pas
+  de club, sa composition propose tous les joueurs, comme aujourd'hui. Pas de `hors_categorie` sur l'inscription, pas de
+  message aux inscrits lié à la catégorie ; seule reste la demande de choisir son tableau (mêlée ouverte passée en deux
+  tableaux). Gel à 7 jours confirmé.

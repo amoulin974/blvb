@@ -94,6 +94,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D81. Mêlée : réponses aux questions du complément au modèle de calcul
 - D82. Mêlée : réponses aux questions ouvertes de la spécification
 - D83. Membres du club avant les équipes ; catégorie de jeu non masquée dans le club ; suites de la relecture sécurité
+- D84. Toute équipe rattachée à un club, signalé au tableau de bord ; précautions sur la catégorie retirées
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1138,6 +1139,19 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
 6. **Purge** : étendue aux membres de la saison, aux brouillons jamais publiés et aux mêlées annulées ; niveau ajusté et
    pointage effacés 30 jours après la mêlée.
 7. **Fiche d'un adhérent sans compte** : **pas pour l'instant** (modifie D82, point 2).
+
+## D84. Toute équipe rattachée à un club, signalé au tableau de bord ; précautions sur la catégorie retirées
+
+*Décidé le 16/11/2026* (utilisateur), suite de D83.
+- **À terme, toute équipe est rattachée à un club** (condition pour composer une équipe parmi les membres du club, D83). Les
+  équipes sans club sont **signalées au tableau de bord de l'admin** (liste « À faire », D64), avec un lien pour les
+  rattacher ; en attendant, leur composition fonctionne comme aujourd'hui.
+- **Précautions retirées**, la catégorie de jeu n'étant plus masquée dans le club : le droit de refuser d'apparaître dans le
+  classement par catégorie (D82, point 1) et le message aux inscrits quand un classement par catégorie ou deux tableaux sont
+  ajoutés (D80). Reste, pour une mêlée « ouverte à tous » passée en deux tableaux, la demande aux inscrits de choisir leur
+  tableau (D82, point 5).
+- **Corrections après la mêlée** : scores et pointage modifiables par le responsable jusqu'à 7 jours après la fin, puis par
+  l'admin seul (comme Volley Stats).
 
 ---
 
