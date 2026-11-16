@@ -76,11 +76,10 @@ RUN mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
 
 COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 
-# Install dependencies (cache Docker optimisé)
+# Install dependencies (cache Docker optimisé) : Docker copie un premier composer.json et composer.lock.
 COPY --link composer.* symfony.* ./
 
-# en prod
-# Installer dépendances SANS scripts
+# en prod, Installer dépendances SANS scripts
 RUN set -eux; \
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
 
@@ -91,6 +90,8 @@ RUN composer show symfony/html-sanitizer || true
 # Copier le reste de l'app : Cette commande recopie tout le projet par-dessus ce qui a été installé précédemment.
 RUN md5sum composer.json composer.lock
 COPY --link --exclude=frankenphp/ . ./
+RUN echo "===== TEST 000000000000 =====" 
+RUN diff composer.lock vendor/composer/installed.json || true
 RUN md5sum composer.json composer.lock
 
 # TESTS
