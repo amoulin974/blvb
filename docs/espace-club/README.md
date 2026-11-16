@@ -26,14 +26,15 @@ dans `docs/wizard-saison/decisions.md`.
 5. `parcours-melee-v3.md` : ce qui change après D77 et D78 (bloc « Qui joue à chaque tour », jour J et inscription en deux
    tableaux, classement par catégorie, filet) ; hypothèses H25 à H33 et incohérences avec le modèle de calcul (§5).
 
+6. `specification-melee.md` : spécification technique (données, calcul, tirage, droits, ordre de réalisation), à faire relire
+   par l'agent `securite`.
+
 Maquette fil de fer (10 écrans) : https://claude.ai/artifact/4ZibXrhAGdyYNdkAQPe47h (privée ; version 3 du parcours au
 16/11/2026 pour les étapes 2 et 3, le jour J et l'inscription ; étapes 1, 4 et 5 encore en version 2).
 
 ## Reprendre ici
 
-1. **Maquette** : reporter la version 3 dans les étapes 4 et 5 (maximum par tableau, règles affichées, filet) ; faire relire
-   l'ensemble par l'ergonome et le webdesigner.
-2. **Spécification** puis développement par étapes, en commençant par les membres du club (D75, reprise depuis
-   `MembreEquipe`), puis la catégorie de jeu (D65), puis la mêlée.
-3. À prévoir : texte d'aide et conditions d'utilisation pour la catégorie de jeu rendue visible par les deux tableaux (D77) et
-   le classement par catégorie (D78).
+1. **Maquette** (10 écrans en version 3) : intégrer la relecture de l'ergonome, puis celle du webdesigner.
+2. **Spécification** (`specification-melee.md`) : relecture `securite`, questions ouvertes du §10, puis développement dans
+   l'ordre du §9, en commençant par les membres du club.
+3. À prévoir : conditions d'utilisation pour la catégorie de jeu rendue visible (D77, D78).
