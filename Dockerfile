@@ -87,18 +87,23 @@ RUN set -eux; \
 # Copier le reste de l'app
 COPY --link --exclude=frankenphp/ . ./
 
+# TEST 1
+RUN echo "===== TEST SANITIZER 1 =====" && \
+    ls -la vendor/symfony | grep sanitizer || true
+
+# TEST 2
+RUN echo "===== TEST SANITIZER 2 =====" && \
+    php -r "require 'vendor/autoload.php'; var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));"
+	
 # Final build steps Symfony (execution des scripts)
 RUN set -eux; \
     mkdir -p var/cache var/log var/share; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    #composer run-script post-install-cmd --no-dev || true; \
     chmod +x bin/console; \
-	php -r "var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));" \
 	php bin/console cache:clear --env=prod; \
 	php bin/console tailwind:build --minify; \
 	php bin/console asset-map:compile; \
     sync;
-	
-	
+
 
 	    
