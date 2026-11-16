@@ -83,7 +83,8 @@ COPY --link composer.* symfony.* ./
 # Installer dépendances SANS scripts
 RUN set -eux; \
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
-	
+# TEST : dira immédiatement si Composer considère le package comme installé.
+RUN composer show symfony/html-sanitizer || true	
 # Copier le reste de l'app
 COPY --link --exclude=frankenphp/ . ./
 
