@@ -102,8 +102,8 @@ RUN echo "===== TEST 3 ====="
 RUN find vendor/symfony/html-sanitizer -name "*.php" | head -20
 RUN grep -R "namespace Symfony\\\\Component\\\\HtmlSanitizer" vendor/symfony/html-sanitizer/src | head -20
 RUN echo "===== TEST 4 =====" 
-RUN composer show symfony/html-sanitizer
-RUN php bin/console debug:container html_sanitizer || true
+#RUN composer show symfony/html-sanitizer
+#RUN php bin/console debug:container html_sanitizer || true
 		
 # Final build steps Symfony (execution des scripts)
 RUN set -eux; \
