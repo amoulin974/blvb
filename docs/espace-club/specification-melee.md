@@ -204,3 +204,21 @@ N+1 terminée) : commande de purge à étendre. Pas d'invités sans compte dans 
   mêlée, rejeu d'un `uuid`, 409, POST sans jeton, isolement (`Partie`, `Classement`, ICS, API, en-têtes), purge.
 
 **À décider par l'utilisateur** (constats I1 à I5, I8 et avis sur les fiches sans compte) : voir la reprise du `README.md`.
+
+## 12. Décisions du 16/11/2026 après la relecture (D83) : ce qui change ci-dessus
+
+- **§2 brique 1** : après la reprise, un `membre_club` n'est créé que par le responsable du club ou un admin (`origine`
+  `reprise` ou `manuel`) ; la composition d'une équipe ne propose que les membres du club de l'équipe pour la saison (les
+  équipes sans club : à trancher). Ajouter un joueur à une équipe ne crée plus de membre. Pas de fiche sans compte créée par
+  le responsable.
+- **§2 brique 2, §6, §11 (M5)** : la catégorie de jeu est visible des membres du club, des participants, du responsable et
+  des admins ; aucun avertissement, aucun effectif réservé au responsable. Elle reste absente des pages publiques, de
+  l'agenda et des API du championnat. Le niveau (poule, `niveau_ajuste`) reste réservé au responsable.
+- **§7** : pas de courriel lié à la visibilité de la catégorie ; le message de D80 devient une simple information du
+  changement de formule.
+- **§2 `melee`** : `saison_id` = saison de la première date, fixée à la création ; les dates suivantes peuvent tomber après la
+  fin de cette saison.
+- **§8** : purge étendue (membres de la saison, brouillons, mêlées annulées) ; `niveau_ajuste` et `present` effacés 30 jours
+  après la mêlée.
+- Gel des scores et du pointage 7 jours après la fin de la mêlée, puis admin seul (proposition de la relecture, retenue sauf
+  avis contraire).

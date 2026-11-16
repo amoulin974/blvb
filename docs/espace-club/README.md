@@ -1,6 +1,6 @@
 # Espace club : où en est-on (16/11/2026)
 
-Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D82
+Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D83
 dans `docs/wizard-saison/decisions.md`.
 
 ## Ce qui est décidé
@@ -34,13 +34,11 @@ Maquette fil de fer (10 écrans) : https://claude.ai/artifact/4ZibXrhAGdyYNdkAQP
 
 ## Reprendre ici
 
-1. **Décisions à prendre après la relecture sécurité** (`relecture-securite-melee.md`) : retrait automatique des membres
-   venus d'une équipe (I1) ; catégorie de jeu vue et saisie par le responsable, courriel à un membre ajouté à la main (I2) ;
-   courriel au joueur inscrit par le responsable dans une mêlée qui montre la catégorie (I3) ; délai avant d'afficher un
-   classement par catégorie ou des tableaux ajoutés après coup (I4) ; saison fixée à la création, gel 7 jours après la fin
-   (I5) ; purge étendue aux membres et aux fiches sans compte (I8) ; fiche d'un adhérent sans compte, déconseillée par la
-   relecture alors que D82 l'accepte.
-2. **Maquette** (10 écrans en version 3, corrigée après la relecture de l'ergonome) : relecture du webdesigner ; états encore
-   à dessiner (écart joueuses / joueurs, pointage irréalisable, 16 à 19 présents).
+1. **À trancher** : équipes sans club (qui peut-on y ajouter, puisque la composition ne propose plus que les membres du
+   club ?) ; garde-t-on le refus du classement par catégorie (D82, point 1) et le message aux inscrits (D80), maintenant que
+   la catégorie n'est plus masquée (D83) ?
+2. **Maquette** (10 écrans en version 3, corrigée après la relecture de l'ergonome) : relecture du webdesigner ; retirer les avertissements et
+   mentions sur la visibilité de la catégorie (D83) ; états encore à dessiner (écart joueuses / joueurs, pointage
+   irréalisable, 16 à 19 présents).
 3. **Développement** dans l'ordre du §9 de `specification-melee.md`, en commençant par les membres du club.
 4. À prévoir : conditions d'utilisation pour la catégorie de jeu rendue visible (D77, D78).

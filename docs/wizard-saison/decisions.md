@@ -93,6 +93,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D80. Mêlée : 10 min sur la carte conseillée seulement, inscrits prévenus, terrains qui changent de tableau d'un tour à l'autre
 - D81. Mêlée : réponses aux questions du complément au modèle de calcul
 - D82. Mêlée : réponses aux questions ouvertes de la spécification
+- D83. Membres du club avant les équipes ; catégorie de jeu non masquée dans le club ; suites de la relecture sécurité
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1116,6 +1117,27 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
 4. **2,35 m en mixte** : assumé comme choix du championnat, libellé « hauteur mixte », jamais « officielle ».
 5. **Passage en deux tableaux d'une mêlée « ouverte à tous » après des inscriptions** : le message envoyé aux inscrits leur
    demande de choisir leur tableau ; le responsable peut le faire à leur place.
+
+## D83. Membres du club avant les équipes ; catégorie de jeu non masquée dans le club ; suites de la relecture sécurité
+
+*Décidé le 16/11/2026* (utilisateur), sur les constats de `docs/espace-club/relecture-securite-melee.md`.
+1. **Membres du club d'abord** (précise D75, tranche sa « piste ») : les joueurs actuels sont repris comme membres du club de
+   leur équipe ; ensuite, **un joueur est ajouté au club par le responsable du club ou un admin, et seulement après il peut
+   être ajouté à une équipe du club** (le capitaine choisit parmi les membres du club). Un joueur peut être membre de
+   plusieurs clubs. Le constat I1 (un capitaine qui ouvre l'accès au club) disparaît avec cette règle.
+2. **La catégorie de jeu n'est pas masquée dans le club** (modifie D65 sur la visibilité, et les précautions de D77, D78,
+   D80) : dans un club de volley, les compétitions sont toujours genrées. Elle est visible des membres du club, des
+   participants, du responsable et des admins ; plus d'avertissement à l'inscription, plus de mention « vu de vous seul »,
+   plus d'effectifs réservés au responsable. Elle reste **hors des pages publiques** du site, et n'est toujours demandée
+   qu'avec les tournois (D65).
+3. **Inscription par le responsable** dans une mêlée réservée, en deux tableaux ou avec classement par catégorie : pas de
+   courriel particulier.
+4. **Classement par catégorie ou deux tableaux ajoutés après des inscriptions** : pas de délai avant l'affichage.
+5. **Saison d'une mêlée** : la mêlée **commence pendant une saison** (celle de sa première date, fixée à la création) et **peut
+   finir après** ; ses membres et son responsable restent ceux de cette saison.
+6. **Purge** : étendue aux membres de la saison, aux brouillons jamais publiés et aux mêlées annulées ; niveau ajusté et
+   pointage effacés 30 jours après la mêlée.
+7. **Fiche d'un adhérent sans compte** : **pas pour l'instant** (modifie D82, point 2).
 
 ---
 
