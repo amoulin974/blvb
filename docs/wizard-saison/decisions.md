@@ -89,6 +89,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D76. Mêlée : matchs non mixtes possibles, terrains pris du gymnase, réglages fixés ou calculés au choix
 - D77. Mêlée : deux tableaux le même soir, joueuses d'un côté, joueurs de l'autre, dès la première version
 - D78. Mêlée : réglages par défaut et réponses aux questions de l'expert et de l'ergonome
+- D79. Mêlée : programme égal proposé, classement par catégorie ou deux tableaux ajoutables après les inscriptions
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1059,6 +1060,17 @@ pour nous / eux ».
 12. **Hauteur du filet** : **2,43 m (joueurs), 2,24 m (joueuses), 2,35 m (mixte)** par défaut selon le mode, **réglable dans
     les paramètres de la mêlée**. Modifie H20.
 Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H18, H22 à H24) sont retenues telles quelles.
+
+## D79. Mêlée : programme égal proposé, classement par catégorie ou deux tableaux ajoutables après les inscriptions
+
+*Décidé le 16/11/2026* (utilisateur), sur les hypothèses H26 et H29 de `docs/espace-club/parcours-melee-v3.md`.
+- **H26 validée** : quand la durée par défaut (10 min) empêche que tout le monde joue autant, la carte conseillée garde le
+  programme de 10 min, affiche l'écart et propose en un geste le programme égal ; le site ne change rien de lui-même.
+- **H29 modifiée** : le classement par catégorie (et le passage en deux tableaux) **reste ajoutable après la première
+  inscription** : l'organisateur est **prévenu** que des joueurs sont déjà inscrits, et peut **forcer**. Raison donnée par
+  l'utilisateur : dans un club, on sait de toute façon qui joue en masculin ou en féminin.
+- **En attente de réponse** : H25 (seule la carte conseillée garde les 10 min par défaut) ; répartition des terrains entre
+  les deux tableaux variable d'un tour à l'autre pour équilibrer les matchs (avec changement de hauteur du filet).
 
 ---
 

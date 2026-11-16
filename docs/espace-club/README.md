@@ -1,6 +1,6 @@
 # Espace club : où en est-on (16/11/2026)
 
-Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D78
+Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D79
 dans `docs/wizard-saison/decisions.md`.
 
 ## Ce qui est décidé
@@ -30,8 +30,9 @@ Maquette fil de fer (9 écrans + étape Programme) : https://claude.ai/artifact/
 
 ## Reprendre ici
 
-0. **À valider** : H25, H26, H29 de `parcours-melee-v3.md` (10 min par défaut et scénarios ; option de classement par
-   catégorie verrouillée après la première inscription), puis faire corriger le modèle de calcul par l'expert (§5).
+0. **À valider** : H25 de `parcours-melee-v3.md` (seule la carte conseillée garde les 10 min) et la répartition des terrains
+   variable d'un tour à l'autre en deux tableaux ; H26 validée et H29 modifiée par D79. Puis faire corriger le modèle de
+   calcul par l'expert (§5 du parcours v3).
 1. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
    (mêlée réservée, deux tableaux), et reporter D78 dans l'étape Programme (10 min par défaut, repos par défaut, message au
    changement du battement, filet, classement par catégorie) ; relectures ergonome et webdesigner.
