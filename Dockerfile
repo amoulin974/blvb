@@ -91,6 +91,7 @@ RUN composer show symfony/html-sanitizer || true
 # Copier le reste de l'app
 COPY --link --exclude=frankenphp/ . ./
 
+
 # TEST 1
 RUN echo "===== TEST SANITIZER 1 =====" && \
     ls -la vendor/symfony | grep sanitizer || true
