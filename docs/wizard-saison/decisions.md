@@ -1094,7 +1094,15 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
 1. **Programme égal quand deux existent** (30 joueurs) : le bouton propose le plus proche de 10 min (10 tours de 8 min),
    l'autre (5 tours de 20 min) en variante.
 2. **Équipes de 3 acceptées en 4 contre 4** (comme 5 joueurs pour 6 en 6 contre 6).
-3 à 8 : en attente de réponse.
+3. **De 16 à 19 joueurs** (6 contre 6, un terrain resterait vide) : le site met **le 4 contre 4 en avant**, les remplaçants en
+   option secondaire.
+4. **Terrains variables** : proposés à partir de **2 matchs d'écart** en répartition fixe, et le site **explique pourquoi**
+   (un écart d'un match vient du roulement des repos et ne justifie pas de régler les filets ; à partir de 2, changer un
+   terrain de tableau rapproche le nombre de matchs).
+5. **Tours groupés** : bloc placé **en fin de soirée** (le tableau qui n'a plus de terrain finit plus tôt).
+6. **Joueurs en trop en deux tableaux** : **un réglage par tableau** (repos ou remplaçants).
+7. Réserve après un retard : en attente (question à réexpliquer).
+8. **Réglage du filet** : tient dans les 5 min du changement d'équipe (confirmé par l'utilisateur pour ses gymnases).
 
 ---
 
