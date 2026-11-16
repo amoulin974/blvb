@@ -1,0 +1,5 @@
+vendor
+var
+.git
+.gitignore
+docker-compose*
