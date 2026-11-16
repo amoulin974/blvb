@@ -94,6 +94,7 @@ RUN set -eux; \
 	chmod +x bin/console; \
 	php bin/console cache:clear --env=prod; \
 	php bin/console tailwind:build --minify; \
+	php bin/console importmap:install; \
 	php bin/console asset-map:compile; \
     sync;
 
