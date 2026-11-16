@@ -98,5 +98,6 @@ RUN set -eux; \
 	php bin/console tailwind:build --minify; \
 	php bin/console asset-map:compile; \
     sync;
+	
 
 	    
