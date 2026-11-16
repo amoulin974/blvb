@@ -1112,8 +1112,10 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
 1. Un joueur **peut refuser d'apparaître dans le classement par catégorie** tout en restant au classement général.
 2. Le responsable **peut créer la fiche d'un adhérent sans compte** (membre du club) ; il l'inscrit alors lui-même aux mêlées.
 3. **Conservation** : comme les pages du match de Volley Stats (mêlées de la saison N supprimées une fois la saison N+1
-   terminée). *Lecture de la réponse « oui » à une question à deux options : à confirmer.*
+   terminée), confirmé.
 4. **2,35 m en mixte** : assumé comme choix du championnat, libellé « hauteur mixte », jamais « officielle ».
+5. **Passage en deux tableaux d'une mêlée « ouverte à tous » après des inscriptions** : le message envoyé aux inscrits leur
+   demande de choisir leur tableau ; le responsable peut le faire à leur place.
 
 ---
 

@@ -167,13 +167,12 @@ N+1 terminée) : commande de purge à étendre. Pas d'invités sans compte dans 
    fait en mêlée mixte).
 8. Relectures ergonome, webdesigner, sécurité à chaque brique ; essai sur une vraie soirée avant de généraliser.
 
-## 10. Questions tranchées (D82) et restantes
+## 10. Questions tranchées (D82)
 
 - Classement par catégorie : un joueur peut s'en retirer en restant au classement général (`melee_inscription.hors_categorie`,
   case à l'inscription et sur sa page de la mêlée).
 - Membres : le responsable peut créer la fiche d'un adhérent sans compte ; il l'inscrit lui-même.
-- Purge : même règle que Volley Stats (à confirmer).
+- Purge : même règle que Volley Stats.
 - 2,35 m : choix du championnat, libellé « hauteur mixte ».
-- **Restante** : passage en deux tableaux d'une mêlée « ouverte à tous » après des inscriptions (les inscrits n'ont pas de
-  catégorie) : proposition, le message aux inscrits leur demande de choisir leur tableau, le responsable peut le faire à leur
-  place.
+- Passage en deux tableaux d'une mêlée « ouverte à tous » après des inscriptions : le message aux inscrits leur demande de
+  choisir leur tableau ; le responsable peut le faire à leur place. Un inscrit sans tableau n'est pas tiré.
