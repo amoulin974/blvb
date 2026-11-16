@@ -88,6 +88,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D75. Membres d'un club par saison ; première version de l'espace club : les mêlées seulement
 - D76. Mêlée : matchs non mixtes possibles, terrains pris du gymnase, réglages fixés ou calculés au choix
 - D77. Mêlée : deux tableaux le même soir, joueuses d'un côté, joueurs de l'autre, dès la première version
+- D78. Mêlée : réglages par défaut et réponses aux questions de l'expert et de l'ergonome
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1033,6 +1034,31 @@ pour nous / eux ».
 - **Conséquence pour D65** : jouer dans le tableau des joueuses montre sa catégorie de jeu aux autres participants et aux
   membres du club (équipes et classement par tableau). C'est inhérent à la formule ; à faire figurer dans l'aide de
   l'inscription et dans les conditions d'utilisation.
+
+## D78. Mêlée : réglages par défaut et réponses aux questions de l'expert et de l'ergonome
+
+*Décidé le 16/11/2026* (utilisateur), sur les questions de `docs/espace-club/calcul-melee.md` et les hypothèses de
+`parcours-melee.md` (H1 à H10) et `parcours-melee-v2.md` (H11 à H24).
+1. **Objectif par défaut** : « Tout le monde joue autant ».
+2. **Durée d'un match** : **10 min par défaut** (modifiable, « laisser le site choisir » possible) ; l'écran dit **tout de
+   suite si tout le monde peut jouer** avec ce réglage (qui joue, qui est au repos, combien de matchs chacun). Modifie H15.
+3. **Joueurs en trop** : **au repos par défaut** ; les remplaçants restent une option. Modifie H16.
+4. **Au pointage** : le site propose un nouveau programme, ne l'applique jamais de lui-même.
+5. **Écart de temps de jeu joueuses / joueurs** dû au minimum : affiché au responsable seul, avec un bouton pour baisser le
+   minimum.
+6. **Changement d'équipe entre deux tours** : réglage, **5 min par défaut**, modifiable ; le modifier affiche **un message qui
+   dit ce que cela change** (tours, horaires, matchs par joueur).
+7. **Niveau des joueurs** : tiré de la poule de leur équipe au championnat, vu du responsable seul ; niveau moyen pour un
+   membre sans équipe, ajustable par le responsable.
+8. **Minuteur** : compte à rebours à l'écran, sans son.
+9. **Vocabulaire** : « date » à l'écran pour une période.
+10. **« Aux points seulement »** : retiré ; restent « au temps » et « au temps ou à 25 points, au premier atteint ».
+11. **Classement** : pourcentage de victoires ; **classement par catégorie possible même dans une mêlée mixte** (option du
+    responsable). Conséquence, comme pour D77 : ce classement montre la catégorie de jeu aux membres du club et aux
+    participants ; à dire à l'inscription et dans les conditions d'utilisation (précise D65). Modifie H2.
+12. **Hauteur du filet** : **2,43 m (joueurs), 2,24 m (joueuses), 2,35 m (mixte)** par défaut selon le mode, **réglable dans
+    les paramètres de la mêlée**. Modifie H20.
+Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H18, H22 à H24) sont retenues telles quelles.
 
 ---
 

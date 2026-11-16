@@ -1,6 +1,6 @@
-# Espace club : où en est-on (11/11/2026)
+# Espace club : où en est-on (16/11/2026)
 
-Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D77
+Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D78
 dans `docs/wizard-saison/decisions.md`.
 
 ## Ce qui est décidé
@@ -13,6 +13,8 @@ dans `docs/wizard-saison/decisions.md`.
 - **D76** : non-mixte possible ; terrains pré-remplis depuis la capacité du créneau du gymnase ; le responsable fixe ce qu'il
   veut, le site calcule le reste.
 - **D77** : deux tableaux le même soir (joueuses / joueurs), terrains partagés, mêmes tours.
+- **D78** : réglages par défaut (objectif « tout le monde joue autant », matchs de 10 min, joueurs en trop au repos,
+  changement d'équipe 5 min, filet 2,43 / 2,24 / 2,35 m réglable), classement par catégorie possible, questions tranchées.
 
 ## Documents, dans l'ordre de lecture
 
@@ -26,16 +28,10 @@ Maquette fil de fer (9 écrans + étape Programme) : https://claude.ai/artifact/
 
 ## Reprendre ici
 
-1. **Questions à trancher par l'utilisateur** :
-   - celles de `calcul-melee.md` (fin du document) : objectif par défaut, durée de match par défaut, remplaçants ou repos,
-     ajustement au pointage proposé ou appliqué, écart joueuses / joueurs, hauteurs de filet (à vérifier), promesse de
-     brassage « le moins possible » ;
-   - hypothèses de l'ergonome : H1 à H10 (`parcours-melee.md`) et H11 à H24 (`parcours-melee-v2.md`), surtout H3 (niveau
-     tiré de la poule), H9 (minuteur sans son), H10 (« date » pour une période), H13 (changement d'équipe réglé, pas
-     calculé), H16 (remplaçants par défaut), H21 (« Aux points seulement » retiré).
-   - D77 et D65 : jouer dans le tableau des joueuses révèle sa catégorie aux participants ; texte d'aide et conditions
-     d'utilisation à prévoir.
-2. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
-   (mêlée réservée, deux tableaux) ; faire relire par l'ergonome et le webdesigner.
-3. **Spécification** puis développement par étapes, en commençant par les membres du club (D75, reprise depuis
+1. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
+   (mêlée réservée, deux tableaux), et reporter D78 dans l'étape Programme (10 min par défaut, repos par défaut, message au
+   changement du battement, filet, classement par catégorie) ; relectures ergonome et webdesigner.
+2. **Spécification** puis développement par étapes, en commençant par les membres du club (D75, reprise depuis
    `MembreEquipe`), puis la catégorie de jeu (D65), puis la mêlée.
+3. À prévoir : texte d'aide et conditions d'utilisation pour la catégorie de jeu rendue visible par les deux tableaux (D77) et
+   le classement par catégorie (D78).
