@@ -65,7 +65,6 @@ COPY --link frankenphp/conf.d/20-app.dev.ini $PHP_INI_DIR/app.conf.d/
 
 CMD ["frankenphp", "run", "--config", "/etc/frankenphp/Caddyfile", "--watch"]
 
-
 #############################################
 # Production image
 #############################################
@@ -80,24 +79,15 @@ COPY --link frankenphp/conf.d/20-app.prod.ini $PHP_INI_DIR/app.conf.d/
 # Install dependencies (cache Docker optimisé)
 COPY --link composer.* symfony.* ./
 
-# Ces lignes ne sont plus forcemenet necessaires à cause des commandes php bin/console dans le dernier RUN
-#RUN set -eux; \
-# composer run-script post-install-cmd --no-dev || true
-# composer run-script post-install-cmd -vvv || true
+# ----------terst
+RUN pwd
+RUN ls -l
+RUN grep '"name": "symfony/html-sanitizer"' composer.lock || true
 
 # en prod
 # Installer dépendances SANS scripts
 RUN set -eux; \
-#composer install --no-dev --prefer-dist --no-progress --no-interaction
-#composer install --no-dev --prefer-dist --no-progress --optimize-autoloader --no-interaction
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
-RUN composer show | grep sanitizer || true
-# en debug
-# RUN composer install -vvv --no-interaction || true	
-
-# Aide
-# --no-scripts peremt de ne lancer aucun script
-# -vvv --no-interaction permet de debugger
 	
 # Copier le reste de l'app
 COPY --link --exclude=frankenphp/ . ./
