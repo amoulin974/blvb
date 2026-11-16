@@ -22,12 +22,16 @@ dans `docs/wizard-saison/decisions.md`.
 2. `parametres-melee.md` : les 73 paramètres d'une mêlée, défauts, calculs, cas limites.
 3. `calcul-melee.md` : modèle de calcul « fixer ou faire calculer », scénarios côte à côte.
 4. `parcours-melee.md` (v1) puis `parcours-melee-v2.md` (création en 5 étapes, pointage, soirée) : avis de l'ergonome.
+5. `parcours-melee-v3.md` : ce qui change après D77 et D78 (bloc « Qui joue à chaque tour », jour J et inscription en deux
+   tableaux, classement par catégorie, filet) ; hypothèses H25 à H33 et incohérences avec le modèle de calcul (§5).
 
 Maquette fil de fer (9 écrans + étape Programme) : https://claude.ai/artifact/4ZibXrhAGdyYNdkAQPe47h (privée ; version 14,
 à jour de D77 pour la création ; jour J et inscription encore en v1).
 
 ## Reprendre ici
 
+0. **À valider** : H25, H26, H29 de `parcours-melee-v3.md` (10 min par défaut et scénarios ; option de classement par
+   catégorie verrouillée après la première inscription), puis faire corriger le modèle de calcul par l'expert (§5).
 1. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
    (mêlée réservée, deux tableaux), et reporter D78 dans l'étape Programme (10 min par défaut, repos par défaut, message au
    changement du battement, filet, classement par catégorie) ; relectures ergonome et webdesigner.
