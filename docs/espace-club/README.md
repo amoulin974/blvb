@@ -20,7 +20,8 @@ dans `docs/wizard-saison/decisions.md`.
 
 1. `formules-tournoi.md` : recherche sur les formules de tournoi (agent organisation-competition).
 2. `parametres-melee.md` : les 73 paramètres d'une mêlée, défauts, calculs, cas limites.
-3. `calcul-melee.md` : modèle de calcul « fixer ou faire calculer », scénarios côte à côte.
+3. `calcul-melee.md` : modèle de calcul « fixer ou faire calculer », scénarios côte à côte. Puis `calcul-melee-complement.md` (après D78 à
+   D80) : programme égal, pointage, retard, 13 à 19 joueurs, deux tableaux à terrains variables, filet.
 4. `parcours-melee.md` (v1) puis `parcours-melee-v2.md` (création en 5 étapes, pointage, soirée) : avis de l'ergonome.
 5. `parcours-melee-v3.md` : ce qui change après D77 et D78 (bloc « Qui joue à chaque tour », jour J et inscription en deux
    tableaux, classement par catégorie, filet) ; hypothèses H25 à H33 et incohérences avec le modèle de calcul (§5).
@@ -30,8 +31,9 @@ Maquette fil de fer (9 écrans + étape Programme) : https://claude.ai/artifact/
 
 ## Reprendre ici
 
-0. **Modèle de calcul** à corriger par l'expert (§5 de `parcours-melee-v3.md`, D78 à D80 : 10 min sur la carte conseillée,
-   repos par défaut, terrains variables d'un tour à l'autre en deux tableaux).
+0. **Questions à trancher** en fin de `calcul-melee-complement.md` (programme égal à 30 joueurs, équipes de 3 en 4 contre 4,
+   4 contre 4 mis en avant de 16 à 19 joueurs, seuil des terrains variables, variante mise en avant, joueurs en trop par
+   tableau, réserve après un retard, réglage du filet en 5 min, 2,35 m).
 1. **Maquette** : redessiner le jour J (pointage avec « programme du soir », tour en retard, deux tableaux) et l'inscription
    (mêlée réservée, deux tableaux), et reporter D78 dans l'étape Programme (10 min par défaut, repos par défaut, message au
    changement du battement, filet, classement par catégorie) ; relectures ergonome et webdesigner.
