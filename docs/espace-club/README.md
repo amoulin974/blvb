@@ -1,6 +1,6 @@
 # Espace club : où en est-on (16/11/2026)
 
-Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D81
+Branche `espace-club` (depuis `main` 1165e41). **Rien n'est réalisé : analyse et maquette seulement.** Décisions D74 à D82
 dans `docs/wizard-saison/decisions.md`.
 
 ## Ce qui est décidé

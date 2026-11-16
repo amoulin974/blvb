@@ -92,6 +92,7 @@ Une ligne par décision ; ne lire que celles qui concernent le sujet du moment (
 - D79. Mêlée : programme égal proposé, classement par catégorie ou deux tableaux ajoutables après les inscriptions
 - D80. Mêlée : 10 min sur la carte conseillée seulement, inscrits prévenus, terrains qui changent de tableau d'un tour à l'autre
 - D81. Mêlée : réponses aux questions du complément au modèle de calcul
+- D82. Mêlée : réponses aux questions ouvertes de la spécification
 - Points ouverts : PO1. Page d'une saison hors wizard : recentrer sur le suivi (avis de l'ergonome, 14/10/2026) ; PO2. Équipe qui se retire, forfait général ; PO3. Questions de détail des lots suivants
 
 ## D1. Rôle de l'outil
@@ -1104,6 +1105,15 @@ Les autres hypothèses de l'ergonome (H1, H4, H6, H7, H8, H11, H12, H14, H17, H1
 7. **Après un retard** : en raccourcissant les tours restants, le site garde **5 min de réserve** avant l'heure de fin ; le
    responsable peut **changer l'heure de fin** (fermeture du gymnase) depuis l'alerte, et le programme est recalculé.
 8. **Réglage du filet** : tient dans les 5 min du changement d'équipe (confirmé par l'utilisateur pour ses gymnases).
+
+## D82. Mêlée : réponses aux questions ouvertes de la spécification
+
+*Décidé le 16/11/2026* (utilisateur), questions du §10 de `docs/espace-club/specification-melee.md`.
+1. Un joueur **peut refuser d'apparaître dans le classement par catégorie** tout en restant au classement général.
+2. Le responsable **peut créer la fiche d'un adhérent sans compte** (membre du club) ; il l'inscrit alors lui-même aux mêlées.
+3. **Conservation** : comme les pages du match de Volley Stats (mêlées de la saison N supprimées une fois la saison N+1
+   terminée). *Lecture de la réponse « oui » à une question à deux options : à confirmer.*
+4. **2,35 m en mixte** : assumé comme choix du championnat, libellé « hauteur mixte », jamais « officielle ».
 
 ---
 
