@@ -84,11 +84,11 @@ COPY --link composer.* symfony.* ./
 RUN set -eux; \
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
 
-# TEST : dira immédiatement si Composer considère le package comme installé.
+# TEST 0 : dira immédiatement si Composer considère le package comme installé.
 RUN echo "===== TEST 0 apres composer install =====" 
 RUN composer show symfony/html-sanitizer || true	
 
-# Copier le reste de l'app
+# Copier le reste de l'app : Cette commande recopie tout le projet par-dessus ce qui a été installé précédemment.
 COPY --link --exclude=frankenphp/ . ./
 
 
@@ -101,15 +101,16 @@ RUN echo "===== TEST SANITIZER 2 =====" && \
 RUN echo "===== TEST 3 =====" 	
 RUN find vendor/symfony/html-sanitizer -name "*.php" | head -20
 RUN grep -R "namespace Symfony\\\\Component\\\\HtmlSanitizer" vendor/symfony/html-sanitizer/src | head -20
-RUN echo "===== TEST 4 =====" 
-#RUN composer show symfony/html-sanitizer
-#RUN php bin/console debug:container html_sanitizer || true
 		
 # Final build steps Symfony (execution des scripts)
+# composer show symfony/html-sanitizer; \
+# php bin/console debug:container html_sanitizer || true; \
 RUN set -eux; \
     mkdir -p var/cache var/log var/share; \
     composer dump-autoload --classmap-authoritative --no-dev; \
-    chmod +x bin/console; \
+	chmod +x bin/console; \
+	composer show symfony/html-sanitizer; \
+    php bin/console debug:container html_sanitizer || true; \
 	php bin/console cache:clear --env=prod; \
 	php bin/console tailwind:build --minify; \
 	php bin/console asset-map:compile; \
