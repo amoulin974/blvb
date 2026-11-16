@@ -89,16 +89,14 @@ RUN echo "===== TEST 0 apres composer install ====="
 RUN composer show symfony/html-sanitizer || true	
 
 # Copier le reste de l'app : Cette commande recopie tout le projet par-dessus ce qui a été installé précédemment.
+RUN md5sum composer.json composer.lock
 COPY --link --exclude=frankenphp/ . ./
+RUN md5sum composer.json composer.lock
 
-
-# TEST 1
-RUN echo "===== TEST SANITIZER 1 =====" && \
-    ls -la vendor/symfony | grep sanitizer || true
-# TEST 2
-RUN echo "===== TEST SANITIZER 2 =====" && \
-    php -r "require 'vendor/autoload.php'; var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));"
-RUN echo "===== TEST 3 =====" 	
+# TESTS
+RUN echo "===== TEST SANITIZER 1 =====" && ls -la vendor/symfony | grep sanitizer || true
+RUN echo "===== TEST SANITIZER 2 =====" && php -r "require 'vendor/autoload.php'; var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));"
+RUN echo "===== TEST SANITIZER 3 =====" 	
 RUN find vendor/symfony/html-sanitizer -name "*.php" | head -20
 RUN grep -R "namespace Symfony\\\\Component\\\\HtmlSanitizer" vendor/symfony/html-sanitizer/src | head -20
 		
