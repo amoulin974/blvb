@@ -91,7 +91,7 @@ RUN set -eux; \
 #composer install --no-dev --prefer-dist --no-progress --no-interaction
 #composer install --no-dev --prefer-dist --no-progress --optimize-autoloader --no-interaction
   composer install --no-dev --prefer-dist --no-progress --no-scripts --no-interaction
-
+RUN composer show | grep sanitizer || true
 # en debug
 # RUN composer install -vvv --no-interaction || true	
 
