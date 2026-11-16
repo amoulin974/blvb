@@ -93,10 +93,10 @@ RUN set -eux; \
     composer dump-autoload --classmap-authoritative --no-dev; \
     #composer run-script post-install-cmd --no-dev || true; \
     chmod +x bin/console; \
+	php -r "var_dump(class_exists('Symfony\\Component\\HtmlSanitizer\\HtmlSanitizer'));" \
 	php bin/console cache:clear --env=prod; \
 	php bin/console tailwind:build --minify; \
 	php bin/console asset-map:compile; \
     sync;
-	
-	#composer dump-env prod; \
+
 	    
